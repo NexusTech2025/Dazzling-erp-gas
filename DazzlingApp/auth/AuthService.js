@@ -63,7 +63,8 @@ class AuthService {
       role,
       status: "active",
       created_at: now,
-      updated_at: now
+      updated_at: now,
+      last_login: null // Initialized as null
     });
 
     // 5. Create the Profile (The "Identity")
@@ -88,7 +89,7 @@ class AuthService {
 
     profileRepo.create(finalProfileData);
 
-    return this._orm.wrap("User", newUserRaw);
+    return this._orm._wrap("User", newUserRaw);
   }
 
   /**
@@ -116,11 +117,22 @@ class AuthService {
       throw new AuthorizationError("Account is inactive.");
     }
 
+    // Update last_login timestamp
+    const now = new Date();
+    this._repo.update(user.id, { 
+      last_login: now,
+      updated_at: now 
+    });
+
     const token = SessionManager.create(user.id);
+
+    // Re-fetch or manually update local object for the response
+    user.last_login = now;
+    user.updated_at = now;
 
     return {
       token,
-      user: this._orm.wrap("User", user)
+      user: this._orm._wrap("User", user)
     };
   }
 
@@ -137,7 +149,7 @@ class AuthService {
     const userData = this._repo.findById(userId);
     if (!userData || userData.status !== "active") return null;
 
-    return this._orm.wrap("User", userData);
+    return this._orm._wrap("User", userData);
   }
 
   /**

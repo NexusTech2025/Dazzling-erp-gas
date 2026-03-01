@@ -39,7 +39,8 @@ const DATABASE_SCHEMA = {
       "role":          { "label": "Role", "type": "string" }, // 'student'|'teacher'|'admin'
       "status":        { "label": "Status", "type": "string" }, // 'active'|'inactive'
       "created_at":    { "label": "Created At", "type": "date" },
-      "updated_at":    { "label": "Updated At", "type": "date" }
+      "updated_at":    { "label": "Updated At", "type": "date" },
+      "last_login":    { "label": "Last Login", "type": "date" }
     }
   },
 

@@ -164,6 +164,7 @@ class SheetDataSource {
 
       return values;
     } catch (error) {
+      Logger.log(`[DataSource.readRaw] Error in sheet "${sheetName}": ${error.message}`);
       if (error instanceof DataSourceError) throw error;
 
       throw new DataSourceError("Failed to read raw sheet data.", {
@@ -209,6 +210,7 @@ class SheetDataSource {
       });
 
     } catch (error) {
+      Logger.log(`[DataSource.readTable] Error in sheet "${sheetName}": ${error.message}`);
       if (error instanceof DataSourceError) throw error;
 
       throw new DataSourceError("Failed to read structured table.", {
@@ -234,6 +236,7 @@ class SheetDataSource {
       lock.waitLock(10000); 
       return callback();
     } catch (e) {
+      Logger.log(`[DataSource._withLock] Lock failure: ${e.message}`);
       throw new DataSourceError("Database is currently busy. Please try again in a moment.", {
         type: "LockTimeout",
         cause: e.message
@@ -253,12 +256,17 @@ class SheetDataSource {
     if (!Array.isArray(rows2D) || rows2D.length === 0) return;
 
     return this._withLock(() => {
-      const sheet = this.getSheet(sheetName);
-      const lastRow = sheet.getLastRow();
-      const colCount = rows2D[0].length;
+      try {
+        const sheet = this.getSheet(sheetName);
+        const lastRow = sheet.getLastRow();
+        const colCount = rows2D[0].length;
 
-      sheet.getRange(lastRow + 1, 1, rows2D.length, colCount)
-           .setValues(rows2D);
+        sheet.getRange(lastRow + 1, 1, rows2D.length, colCount)
+             .setValues(rows2D);
+      } catch (e) {
+        Logger.log(`[DataSource.insertRows] Write failed for "${sheetName}": ${e.message}`);
+        throw e;
+      }
     });
   }
 
@@ -275,9 +283,37 @@ class SheetDataSource {
     }
 
     return this._withLock(() => {
-      const sheet = this.getSheet(sheetName);
-      sheet.getRange(rowNumber, 1, 1, rowData.length)
-           .setValues([rowData]);
+      try {
+        const sheet = this.getSheet(sheetName);
+        sheet.getRange(rowNumber, 1, 1, rowData.length)
+             .setValues([rowData]);
+      } catch (e) {
+        Logger.log(`[DataSource.updateRow] Update failed at row ${rowNumber} in "${sheetName}": ${e.message}`);
+        throw e;
+      }
+    });
+  }
+
+  /**
+   * Physically removes a row from the sheet.
+   * Note: This causes row numbers for subsequent rows to shift.
+   * 
+   * @param {string} sheetName
+   * @param {number} rowNumber
+   */
+  deleteRow(sheetName, rowNumber) {
+    if (!rowNumber || rowNumber < 2) {
+      throw new DataSourceError("Invalid row number for deletion.", { rowNumber });
+    }
+
+    return this._withLock(() => {
+      try {
+        const sheet = this.getSheet(sheetName);
+        sheet.deleteRow(rowNumber);
+      } catch (e) {
+        Logger.log(`[DataSource.deleteRow] Deletion failed at row ${rowNumber} in "${sheetName}": ${e.message}`);
+        throw e;
+      }
     });
   }
 

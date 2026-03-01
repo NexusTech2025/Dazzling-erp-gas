@@ -42,16 +42,28 @@ class TableGateway {
    */
   constructor(entityName, schemaRegistry, dataSource) {
     if (!entityName || !schemaRegistry || !dataSource) {
-      throw new TableGatewayError("entityName, schemaRegistry, and dataSource are required.");
+      const missing = [!entityName && "entityName", !schemaRegistry && "schemaRegistry", !dataSource && "dataSource"].filter(Boolean);
+      Logger.log(`[TableGateway.constructor] Error: Missing dependencies: ${missing.join(", ")}`);
+      throw new TableGatewayError("Critical dependencies missing during initialization.", {
+        missing
+      });
     }
 
-    this.entityName = entityName;
+    this._entityName = entityName;
     this.schemaRegistry = schemaRegistry;
     this.dataSource = dataSource;
 
-    this.tableName = schemaRegistry.getTableName(entityName);
-    this.primaryKey = schemaRegistry.getPrimaryKey(entityName);
-    this.columns = schemaRegistry.getColumns(entityName);
+    try {
+      this.tableName = schemaRegistry.getTableName(entityName);
+      this.primaryKey = schemaRegistry.getPrimaryKey(entityName);
+      this.columns = schemaRegistry.getColumns(entityName);
+    } catch (e) {
+      Logger.log(`[TableGateway.constructor] Schema resolution failure for "${entityName}": ${e.message}`);
+      throw new TableGatewayError(`Schema resolution failed for '${entityName}'.`, {
+        entity: entityName,
+        cause: e.message
+      });
+    }
   }
 
   /**
@@ -63,10 +75,12 @@ class TableGateway {
       this._validateSheetStructure(rows);
       return rows.map(row => this._normalizeRow(row));
     } catch (error) {
-      if (error instanceof TableGatewayError) throw error;
-      throw new TableGatewayError("Failed to retrieve all rows.", {
-        entity: this.entityName,
-        cause: error.message
+      Logger.log(`[TableGateway.getAll] Error for "${this._entityName}": ${error.message}`);
+      throw new TableGatewayError(`Critical data access failure for '${this._entityName}'.`, {
+        operation: "getAll",
+        tableName: this.tableName,
+        cause: error.message,
+        details: error.meta || {}
       });
     }
   }
@@ -75,10 +89,18 @@ class TableGateway {
    * Find by primary key
    */
   findById(value) {
-    const normalizedValue = this._normalizeValue(value, this.columns[this.primaryKey].type);
-
-    const results = this.filter({ [this.primaryKey]: normalizedValue });
-    return results.length > 0 ? results[0] : null;
+    try {
+      const normalizedValue = this._normalizeValue(value, this.columns[this.primaryKey].type);
+      const results = this.filter({ [this.primaryKey]: normalizedValue });
+      return results.length > 0 ? results[0] : null;
+    } catch (e) {
+      Logger.log(`[TableGateway.findById] Error for "${this._entityName}" with ID "${value}": ${e.message}`);
+      throw new TableGatewayError(`ID lookup failed for '${this._entityName}'.`, {
+        operation: "findById",
+        idValue: value,
+        cause: e.message
+      });
+    }
   }
 
   /**
@@ -86,20 +108,23 @@ class TableGateway {
    */
   filter(filters = {}) {
     try {
-      this.schemaRegistry.validateFilter(this.entityName, filters);
+      this.schemaRegistry.validateFilter(this._entityName, filters);
 
       const rows = this.getAll();
 
       return rows.filter(row => {
         return Object.keys(filters).every(key => {
-          return row[key] === this._normalizeValue(filters[key], this.columns[key].type);
+          const expected = this._normalizeValue(filters[key], this.columns[key].type);
+          return row[key] === expected;
         });
       });
 
     } catch (error) {
+      Logger.log(`[TableGateway.filter] Error for "${this._entityName}" with filters ${JSON.stringify(filters)}: ${error.message}`);
       if (error instanceof TableGatewayError) throw error;
-      throw new TableGatewayError("Filtering failed.", {
-        entity: this.entityName,
+      throw new TableGatewayError(`Filtering engine failure for '${this._entityName}'.`, {
+        operation: "filter",
+        appliedFilters: filters,
         cause: error.message
       });
     }
@@ -107,28 +132,27 @@ class TableGateway {
 
   /**
    * Insert a single record
-   * 
-   * @param {Object} data
-   * @returns {Object} The inserted record (normalized)
    */
   insert(data) {
     try {
-      // 1. Ensure primary key exists (or throw if schema requires auto-gen)
       if (!data[this.primaryKey]) {
-        throw new TableGatewayError(`Primary key '${this.primaryKey}' is required for insert.`);
+        throw new TableGatewayError(`Primary key '${this.primaryKey}' is missing in payload.`, {
+          entity: this._entityName,
+          payload: data
+        });
       }
 
-      // 2. Map object to ordered row array based on schema
       const rowArray = this._mapObjectToRow(data);
-
-      // 3. Delegate to data source for efficient write
       this.dataSource.insertRows(this.tableName, [rowArray]);
 
       return this._normalizeRow(data);
 
     } catch (error) {
-      throw new TableGatewayError("Insert operation failed.", {
-        entity: this.entityName,
+      Logger.log(`[TableGateway.insert] Error for "${this._entityName}": ${error.message}`);
+      if (error instanceof TableGatewayError) throw error;
+      throw new TableGatewayError(`Insert transaction failed for '${this._entityName}'.`, {
+        operation: "insert",
+        tableName: this.tableName,
         cause: error.message
       });
     }
@@ -136,39 +160,36 @@ class TableGateway {
 
   /**
    * Update a record by primary key
-   * 
-   * @param {any} id
-   * @param {Object} updates
-   * @returns {Object} The updated record (normalized)
    */
   update(id, updates) {
     try {
-      // 1. Find the existing record to get its row number
-      // Note: getAll() attaches __rowNumber via DataSource
-      const existing = this.dataSource.readTable(this.tableName)
-        .find(row => row[this.primaryKey] == id);
+      // Find the existing record directly from DataSource to get metadata
+      const rawRows = this.dataSource.readTable(this.tableName);
+      const existing = rawRows.find(row => 
+        this._normalizeValue(row[this.primaryKey], this.columns[this.primaryKey].type) == id
+      );
 
       if (!existing) {
-        throw new TableGatewayError(`Record with ID '${id}' not found.`);
+        throw new TableGatewayError(`Update rejected: Record '${id}' not found in '${this._entityName}'.`, {
+          id,
+          tableName: this.tableName
+        });
       }
 
       const rowNumber = existing.__rowNumber;
-
-      // 2. Merge updates into existing data
       const merged = { ...existing, ...updates };
-      delete merged.__rowNumber; // Don't write metadata back
+      delete merged.__rowNumber;
 
-      // 3. Map to row array
       const rowArray = this._mapObjectToRow(merged);
-
-      // 4. Surgical update via data source
       this.dataSource.updateRow(this.tableName, rowNumber, rowArray);
 
       return this._normalizeRow(merged);
 
     } catch (error) {
-      throw new TableGatewayError("Update operation failed.", {
-        entity: this.entityName,
+      Logger.log(`[TableGateway.update] Error for "${this._entityName}" with ID "${id}": ${error.message}`);
+      if (error instanceof TableGatewayError) throw error;
+      throw new TableGatewayError(`Update transaction failed for '${this._entityName}'.`, {
+        operation: "update",
         id,
         cause: error.message
       });
@@ -176,81 +197,116 @@ class TableGateway {
   }
 
   /**
-   * Map a JavaScript object to an ordered row array based on schema columns.
-   * @private
+   * Delete a record by primary key
+   * 
+   * @param {any} id
    */
-  _mapObjectToRow(obj) {
-    // We must ensure the order matches the headers in the sheet exactly.
-    // Since our schema defines columns, we use the column keys.
-    return Object.keys(this.columns).map(colKey => {
-      const val = obj[colKey];
-      return val !== undefined ? this._prepareForWrite(val, this.columns[colKey].type) : "";
-    });
+  remove(id) {
+    try {
+      // 1. Find the existing record to get its row number
+      const rawRows = this.dataSource.readTable(this.tableName);
+      const existing = rawRows.find(row => 
+        this._normalizeValue(row[this.primaryKey], this.columns[this.primaryKey].type) == id
+      );
+
+      if (!existing) {
+        throw new TableGatewayError(`Delete rejected: Record '${id}' not found in '${this._entityName}'.`, {
+          id,
+          tableName: this.tableName
+        });
+      }
+
+      const rowNumber = existing.__rowNumber;
+
+      // 2. Perform physical deletion
+      this.dataSource.deleteRow(this.tableName, rowNumber);
+
+    } catch (error) {
+      Logger.log(`[TableGateway.remove] Error for "${this._entityName}" with ID "${id}": ${error.message}`);
+      if (error instanceof TableGatewayError) throw error;
+      throw new TableGatewayError(`Delete transaction failed for '${this._entityName}'.`, {
+        operation: "delete",
+        id,
+        cause: error.message
+      });
+    }
   }
 
   /**
-   * Prepare a value for writing to spreadsheet
+   * Map object to row array
+   * @private
+   */
+  _mapObjectToRow(obj) {
+    try {
+      return Object.keys(this.columns).map(colKey => {
+        const val = obj[colKey];
+        return val !== undefined ? this._prepareForWrite(val, this.columns[colKey].type) : "";
+      });
+    } catch (e) {
+      Logger.log(`[TableGateway._mapObjectToRow] Mapping failure for "${this._entityName}": ${e.message}`);
+      throw new TableGatewayError(`Row mapping failed for '${this._entityName}'. Check schema alignment.`, {
+        cause: e.message
+      });
+    }
+  }
+
+  /**
    * @private
    */
   _prepareForWrite(value, type) {
     if (value === null || value === undefined) return "";
-    
-    if (type === "json") {
-      return JSON.stringify(value);
-    }
-    
+    if (type === "json") return JSON.stringify(value);
     return value;
   }
 
   /**
-   * Normalize entire row based on schema types
+   * Normalize entire row
+   * @private
    */
   _normalizeRow(row) {
     const normalized = {};
-
     Object.keys(this.columns).forEach(column => {
       const columnDef = this.columns[column];
       normalized[column] = this._normalizeValue(row[column], columnDef.type);
     });
-
     return normalized;
   }
 
   /**
    * Normalize individual value
+   * @private
    */
   _normalizeValue(value, type) {
     if (value === null || value === undefined || value === "") return null;
 
-    switch (type) {
-      case "number":
-        return Number(value);
-      case "string":
-        return String(value);
-      case "boolean":
-        return Boolean(value);
-      case "date":
-        return value instanceof Date ? value : new Date(value);
-      case "json":
-        return typeof value === "string" ? JSON.parse(value) : value;
-      default:
-        return value;
+    try {
+      switch (type) {
+        case "number":  return Number(value);
+        case "string":  return String(value);
+        case "boolean": return Boolean(value);
+        case "date":    return value instanceof Date ? value : new Date(value);
+        case "json":    return typeof value === "string" ? JSON.parse(value) : value;
+        default:        return value;
+      }
+    } catch (e) {
+      return value; // Fallback to raw if cast fails
     }
   }
 
   /**
-   * Validate sheet headers align with schema
+   * @private
    */
   _validateSheetStructure(rows) {
     if (!rows || rows.length === 0) return;
-
     const row = rows[0];
-
     Object.keys(this.columns).forEach(column => {
       if (!(column in row)) {
-        throw new TableGatewayError(
-          `Column '${column}' missing in sheet for entity '${this.entityName}'.`
-        );
+        const err = `Infrastructure mismatch: Column '${column}' not found in sheet '${this.tableName}'.`;
+        Logger.log(`[TableGateway._validateSheetStructure] Error: ${err}`);
+        throw new TableGatewayError(err, {
+          entity: this._entityName,
+          missingColumn: column
+        });
       }
     });
   }

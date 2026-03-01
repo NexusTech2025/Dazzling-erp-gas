@@ -57,6 +57,7 @@ class BaseRepository {
    */
   constructor(tableGateway) {
     if (!tableGateway) {
+      Logger.log("[BaseRepository.constructor] Error: TableGateway instance is required.");
       throw new BaseRepositoryError("TableGateway instance is required.");
     }
 
@@ -75,7 +76,6 @@ toString() {
     ? this._gateway.constructor.name
     : "undefined";
 
-  // Optional: if your TableGateway exposes entityName
   const entityName =
     this._gateway && this._gateway._entityName
       ? this._gateway._entityName
@@ -96,8 +96,11 @@ toString() {
     try {
       return this._gateway.getAll();
     } catch (error) {
-      throw new BaseRepositoryError("Failed to retrieve all records.", {
-        cause: error.message
+      Logger.log(`[BaseRepository.all] Error for "${this._gateway._entityName}": ${error.message}`);
+      throw new BaseRepositoryError(`Failed to fetch all records for '${this._gateway._entityName}'.`, {
+        operation: "all",
+        cause: error.message,
+        details: error.meta || {}
       });
     }
   }
@@ -110,15 +113,19 @@ toString() {
    */
   findById(id) {
     if (id === undefined || id === null) {
-      throw new BaseRepositoryError("Primary key value is required.");
+      Logger.log("[BaseRepository.findById] Error: Primary key is required.");
+      throw new BaseRepositoryError("Primary key value is required for findById.");
     }
 
     try {
       return this._gateway.findById(id);
     } catch (error) {
-      throw new BaseRepositoryError("Failed to find record by ID.", {
+      Logger.log(`[BaseRepository.findById] Error for "${this._gateway._entityName}" with ID "${id}": ${error.message}`);
+      throw new BaseRepositoryError(`Failed to find record by ID in '${this._gateway._entityName}'.`, {
+        operation: "findById",
         id,
-        cause: error.message
+        cause: error.message,
+        details: error.meta || {}
       });
     }
   }
@@ -131,18 +138,19 @@ toString() {
    */
   find(filters = {}) {
     if (typeof filters !== "object") {
-      throw new BaseRepositoryError("Filters must be an object.");
+      Logger.log(`[BaseRepository.find] Error: Filters must be an object. Received: ${typeof filters}`);
+      throw new BaseRepositoryError("Filters must be a plain object.");
     }
 
     try {
-      Logger.log(`Current Repository: ${this.toString()}`)
-      Logger.log("table gateway: ", this._gateway)
       return this._gateway.filter(filters);
-      
     } catch (error) {
-      throw new BaseRepositoryError("Filtering failed.", {
+      Logger.log(`[BaseRepository.find] Error for "${this._gateway._entityName}" with filters ${JSON.stringify(filters)}: ${error.message}`);
+      throw new BaseRepositoryError(`Domain query failure in '${this._gateway._entityName}'.`, {
+        operation: "find",
         filters,
-        cause: error.message
+        cause: error.message,
+        details: error.meta || {}
       });
     }
   }
@@ -178,8 +186,11 @@ toString() {
     try {
       return this._gateway.insert(data);
     } catch (error) {
-      throw new BaseRepositoryError("Failed to create record.", {
-        cause: error.message
+      Logger.log(`[BaseRepository.create] Error for "${this._gateway._entityName}": ${error.message}`);
+      throw new BaseRepositoryError(`Persistence failure: Could not create '${this._gateway._entityName}'.`, {
+        operation: "create",
+        cause: error.message,
+        details: error.meta || {}
       });
     }
   }
@@ -195,13 +206,36 @@ toString() {
     try {
       return this._gateway.update(id, updates);
     } catch (error) {
-      throw new BaseRepositoryError("Failed to update record.", {
+      Logger.log(`[BaseRepository.update] Error for "${this._gateway._entityName}" with ID "${id}": ${error.message}`);
+      throw new BaseRepositoryError(`Persistence failure: Could not update '${this._gateway._entityName}' with ID '${id}'.`, {
+        operation: "update",
         id,
-        cause: error.message
+        cause: error.message,
+        details: error.meta || {}
+      });
+    }
+  }
+
+  /**
+   * Delete a record by primary key
+   * 
+   * @param {any} id
+   */
+  delete(id) {
+    try {
+      return this._gateway.remove(id);
+    } catch (error) {
+      Logger.log(`[BaseRepository.delete] Error for "${this._gateway._entityName}" with ID "${id}": ${error.message}`);
+      throw new BaseRepositoryError(`Persistence failure: Could not delete '${this._gateway._entityName}' with ID '${id}'.`, {
+        operation: "delete",
+        id,
+        cause: error.message,
+        details: error.meta || {}
       });
     }
   }
 }
+
 
 /**
  * ==============================================================

@@ -11,7 +11,7 @@
  *
  * Design Goals:
  * --------------------------------------------------------------
- * - Heavy structural components are created once (global)
+ * - Heavy structural components are created once (lazy global)
  * - ORM instance is created per request
  * - IdentityMap remains request-scoped
  * - No cross-request state leakage
@@ -30,20 +30,29 @@
  * ==============================================================
  */
 
-
 /**
  * --------------------------------------------------------------
- * GLOBAL STRUCTURAL WIRING (Executed Once)
+ * LAZY GLOBAL REGISTRIES
  * --------------------------------------------------------------
- *
- * These objects are immutable and safe to reuse.
+ * Using getters to prevent ReferenceErrors during initial load.
+ * Google Apps Script file loading order can be unpredictable.
  */
 
-// 1️⃣ Schema Registry (Structural Metadata)
-const GLOBAL_SCHEMA_REGISTRY = buildSchemaRegistry();
+let _GLOBAL_SCHEMA_REGISTRY = null;
+function getGlobalSchemaRegistry() {
+  if (!_GLOBAL_SCHEMA_REGISTRY) {
+    _GLOBAL_SCHEMA_REGISTRY = buildSchemaRegistry();
+  }
+  return _GLOBAL_SCHEMA_REGISTRY;
+}
 
-// 2️⃣ Repository Registry (Repository Mapping)
-const GLOBAL_REPOSITORY_REGISTRY = buildRepositoryRegistry(GLOBAL_SCHEMA_REGISTRY);
+let _GLOBAL_REPOSITORY_REGISTRY = null;
+function getGlobalRepositoryRegistry() {
+  if (!_GLOBAL_REPOSITORY_REGISTRY) {
+    _GLOBAL_REPOSITORY_REGISTRY = buildRepositoryRegistry(getGlobalSchemaRegistry());
+  }
+  return _GLOBAL_REPOSITORY_REGISTRY;
+}
 
 
 /**
@@ -57,8 +66,7 @@ const GLOBAL_REPOSITORY_REGISTRY = buildRepositoryRegistry(GLOBAL_SCHEMA_REGISTR
  * - Freezing metadata structure
  */
 function buildSchemaRegistry() {
-  const registry = new SchemaRegistry(DATABASE_SCHEMA);
-  return registry;
+  return new SchemaRegistry(DATABASE_SCHEMA);
 }
 
 
@@ -77,47 +85,24 @@ function buildSchemaRegistry() {
  */
 function buildRepositoryRegistry(schemaRegistry) {
   const repositoryRegistry = new RepositoryRegistry();
-  const dataSource = SheetDataSource.fromActiveSpreadsheet()
+  const dataSource = SheetDataSource.fromActiveSpreadsheet();
 
-  // Student
-  const studentGateway = new TableGateway("Student", schemaRegistry, dataSource);
-  const studentRepo = new StudentRepository(studentGateway);
-  repositoryRegistry.register("Student", studentRepo);
+  const entities = [
+    { name: "Student", repo: StudentRepository },
+    { name: "Attendance", repo: AttendanceRepository },
+    { name: "Subject", repo: SubjectRepository },
+    { name: "Teacher", repo: TeacherRepository },
+    { name: "Exam", repo: ExamRepository },
+    { name: "TimeSeries", repo: TimeSeriesRepository },
+    { name: "User", repo: UserRepository },
+    { name: "Admin", repo: AdminRepository }
+  ];
 
-  // Attendance
-  const attendanceGateway = new TableGateway("Attendance", schemaRegistry, dataSource);
-  const attendanceRepo = new AttendanceRepository(attendanceGateway);
-  repositoryRegistry.register("Attendance", attendanceRepo);
-
-  // Subject
-  const subjectGateway = new TableGateway("Subject", schemaRegistry, dataSource);
-  const subjectRepo = new SubjectRepository(subjectGateway);
-  repositoryRegistry.register("Subject", subjectRepo);
-
-  // Teacher
-  const teacherGateway = new TableGateway("Teacher", schemaRegistry, dataSource);
-  const teacherRepo = new TeacherRepository(teacherGateway);
-  repositoryRegistry.register("Teacher", teacherRepo);
-
-  // Exam
-  const examGateway = new TableGateway("Exam", schemaRegistry, dataSource);
-  const examRepo = new ExamRepository(examGateway);
-  repositoryRegistry.register("Exam", examRepo);
-
-  // TimeSeries
-  const timeSeriesGateway = new TableGateway("TimeSeries", schemaRegistry, dataSource);
-  const timeSeriesRepo = new TimeSeriesRepository(timeSeriesGateway);
-  repositoryRegistry.register("TimeSeries", timeSeriesRepo);
-
-  // User
-  const userGateway = new TableGateway("User", schemaRegistry, dataSource);
-  const userRepo = new UserRepository(userGateway);
-  repositoryRegistry.register("User", userRepo);
-
-  // Admin
-  const adminGateway = new TableGateway("Admin", schemaRegistry, dataSource);
-  const adminRepo = new AdminRepository(adminGateway);
-  repositoryRegistry.register("Admin", adminRepo);
+  entities.forEach(entity => {
+    const gateway = new TableGateway(entity.name, schemaRegistry, dataSource);
+    const repoInstance = new entity.repo(gateway);
+    repositoryRegistry.register(entity.name, repoInstance);
+  });
 
   return repositoryRegistry;
 }
@@ -139,15 +124,14 @@ function buildRepositoryRegistry(schemaRegistry) {
  */
 function bootstrapORM() {
   const orm = new ORM(
-    GLOBAL_SCHEMA_REGISTRY,
-    GLOBAL_REPOSITORY_REGISTRY
+    getGlobalSchemaRegistry(),
+    getGlobalRepositoryRegistry()
   );
 
-  // Initialize AuthService with UserRepository and the ORM instance
-  const userRepo = GLOBAL_REPOSITORY_REGISTRY.get("User");
+  // Initialize AuthService
+  const userRepo = getGlobalRepositoryRegistry().get("User");
   const authService = new AuthService(userRepo, orm);
   
-  // Attach authService to orm for access within Actions
   orm.setAuthService(authService);
 
   return orm;
