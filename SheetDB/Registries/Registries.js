@@ -52,7 +52,8 @@ class SchemaRegistry {
 
   getColumns(tableName) {
     const table = this.getTableSchema(tableName);
-    return table.columns;
+    const systemColumns = this._schema.systemColumns || {};
+    return { ...systemColumns, ...table.columns };
   }
 
   /**

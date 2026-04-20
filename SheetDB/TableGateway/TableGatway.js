@@ -64,6 +64,23 @@ class TableGateway {
   }
 
   /**
+   * Performs an optimized batch insertion of multiple records.
+   * @param {Array<Object>} dataArray - Array of records.
+   * @returns {Array<Object>} Normalized results.
+   */
+  insertBatch(dataArray) {
+    if (!dataArray || dataArray.length === 0) return [];
+
+    // Map objects to 2D array
+    const rows2D = dataArray.map(obj => this._mapObjectToRow(obj));
+    
+    // Batch Write
+    this.dataSource.insertRows(this.category, this.tableName, rows2D);
+
+    return dataArray.map(data => this._normalizeRow(data));
+  }
+
+  /**
    * Update an existing record by ID.
    */
   update(id, updates) {
