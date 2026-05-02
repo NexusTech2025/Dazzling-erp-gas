@@ -91,6 +91,29 @@ class BaseModel {
   }
 
   /**
+   * Safe serialization to JSON.
+   * Excludes internal framework properties to prevent circular references.
+   */
+  toJSON() {
+    const json = {};
+    const columns = this._registry.getColumns(this._entityName);
+    
+    // 1. Add schema-defined columns
+    Object.keys(columns).forEach(key => {
+      json[key] = this[key];
+    });
+
+    // 2. Add any other non-function properties (eager-loaded relations)
+    Object.keys(this).forEach(key => {
+      if (!key.startsWith('_') && typeof this[key] !== 'function' && json[key] === undefined) {
+        json[key] = this[key];
+      }
+    });
+
+    return json;
+  }
+
+  /**
    * Returns a copy of the record data without the internal framework properties.
    * Used before writing back to Google Sheets to ensure schema integrity.
    * @private
