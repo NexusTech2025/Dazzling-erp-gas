@@ -8,7 +8,7 @@ const REL_TEST_FOLDER_ID = "1aw3neGzRDRzSqQNOe_kjqUS7MDsIEU7G";
 
 /**
  * Main Runner for Relational Tests
- */
+*/
 function runRelationTests() {
   const schema = getProductionStudentSchema();
   

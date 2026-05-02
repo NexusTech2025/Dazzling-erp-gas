@@ -7,14 +7,16 @@ class SchemaSetupEngine {
   /**
    * @param {Object} fileSystem - An initialized instance of SpreadsheetFileSystem
    * @param {Object} schema - The database schema JSON object
+   * @param {Object} registry - (Optional) An instance of SchemaRegistry
    * @param {Object} config - Execution configuration overrides
    */
-  constructor(fileSystem, schema, config = {}) {
+  constructor(fileSystem, schema, registry, config = {}) {
     if (!fileSystem) throw new Error("SpreadsheetFileSystem instance is required.");
     if (!schema) throw new Error("Schema definition is required.");
 
     this.fs = fileSystem;
     this.schema = schema;
+    this.registry = registry || new SchemaRegistry(schema); // Reuse or create fallback
     
     // Instantiate the dedicated Read Adapter
     this.inspector = new SchemaInspector(fileSystem);
@@ -128,7 +130,8 @@ class SchemaSetupEngine {
     plan.summary.createFile++;
 
     for (const tableName of Object.keys(catSchema.tables)) {
-      const headers = Object.keys(catSchema.tables[tableName].columns);
+      // Use Registry to get merged (System + Table) columns
+      const headers = Object.keys(this.registry.getColumns(tableName));
       plan.operations.push(this._createSheetOp(categoryName, tableName, headers));
       plan.summary.createSheet++;
     }
@@ -144,7 +147,9 @@ class SchemaSetupEngine {
   _planIncrementalUpdate(plan, categoryName, catSchema, physicalCat) {
     for (const [tableName, tableSchema] of Object.entries(catSchema.tables)) {
       const physicalTable = physicalCat.tables[tableName];
-      const expectedHeaders = Object.keys(tableSchema.columns);
+      
+      // Use Registry to get merged (System + Table) columns
+      const expectedHeaders = Object.keys(this.registry.getColumns(tableName));
 
       if (!physicalTable) {
         // Table missing from existing file
