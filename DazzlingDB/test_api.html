@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+  <style>
+    body { background: #f8f9fa; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .card-header { background: #0d6efd; color: white; border-radius: 12px 12px 0 0 !important; font-weight: 600; }
+    #response-area { background: #212529; color: #00ff41; padding: 15px; border-radius: 8px; font-family: 'Consolas', monospace; min-height: 200px; white-space: pre-wrap; overflow-x: auto; }
+    .method-badge { font-weight: bold; border-radius: 4px; padding: 2px 8px; }
+    .badge-post { background: #fd7e14; color: white; }
+    .badge-get { background: #198754; color: white; }
+    .loading-spinner { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-header">🚀 DazzlingDB API Request</div>
+        <div class="card-body">
+          <form id="api-form">
+            <div class="mb-3">
+              <label class="form-label">HTTP Method</label>
+              <select class="form-select" id="method">
+                <option value="POST">POST (Recommended)</option>
+                <option value="GET">GET</option>
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Action (Endpoint)</label>
+              <select class="form-select" id="action">
+                <option value="ping">ping</option>
+                <option value="student_register">student_register</option>
+                <option value="academic_create_course_type">academic_create_course_type</option>
+                <option value="academic_create_course">academic_create_course</option>
+                <option value="academic_create_batch">academic_create_batch</option>
+                <option value="academic_create_package">academic_create_package</option>
+                <option value="academic_enroll_student">academic_enroll_student</option>
+                <option value="core_create_branch">core_create_branch</option>
+                <option value="core_create_promo">core_create_promo</option>
+                <option value="core_validate_promo">core_validate_promo</option>
+                <option value="user_register">user_register</option>
+                <option value="user_login">user_login</option>
+                <option value="user_logout">user_logout</option>
+                <option value="staff_onboard_teacher">staff_onboard_teacher</option>
+                <option value="staff_assign_subjects">staff_assign_subjects</option>
+                <option value="staff_set_salary_config">staff_set_salary_config</option>
+                <option value="staff_mark_attendance">staff_mark_attendance</option>
+                <option value="staff_record_payment">staff_record_payment</option>
+                <option value="staff_add_document">staff_add_document</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">JSON Payload (Body)</label>
+              <textarea class="form-control" id="payload" rows="10" placeholder='{ "id": "123", "name": "Test" }'></textarea>
+              <div class="form-text">Note: For GET, this will be merged into query params.</div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary" id="submit-btn">
+                <span class="spinner-border spinner-border-sm loading-spinner" role="status"></span>
+                Send Request
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-7">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>📡 API Response</span>
+          <span id="status-badge" class="badge bg-secondary">Waiting</span>
+        </div>
+        <div class="card-body">
+          <div id="response-area">No request sent yet...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('api-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const spinner = submitBtn.querySelector('.loading-spinner');
+  const responseArea = document.getElementById('response-area');
+  const statusBadge = document.getElementById('status-badge');
+  const payloadBox = document.getElementById('payload');
+  const actionSelect = document.getElementById('action');
+
+  // Pre-populate examples
+  const examples = {
+    "ping": {},
+    "student_register": {
+      "payload": {
+        "profile": { "student_name": "Web Tester", "email": "web@test.com", "phone": "12345" },
+        "address": { "line1": "Internet St", "city": "Cloud" },
+        "contact": { "emergency_name": "Admin" }
+      }
+    },
+    "academic_create_course_type": {
+      "payload": { 
+        "segment_id": "SEG-ACA", 
+        "segment_name": "Academic Courses",
+        "entity_label": "Course"
+      }
+    },
+    "academic_create_course": {
+      "payload": {
+        "course_id": "CRS-MAT-01",
+        "segment_id": "SEG-ACA",
+        "name": "Advanced Mathematics",
+        "language_medium": "English",
+        "base_fee": 15000,
+        "duration_value": 6,
+        "duration_unit": "months"
+      }
+    },
+    "academic_create_batch": {
+      "payload": {
+        "batch_id": "B-2026-MAT-01",
+        "item_id": "CRS-MAT-01",
+        "batch_name": "Spring 2026 Morning Batch",
+        "capacity": 25,
+        "start_date": "2026-05-01"
+      }
+    },
+    "core_create_branch": {
+      "payload": {
+        "branch_id": "BR-HO-01",
+        "branch_name": "Head Office (Main)",
+        "location": "Downtown Metropolis",
+        "status": "active"
+      }
+    },
+    "core_create_promo": {
+      "payload": {
+        "promo_id": "PRM-50-OFF",
+        "code": "WELCOME50",
+        "entity_type": "course",
+        "entity_id": "CRS-MAT-01",
+        "discount_type": "percentage",
+        "discount_value": 50,
+        "valid_until": "2026-12-31"
+      }
+    },
+    "core_validate_promo": {
+      "code": "WELCOME50",
+      "entity_type": "course",
+      "entity_id": "CRS-MAT-01"
+    },
+    "user_register": {
+      "payload": {
+        "username": "admin_moni",
+        "password": "securepassword123",
+        "role": "admin"
+      }
+    },
+    "user_login": {
+      "username": "admin_moni",
+      "password": "securepassword123"
+    },
+    "user_logout": {
+      "token": "PASTE_YOUR_TOKEN_HERE"
+    },
+    "staff_onboard_teacher": {
+      "payload": {
+        "teacher_id": "TCH-2026-001",
+        "full_name": "Dr. Sarah Khan",
+        "mobile_number": "9876543210",
+        "email": "sarah.khan@institute.com",
+        "teacher_type": "full_time",
+        "experience_years": 8,
+        "joining_date": "2026-06-01",
+        "userData": {
+          "username": "sarah_k",
+          "password": "teacherpassword123"
+        }
+      }
+    },
+    "staff_assign_subjects": {
+      "teacher_id": "TCH-2026-001",
+      "subject_ids": ["CRS-MAT-01", "CRS-PY-101"]
+    },
+    "staff_set_salary_config": {
+      "payload": {
+        "teacher_id": "TCH-2026-001",
+        "salary_type": "monthly",
+        "base_amount": 45000,
+        "effective_from": "2026-06-01"
+      }
+    },
+    "staff_mark_attendance": {
+      "payload": {
+        "teacher_id": "TCH-2026-001",
+        "attendance_date": "2026-05-04",
+        "status": "present"
+      }
+    },
+    "staff_record_payment": {
+      "payload": {
+        "teacher_id": "TCH-2026-001",
+        "payment_type": "salary",
+        "amount": 45000,
+        "payment_mode": "bank_transfer",
+        "salary_month": "2026-05"
+      }
+    }
+  };
+
+  actionSelect.addEventListener('change', () => {
+    const val = actionSelect.value;
+    if (examples[val]) {
+      payloadBox.value = JSON.stringify(examples[val], null, 2);
+    } else {
+      payloadBox.value = '{ "payload": {} }';
+    }
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // UI state
+    submitBtn.disabled = true;
+    spinner.style.display = 'inline-block';
+    responseArea.textContent = "// Sending request...";
+    statusBadge.className = 'badge bg-warning text-dark';
+    statusBadge.textContent = 'Processing';
+
+    const request = {
+      method: document.getElementById('method').value,
+      action: document.getElementById('action').value,
+      payload: payloadBox.value ? JSON.parse(payloadBox.value) : {}
+    };
+
+    google.script.run
+      .withSuccessHandler(onSuccess)
+      .withFailureHandler(onFailure)
+      .runInternalApiTest(request);
+  });
+
+  function onSuccess(response) {
+    submitBtn.disabled = false;
+    spinner.style.display = 'none';
+    
+    if (response.success) {
+      statusBadge.className = 'badge bg-success';
+      statusBadge.textContent = 'Success';
+    } else {
+      statusBadge.className = 'badge bg-danger';
+      statusBadge.textContent = 'Error';
+    }
+
+    responseArea.textContent = JSON.stringify(response, null, 2);
+  }
+
+  function onFailure(error) {
+    submitBtn.disabled = false;
+    spinner.style.display = 'none';
+    statusBadge.className = 'badge bg-danger';
+    statusBadge.textContent = 'Fatal Crash';
+    responseArea.textContent = "// SERVER FATAL ERROR:\n" + error.message;
+  }
+</script>
+
+</body>
+</html>

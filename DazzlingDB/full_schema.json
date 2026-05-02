@@ -1,0 +1,1698 @@
+{
+  "version": "1.0.0",
+  "database": "DazzlingDB",
+  "systemColumns": {
+    "__tx_id": {
+      "type": "string",
+      "system": true,
+      "description": "Unique Transaction ID"
+    },
+    "__tx_status": {
+      "type": "enum",
+      "choices": [
+        "PENDING",
+        "COMMITTED",
+        "FAILED"
+      ],
+      "default": "PENDING",
+      "system": true
+    },
+    "__created_at": {
+      "type": "datetime",
+      "system": true,
+      "description": "Record creation timestamp"
+    }
+  },
+  "categories": {
+    "Core": {
+      "tables": {
+        "Branch": {
+          "primaryKey": "branch_id",
+          "columns": {
+            "branch_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "branch_name": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "location": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "inactive"
+              ]
+            }
+          },
+          "relations": {}
+        },
+        "PromoCode": {
+          "primaryKey": "promo_id",
+          "columns": {
+            "promo_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "code": {
+              "type": "string",
+              "required": true,
+              "unique": true
+            },
+            "entity_type": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "course",
+                "package"
+              ]
+            },
+            "entity_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "discount_type": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "percentage",
+                "amount"
+              ]
+            },
+            "discount_value": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            },
+            "max_usage": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            },
+            "valid_from": {
+              "type": "date",
+              "required": false,
+              "unique": false
+            },
+            "valid_until": {
+              "type": "date",
+              "required": false,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "expired",
+                "disabled"
+              ]
+            }
+          },
+          "relations": {}
+        }
+      }
+    },
+    "Auth": {
+      "tables": {
+        "User": {
+          "primaryKey": "user_id",
+          "columns": {
+            "user_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "username": {
+              "type": "string",
+              "required": true,
+              "unique": true
+            },
+            "password_hash": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "role": {
+              "type": "string",
+              "required": true,
+              "unique": false,
+              "default": "guest"
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "locked",
+                "disabled"
+              ]
+            },
+            "last_login": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {}
+        },
+        "Session": {
+          "primaryKey": "token",
+          "columns": {
+            "token": {
+              "type": "string",
+              "required": true,
+              "unique": true
+            },
+            "user_id": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "expires_at": {
+              "type": "datetime",
+              "required": true,
+              "unique": false
+            },
+            "client_info": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "description": "JSON string of device/browser info"
+            }
+          },
+          "relations": {
+            "user": {
+              "type": "belongsTo",
+              "target": "User",
+              "foreignKey": "user_id"
+            }
+          }
+        }
+      }
+    },
+    "Students": {
+      "tables": {
+        "Address": {
+          "primaryKey": "address_id",
+          "columns": {
+            "address_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "student_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "line1": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "line2": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "city": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "state": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "pin_code": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "country": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "default": "India"
+            }
+          },
+          "relations": {
+            "student": {
+              "type": "hasOne",
+              "target": "Student",
+              "foreignKey": "student_id"
+            }
+          }
+        },
+        "ContactInfo": {
+          "primaryKey": "contact_id",
+          "columns": {
+            "contact_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "student_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "address_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "email": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "mobile_number": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "emergency_name": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "emergency_phone": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "emergency_relationship": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "student": {
+              "type": "hasOne",
+              "target": "Student",
+              "foreignKey": "student_id"
+            },
+            "address": {
+              "type": "belongsTo",
+              "target": "Address",
+              "foreignKey": "address_id"
+            }
+          }
+        },
+        "Education": {
+          "primaryKey": "education_id",
+          "columns": {
+            "education_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "student_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "highest_qualification": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "institution_name": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "year_of_passing": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            },
+            "percentage_or_cgpa": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "student": {
+              "type": "belongsTo",
+              "target": "Student",
+              "foreignKey": "student_id"
+            }
+          }
+        },
+        "Student": {
+          "primaryKey": "student_id",
+          "columns": {
+            "student_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "student_name": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "email": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "phone": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "gender": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "Male",
+                "Female",
+                "Other"
+              ]
+            },
+            "dob": {
+              "type": "date",
+              "required": false,
+              "unique": false
+            },
+            "mother_name": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "father_name": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "avatarUrl": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "inactive",
+                "applicant"
+              ]
+            },
+            "created_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "address": {
+              "type": "hasOne",
+              "target": "Address",
+              "foreignKey": "student_id"
+            },
+            "contact": {
+              "type": "hasOne",
+              "target": "ContactInfo",
+              "foreignKey": "student_id"
+            },
+            "education": {
+              "type": "hasMany",
+              "target": "Education",
+              "foreignKey": "student_id"
+            },
+            "enrollments": {
+              "type": "hasMany",
+              "target": "Enrollment",
+              "foreignKey": "student_id"
+            }
+          }
+        }
+      }
+    },
+    "Academic": {
+      "tables": {
+        "Batch": {
+          "primaryKey": "batch_id",
+          "columns": {
+            "batch_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "item_id": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "description": "The course this batch belongs to."
+            },
+            "teacher_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "branch_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "batch_name": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "start_date": {
+              "type": "date",
+              "required": false,
+              "unique": false
+            },
+            "end_date": {
+              "type": "date",
+              "required": false,
+              "unique": false
+            },
+            "capacity": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "default": 30
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "completed",
+                "cancelled"
+              ]
+            },
+            "schedule": {
+              "type": "json",
+              "required": false,
+              "unique": false,
+              "description": "Stored as { days_of_week: [], start_time: '', end_time: '' }"
+            }
+          },
+          "relations": {
+            "course": {
+              "type": "belongsTo",
+              "target": "Course",
+              "foreignKey": "item_id"
+            },
+            "teacher": {
+              "type": "belongsTo",
+              "target": "Teacher",
+              "foreignKey": "teacher_id"
+            },
+            "branch": {
+              "type": "belongsTo",
+              "target": "Branch",
+              "foreignKey": "branch_id"
+            }
+          }
+        },
+        "Course": {
+          "primaryKey": "course_id",
+          "columns": {
+            "course_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "segment_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "entity_type": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "subject",
+                "course"
+              ],
+              "description": "'subject' for strict curriculum items, 'course' for flexible/skill-based programs."
+            },
+            "name": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "short_code": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "language_medium": {
+              "type": "enum",
+              "required": true,
+              "unique": false,
+              "enum": [
+                "English",
+                "Hindi",
+                "Urdu"
+              ]
+            },
+            "description": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "duration_value": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            },
+            "duration_unit": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "months",
+              "enum": [
+                "months",
+                "days",
+                "weeks"
+              ]
+            },
+            "base_fee": {
+              "type": "number",
+              "required": true,
+              "unique": false,
+              "description": "Fee varies by board/medium."
+            },
+            "default_installment_count": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "default": 1
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "inactive"
+              ]
+            },
+            "metadata": {
+              "type": "json",
+              "required": false,
+              "unique": false,
+              "description": "For subjects: {class, board}. For courses: {min_class, max_class}."
+            }
+          },
+          "relations": {
+            "coursetype": {
+              "type": "belongsTo",
+              "target": "CourseType",
+              "foreignKey": "segment_id"
+            }
+          }
+        },
+        "CourseType": {
+          "primaryKey": "segment_id",
+          "columns": {
+            "segment_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "segment_name": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "entity_label": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "description": "Singular label for items in this segment (e.g., 'Subject', 'Course')"
+            },
+            "description": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "inactive"
+              ]
+            }
+          },
+          "relations": {}
+        },
+        "Enrollment": {
+          "primaryKey": "enrollment_id",
+          "columns": {
+            "enrollment_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "student_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "item_id": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "description": "References either Course.course_id or Package.package_id"
+            },
+            "batch_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "roll_number": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            },
+            "enrollment_date": {
+              "type": "date",
+              "required": false,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "completed",
+                "withdrawn"
+              ]
+            }
+          },
+          "relations": {
+            "student": {
+              "type": "belongsTo",
+              "target": "Student",
+              "foreignKey": "student_id"
+            },
+            "batch": {
+              "type": "belongsTo",
+              "target": "Batch",
+              "foreignKey": "batch_id"
+            }
+          }
+        },
+        "Package": {
+          "primaryKey": "package_id",
+          "columns": {
+            "package_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "name": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "description": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "target_class": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "board": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "month": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "description": "Duration in months"
+            },
+            "package_fee": {
+              "type": "number",
+              "required": true,
+              "unique": false
+            },
+            "discount_percent": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "inactive",
+                "draft"
+              ]
+            }
+          },
+          "relations": {}
+        },
+        "PackageCourse": {
+          "primaryKey": "package_course_id",
+          "columns": {
+            "package_course_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "package_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "course_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "package": {
+              "type": "belongsTo",
+              "target": "Package",
+              "foreignKey": "package_id"
+            },
+            "course": {
+              "type": "belongsTo",
+              "target": "Course",
+              "foreignKey": "course_id"
+            }
+          }
+        },
+        "PackagePerk": {
+          "primaryKey": "perk_id",
+          "columns": {
+            "perk_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "package_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "perk_title": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "perk_description": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "icon": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "display_order": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "package": {
+              "type": "belongsTo",
+              "target": "Package",
+              "foreignKey": "package_id"
+            }
+          }
+        }
+      }
+    },
+    "Staff": {
+      "tables": {
+        "TeacherAttendance": {
+          "primaryKey": "attendance_id",
+          "columns": {
+            "attendance_id": {
+              "type": "string",
+              "required": false,
+              "unique": true,
+              "description": "Unique identifier for each attendance record. Typically a UUID or structured ID used to uniquely track each attendance entry."
+            },
+            "teacher_id": {
+              "type": "string",
+              "required": true,
+              "unique": false,
+              "description": "Reference to the teacher whose attendance is being recorded. Links this record to the Teacher entity."
+            },
+            "attendance_date": {
+              "type": "date",
+              "required": true,
+              "unique": false,
+              "description": "The specific calendar date for which attendance is recorded. Only one record per teacher per date should exist."
+            },
+            "status": {
+              "type": "enum",
+              "required": true,
+              "unique": false,
+              "enum": [
+                "present",
+                "absent",
+                "leave",
+                "half_day"
+              ],
+              "description": "Indicates the attendance status of the teacher for the given date. Used directly in salary calculations and attendance reporting."
+            },
+            "check_in_time": {
+              "type": "datetime",
+              "required": false,
+              "unique": false,
+              "description": "Timestamp when the teacher checked in for the day. Useful for tracking punctuality and working duration."
+            },
+            "check_out_time": {
+              "type": "datetime",
+              "required": false,
+              "unique": false,
+              "description": "Timestamp when the teacher checked out. Helps determine total working hours and verify attendance accuracy."
+            },
+            "working_hours": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "description": "Total number of hours worked by the teacher on the given day. Can be calculated from check-in and check-out or manually entered for flexibility."
+            },
+            "is_paid_leave": {
+              "type": "boolean",
+              "required": false,
+              "unique": false,
+              "default": false,
+              "description": "Indicates whether a leave day is considered paid or unpaid. Critical for accurate payroll calculations and leave policy enforcement."
+            },
+            "attendance_source": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "manual",
+                "biometric",
+                "system"
+              ],
+              "description": "Specifies how the attendance was recorded. Enables tracking of manual entries versus automated systems like biometric devices."
+            },
+            "notes": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "description": "Optional remarks or comments related to the attendance entry, such as reasons for leave, late arrival, or special conditions."
+            },
+            "marked_by": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "description": "Identifier of the admin or system user who recorded or updated the attendance. Useful for accountability and audit tracking."
+            },
+            "created_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false,
+              "description": "Timestamp when the attendance record was initially created in the system."
+            },
+            "updated_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false,
+              "description": "Timestamp of the most recent update to the attendance record. Ensures traceability of modifications."
+            }
+          },
+          "relations": {
+            "teacher": {
+              "type": "belongsTo",
+              "target": "Teacher",
+              "foreignKey": "teacher_id"
+            }
+          }
+        },
+        "Teacher": {
+          "primaryKey": "teacher_id",
+          "columns": {
+            "teacher_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "full_name": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "mobile_number": {
+              "type": "string",
+              "required": true,
+              "unique": true
+            },
+            "email": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "gender": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "male",
+                "female",
+                "other"
+              ]
+            },
+            "date_of_birth": {
+              "type": "date",
+              "required": false,
+              "unique": false
+            },
+            "profile_photo_url": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "experience_years": {
+              "type": "number",
+              "required": true,
+              "unique": false
+            },
+            "qualification": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "specialization": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "previous_institute": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "teacher_type": {
+              "type": "enum",
+              "required": true,
+              "unique": false,
+              "enum": [
+                "full_time",
+                "part_time",
+                "guest"
+              ]
+            },
+            "joining_date": {
+              "type": "date",
+              "required": true,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "inactive",
+                "pending"
+              ]
+            },
+            "notes": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "created_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            },
+            "updated_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            },
+            "created_by": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "teachersubject": {
+              "type": "hasMany",
+              "target": "TeacherSubject",
+              "foreignKey": "teacher_id"
+            },
+            "teachersalaryconfig": {
+              "type": "hasMany",
+              "target": "TeacherSalaryConfig",
+              "foreignKey": "teacher_id"
+            },
+            "teacherdocument": {
+              "type": "hasMany",
+              "target": "TeacherDocument",
+              "foreignKey": "teacher_id"
+            },
+            "teacherpaymenttransaction": {
+              "type": "hasMany",
+              "target": "TeacherPaymentTransaction",
+              "foreignKey": "teacher_id"
+            }
+          }
+        },
+        "TeacherSubject": {
+          "primaryKey": "teacher_subject_id",
+          "columns": {
+            "teacher_subject_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "teacher_id": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "subject_id": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            }
+          },
+          "relations": {
+            "teacher": {
+              "type": "belongsTo",
+              "target": "Teacher",
+              "foreignKey": "teacher_id"
+            },
+            "subject": {
+              "type": "belongsTo",
+              "target": "Subject",
+              "foreignKey": "subject_id"
+            }
+          }
+        },
+        "TeacherSalaryConfig": {
+          "primaryKey": "salary_config_id",
+          "columns": {
+            "salary_config_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "teacher_id": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "salary_type": {
+              "type": "enum",
+              "required": true,
+              "unique": false,
+              "enum": [
+                "monthly",
+                "per_class"
+              ]
+            },
+            "base_amount": {
+              "type": "number",
+              "required": true,
+              "unique": false
+            },
+            "effective_from": {
+              "type": "date",
+              "required": true,
+              "unique": false
+            }
+          },
+          "relations": {
+            "teacher": {
+              "type": "belongsTo",
+              "target": "Teacher",
+              "foreignKey": "teacher_id"
+            }
+          }
+        },
+        "TeacherDocument": {
+          "primaryKey": "document_id",
+          "columns": {
+            "document_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "teacher_id": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "document_type": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "id_proof",
+                "resume",
+                "other"
+              ]
+            },
+            "file_url": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "uploaded_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "teacher": {
+              "type": "belongsTo",
+              "target": "Teacher",
+              "foreignKey": "teacher_id"
+            }
+          }
+        },
+        "TeacherPaymentTransaction": {
+          "primaryKey": "transaction_id",
+          "columns": {
+            "transaction_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "teacher_id": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "salary_config_id": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "description": "Optional reference to salary config used"
+            },
+            "payment_type": {
+              "type": "enum",
+              "required": true,
+              "unique": false,
+              "enum": [
+                "salary",
+                "advance",
+                "bonus",
+                "deduction"
+              ]
+            },
+            "amount": {
+              "type": "number",
+              "required": true,
+              "unique": false
+            },
+            "payment_mode": {
+              "type": "enum",
+              "required": true,
+              "unique": false,
+              "enum": [
+                "cash",
+                "bank_transfer",
+                "upi",
+                "cheque"
+              ]
+            },
+            "transaction_date": {
+              "type": "date",
+              "required": true,
+              "unique": false
+            },
+            "reference_number": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "notes": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "salary_month": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "description": "Format: YYYY-MM for payroll tracking"
+            },
+            "created_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            },
+            "created_by": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "teacher": {
+              "type": "belongsTo",
+              "target": "Teacher",
+              "foreignKey": "teacher_id"
+            },
+            "teachersalaryconfig": {
+              "type": "belongsTo",
+              "target": "TeacherSalaryConfig",
+              "foreignKey": "salary_config_id"
+            }
+          }
+        }
+      }
+    },
+    "Finance": {
+      "tables": {
+        "FeePlan": {
+          "primaryKey": "fee_plan_id",
+          "columns": {
+            "fee_plan_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "entity_id": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "description": "References Course.course_id or Package.package_id"
+            },
+            "entity_type": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "course",
+                "package"
+              ]
+            },
+            "plan_name": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "total_fee": {
+              "type": "number",
+              "required": true,
+              "unique": false
+            },
+            "discount_allowed": {
+              "type": "boolean",
+              "required": false,
+              "unique": false,
+              "default": true
+            },
+            "installment_allowed": {
+              "type": "boolean",
+              "required": false,
+              "unique": false,
+              "default": true
+            },
+            "created_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {}
+        },
+        "StudentFeeAccount": {
+          "primaryKey": "student_fee_id",
+          "columns": {
+            "student_fee_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "enrollment_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "fee_plan_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "total_fee": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "description": "Base fee at time of enrollment"
+            },
+            "discount": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "default": 0
+            },
+            "adjustment_type": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "scholarship",
+                "coupon",
+                "referral",
+                "manual_override",
+                "none"
+              ]
+            },
+            "coupon_code": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "final_fee": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "description": "Legally binding amount (total - discount)"
+            },
+            "amount_paid": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "default": 0
+            },
+            "balance_due": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            },
+            "is_overdue": {
+              "type": "boolean",
+              "required": false,
+              "unique": false,
+              "default": false
+            },
+            "penalty_amount": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "default": 0
+            },
+            "next_due_date": {
+              "type": "date",
+              "required": false,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "completed",
+                "defaulted",
+                "refunded"
+              ]
+            },
+            "remarks": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "created_by": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "created_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            },
+            "updated_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "enrollment": {
+              "type": "hasOne",
+              "target": "Enrollment",
+              "foreignKey": "enrollment_id"
+            },
+            "feeplan": {
+              "type": "belongsTo",
+              "target": "FeePlan",
+              "foreignKey": "fee_plan_id"
+            }
+          }
+        },
+        "Installment": {
+          "primaryKey": "installment_id",
+          "columns": {
+            "installment_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "student_fee_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "installment_number": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            },
+            "due_amount": {
+              "type": "number",
+              "required": true,
+              "unique": false
+            },
+            "paid_amount": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "default": 0
+            },
+            "late_fee_amount": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "default": 0
+            },
+            "due_date": {
+              "type": "date",
+              "required": true,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "pending",
+              "enum": [
+                "pending",
+                "partially_paid",
+                "paid",
+                "overdue"
+              ]
+            }
+          },
+          "relations": {
+            "studentfeeaccount": {
+              "type": "belongsTo",
+              "target": "StudentFeeAccount",
+              "foreignKey": "student_fee_id"
+            }
+          }
+        },
+        "Payment": {
+          "primaryKey": "payment_id",
+          "columns": {
+            "payment_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "installment_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "student_fee_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "amount_paid": {
+              "type": "number",
+              "required": true,
+              "unique": false
+            },
+            "payment_date": {
+              "type": "datetime",
+              "required": true,
+              "unique": false
+            },
+            "payment_method": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "cash",
+                "upi",
+                "bank_transfer",
+                "cheque"
+              ]
+            },
+            "transaction_reference": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "success",
+              "enum": [
+                "success",
+                "pending",
+                "failed"
+              ]
+            },
+            "remarks": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "created_by": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "installment": {
+              "type": "belongsTo",
+              "target": "Installment",
+              "foreignKey": "installment_id"
+            },
+            "studentfeeaccount": {
+              "type": "belongsTo",
+              "target": "StudentFeeAccount",
+              "foreignKey": "student_fee_id"
+            }
+          }
+        },
+        "FeeAdjustment": {
+          "primaryKey": "adjustment_id",
+          "columns": {
+            "adjustment_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "student_fee_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "adjustment_type": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "scholarship",
+                "coupon",
+                "referral",
+                "manual"
+              ]
+            },
+            "amount": {
+              "type": "number",
+              "required": true,
+              "unique": false
+            },
+            "reason": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "created_by": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "created_at": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {
+            "studentfeeaccount": {
+              "type": "belongsTo",
+              "target": "StudentFeeAccount",
+              "foreignKey": "student_fee_id"
+            }
+          }
+        }
+      }
+    }
+  }
+}
