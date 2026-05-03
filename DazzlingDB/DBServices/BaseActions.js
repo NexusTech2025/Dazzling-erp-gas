@@ -17,12 +17,12 @@ class BaseActionError extends Error {
 /**
  * Thrown when request parameters fail validation.
  */
-class ValidationError extends BaseActionError {}
+class ActionValidationError extends BaseActionError {}
 
 /**
  * Thrown when access is denied.
  */
-class AuthorizationError extends BaseActionError {}
+class ActionAuthorizationError extends BaseActionError {}
 
 /**
  * Abstract base class for all API Actions.
@@ -80,7 +80,7 @@ class BaseAction {
   _requireParam(name) {
     const val = this._params[name];
     if (val === undefined || val === null || val === "") {
-      throw new ValidationError(`${name} is required.`);
+      throw new ActionValidationError(`${name} is required.`);
     }
     return val;
   }

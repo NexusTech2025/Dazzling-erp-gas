@@ -11,9 +11,9 @@ class AuthBaseError extends Error {
   }
 }
 
-class AuthenticationError extends AuthBaseError {}
-class AuthorizationError extends AuthBaseError {}
-class AccountLockedError extends AuthenticationError {}
+class AuthAuthenticationError extends AuthBaseError {}
+class AuthAuthorizationError extends AuthBaseError {}
+class AuthAccountLockedError extends AuthAuthenticationError {}
 
 const AuthBridge = {
   
@@ -61,28 +61,28 @@ const AuthBridge = {
 
     // 1. Check Cache Lockout
     if (cache.get(`lockout_${username}`)) {
-      throw new AccountLockedError("Account temporarily locked due to multiple failed attempts. Please try again in 15 minutes.");
+      throw new AuthAccountLockedError("Account temporarily locked due to multiple failed attempts. Please try again in 15 minutes.");
     }
 
     const user = db.User.findOne({ username: username });
 
-    if (!user) throw new AuthenticationError("Invalid username or password.");
+    if (!user) throw new AuthAuthenticationError("Invalid username or password.");
     
     // 2. Check DB Status
     if (user.status !== "active") {
-      throw new AuthenticationError(`Account is ${user.status}.`);
+      throw new AuthAuthenticationError(`Account is ${user.status}.`);
     }
 
     // 3. Check DB Lockout (failed_attempts)
     if (user.failed_attempts >= this._MAX_FAILED_ATTEMPTS) {
       cache.put(`lockout_${username}`, "true", this._LOCKOUT_TTL_CACHE);
-      throw new AccountLockedError("Account locked. Please contact administrator.");
+      throw new AuthAccountLockedError("Account locked. Please contact administrator.");
     }
 
     // 4. Verify Salted Password
     if (!AuthCore.verifyPassword(password, user.password_hash, user.password_salt)) {
       this._handleLoginFailure(user);
-      throw new AuthenticationError("Invalid username or password.");
+      throw new AuthAuthenticationError("Invalid username or password.");
     }
 
     // SUCCESS: Reset failures and create session
@@ -152,6 +152,15 @@ const AuthBridge = {
       role: user.role,
       isValid: true
     };
+  },
+
+  /**
+   * Checks if any admin user exists in the system.
+   * Used for First-Run Wizard detection.
+   */
+  isSystemInitialized() {
+    const db = DBContext.getInstance();
+    return db.User.exists({ role: "admin" });
   },
 
   /**

@@ -6,10 +6,9 @@
 const ApiDispatcher = (function() {
   
   /**
-   * Internal: Returns the map of action keys to classes.
-   * Defined as a function to ensure all classes are loaded by GAS before access.
+   * Internal: Returns the map of standard action keys to classes.
    */
-  function _getRegistry() {
+  function _getStandardRegistry() {
     return {
       "ping": PingAction,
       "student_register": RegisterStudentAction,
@@ -34,6 +33,21 @@ const ApiDispatcher = (function() {
   }
 
   /**
+   * Internal: Returns the map of administrative action keys to classes.
+   * ISOLATED from standard business logic.
+   */
+  function _getAdminRegistry() {
+    return {
+      "admin_system_status": AdminSystemStatusAction,
+      "admin_bootstrap": AdminBootstrapAction,
+      "admin_get_schema": AdminGetSchemaAction,
+      "admin_analyze_table": AdminAnalyzeTableAction,
+      "admin_repair_table": AdminRepairTableAction,
+      "admin_peek_data": AdminPeekDataAction
+    };
+  }
+
+  /**
    * Main entry point for processing an event.
    * @param {Object} e - GAS event object from doGet or doPost.
    */
@@ -44,17 +58,24 @@ const ApiDispatcher = (function() {
       // 1. Parse Request
       const params = _parseEvent(e);
       const actionKey = params.action;
-      const registry = _getRegistry();
 
-      if (!actionKey || !registry[actionKey]) {
-        throw new Error(`Endpoint '${actionKey}' is not registered.`);
+      if (!actionKey) {
+        throw new Error("No 'action' parameter provided.");
       }
 
-      // 2. Resolve User Context (Optional for now, required for protected actions)
+      // 2. Determine Registry (Admin vs Standard)
+      const isAdminAction = actionKey.startsWith("admin_");
+      const registry = isAdminAction ? _getAdminRegistry() : _getStandardRegistry();
+
+      if (!registry[actionKey]) {
+        throw new Error(`Endpoint '${actionKey}' is not registered in ${isAdminAction ? 'Admin' : 'Standard'} registry.`);
+      }
+
+      // 3. Resolve User Context
       const token = params.token;
       const user = token ? AuthBridge.resolveContext(token) : null;
 
-      // 3. Initialize the Action with automatic DB injection
+      // 4. Initialize the Action with automatic DB injection
       const ActionClass = registry[actionKey];
       const db = DBContext.getInstance();
       

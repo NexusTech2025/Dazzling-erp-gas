@@ -34,31 +34,39 @@ function doPost(e) {
  * HTTP Entry Point: GET requests
  */
 function doGet(e) {
-  if (e.parameter.ui === 'test') {
-    return HtmlService.createTemplateFromFile('test_api')
+  const ui = e.parameter.ui;
+
+  if (ui === 'test') {
+    return HtmlService.createTemplateFromFile('views/test_api')
       .evaluate()
       .setTitle("DazzlingDB - API Tester")
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
+
+  if (ui === 'admin') {
+    return HtmlService.createTemplateFromFile('views/admin_acc')
+      .evaluate()
+      .setTitle("Admin Control Center | DazzlingDB")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
   return ApiDispatcher.dispatch(e);
 }
 
 /**
- * BRIDGE: Allows the testing HTML to execute API logic via google.script.run.
- * Simulates a real GAS event object.
+ * BRIDGE: Allows the HTML UI to execute API logic via google.script.run.
+ * Consolidates Admin and Standard actions.
  */
-function runInternalApiTest(request) {
-  const { method, action, payload } = request;
+function executeActionViaUI(request) {
+  const { action, payload, token } = request;
   
   const mockEvent = {
-    parameter: { action: action },
-    postData: method === 'POST' ? { contents: JSON.stringify(payload) } : null
+    parameter: { 
+      action: action,
+      token: token
+    },
+    postData: { contents: JSON.stringify(payload || {}) }
   };
-
-  // If GET, merge payload into parameters
-  if (method === 'GET' && payload) {
-    Object.assign(mockEvent.parameter, payload);
-  }
 
   const output = ApiDispatcher.dispatch(mockEvent);
   return JSON.parse(output.getContent());

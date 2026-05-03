@@ -244,7 +244,7 @@
     google.script.run
       .withSuccessHandler(onSuccess)
       .withFailureHandler(onFailure)
-      .runInternalApiTest(request);
+      .executeActionViaUI(request);
   });
 
   function onSuccess(response) {

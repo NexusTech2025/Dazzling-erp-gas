@@ -184,3 +184,93 @@ class StaffAddDocumentAction extends BaseAction {
     return StaffService.addDocument(this._params.teacher_id, this._params.document);
   }
 }
+
+/**
+ * 🛠️ ADMIN CONTROL CENTER (ACC) ACTIONS
+ */
+
+class AdminSystemStatusAction extends BaseAction {
+  _execute() {
+    return {
+      isInitialized: AuthBridge.isSystemInitialized(),
+      database: DATABASE_SCHEMA.database,
+      version: DATABASE_SCHEMA.version,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+class AdminBootstrapAction extends BaseAction {
+  _validate() {
+    this._requireParam("setupKey");
+    this._requireParam("userData");
+  }
+
+  _authorize() {
+    if (AuthBridge.isSystemInitialized()) {
+      throw new ActionAuthorizationError("System already initialized. Bootstrap disabled.");
+    }
+
+    const masterKey = PropertiesService.getScriptProperties().getProperty("SETUP_KEY") || "DAZZLING_2026";
+    if (this._params.setupKey !== masterKey) {
+      throw new ActionAuthorizationError("Invalid Setup Key.");
+    }
+  }
+
+  _execute() {
+    const { userData } = this._params;
+    return AuthBridge.registerUser({
+      ...userData,
+      role: "admin"
+    });
+  }
+}
+
+class AdminGetSchemaAction extends BaseAction {
+  _authorize() {
+    if (!this._user || this._user.role !== "admin") {
+      throw new ActionAuthorizationError("Superadmin privileges required.");
+    }
+  }
+  _execute() { return DATABASE_SCHEMA; }
+}
+
+class AdminAnalyzeTableAction extends BaseAction {
+  _authorize() {
+    if (!this._user || this._user.role !== "admin") {
+      throw new ActionAuthorizationError("Superadmin privileges required.");
+    }
+  }
+  _execute() {
+    // SchemaSetupEngine.plan() returns the full intent/health check
+    return this._db.setup.plan();
+  }
+}
+
+class AdminRepairTableAction extends BaseAction {
+  _authorize() {
+    if (!this._user || this._user.role !== "admin") {
+      throw new ActionAuthorizationError("Superadmin privileges required.");
+    }
+  }
+  _execute() {
+    // SchemaSetupEngine.provision() performs actual repair/creation
+    return this._db.setup.provision();
+  }
+}
+
+class AdminPeekDataAction extends BaseAction {
+  _validate() { this._requireParam("table"); }
+  _authorize() {
+    if (!this._user || this._user.role !== "admin") {
+      throw new ActionAuthorizationError("Superadmin privileges required.");
+    }
+  }
+  _execute() {
+    const { table } = this._params;
+    if (!this._db[table]) throw new ActionValidationError(`Table '${table}' not found.`);
+    
+    // Return last 5 rows
+    return this._db[table].where({}, { limit: 5 });
+  }
+}

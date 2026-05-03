@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Control Center | DazzlingDB</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --success-color: #198754;
+      --warning-color: #ffc107;
+      --danger-color: #dc3545;
+      --bg-light: #f8f9fa;
+    }
+    body { background-color: var(--bg-light); font-family: 'Inter', system-ui, sans-serif; }
+    .navbar-brand { font-weight: 800; letter-spacing: -0.5px; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+    .bg-synced { background-color: var(--success-color); }
+    .bg-partial { background-color: var(--warning-color); }
+    .bg-unsynced { background-color: var(--danger-color); }
+    .sidebar { min-height: calc(100vh - 56px); border-right: 1px solid #dee2e6; background: #fff; }
+    .nav-link { color: #4b5563; font-weight: 500; padding: 12px 20px; border-radius: 8px; margin: 4px 10px; }
+    .nav-link.active { background-color: #e0e7ff; color: var(--primary-color); }
+    .nav-link:hover:not(.active) { background-color: #f3f4f6; }
+    .loader-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:none; align-items:center; justify-content:center; z-index:9999; }
+    pre { background: #1e293b; color: #f8fafc; padding: 15px; border-radius: 8px; font-size: 13px; max-height: 400px; }
+  </style>
+</head>
+<body>
+
+<!-- Loader -->
+<div id="loader" class="loader-overlay">
+  <div class="spinner-border text-primary" role="status"></div>
+</div>
+
+<!-- 1. INITIALIZATION STATE (WIZARD) -->
+<div id="view-wizard" class="container py-5 d-none">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card p-4">
+        <div class="text-center mb-4">
+          <i class="fas fa-rocket fa-3x text-primary mb-3"></i>
+          <h2 class="fw-bold">First-Run Wizard</h2>
+          <p class="text-muted">Initialize your DazzlingDB Superadmin account.</p>
+        </div>
+        <form id="wizardForm">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Master Setup Key</label>
+            <input type="password" id="wiz-setupKey" class="form-control" required placeholder="Enter the system master key">
+          </div>
+          <hr>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Admin Username</label>
+            <input type="text" id="wiz-username" class="form-control" required placeholder="e.g. admin_moni">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Email Address</label>
+            <input type="email" id="wiz-email" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Password</label>
+            <input type="password" id="wiz-password" class="form-control" required minlength="8">
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Create Superadmin</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. LOGIN GATEWAY -->
+<div id="view-login" class="container py-5 d-none">
+  <div class="row justify-content-center">
+    <div class="col-md-4">
+      <div class="card p-4 shadow-lg mt-5">
+        <div class="text-center mb-4">
+          <h3 class="fw-bold">Admin Login</h3>
+          <p class="text-muted">Access the Control Center</p>
+        </div>
+        <form id="loginForm">
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" id="login-username" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" id="login-password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Enter Cockpit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. MAIN DASHBOARD -->
+<div id="view-dashboard" class="d-none">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand px-3" href="#">DAZZLING <span class="text-primary">DB</span></a>
+      <div class="ms-auto d-flex align-items-center text-light pe-3">
+        <span id="user-display" class="me-3 small"></span>
+        <button onclick="logout()" class="btn btn-sm btn-outline-danger">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav class="col-md-2 d-none d-md-block sidebar py-3">
+        <div class="nav flex-column nav-pills">
+          <a class="nav-link active" href="#" onclick="showPanel('schema')"><i class="fas fa-layer-group me-2"></i> Schema Explorer</a>
+          <a class="nav-link" href="#" onclick="showPanel('health')"><i class="fas fa-heartbeat me-2"></i> System Health</a>
+          <a class="nav-link" href="#" onclick="showPanel('logs')"><i class="fas fa-list-ul me-2"></i> Activity Logs</a>
+        </div>
+      </nav>
+
+      <!-- Content Area -->
+      <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+        
+        <!-- Schema Panel -->
+        <div id="panel-schema">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">Schema Explorer</h2>
+            <div>
+              <button onclick="refreshSchema()" class="btn btn-outline-secondary btn-sm me-2"><i class="fas fa-sync"></i> Refresh</button>
+              <button onclick="repairAll()" class="btn btn-danger btn-sm"><i class="fas fa-tools"></i> Repair All Sheets</button>
+            </div>
+          </div>
+
+          <div id="schema-container" class="accordion shadow-sm">
+            <!-- Dynamic Content via JS -->
+          </div>
+        </div>
+
+        <!-- Health Panel -->
+        <div id="panel-health" class="d-none">
+          <h2 class="fw-bold mb-4">System Health</h2>
+          <div class="row" id="health-metrics">
+             <!-- Dynamic metrics -->
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- Peek Modal -->
+<div class="modal fade" id="peekModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold" id="peekTitle">Data Peek</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="peekContent" class="table-responsive">
+           <pre id="peekRaw"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+  let sessionToken = null;
+  let currentUser = null;
+  let schemaData = null;
+
+  // --- INITIALIZATION ---
+  window.onload = function() {
+    checkSystemStatus();
+  };
+
+  function checkSystemStatus() {
+    setLoading(true);
+    callApi("admin_system_status", {}, (res) => {
+      setLoading(false);
+      if (res.data.isInitialized) {
+        showView("login");
+      } else {
+        showView("wizard");
+      }
+    });
+  }
+
+  // --- AUTH LOGIC ---
+  document.getElementById('wizardForm').onsubmit = function(e) {
+    e.preventDefault();
+    const payload = {
+      setupKey: document.getElementById('wiz-setupKey').value,
+      userData: {
+        username: document.getElementById('wiz-username').value,
+        email: document.getElementById('wiz-email').value,
+        password: document.getElementById('wiz-password').value
+      }
+    };
+    setLoading(true);
+    callApi("admin_bootstrap", payload, (res) => {
+      setLoading(false);
+      alert("✅ System Initialized! Please login.");
+      showView("login");
+    });
+  };
+
+  document.getElementById('loginForm').onsubmit = function(e) {
+    e.preventDefault();
+    const payload = {
+      username: document.getElementById('login-username').value,
+      password: document.getElementById('login-password').value
+    };
+    setLoading(true);
+    callApi("user_login", payload, (res) => {
+      setLoading(false);
+      if (res.data && res.data.user.role === 'admin') {
+        sessionToken = res.data.token;
+        currentUser = res.data.user;
+        document.getElementById('user-display').textContent = `Logged in as: ${currentUser.username}`;
+        showView("dashboard");
+        refreshSchema();
+      } else {
+        alert("❌ Error: Access denied. Must be an administrator.");
+      }
+    });
+  };
+
+  function logout() {
+    sessionToken = null;
+    showView("login");
+  }
+
+  // --- DASHBOARD LOGIC ---
+  function refreshSchema() {
+    setLoading(true);
+    callApi("admin_get_schema", {}, (res) => {
+      schemaData = res.data;
+      renderSchema();
+      setLoading(false);
+    });
+  }
+
+  function renderSchema() {
+    const container = document.getElementById('schema-container');
+    container.innerHTML = "";
+
+    Object.entries(schemaData.categories).forEach(([catName, catData], idx) => {
+      const catId = `cat-${catName}`;
+      let tablesHtml = "";
+
+      Object.entries(catData.tables).forEach(([tableName, tableSchema]) => {
+        tablesHtml += `
+          <div class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3">
+            <div>
+              <span class="fw-bold">${tableName}</span>
+              <div class="small text-muted">${Object.keys(tableSchema.columns).length} Columns | PK: ${tableSchema.primaryKey}</div>
+            </div>
+            <div>
+              <button onclick="peekData('${tableName}')" class="btn btn-sm btn-light"><i class="fas fa-eye"></i> Peek</button>
+              <button onclick="analyzeTable('${tableName}')" class="btn btn-sm btn-outline-info ms-2">Analyze</button>
+              <button onclick="repairTable('${tableName}')" class="btn btn-sm btn-outline-warning ms-2">Repair</button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML += `
+        <div class="accordion-item border-0 mb-3 rounded shadow-sm overflow-hidden">
+          <h2 class="accordion-header">
+            <button class="accordion-button ${idx === 0 ? '' : 'collapsed'} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#${catId}">
+              <i class="fas fa-folder text-warning me-2"></i> ${catName} Domain
+            </button>
+          </h2>
+          <div id="${catId}" class="accordion-collapse collapse ${idx === 0 ? 'show' : ''}">
+            <div class="accordion-body p-0">
+              <div class="list-group list-group-flush">
+                ${tablesHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function analyzeTable(tableName) {
+    setLoading(true);
+    callApi("admin_analyze_table", { table: tableName }, (res) => {
+      setLoading(false);
+      console.log("Analysis Result:", res.data);
+      alert(`Analysis Complete for ${tableName}. Check console for details.`);
+    });
+  }
+
+  function repairTable(tableName) {
+    if (!confirm(`Physically create or update ${tableName}? This is non-destructive.`)) return;
+    setLoading(true);
+    callApi("admin_repair_table", { table: tableName }, (res) => {
+      setLoading(false);
+      alert("✅ Repair operation triggered successfully.");
+    });
+  }
+
+  function peekData(tableName) {
+    setLoading(true);
+    callApi("admin_peek_data", { table: tableName }, (res) => {
+      setLoading(false);
+      document.getElementById('peekTitle').textContent = `Last 5 Records: ${tableName}`;
+      document.getElementById('peekRaw').textContent = JSON.stringify(res.data, null, 2);
+      new bootstrap.Modal(document.getElementById('peekModal')).show();
+    });
+  }
+
+  // --- UTILS ---
+  function callApi(action, payload, successCallback) {
+    const request = {
+      action: action,
+      token: sessionToken,
+      ...payload
+    };
+
+    google.script.run
+      .withSuccessHandler((response) => {
+        if (response.success) {
+          successCallback(response);
+        } else {
+          alert("❌ API Error: " + response.error.message);
+          setLoading(false);
+        }
+      })
+      .withFailureHandler((err) => {
+        alert("💥 Server Crash: " + err.message);
+        setLoading(false);
+      })
+      .executeActionViaUI(request);
+  }
+
+  function showView(viewId) {
+    document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('d-none'));
+    document.getElementById(`view-${viewId}`).classList.remove('d-none');
+  }
+
+  function showPanel(panelId) {
+    document.querySelectorAll('[id^="panel-"]').forEach(el => el.classList.add('d-none'));
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+    document.getElementById(`panel-${panelId}`).classList.remove('d-none');
+    
+    // Use target to highlight active link
+    if (event && event.currentTarget) {
+      event.currentTarget.classList.add('active');
+    }
+
+    if (panelId === 'health') {
+      renderHealth();
+    }
+  }
+
+  function renderHealth() {
+    const container = document.getElementById('health-metrics');
+    container.innerHTML = '<div class="col-12 text-center text-muted">Calculating metrics...</div>';
+    
+    callApi("admin_analyze_table", {}, (res) => {
+      const plan = res.data;
+      const issues = plan.operations.filter(op => op.type === 'ERROR').length;
+      const changes = plan.operations.length - issues;
+      
+      container.innerHTML = `
+        <div class="col-md-3">
+          <div class="card p-4 text-center">
+            <h4 class="fw-bold">${Object.keys(schemaData.categories).length}</h4>
+            <div class="text-muted small uppercase">Domains</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card p-4 text-center">
+            <h4 class="fw-bold">${Object.values(schemaData.categories).reduce((acc, cat) => acc + Object.keys(cat.tables).length, 0)}</h4>
+            <div class="text-muted small uppercase">Total Tables</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card p-4 text-center border-start border-danger border-4">
+            <h4 class="fw-bold text-danger">${issues}</h4>
+            <div class="text-muted small uppercase">Critical Issues</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card p-4 text-center border-start border-warning border-4">
+            <h4 class="fw-bold text-warning">${changes}</h4>
+            <div class="text-muted small uppercase">Pending Repairs</div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function repairAll() {
+    if (!confirm("This will physically provision ALL missing tables and headers across the entire system. Proceed?")) return;
+    setLoading(true);
+    callApi("admin_repair_table", {}, (res) => {
+      setLoading(false);
+      alert("✅ Global Repair Complete! System is now synced.");
+      refreshSchema();
+    });
+  }
+
+  function setLoading(show) {
+    document.getElementById('loader').style.display = show ? 'flex' : 'none';
+  }
+</script>
+
+</body>
+</html>
