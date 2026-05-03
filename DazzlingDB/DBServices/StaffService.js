@@ -51,7 +51,7 @@ const StaffService = {
 
       // 3. Optional: Create Auth User
       if (payload.userData) {
-        AuthService.registerUser({
+        AuthBridge.registerUser({
           ...payload.userData,
           role: "teacher"
         });

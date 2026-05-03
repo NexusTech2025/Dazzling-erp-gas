@@ -122,7 +122,7 @@ class ValidatePromoCodeAction extends BaseAction {
 
 class UserRegisterAction extends BaseAction {
   _validate() { this._requireParam("payload"); }
-  _execute() { return AuthService.registerUser(this._params.payload); }
+  _execute() { return AuthBridge.registerUser(this._params.payload); }
 }
 
 class UserLoginAction extends BaseAction {
@@ -132,13 +132,13 @@ class UserLoginAction extends BaseAction {
   }
   _execute() {
     const { username, password } = this._params;
-    return AuthService.login(username, password, this._context);
+    return AuthBridge.login(username, password, this._context);
   }
 }
 
 class UserLogoutAction extends BaseAction {
   _validate() { this._requireParam("token"); }
-  _execute() { return AuthService.logout(this._params.token); }
+  _execute() { return AuthBridge.logout(this._params.token); }
 }
 
 /**

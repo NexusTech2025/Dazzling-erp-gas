@@ -52,7 +52,7 @@ const ApiDispatcher = (function() {
 
       // 2. Resolve User Context (Optional for now, required for protected actions)
       const token = params.token;
-      const user = token ? AuthService.validateSession(token) : null;
+      const user = token ? AuthBridge.resolveContext(token) : null;
 
       // 3. Initialize the Action with automatic DB injection
       const ActionClass = registry[actionKey];
