@@ -24,6 +24,204 @@ const DATABASE_SCHEMA = {
     }
   },
   "categories": {
+    "Core": {
+      "tables": {
+        "Branch": {
+          "primaryKey": "branch_id",
+          "columns": {
+            "branch_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "branch_name": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "location": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "inactive"
+              ]
+            }
+          },
+          "relations": {}
+        },
+        "PromoCode": {
+          "primaryKey": "promo_id",
+          "columns": {
+            "promo_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "code": {
+              "type": "string",
+              "required": true,
+              "unique": true
+            },
+            "entity_type": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "course",
+                "package"
+              ]
+            },
+            "entity_id": {
+              "type": "string",
+              "required": false,
+              "unique": false
+            },
+            "discount_type": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "enum": [
+                "percentage",
+                "amount"
+              ]
+            },
+            "discount_value": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            },
+            "max_usage": {
+              "type": "number",
+              "required": false,
+              "unique": false
+            },
+            "valid_from": {
+              "type": "date",
+              "required": false,
+              "unique": false
+            },
+            "valid_until": {
+              "type": "date",
+              "required": false,
+              "unique": false
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "expired",
+                "disabled"
+              ]
+            }
+          },
+          "relations": {}
+        }
+      }
+    },
+    "Auth": {
+      "tables": {
+        "User": {
+          "primaryKey": "user_id",
+          "columns": {
+            "user_id": {
+              "type": "string",
+              "required": false,
+              "unique": true
+            },
+            "username": {
+              "type": "string",
+              "required": true,
+              "unique": true
+            },
+            "password_hash": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "password_salt": {
+              "type": "string",
+              "required": true,
+              "unique": false,
+              "description": "Unique salt for password hashing"
+            },
+            "failed_attempts": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "default": 0,
+              "description": "Counter for failed login attempts"
+            },
+            "role": {
+              "type": "string",
+              "required": true,
+              "unique": false,
+              "default": "guest"
+            },
+            "status": {
+              "type": "enum",
+              "required": false,
+              "unique": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "locked",
+                "disabled"
+              ]
+            },
+            "last_login": {
+              "type": "datetime",
+              "required": false,
+              "unique": false
+            }
+          },
+          "relations": {}
+        },
+        "Session": {
+          "primaryKey": "token",
+          "columns": {
+            "token": {
+              "type": "string",
+              "required": true,
+              "unique": true
+            },
+            "user_id": {
+              "type": "string",
+              "required": true,
+              "unique": false
+            },
+            "expires_at": {
+              "type": "datetime",
+              "required": true,
+              "unique": false
+            },
+            "client_info": {
+              "type": "string",
+              "required": false,
+              "unique": false,
+              "description": "JSON string of device/browser info"
+            }
+          },
+          "relations": {
+            "user": {
+              "type": "belongsTo",
+              "target": "User",
+              "foreignKey": "user_id"
+            }
+          }
+        }
+      }
+    },
     "Students": {
       "tables": {
         "Address": {
@@ -609,10 +807,7 @@ const DATABASE_SCHEMA = {
               ]
             }
           },
-          "relations": {
-            "courses": { "type": "hasMany", "target": "PackageCourse", "foreignKey": "package_id" },
-            "perks": { "type": "hasMany", "target": "PackagePerk", "foreignKey": "package_id" }
-          }
+          "relations": {}
         },
         "PackageCourse": {
           "primaryKey": "package_course_id",
@@ -687,112 +882,11 @@ const DATABASE_SCHEMA = {
               "foreignKey": "package_id"
             }
           }
-        },
-        "PromoCode": {
-          "primaryKey": "promo_id",
-          "columns": {
-            "promo_id": {
-              "type": "string",
-              "required": false,
-              "unique": true
-            },
-            "code": {
-              "type": "string",
-              "required": true,
-              "unique": true
-            },
-            "entity_type": {
-              "type": "enum",
-              "required": false,
-              "unique": false,
-              "enum": [
-                "course",
-                "package"
-              ]
-            },
-            "entity_id": {
-              "type": "string",
-              "required": false,
-              "unique": false
-            },
-            "discount_type": {
-              "type": "enum",
-              "required": false,
-              "unique": false,
-              "enum": [
-                "percentage",
-                "amount"
-              ]
-            },
-            "discount_value": {
-              "type": "number",
-              "required": false,
-              "unique": false
-            },
-            "max_usage": {
-              "type": "number",
-              "required": false,
-              "unique": false
-            },
-            "valid_from": {
-              "type": "date",
-              "required": false,
-              "unique": false
-            },
-            "valid_until": {
-              "type": "date",
-              "required": false,
-              "unique": false
-            },
-            "status": {
-              "type": "enum",
-              "required": false,
-              "unique": false,
-              "default": "active",
-              "enum": [
-                "active",
-                "expired",
-                "disabled"
-              ]
-            }
-          },
-          "relations": {}
         }
       }
     },
     "Staff": {
       "tables": {
-        "Branch": {
-          "primaryKey": "branch_id",
-          "columns": {
-            "branch_id": {
-              "type": "string",
-              "required": false,
-              "unique": true
-            },
-            "branch_name": {
-              "type": "string",
-              "required": true,
-              "unique": false
-            },
-            "location": {
-              "type": "string",
-              "required": false,
-              "unique": false
-            },
-            "status": {
-              "type": "enum",
-              "required": false,
-              "unique": false,
-              "default": "active",
-              "enum": [
-                "active",
-                "inactive"
-              ]
-            }
-          },
-          "relations": {}
-        },
         "TeacherAttendance": {
           "primaryKey": "attendance_id",
           "columns": {
@@ -1614,4 +1708,4 @@ const DATABASE_SCHEMA = {
       }
     }
   }
-}
+};

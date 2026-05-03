@@ -1,6 +1,7 @@
 /**
  * @file AuthBridge.js
  * Facade for the Auth Layer. The only interface the ERP talks to.
+ * Implements Salted Hashing and Brute-Force Protection.
  */
 
 class AuthBaseError extends Error {
@@ -12,11 +13,15 @@ class AuthBaseError extends Error {
 
 class AuthenticationError extends AuthBaseError {}
 class AuthorizationError extends AuthBaseError {}
+class AccountLockedError extends AuthenticationError {}
 
 const AuthBridge = {
   
+  _MAX_FAILED_ATTEMPTS: 5,
+  _LOCKOUT_TTL_CACHE: 900, // 15 minutes lockout in cache
+
   /**
-   * Registers a new user.
+   * Registers a new user with a unique salt.
    */
   registerUser(payload) {
     const db = DBContext.getInstance();
@@ -30,37 +35,63 @@ const AuthBridge = {
       throw new AuthBaseError("Password is too weak (minimum 8 characters).");
     }
 
+    const salt = AuthCore.generateSalt();
     const newUser = db.User.insert({
       ...payload,
-      password_hash: AuthCore.hashPassword(payload.password),
+      password_salt: salt,
+      password_hash: AuthCore.hashPassword(payload.password, salt),
       status: "active",
-      role: payload.role || "guest"
+      role: payload.role || "guest",
+      failed_attempts: 0
     });
 
     delete newUser.password_hash;
+    delete newUser.password_salt;
     return newUser;
   },
 
   /**
-   * Authenticates user and returns session.
+   * Authenticates user with Salted Hashing and Brute-Force checks.
    */
   login(username, password, clientInfo = {}) {
     const db = DBContext.getInstance();
+    const cache = CacheService.getScriptCache();
+    
     console.log(`[AuthBridge] Attempting login for: ${username}`);
+
+    // 1. Check Cache Lockout
+    if (cache.get(`lockout_${username}`)) {
+      throw new AccountLockedError("Account temporarily locked due to multiple failed attempts. Please try again in 15 minutes.");
+    }
 
     const user = db.User.findOne({ username: username });
 
     if (!user) throw new AuthenticationError("Invalid username or password.");
-    if (user.status !== "active") throw new AuthenticationError(`Account is ${user.status}.`);
+    
+    // 2. Check DB Status
+    if (user.status !== "active") {
+      throw new AuthenticationError(`Account is ${user.status}.`);
+    }
 
-    if (!AuthCore.verifyPassword(password, user.password_hash)) {
+    // 3. Check DB Lockout (failed_attempts)
+    if (user.failed_attempts >= this._MAX_FAILED_ATTEMPTS) {
+      cache.put(`lockout_${username}`, "true", this._LOCKOUT_TTL_CACHE);
+      throw new AccountLockedError("Account locked. Please contact administrator.");
+    }
+
+    // 4. Verify Salted Password
+    if (!AuthCore.verifyPassword(password, user.password_hash, user.password_salt)) {
+      this._handleLoginFailure(user);
       throw new AuthenticationError("Invalid username or password.");
     }
 
-    const token = SessionManager.createSession(user.user_id, clientInfo);
+    // SUCCESS: Reset failures and create session
+    db.User.update(user.user_id, { 
+      failed_attempts: 0,
+      last_login: new Date() 
+    });
 
-    // Update last login
-    db.User.update(user.user_id, { last_login: new Date() });
+    const token = SessionManager.createSession(user.user_id, clientInfo);
 
     return {
       token: token,
@@ -70,6 +101,24 @@ const AuthBridge = {
         role: user.role
       }
     };
+  },
+
+  /**
+   * Private: Increments failed attempt counter and triggers lockout.
+   */
+  _handleLoginFailure(user) {
+    const db = DBContext.getInstance();
+    const newCount = (user.failed_attempts || 0) + 1;
+    
+    db.User.update(user.user_id, { failed_attempts: newCount });
+    
+    console.warn(`[AuthBridge] Failed login for ${user.username}. Attempt: ${newCount}`);
+    
+    if (newCount >= this._MAX_FAILED_ATTEMPTS) {
+      const cache = CacheService.getScriptCache();
+      cache.put(`lockout_${user.username}`, "true", this._LOCKOUT_TTL_CACHE);
+      console.error(`[AuthBridge] ACCOUNT LOCKED: ${user.username}`);
+    }
   },
 
   /**
@@ -83,7 +132,6 @@ const AuthBridge = {
 
   /**
    * Resolves a token into a UserContext object.
-   * Called by ApiDispatcher on every request.
    */
   resolveContext(token) {
     if (!token) return { isValid: false, role: "guest" };

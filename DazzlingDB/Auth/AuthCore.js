@@ -1,18 +1,20 @@
 /**
  * @file AuthCore.js
  * Cryptographic engine for the Auth Layer.
- * Handles hashing, validation, and token generation.
+ * Handles salted hashing, validation, and token generation.
  */
 
 const AuthCore = {
   /**
-   * Computes a SHA-256 hash of a string.
+   * Computes a SHA-256 hash of a string with an optional salt.
    * @param {string} plainText
+   * @param {string} salt
    * @returns {string} Hex representation of the hash
    */
-  hashPassword(plainText) {
+  hashPassword(plainText, salt = "") {
     if (!plainText) throw new Error("Password cannot be empty.");
-    const signature = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, plainText);
+    const input = plainText + salt;
+    const signature = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, input);
     return signature.map(byte => {
       const hex = (byte & 0xFF).toString(16);
       return hex.length === 1 ? '0' + hex : hex;
@@ -20,13 +22,22 @@ const AuthCore = {
   },
 
   /**
-   * Verifies if a plain text password matches a hash.
+   * Verifies if a plain text password matches a hash given a salt.
    * @param {string} plainText
    * @param {string} hash
+   * @param {string} salt
    * @returns {boolean}
    */
-  verifyPassword(plainText, hash) {
-    return this.hashPassword(plainText) === hash;
+  verifyPassword(plainText, hash, salt) {
+    return this.hashPassword(plainText, salt) === hash;
+  },
+
+  /**
+   * Generates a random secure salt.
+   * @returns {string}
+   */
+  generateSalt() {
+    return Utilities.getUuid().split('-')[0]; // Simple 8-char salt
   },
 
   /**

@@ -149,6 +149,19 @@
               "required": true,
               "unique": false
             },
+            "password_salt": {
+              "type": "string",
+              "required": true,
+              "unique": false,
+              "description": "Unique salt for password hashing"
+            },
+            "failed_attempts": {
+              "type": "number",
+              "required": false,
+              "unique": false,
+              "default": 0,
+              "description": "Counter for failed login attempts"
+            },
             "role": {
               "type": "string",
               "required": true,
