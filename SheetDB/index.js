@@ -77,6 +77,16 @@ Object.assign(globalThis, {
   /**
    * Primary entry point for the SheetDB ecosystem.
    */
-  init
+  init,
+
+  // --- Core Classes (Injected for Library Visibility) ---
+  SheetDBError,
+  SpreadsheetNotFoundError,
+  TableNotFoundError,
+  EntityNotFoundError,
+  ValidationError,
+  ConflictError,
+  IntegrityError,
+  ForbiddenError
 });
 

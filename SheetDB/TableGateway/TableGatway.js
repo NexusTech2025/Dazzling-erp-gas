@@ -30,8 +30,33 @@ class TableGateway {
    * Fetch all records as normalized objects.
    */
   all() {
-    const rawRows = this.dataSource.readTable(this.category, this.tableName);
-    return rawRows.map(row => this._normalizeRow(row));
+    try {
+      const rawRows = this.dataSource.readTable(this.category, this.tableName);
+      return rawRows.map(row => this._normalizeRow(row));
+    } catch (e) {
+      if (e.message.includes("Category file") || e.message.includes("not found")) {
+        throw new TableNotFoundError(this.tableName, this.category);
+      }
+      throw e;
+    }
+  }
+
+  /**
+   * Check if the table physically exists in the spreadsheet.
+   * @returns {boolean}
+   */
+  isTableExist() {
+    try {
+      // 1. Check if the spreadsheet file exists
+      const fileMeta = this.dataSource.fs.findByName(this.category);
+      if (!fileMeta) return false;
+
+      // 2. Check if the sheet (table) exists inside the file
+      const ss = this.dataSource.fs.open(fileMeta.id);
+      return !!ss.getSheetByName(this.tableName);
+    } catch (e) {
+      return false;
+    }
   }
 
   /**
@@ -50,6 +75,27 @@ class TableGateway {
     return all.filter(row => {
       return Object.entries(filters).every(([key, value]) => row[key] === value);
     });
+  }
+
+  /**
+   * Finds the first record matching the filters.
+   * @param {Object} filters 
+   * @returns {Object|null} Raw row object or null.
+   */
+  findOne(filters = {}) {
+    const all = this.all();
+    return all.find(row => {
+      return Object.entries(filters).every(([key, value]) => row[key] === value);
+    }) || null;
+  }
+
+  /**
+   * Counts records matching the filters.
+   * @param {Object} filters 
+   * @returns {number}
+   */
+  count(filters = {}) {
+    return this.where(filters).length;
   }
 
   /**

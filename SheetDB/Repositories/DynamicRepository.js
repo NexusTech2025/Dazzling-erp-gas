@@ -59,6 +59,43 @@ class DynamicRepository {
   }
 
   /**
+   * Checks if the table physically exists in the database.
+   * @returns {boolean}
+   */
+  isTableExist() {
+    return this.gateway.isTableExist();
+  }
+
+  /**
+   * Checks if any record matches the filters.
+   * Gracefully returns false if the table doesn't exist.
+   */
+  exists(filters = {}) {
+    if (!this.isTableExist()) return false;
+    return this.gateway.count(filters) > 0;
+  }
+
+  /**
+   * Finds the first record matching the filters.
+   * @param {Object} filters 
+   * @returns {BaseModel|null}
+   */
+  findOne(filters = {}) {
+    const rawData = this.gateway.findOne(filters);
+    return this._hydrate(rawData);
+  }
+
+  /**
+   * Counts records matching the filters.
+   * @param {Object} filters 
+   * @returns {number}
+   */
+  count(filters = {}) {
+    if (!this.isTableExist()) return 0;
+    return this.gateway.count(filters);
+  }
+
+  /**
    * Filters records based on simple equality.
    * @param {Object} filters - Key-value map for filtering.
    * @returns {Array<BaseModel>}
