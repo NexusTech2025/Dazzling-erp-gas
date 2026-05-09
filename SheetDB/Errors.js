@@ -51,6 +51,16 @@ class EntityNotFoundError extends SheetDBError {
 class ValidationError extends SheetDBError {}
 
 /**
+ * Thrown when a specific field fails validation or transformation.
+ */
+class FieldError extends ValidationError {
+  constructor(fieldName, message, value) {
+    super(`Field '${fieldName}' failed validation: ${message}`, { fieldName, value });
+    this.fieldName = fieldName;
+  }
+}
+
+/**
  * Thrown when a unique constraint is violated.
  */
 class ConflictError extends SheetDBError {}
@@ -71,6 +81,7 @@ globalThis.SpreadsheetNotFoundError = SpreadsheetNotFoundError;
 globalThis.TableNotFoundError = TableNotFoundError;
 globalThis.EntityNotFoundError = EntityNotFoundError;
 globalThis.ValidationError = ValidationError;
+globalThis.FieldError = FieldError;
 globalThis.ConflictError = ConflictError;
 globalThis.IntegrityError = IntegrityError;
 globalThis.ForbiddenError = ForbiddenError;

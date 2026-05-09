@@ -41,16 +41,25 @@ function init(rootFolderId, schema, config = {}) {
     _dataSource: dataSource,
     _schema: schema,
 
-    // Setup Engine Access
-    setup: new SchemaSetupEngine(fs, schema, registry, config),
+    // Setup Engine Access (Now wired to dataSource for cache sync)
+    setup: new SchemaSetupEngine(fs, schema, registry, dataSource, config),
 
     // Relation Resolver
     _resolver: null // Will be wired below
   };
+
+  /**
+   * Manually purge the spreadsheet cache.
+   */
+  db.purge = () => dataSource.purgeCache();
+
   // 3. Prepare the Relation Resolver
   db._resolver = new RelationResolver(db, registry);
 
-  // 4. Dynamic Repository Generation
+  // 4. Initialize Dynamic Model Registry
+  ModelRegistry.initialize(schema);
+
+  // 5. Dynamic Repository Generation
   // Loop through all tables and attach repositories to the 'db' object
   const tableNames = registry.listAllTables();
   
@@ -63,7 +72,7 @@ function init(rootFolderId, schema, config = {}) {
     db[tableName] = new DynamicRepository(tableName, gateway, registry, db._resolver);
   });
 
-  // 5. Utility Methods on the Facade
+  // 6. Utility Methods on the Facade
   db.resolve = (model, relation) => db._resolver.resolve(model, relation);
 
   console.log(`[SheetDB] Success: ${tableNames.length} repositories generated.`);
@@ -80,11 +89,15 @@ Object.assign(globalThis, {
   init,
 
   // --- Core Classes (Injected for Library Visibility) ---
+  BaseModel,
+  ModelRegistry,
+  FieldMapper,
   SheetDBError,
   SpreadsheetNotFoundError,
   TableNotFoundError,
   EntityNotFoundError,
   ValidationError,
+  FieldError,
   ConflictError,
   IntegrityError,
   ForbiddenError

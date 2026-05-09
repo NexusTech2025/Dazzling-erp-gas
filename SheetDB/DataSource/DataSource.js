@@ -18,6 +18,15 @@ class SheetDataSource {
   }
 
   /**
+   * Clears the internal spreadsheet cache.
+   * Forces the next read to perform a fresh open from Drive.
+   */
+  purgeCache() {
+    this._cache = {};
+    console.log("[SheetDataSource] Spreadsheet cache purged.");
+  }
+
+  /**
    * Resolves a category name to a Spreadsheet object.
    * @private
    */

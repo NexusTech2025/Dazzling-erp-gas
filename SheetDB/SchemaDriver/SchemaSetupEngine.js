@@ -8,22 +8,24 @@ class SchemaSetupEngine {
    * @param {Object} fileSystem - An initialized instance of SpreadsheetFileSystem
    * @param {Object} schema - The database schema JSON object
    * @param {Object} registry - (Optional) An instance of SchemaRegistry
+   * @param {Object} dataSource - (Optional) An instance of SheetDataSource for cache invalidation
    * @param {Object} config - Execution configuration overrides
    */
-  constructor(fileSystem, schema, registry, config = {}) {
+  constructor(fileSystem, schema, registry, dataSource = null, config = {}) {
     if (!fileSystem) throw new Error("SpreadsheetFileSystem instance is required.");
     if (!schema) throw new Error("Schema definition is required.");
 
     this.fs = fileSystem;
     this.schema = schema;
-    this.registry = registry || new SchemaRegistry(schema); // Reuse or create fallback
+    this.registry = registry || new SchemaRegistry(schema); 
+    this.dataSource = dataSource; // For cache invalidation
     
     // Instantiate the dedicated Read Adapter
     this.inspector = new SchemaInspector(fileSystem);
 
     // Default configuration
     this.config = {
-      mode: config.mode || 'safe', // 'safe' | 'force'
+      mode: config.mode || 'safe', 
       dryRun: config.dryRun || false,
       continueOnError: config.continueOnError || false,
       verbose: config.verbose !== undefined ? config.verbose : true
@@ -242,6 +244,16 @@ class SchemaSetupEngine {
     }
 
     result.isChanged = (result.createdFiles.length + result.createdSheets.length + result.updatedHeaders.length + result.metaUpdated.length) > 0;
+
+    // --- Physical & Logical Synchronization ---
+    if (result.isChanged) {
+      this._log('INFO', 'SYNC', 'Engine', 'START', 'Flushing spreadsheet buffer and purging memory cache...');
+      SpreadsheetApp.flush();
+      if (this.dataSource) {
+        this.dataSource.purgeCache();
+      }
+    }
+
     return result;
   }
 

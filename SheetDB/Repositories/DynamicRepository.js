@@ -31,11 +31,13 @@ class DynamicRepository {
    */
   _hydrate(rawData) {
     if (!rawData) return null;
-    return new BaseModel(rawData, {
-      entityName: this.entityName,
+    const ModelClass = ModelRegistry.getModel(this.entityName);
+    
+    // Restore full framework context for Active Record support
+    return new ModelClass(rawData, { 
       gateway: this.gateway,
       registry: this.registry,
-      resolver: this.resolver
+      resolver: this.resolver 
     });
   }
 
@@ -107,12 +109,25 @@ class DynamicRepository {
 
   /**
    * Inserts a new record into the database.
-   * @param {Object} dataPayload - Key-value pair matching schema columns.
+   * @param {Object|BaseModel} dataPayload - Data or Model instance.
    * @returns {BaseModel} The newly created and hydrated object.
    */
   insert(dataPayload) {
-    const rawSaved = this.gateway.insert(dataPayload);
-    return this._hydrate(rawSaved);
+    const ModelClass = ModelRegistry.getModel(this.entityName);
+    
+    // If it's already a model instance, just save it
+    if (dataPayload instanceof BaseModel) {
+      return dataPayload.save();
+    }
+
+    // Otherwise, create a new instance with full context and save
+    const instance = new ModelClass(dataPayload, { 
+      gateway: this.gateway, 
+      registry: this.registry, 
+      resolver: this.resolver 
+    });
+
+    return instance.save();
   }
 
   /**
@@ -193,8 +208,14 @@ class DynamicRepository {
         else if (relations[key]) nested[key] = doc[key];
       });
 
-      // 2. Add Parent to bucket
-      bucket.add(this.entityName, mainData);
+      // 2. Add Parent to bucket (Implicitly validates/serializes via insert path in later logic)
+      // Actually, BatchBucket needs to be updated to handle Models too.
+      const ModelClass = ModelRegistry.getModel(this.entityName);
+      const instance = new ModelClass(mainData);
+      instance.validate();
+      const rowData = instance.toDatabaseRow();
+      
+      bucket.add(this.entityName, rowData);
 
       // 3. Process relations and add to child buckets
       Object.entries(nested).forEach(([relName, data]) => {
@@ -203,8 +224,13 @@ class DynamicRepository {
 
         dataItems.forEach(item => {
           // Link Child to Parent ID
-          item[relDef.foreignKey] = mainData[pkName];
-          bucket.add(relDef.target, item);
+          // We use the generated PK from the parent if available, or the one about to be generated
+          item[relDef.foreignKey] = rowData[pkName]; 
+          
+          const TargetModelClass = ModelRegistry.getModel(relDef.target);
+          const targetInstance = new TargetModelClass(item);
+          targetInstance.validate();
+          bucket.add(relDef.target, targetInstance.toDatabaseRow());
         });
       });
     });
@@ -216,6 +242,26 @@ class DynamicRepository {
     // --- Phase 3: Hydrate & Return ---
     // Hydrate the main entity results (Parents)
     return results[this.entityName].map(row => this._hydrate(row));
+  }
+
+  /**
+   * Updates an existing record by its primary key.
+   * @param {any} id - The primary key value.
+   * @param {Object|BaseModel} updates - Key-value map or Model instance.
+   * @returns {BaseModel}
+   */
+  update(id, updates) {
+    // 1. Fetch the existing full record to ensure all required fields are present for validation
+    const existing = this.findById(id);
+    if (!existing) {
+      throw new EntityNotFoundError(this.entityName, id);
+    }
+
+    // 2. Extract raw data if a Model was passed
+    const cleanUpdates = (updates instanceof BaseModel) ? updates.toJSON() : updates;
+
+    // 3. Merge changes and save (which triggers full validation)
+    return existing.merge(cleanUpdates).save();
   }
 
   /**
