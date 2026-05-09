@@ -3,26 +3,6 @@
  * Domain Service for Organizational Foundation (Branches, Promos, Settings).
  */
 
-/**
- * 🛠️ CORE ERROR HIERARCHY
- */
-class CoreBaseError extends Error {
-  constructor(message, context = {}) {
-    super(message);
-    this.name = this.constructor.name;
-    this.context = context;
-    this.timestamp = new Date().toISOString();
-  }
-}
-
-class CoreValidationError extends CoreBaseError {}
-class CoreIntegrityError extends CoreBaseError {}
-
-class BranchNotFoundError extends CoreIntegrityError {}
-class PromoCodeNotFoundError extends CoreIntegrityError {}
-class DuplicatePromoCodeError extends CoreValidationError {}
-class InvalidEntityReferenceError extends CoreIntegrityError {}
-
 const CoreService = {
 
   /**
@@ -43,7 +23,7 @@ const CoreService = {
       });
     } catch (e) {
       console.error("[CoreService] Branch creation failed:", e.message);
-      throw new CoreBaseError("Failed to create branch.", { originalError: e });
+      throw new SheetDB.IntegrityError("Failed to create branch.", { originalError: e });
     }
   },
 
@@ -56,7 +36,7 @@ const CoreService = {
 
     const branch = db.Branch.findById(branchId);
     if (!branch) {
-      throw new BranchNotFoundError(`Branch ID '${branchId}' not found.`);
+      throw new SheetDB.EntityNotFoundError("Branch", branchId, "Core");
     }
 
     return db.Branch.update(branchId, payload);
@@ -76,14 +56,14 @@ const CoreService = {
 
     // 1. Uniqueness check (Native unique constraint will handle this, but we can be proactive)
     if (db.PromoCode.exists({ code: payload.code })) {
-      throw new DuplicatePromoCodeError(`The promo code '${payload.code}' already exists.`);
+      throw new SheetDB.ConflictError(`The promo code '${payload.code}' already exists.`);
     }
 
     // 2. Relational Integrity Check
     if (payload.entity_id) {
       const entityTable = payload.entity_type === 'package' ? 'Package' : 'Course';
       if (!db[entityTable].findById(payload.entity_id)) {
-        throw new InvalidEntityReferenceError(
+        throw new SheetDB.IntegrityError(
           `Cannot link promo to non-existent ${payload.entity_type}: ${payload.entity_id}`
         );
       }
@@ -107,17 +87,17 @@ const CoreService = {
     const promo = db.PromoCode.findOne({ code: code, status: "active" });
 
     if (!promo) {
-      throw new PromoCodeNotFoundError(`Promo code '${code}' is invalid or expired.`);
+      throw new SheetDB.EntityNotFoundError("PromoCode", code, "Core");
     }
 
     // Logic for entity binding
     if (promo.entity_id && promo.entity_id !== entityId) {
-      throw new CoreValidationError("This promo code is not applicable to the selected item.");
+      throw new SheetDB.ValidationError("This promo code is not applicable to the selected item.");
     }
 
     // Check expiration
     if (promo.valid_until && new Date(promo.valid_until) < new Date()) {
-      throw new CoreValidationError("This promo code has expired.");
+      throw new SheetDB.ValidationError("This promo code has expired.");
     }
 
     return promo;

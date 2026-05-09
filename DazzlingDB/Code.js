@@ -27,7 +27,15 @@ function verifyDatabase() {
  * HTTP Entry Point: POST requests
  */
 function doPost(e) {
-  return ApiDispatcher.dispatch(e);
+  try {
+    return ApiDispatcher.dispatch(e);
+  } catch (error) {
+    console.error("[Code] Fatal Error in doPost:", error);
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: { message: error.message || "Internal Server Error" }
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 /**
@@ -44,10 +52,7 @@ function doGet(e) {
   }
 
   if (ui === 'admin') {
-    return HtmlService.createTemplateFromFile('views/admin_acc')
-      .evaluate()
-      .setTitle("Admin Control Center | DazzlingDB")
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    return getAdminPanelContent();
   }
 
   return ApiDispatcher.dispatch(e);
@@ -58,16 +63,34 @@ function doGet(e) {
  * Consolidates Admin and Standard actions.
  */
 function executeActionViaUI(request) {
-  const { action, payload, token } = request;
+  let { action, payload, token } = request;
+
+  console.log(`[Code] UI Action: ${action}`);
+
+  // Handle flattened requests (where payload properties are at the top level)
+  if (!payload) {
+    const { action: a, token: t, ...rest } = request;
+    payload = rest;
+  }
+
+  // Special case for bootstrapping (doesn't require a token/session)
+  if (action === 'admin_bootstrap' || action === 'bootstrap_admin') {
+    return bootstrapAdminSystem(request);
+  }
   
   const mockEvent = {
     parameter: { 
       action: action,
       token: token
     },
-    postData: { contents: JSON.stringify(payload || {}) }
+    postData: { contents: JSON.stringify(payload) }
   };
 
   const output = ApiDispatcher.dispatch(mockEvent);
-  return JSON.parse(output.getContent());
+  
+  // Handle both ContentOutput (standard) and raw objects (bootstrap)
+  if (output.getContent) {
+    return JSON.parse(output.getContent());
+  }
+  return output;
 }

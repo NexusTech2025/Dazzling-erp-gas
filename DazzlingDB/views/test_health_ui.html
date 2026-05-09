@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health UI Prototype | DazzlingDB</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --health-good: #198754;
+      --health-bad: #212529;
+      --health-warning: #ffc107;
+      --health-error: #dc3545;
+      --health-issue: #0dcaf0;
+      --bg-light: #f8f9fa;
+    }
+    body { background-color: var(--bg-light); font-family: 'Inter', system-ui, sans-serif; padding: 40px 0; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .status-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border-bottom: 5px solid transparent; }
+    .status-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .card-good { border-bottom-color: var(--health-good); }
+    .card-bad { border-bottom-color: var(--health-bad); }
+    .card-warning { border-bottom-color: var(--health-warning); }
+    .card-error { border-bottom-color: var(--health-error); }
+    .card-issue { border-bottom-color: var(--health-issue); }
+    .metric-value { font-size: 2.5rem; font-weight: 800; line-height: 1; margin-bottom: 5px; }
+    .metric-label { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; }
+    .issue-item { border-left: 4px solid #dee2e6; transition: all 0.2s; }
+    .issue-item:hover { background-color: #f1f3f5; border-left-color: var(--health-error); }
+    .severity-high { border-left-color: var(--health-error) !important; }
+    .severity-med { border-left-color: var(--health-warning) !important; }
+    .severity-low { border-left-color: var(--health-issue) !important; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+      <h1 class="fw-bold mb-0">System Health</h1>
+      <p class="text-muted">Diagnostic overview of the Spreadsheet Database</p>
+    </div>
+    <div class="mb-2">
+      <button class="btn btn-primary px-4 fw-bold" onclick="simulateAnalysis()">
+        <i class="fas fa-search me-2"></i>Analyze System
+      </button>
+      <button class="btn btn-outline-danger px-4 fw-bold ms-2">
+        <i class="fas fa-tools me-2"></i>Repair All
+      </button>
+    </div>
+  </div>
+  <div class="row g-3 mb-5">
+    <div class="col"><div class="card p-4 text-center status-card card-good"><div class="metric-value text-success" id="count-good">0</div><div class="metric-label">Good</div></div></div>
+    <div class="col"><div class="card p-4 text-center status-card card-bad"><div class="metric-value text-dark" id="count-bad">0</div><div class="metric-label">Bad</div></div></div>
+    <div class="col"><div class="card p-4 text-center status-card card-warning"><div class="metric-value text-warning" id="count-warning">0</div><div class="metric-label">Warnings</div></div></div>
+    <div class="col"><div class="card p-4 text-center status-card card-error"><div class="metric-value text-danger" id="count-error">0</div><div class="metric-label">Errors</div></div></div>
+    <div class="col"><div class="card p-4 text-center status-card card-issue"><div class="metric-value text-info" id="count-issue">0</div><div class="metric-label">Issues</div></div></div>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0">Diagnostic Details</h5>
+      <span class="badge bg-light text-dark border" id="total-issues">0 Items Found</span>
+    </div>
+    <div class="list-group list-group-flush" id="issue-list">
+      <div class="p-5 text-center text-muted"><i class="fas fa-stethoscope fa-3x mb-3"></i><p>Run analysis to detect system health issues.</p></div>
+    </div>
+  </div>
+</div>
+<script>
+  window.onload = function() {
+    simulateAnalysis();
+  };
+
+  function simulateAnalysis() {
+    var categories = {
+      "Core": ["Branch", "PromoCode"],
+      "Auth": ["User", "Session"],
+      "Students": ["Address", "ContactInfo", "Education", "Student"],
+      "Academic": ["Batch", "Course", "CourseType", "Enrollment", "Package", "PackageCourse", "PackagePerk"],
+      "Staff": ["TeacherAttendance", "Teacher", "TeacherSubject", "TeacherSalaryConfig", "TeacherDocument", "TeacherPaymentTransaction"],
+      "Finance": ["FeePlan", "StudentFeeAccount", "Installment", "Payment", "FeeAdjustment"]
+    };
+
+    var summary = { good: 0, bad: 0, warning: 0, error: 0, issue: 0 };
+    var details = [];
+
+    Object.keys(categories).forEach(function(cat) {
+      categories[cat].forEach(function(table) {
+        var rand = Math.random();
+        var status;
+        if (rand > 0.45) status = "GOOD";
+        else if (rand > 0.35) status = "WARNING";
+        else if (rand > 0.25) status = "BAD";
+        else if (rand > 0.15) status = "ERROR";
+        else status = "ISSUE";
+
+        var target = cat + "." + table;
+        
+        if (status === "GOOD") {
+          summary.good++;
+        } else {
+          var message, severity;
+          if (status === "BAD") {
+            summary.bad++;
+            message = "Physical " + (Math.random() > 0.5 ? "File" : "Sheet") + " missing for " + table + ".";
+            severity = "high";
+          } else if (status === "WARNING") {
+            summary.warning++;
+            message = "Column mismatch in " + table + ": Expected [" + (Math.random() > 0.5 ? "updated_at" : "created_by") + "] not found.";
+            severity = "med";
+          } else if (status === "ERROR") {
+            summary.error++;
+            message = "CRITICAL: Data corruption in " + table + ". Row 1 contains data but no matching schema headers.";
+            severity = "high";
+          } else if (status === "ISSUE") {
+            summary.issue++;
+            message = "System metadata for " + table + " is outdated (v1.0 vs v1.2).";
+            severity = "low";
+          }
+          
+          details.push({
+            type: status,
+            target: target,
+            message: message,
+            severity: severity
+          });
+        }
+      });
+    });
+
+    document.getElementById("count-good").textContent = summary.good;
+    document.getElementById("count-bad").textContent = summary.bad;
+    document.getElementById("count-warning").textContent = summary.warning;
+    document.getElementById("count-error").textContent = summary.error;
+    document.getElementById("count-issue").textContent = summary.issue;
+    document.getElementById("total-issues").textContent = details.length + " Items Found";
+
+    var list = document.getElementById("issue-list");
+    list.innerHTML = "";
+
+    if (details.length === 0) {
+      list.innerHTML = '<div class="p-5 text-center text-success"><i class="fas fa-check-circle fa-3x mb-3"></i><p>System is fully healthy. No issues found.</p></div>';
+      return;
+    }
+
+    details.forEach(function(item) {
+      var icon = item.type === "ERROR" ? "fa-exclamation-circle text-danger" : (item.type === "BAD" ? "fa-times-circle text-dark" : (item.type === "WARNING" ? "fa-exclamation-triangle text-warning" : "fa-info-circle text-info"));
+      var badgeClass = item.type === "ERROR" ? "bg-danger" : (item.type === "BAD" ? "bg-dark" : (item.type === "WARNING" ? "bg-warning text-dark" : "bg-info text-white"));
+      
+      var html = "<div class=\"list-group-item issue-item p-3 severity-" + item.severity + "\">" +
+          "<div class=\"d-flex justify-content-between align-items-start\">" +
+            "<div class=\"d-flex\">" +
+              "<i class=\"fas " + icon + " fs-4 me-3 mt-1\"></i>" +
+              "<div>" +
+                "<div class=\"fw-bold fs-5\">" + item.target + "</div>" +
+                "<div class=\"text-muted\">" + item.message + "</div>" +
+              "</div>" +
+            "</div>" +
+            "<span class=\"badge " + badgeClass + " text-uppercase\">" + item.type + "</span>" +
+          "</div>" +
+        "</div>";
+      list.innerHTML += html;
+    });
+  }
+</script>
+</body>
+</html>

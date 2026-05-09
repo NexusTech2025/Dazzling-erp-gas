@@ -4,27 +4,6 @@
  */
 
 /**
- * Root error type for all Action layer failures.
- */
-class BaseActionError extends Error {
-  constructor(message, meta = {}) {
-    super(message);
-    this.name = this.constructor.name;
-    this.meta = meta;
-  }
-}
-
-/**
- * Thrown when request parameters fail validation.
- */
-class ActionValidationError extends BaseActionError {}
-
-/**
- * Thrown when access is denied.
- */
-class ActionAuthorizationError extends BaseActionError {}
-
-/**
  * Abstract base class for all API Actions.
  */
 class BaseAction {

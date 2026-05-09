@@ -3,25 +3,6 @@
  * Domain Service for Human Resources and Payroll (Teachers/Staff).
  */
 
-/**
- * 👩‍🏫 STAFF ERROR HIERARCHY
- */
-class StaffBaseError extends Error {
-  constructor(message, context = {}) {
-    super(message);
-    this.name = this.constructor.name;
-    this.context = context;
-    this.timestamp = new Date().toISOString();
-  }
-}
-
-class StaffValidationError extends StaffBaseError {}
-class StaffIntegrityError extends StaffBaseError {}
-
-class TeacherNotFoundError extends StaffIntegrityError {}
-class DuplicateTeacherError extends StaffValidationError {}
-class SalaryConfigNotFoundError extends StaffIntegrityError {}
-
 const StaffService = {
 
   /**
@@ -38,7 +19,7 @@ const StaffService = {
 
     // 1. Uniqueness check for mobile number
     if (db.Teacher.exists({ mobile_number: payload.mobile_number })) {
-      throw new DuplicateTeacherError(`A teacher with mobile number ${payload.mobile_number} already exists.`);
+      throw new SheetDB.ConflictError(`A teacher with mobile number ${payload.mobile_number} already exists.`);
     }
 
     try {
@@ -60,7 +41,7 @@ const StaffService = {
       return teacher;
     } catch (e) {
       console.error("[StaffService] Onboarding failed:", e.message);
-      throw new StaffBaseError("Failed to onboard teacher.", { originalError: e });
+      throw new SheetDB.IntegrityError("Failed to onboard teacher.", { originalError: e });
     }
   },
 
@@ -72,7 +53,7 @@ const StaffService = {
     console.log(`[StaffService] Assigning ${subjectIds.length} subjects to teacher ${teacherId}`);
 
     if (!db.Teacher.findById(teacherId)) {
-      throw new TeacherNotFoundError(`Teacher ID '${teacherId}' not found.`);
+      throw new SheetDB.EntityNotFoundError("Teacher", teacherId, "Staff");
     }
 
     const results = [];
@@ -104,7 +85,7 @@ const StaffService = {
     console.log(`[StaffService] Setting salary config for teacher: ${payload.teacher_id}`);
 
     if (!db.Teacher.findById(payload.teacher_id)) {
-      throw new TeacherNotFoundError(`Teacher ID '${payload.teacher_id}' not found.`);
+      throw new SheetDB.EntityNotFoundError("Teacher", payload.teacher_id, "Staff");
     }
 
     return db.TeacherSalaryConfig.insert({
@@ -121,7 +102,7 @@ const StaffService = {
     console.log(`[StaffService] Marking attendance for ${payload.teacher_id} on ${payload.attendance_date}`);
 
     if (!db.Teacher.findById(payload.teacher_id)) {
-      throw new TeacherNotFoundError(`Teacher ID '${payload.teacher_id}' not found.`);
+      throw new SheetDB.EntityNotFoundError("Teacher", payload.teacher_id, "Staff");
     }
 
     return db.TeacherAttendance.insert({
@@ -139,7 +120,7 @@ const StaffService = {
     console.log(`[StaffService] Recording ${payload.payment_type} for teacher ${payload.teacher_id}`);
 
     if (!db.Teacher.findById(payload.teacher_id)) {
-      throw new TeacherNotFoundError(`Teacher ID '${payload.teacher_id}' not found.`);
+      throw new SheetDB.EntityNotFoundError("Teacher", payload.teacher_id, "Staff");
     }
 
     return db.TeacherPaymentTransaction.insert({
@@ -161,7 +142,7 @@ const StaffService = {
     console.log(`[StaffService] Adding document for teacher ${teacherId}`);
 
     if (!db.Teacher.findById(teacherId)) {
-      throw new TeacherNotFoundError(`Teacher ID '${teacherId}' not found.`);
+      throw new SheetDB.EntityNotFoundError("Teacher", teacherId, "Staff");
     }
 
     return db.TeacherDocument.insert({

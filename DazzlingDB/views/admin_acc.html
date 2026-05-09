@@ -14,17 +14,46 @@
       --warning-color: #ffc107;
       --danger-color: #dc3545;
       --bg-light: #f8f9fa;
+      
+      /* New Health Themes */
+      --health-good: #198754;
+      --health-bad: #212529;
+      --health-warning: #ffc107;
+      --health-error: #dc3545;
+      --health-issue: #0dcaf0;
     }
     body { background-color: var(--bg-light); font-family: 'Inter', system-ui, sans-serif; }
     .navbar-brand { font-weight: 800; letter-spacing: -0.5px; }
     .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    
+    /* Health Dashboard Styles */
+    .status-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border-bottom: 5px solid transparent; }
+    .status-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .card-good { border-bottom-color: var(--health-good); }
+    .card-bad { border-bottom-color: var(--health-bad); }
+    .card-warning { border-bottom-color: var(--health-warning); }
+    .card-error { border-bottom-color: var(--health-error); }
+    .card-issue { border-bottom-color: var(--health-issue); }
+    .metric-value { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 5px; }
+    .metric-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; }
+    .issue-item { border-left: 4px solid #dee2e6; transition: all 0.2s; }
+    .issue-item:hover { background-color: #f1f3f5; }
+    .severity-high { border-left-color: var(--health-error) !important; }
+    .severity-med { border-left-color: var(--health-warning) !important; }
+    .severity-low { border-left-color: var(--health-issue) !important; }
+
     .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
     .bg-synced { background-color: var(--success-color); }
     .bg-partial { background-color: var(--warning-color); }
     .bg-unsynced { background-color: var(--danger-color); }
     .sidebar { min-height: calc(100vh - 56px); border-right: 1px solid #dee2e6; background: #fff; }
-    .nav-link { color: #4b5563; font-weight: 500; padding: 12px 20px; border-radius: 8px; margin: 4px 10px; }
-    .nav-link.active { background-color: #e0e7ff; color: var(--primary-color); }
+    .nav-link { color: #4b5563; font-weight: 500; padding: 12px 20px; border-radius: 8px; margin: 4px 10px; transition: all 0.2s;}
+    /* High specificity to beat Bootstrap's white text */
+    .sidebar .nav-pills .nav-link.active { 
+      background-color: #e0e7ff !important; 
+      color: var(--primary-color) !important; 
+      font-weight: 700;
+    }
     .nav-link:hover:not(.active) { background-color: #f3f4f6; }
     .loader-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:none; align-items:center; justify-content:center; z-index:9999; }
     pre { background: #1e293b; color: #f8fafc; padding: 15px; border-radius: 8px; font-size: 13px; max-height: 400px; }
@@ -101,7 +130,8 @@
 <div id="view-dashboard" class="d-none">
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
     <div class="container-fluid">
-      <a class="navbar-brand px-3" href="#">DAZZLING <span class="text-primary">DB</span></a>
+      <!-- Fixed: Converted from <a> to <span> to prevent target="_top" reload -->
+      <span class="navbar-brand px-3 mb-0 h1">DAZZLING <span class="text-primary">DB</span></span>
       <div class="ms-auto d-flex align-items-center text-light pe-3">
         <span id="user-display" class="me-3 small"></span>
         <button onclick="logout()" class="btn btn-sm btn-outline-danger">Logout</button>
@@ -114,9 +144,16 @@
       <!-- Sidebar -->
       <nav class="col-md-2 d-none d-md-block sidebar py-3">
         <div class="nav flex-column nav-pills">
-          <a class="nav-link active" href="#" onclick="showPanel('schema')"><i class="fas fa-layer-group me-2"></i> Schema Explorer</a>
-          <a class="nav-link" href="#" onclick="showPanel('health')"><i class="fas fa-heartbeat me-2"></i> System Health</a>
-          <a class="nav-link" href="#" onclick="showPanel('logs')"><i class="fas fa-list-ul me-2"></i> Activity Logs</a>
+          <!-- Fixed: Converted <a> to <button> to prevent routing bugs in SPA -->
+          <button class="nav-link active border-0 w-100 text-start" onclick="showPanel('schema', event)">
+            <i class="fas fa-layer-group me-2"></i> Schema Explorer
+          </button>
+          <button class="nav-link border-0 w-100 text-start" onclick="showPanel('health', event)">
+            <i class="fas fa-heartbeat me-2"></i> System Health
+          </button>
+          <button class="nav-link border-0 w-100 text-start" onclick="showPanel('logs', event)">
+            <i class="fas fa-list-ul me-2"></i> Activity Logs
+          </button>
         </div>
       </nav>
 
@@ -140,10 +177,41 @@
 
         <!-- Health Panel -->
         <div id="panel-health" class="d-none">
-          <h2 class="fw-bold mb-4">System Health</h2>
-          <div class="row" id="health-metrics">
-             <!-- Dynamic metrics -->
+          <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+              <h2 class="fw-bold mb-0">System Health</h2>
+              <p class="text-muted">Diagnostic overview of the Spreadsheet Database</p>
+            </div>
+            <div class="mb-2">
+              <button class="btn btn-primary px-4 fw-bold" onclick="renderHealth()">
+                <i class="fas fa-search me-2"></i>Analyze System
+              </button>
+            </div>
           </div>
+          
+          <div class="row g-3 mb-5">
+            <div class="col"><div class="card p-4 text-center status-card card-good"><div class="metric-value text-success" id="count-good">0</div><div class="metric-label">Good</div></div></div>
+            <div class="col"><div class="card p-4 text-center status-card card-bad"><div class="metric-value text-dark" id="count-bad">0</div><div class="metric-label">Bad</div></div></div>
+            <div class="col"><div class="card p-4 text-center status-card card-warning"><div class="metric-value text-warning" id="count-warning">0</div><div class="metric-label">Warnings</div></div></div>
+            <div class="col"><div class="card p-4 text-center status-card card-error"><div class="metric-value text-danger" id="count-error">0</div><div class="metric-label">Errors</div></div></div>
+            <div class="col"><div class="card p-4 text-center status-card card-issue"><div class="metric-value text-info" id="count-issue">0</div><div class="metric-label">Issues</div></div></div>
+          </div>
+
+          <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+              <h5 class="fw-bold mb-0">Diagnostic Details</h5>
+              <span class="badge bg-light text-dark border" id="total-issues">0 Items Found</span>
+            </div>
+            <div class="list-group list-group-flush" id="issue-list">
+              <div class="p-5 text-center text-muted"><i class="fas fa-stethoscope fa-3x mb-3"></i><p>Run analysis to detect system health issues.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logs Panel -->
+        <div id="panel-logs" class="d-none">
+          <h2 class="fw-bold mb-4">Activity Logs</h2>
+          <div class="alert alert-info">Log viewer implementation pending...</div>
         </div>
 
       </main>
@@ -168,249 +236,473 @@
   </div>
 </div>
 
+<!-- Global Error Handling Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-danger shadow-lg">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>System Exception Caught</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p id="errorModalMessage" class="fw-bold text-danger fs-5"></p>
+        <div class="bg-dark p-3 rounded">
+          <pre id="errorModalTrace" class="text-light mb-0" style="font-size: 13px; white-space: pre-wrap; word-break: break-word;"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Acknowledge</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script>
   let sessionToken = null;
   let currentUser = null;
   let schemaData = null;
 
+  // --- EXCEPTION HANDLING UTILITY ---
+  function showErrorModal(message, errorObj) {
+    console.error(message, errorObj);
+    document.getElementById('errorModalMessage').textContent = message;
+    
+    let details = "No additional trace provided.";
+    if (errorObj) {
+      if (errorObj.stack) {
+        details = errorObj.stack;
+      } else if (typeof errorObj === 'object') {
+        details = JSON.stringify(errorObj, null, 2);
+      } else {
+        details = errorObj.toString();
+      }
+    }
+    
+    document.getElementById('errorModalTrace').textContent = details;
+    
+    if (typeof bootstrap !== 'undefined') {
+      new bootstrap.Modal(document.getElementById('errorModal')).show();
+    } else {
+      alert(`${message}\n\n${details}`);
+    }
+    setLoading(false);
+  }
+
   // --- INITIALIZATION ---
   window.onload = function() {
-    checkSystemStatus();
+    try {
+      checkSystemStatus();
+    } catch (e) {
+      showErrorModal("Failed during window.onload execution", e);
+    }
   };
 
   function checkSystemStatus() {
-    setLoading(true);
-    callApi("admin_system_status", {}, (res) => {
-      setLoading(false);
-      if (res.data.isInitialized) {
-        showView("login");
-      } else {
-        showView("wizard");
-      }
-    });
+    try {
+      setLoading(true);
+      callApi("admin_system_status", {}, (res) => {
+        try {
+          setLoading(false);
+          if (res.data && res.data.isInitialized) {
+            showView("login");
+          } else {
+            showView("wizard");
+          }
+        } catch (e) {
+          showErrorModal("Error processing system status response", e);
+        }
+      });
+    } catch (e) {
+      showErrorModal("Failed to execute checkSystemStatus", e);
+    }
   }
 
   // --- AUTH LOGIC ---
   document.getElementById('wizardForm').onsubmit = function(e) {
-    e.preventDefault();
-    const payload = {
-      setupKey: document.getElementById('wiz-setupKey').value,
-      userData: {
-        username: document.getElementById('wiz-username').value,
-        email: document.getElementById('wiz-email').value,
-        password: document.getElementById('wiz-password').value
-      }
-    };
-    setLoading(true);
-    callApi("admin_bootstrap", payload, (res) => {
-      setLoading(false);
-      alert("✅ System Initialized! Please login.");
-      showView("login");
-    });
+    try {
+      e.preventDefault();
+      const payload = {
+        setupKey: document.getElementById('wiz-setupKey').value,
+        userData: {
+          username: document.getElementById('wiz-username').value,
+          email: document.getElementById('wiz-email').value,
+          password: document.getElementById('wiz-password').value
+        }
+      };
+      setLoading(true);
+      callApi("admin_bootstrap", payload, (res) => {
+        try {
+          setLoading(false);
+          alert("✅ System Initialized! Please login.");
+          showView("login");
+        } catch (err) {
+          showErrorModal("Error resolving wizard completion", err);
+        }
+      });
+    } catch (err) {
+      showErrorModal("Error submitting wizard form", err);
+    }
   };
 
   document.getElementById('loginForm').onsubmit = function(e) {
-    e.preventDefault();
-    const payload = {
-      username: document.getElementById('login-username').value,
-      password: document.getElementById('login-password').value
-    };
-    setLoading(true);
-    callApi("user_login", payload, (res) => {
-      setLoading(false);
-      if (res.data && res.data.user.role === 'admin') {
-        sessionToken = res.data.token;
-        currentUser = res.data.user;
-        document.getElementById('user-display').textContent = `Logged in as: ${currentUser.username}`;
-        showView("dashboard");
-        refreshSchema();
-      } else {
-        alert("❌ Error: Access denied. Must be an administrator.");
-      }
-    });
+    try {
+      e.preventDefault();
+      const payload = {
+        username: document.getElementById('login-username').value,
+        password: document.getElementById('login-password').value
+      };
+      setLoading(true);
+      callApi("user_login", payload, (res) => {
+        try {
+          setLoading(false);
+          if (res.data && res.data.user && res.data.user.role === 'admin') {
+            sessionToken = res.data.token;
+            currentUser = res.data.user;
+            document.getElementById('user-display').textContent = `Logged in as: ${currentUser.username}`;
+            showView("dashboard");
+            refreshSchema();
+          } else {
+            showErrorModal("Access Denied", "Error: User is either not found or does not have administrator privileges.");
+          }
+        } catch (err) {
+          showErrorModal("Error processing login response", err);
+        }
+      });
+    } catch (err) {
+      showErrorModal("Error submitting login form", err);
+    }
   };
 
   function logout() {
-    sessionToken = null;
-    showView("login");
+    try {
+      sessionToken = null;
+      showView("login");
+    } catch (e) {
+      showErrorModal("Error during logout", e);
+    }
   }
 
   // --- DASHBOARD LOGIC ---
   function refreshSchema() {
-    setLoading(true);
-    callApi("admin_get_schema", {}, (res) => {
-      schemaData = res.data;
-      renderSchema();
-      setLoading(false);
-    });
+    try {
+      setLoading(true);
+      callApi("admin_get_schema", {}, (res) => {
+        try {
+          schemaData = res.data;
+          renderSchema();
+          setLoading(false);
+        } catch (e) {
+          showErrorModal("Error processing schema response data", e);
+        }
+      });
+    } catch (e) {
+      showErrorModal("Failed to initiate schema refresh", e);
+    }
   }
 
   function renderSchema() {
-    const container = document.getElementById('schema-container');
-    container.innerHTML = "";
+    try {
+      const container = document.getElementById('schema-container');
+      container.innerHTML = "";
 
-    Object.entries(schemaData.categories).forEach(([catName, catData], idx) => {
-      const catId = `cat-${catName}`;
-      let tablesHtml = "";
+      if(!schemaData || !schemaData.categories) {
+        container.innerHTML = "<div class='alert alert-warning'>No schema data available.</div>";
+        return;
+      }
 
-      Object.entries(catData.tables).forEach(([tableName, tableSchema]) => {
-        tablesHtml += `
-          <div class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3">
-            <div>
-              <span class="fw-bold">${tableName}</span>
-              <div class="small text-muted">${Object.keys(tableSchema.columns).length} Columns | PK: ${tableSchema.primaryKey}</div>
+      Object.entries(schemaData.categories).forEach(([catName, catData], idx) => {
+        const catId = `cat-${catName}`;
+        let tablesHtml = "";
+
+        Object.entries(catData.tables).forEach(([tableName, tableSchema]) => {
+          tablesHtml += `
+            <div class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3">
+              <div>
+                <span class="fw-bold">${tableName}</span>
+                <div class="small text-muted">${Object.keys(tableSchema.columns).length} Columns | PK: ${tableSchema.primaryKey}</div>
+              </div>
+              <div>
+                <button onclick="peekData('${tableName}')" class="btn btn-sm btn-light"><i class="fas fa-eye"></i> Peek</button>
+                <button onclick="analyzeTable('${tableName}')" class="btn btn-sm btn-outline-info ms-2">Analyze</button>
+                <button onclick="repairTable('${tableName}')" class="btn btn-sm btn-outline-warning ms-2">Repair</button>
+              </div>
             </div>
-            <div>
-              <button onclick="peekData('${tableName}')" class="btn btn-sm btn-light"><i class="fas fa-eye"></i> Peek</button>
-              <button onclick="analyzeTable('${tableName}')" class="btn btn-sm btn-outline-info ms-2">Analyze</button>
-              <button onclick="repairTable('${tableName}')" class="btn btn-sm btn-outline-warning ms-2">Repair</button>
+          `;
+        });
+
+        container.innerHTML += `
+          <div class="accordion-item border-0 mb-3 rounded shadow-sm overflow-hidden">
+            <h2 class="accordion-header">
+              <button class="accordion-button ${idx === 0 ? '' : 'collapsed'} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#${catId}">
+                <i class="fas fa-folder text-warning me-2"></i> ${catName} Domain
+              </button>
+            </h2>
+            <div id="${catId}" class="accordion-collapse collapse ${idx === 0 ? 'show' : ''}">
+              <div class="accordion-body p-0">
+                <div class="list-group list-group-flush">
+                  ${tablesHtml}
+                </div>
+              </div>
             </div>
           </div>
         `;
       });
-
-      container.innerHTML += `
-        <div class="accordion-item border-0 mb-3 rounded shadow-sm overflow-hidden">
-          <h2 class="accordion-header">
-            <button class="accordion-button ${idx === 0 ? '' : 'collapsed'} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#${catId}">
-              <i class="fas fa-folder text-warning me-2"></i> ${catName} Domain
-            </button>
-          </h2>
-          <div id="${catId}" class="accordion-collapse collapse ${idx === 0 ? 'show' : ''}">
-            <div class="accordion-body p-0">
-              <div class="list-group list-group-flush">
-                ${tablesHtml}
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    });
+    } catch (e) {
+      showErrorModal("Error rendering schema UI", e);
+    }
   }
 
   function analyzeTable(tableName) {
-    setLoading(true);
-    callApi("admin_analyze_table", { table: tableName }, (res) => {
-      setLoading(false);
-      console.log("Analysis Result:", res.data);
-      alert(`Analysis Complete for ${tableName}. Check console for details.`);
-    });
+    try {
+      setLoading(true);
+      callApi("admin_analyze_table", { table: tableName }, (res) => {
+        try {
+          setLoading(false);
+          console.log("Analysis Result:", res.data);
+          alert(`Analysis Complete for ${tableName}. Check console for details.`);
+        } catch (e) {
+          showErrorModal(`Error processing analysis for ${tableName}`, e);
+        }
+      });
+    } catch (e) {
+      showErrorModal("Failed to initiate table analysis", e);
+    }
   }
 
   function repairTable(tableName) {
-    if (!confirm(`Physically create or update ${tableName}? This is non-destructive.`)) return;
-    setLoading(true);
-    callApi("admin_repair_table", { table: tableName }, (res) => {
-      setLoading(false);
-      alert("✅ Repair operation triggered successfully.");
-    });
+    try {
+      if (!confirm(`Physically create or update ${tableName}? This is non-destructive.`)) return;
+      setLoading(true);
+      callApi("admin_repair_table", { table: tableName }, (res) => {
+        try {
+          setLoading(false);
+          alert("✅ Repair operation triggered successfully.");
+        } catch (e) {
+          showErrorModal(`Error processing repair for ${tableName}`, e);
+        }
+      });
+    } catch (e) {
+      showErrorModal("Failed to initiate table repair", e);
+    }
   }
 
   function peekData(tableName) {
-    setLoading(true);
-    callApi("admin_peek_data", { table: tableName }, (res) => {
-      setLoading(false);
-      document.getElementById('peekTitle').textContent = `Last 5 Records: ${tableName}`;
-      document.getElementById('peekRaw').textContent = JSON.stringify(res.data, null, 2);
-      new bootstrap.Modal(document.getElementById('peekModal')).show();
-    });
+    try {
+      setLoading(true);
+      callApi("admin_peek_data", { table: tableName }, (res) => {
+        try {
+          setLoading(false);
+          document.getElementById('peekTitle').textContent = `Last 5 Records: ${tableName}`;
+          document.getElementById('peekRaw').textContent = JSON.stringify(res.data, null, 2);
+          new bootstrap.Modal(document.getElementById('peekModal')).show();
+        } catch (e) {
+          showErrorModal(`Error rendering peek data for ${tableName}`, e);
+        }
+      });
+    } catch (e) {
+      showErrorModal("Failed to initiate data peek", e);
+    }
   }
 
   // --- UTILS ---
   function callApi(action, payload, successCallback) {
-    const request = {
-      action: action,
-      token: sessionToken,
-      ...payload
-    };
+    try {
+      const request = {
+        action: action,
+        token: sessionToken,
+        ...payload
+      };
 
-    google.script.run
-      .withSuccessHandler((response) => {
-        if (response.success) {
-          successCallback(response);
-        } else {
-          alert("❌ API Error: " + response.error.message);
-          setLoading(false);
-        }
-      })
-      .withFailureHandler((err) => {
-        alert("💥 Server Crash: " + err.message);
-        setLoading(false);
-      })
-      .executeActionViaUI(request);
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((response) => {
+            try {
+              if (response && response.success) {
+                successCallback(response);
+              } else {
+                showErrorModal("API Logical Error", response ? response.error : "Unknown backend failure");
+              }
+            } catch (err) {
+              showErrorModal("Exception inside API Success Handler", err);
+            }
+          })
+          .withFailureHandler((err) => {
+            showErrorModal("API Server Communication Crash", err);
+          })
+          .executeActionViaUI(request);
+      } else {
+        throw new Error("google.script.run is unavailable. Are you running this outside of Apps Script?");
+      }
+    } catch (err) {
+      showErrorModal(`Failed to construct or send API call for action: ${action}`, err);
+    }
   }
 
   function showView(viewId) {
-    document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('d-none'));
-    document.getElementById(`view-${viewId}`).classList.remove('d-none');
+    try {
+      document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('d-none'));
+      document.getElementById(`view-${viewId}`).classList.remove('d-none');
+    } catch (e) {
+      showErrorModal(`Error switching view to ${viewId}`, e);
+    }
   }
 
-  function showPanel(panelId) {
-    document.querySelectorAll('[id^="panel-"]').forEach(el => el.classList.add('d-none'));
-    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-    document.getElementById(`panel-${panelId}`).classList.remove('d-none');
-    
-    // Use target to highlight active link
-    if (event && event.currentTarget) {
-      event.currentTarget.classList.add('active');
-    }
+  // Updated definition to explicitly require the 'e' event
+  function showPanel(panelId, e) {
+    try {
+      document.querySelectorAll('[id^="panel-"]').forEach(el => el.classList.add('d-none'));
+      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+      document.getElementById(`panel-${panelId}`).classList.remove('d-none');
+      
+      // Safely check against the passed event parameter
+      if (e && e.currentTarget) {
+        e.currentTarget.classList.add('active');
+      }
 
-    if (panelId === 'health') {
-      renderHealth();
+      if (panelId === 'health') {
+        renderHealth();
+      }
+    } catch (err) {
+      showErrorModal(`Exception caught executing showPanel('${panelId}')`, err);
     }
   }
 
   function renderHealth() {
-    const container = document.getElementById('health-metrics');
-    container.innerHTML = '<div class="col-12 text-center text-muted">Calculating metrics...</div>';
-    
-    callApi("admin_analyze_table", {}, (res) => {
-      const plan = res.data;
-      const issues = plan.operations.filter(op => op.type === 'ERROR').length;
-      const changes = plan.operations.length - issues;
+    try {
+      const container = document.getElementById('health-metrics');
+      // Using issue-list to show loading since metrics container was removed in HTML update
+      const list = document.getElementById('issue-list');
+      if (list) {
+          list.innerHTML = '<div class="p-5 text-center text-muted"><div class="spinner-border text-primary mb-3" role="status"></div><p>Scanning all spreadsheet data and schemas...</p></div>';
+      }
       
-      container.innerHTML = `
-        <div class="col-md-3">
-          <div class="card p-4 text-center">
-            <h4 class="fw-bold">${Object.keys(schemaData.categories).length}</h4>
-            <div class="text-muted small uppercase">Domains</div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card p-4 text-center">
-            <h4 class="fw-bold">${Object.values(schemaData.categories).reduce((acc, cat) => acc + Object.keys(cat.tables).length, 0)}</h4>
-            <div class="text-muted small uppercase">Total Tables</div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card p-4 text-center border-start border-danger border-4">
-            <h4 class="fw-bold text-danger">${issues}</h4>
-            <div class="text-muted small uppercase">Critical Issues</div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card p-4 text-center border-start border-warning border-4">
-            <h4 class="fw-bold text-warning">${changes}</h4>
-            <div class="text-muted small uppercase">Pending Repairs</div>
-          </div>
-        </div>
-      `;
-    });
+      callApi("admin_analyze_table", {}, (res) => {
+        try {
+          const plan = res.data;
+          
+          // Calculate Metrics
+          let summary = { good: 0, bad: 0, warning: 0, error: 0, issue: 0 };
+          let details = [];
+
+          // Determine total tables from schema
+          let totalTables = 0;
+          if (schemaData && schemaData.categories) {
+             Object.values(schemaData.categories).forEach(cat => {
+                 totalTables += Object.keys(cat.tables).length;
+             });
+          }
+
+          // A set to keep track of tables that have at least one issue
+          let tablesWithIssues = new Set();
+
+          if(plan && plan.operations) {
+             plan.operations.forEach(op => {
+                let status, message, severity;
+                let target = (op.target && op.target.category ? op.target.category : "ALL") + "." + (op.target && op.target.table ? op.target.table : "N/A");
+                
+                if(target !== 'ALL.N/A') tablesWithIssues.add(target);
+
+                if (op.type === 'ERROR') {
+                    status = "ERROR"; summary.error++;
+                    message = (op.payload && op.payload.message) ? op.payload.message : "Critical operation failure.";
+                    severity = "high";
+                } else if (op.type === 'CREATE_FILE' || op.type === 'CREATE_SHEET') {
+                    status = "BAD"; summary.bad++;
+                    message = "Physical component missing (" + (op.meta ? op.meta.reason : "unknown") + ").";
+                    severity = "high";
+                } else if (op.type === 'ENSURE_HEADER') {
+                    status = "WARNING"; summary.warning++;
+                    message = "Schema mismatch: Headers need syncing.";
+                    severity = "med";
+                } else if (op.type === 'ENSURE_META_SHEET') {
+                    status = "ISSUE"; summary.issue++;
+                    message = "System metadata is outdated or missing.";
+                    severity = "low";
+                } else {
+                    status = "ISSUE"; summary.issue++;
+                    message = "Unknown operation: " + op.type;
+                    severity = "low";
+                }
+
+                details.push({ type: status, target: target, message: message, severity: severity });
+             });
+          }
+
+          // Good tables are the total minus any tables that appeared in an operation
+          summary.good = totalTables > 0 ? (totalTables - tablesWithIssues.size) : 0;
+
+          // Update UI
+          document.getElementById('count-good').textContent = summary.good;
+          document.getElementById('count-bad').textContent = summary.bad;
+          document.getElementById('count-warning').textContent = summary.warning;
+          document.getElementById('count-error').textContent = summary.error;
+          document.getElementById('count-issue').textContent = summary.issue;
+          document.getElementById('total-issues').textContent = details.length + ' Items Found';
+
+          if (list) {
+              list.innerHTML = "";
+
+              if (details.length === 0) {
+                list.innerHTML = '<div class="p-5 text-center text-success"><i class="fas fa-check-circle fa-3x mb-3"></i><p>System is fully healthy. No issues found.</p></div>';
+                return;
+              }
+
+              details.forEach(item => {
+                let icon = item.type === "ERROR" ? "fa-exclamation-circle text-danger" : (item.type === "BAD" ? "fa-times-circle text-dark" : (item.type === "WARNING" ? "fa-exclamation-triangle text-warning" : "fa-info-circle text-info"));
+                let badgeClass = item.type === "ERROR" ? "bg-danger" : (item.type === "BAD" ? "bg-dark" : (item.type === "WARNING" ? "bg-warning text-dark" : "bg-info text-white"));
+                
+                let targetTable = item.target.split('.')[1] || item.target;
+                
+                list.innerHTML += `<div class="list-group-item issue-item p-3 severity-${item.severity}">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div class="d-flex">
+                        <i class="fas ${icon} fs-4 me-3 mt-1"></i>
+                        <div>
+                          <div class="fw-bold fs-5">${item.target}</div>
+                          <div class="text-muted mb-2">${item.message}</div>
+                          ${item.type !== 'ERROR' ? `<button onclick="repairTable('${targetTable}')" class="btn btn-sm btn-outline-primary"><i class="fas fa-tools"></i> Repair Issue</button>` : `<span class="small text-danger fw-bold"><i class="fas fa-lock"></i> Auto-Repair Blocked</span>`}
+                        </div>
+                      </div>
+                      <span class="badge ${badgeClass} text-uppercase">${item.type}</span>
+                    </div>
+                  </div>`;
+              });
+          }
+
+        } catch (e) {
+          showErrorModal("Exception caught processing data inside renderHealth callback", e);
+        }
+      });
+    } catch (e) {
+      showErrorModal("Exception caught initiating renderHealth", e);
+    }
   }
 
   function repairAll() {
-    if (!confirm("This will physically provision ALL missing tables and headers across the entire system. Proceed?")) return;
-    setLoading(true);
-    callApi("admin_repair_table", {}, (res) => {
-      setLoading(false);
-      alert("✅ Global Repair Complete! System is now synced.");
-      refreshSchema();
-    });
+    try {
+      if (!confirm("This will physically provision ALL missing tables and headers across the entire system. Proceed?")) return;
+      setLoading(true);
+      callApi("admin_repair_table", {}, (res) => {
+        try {
+          setLoading(false);
+          alert("✅ Global Repair Complete! System is now synced.");
+          refreshSchema();
+        } catch (e) {
+          showErrorModal("Error resolving global repair callback", e);
+        }
+      });
+    } catch (e) {
+      showErrorModal("Exception caught initiating repairAll", e);
+    }
   }
 
   function setLoading(show) {
-    document.getElementById('loader').style.display = show ? 'flex' : 'none';
+    try {
+      document.getElementById('loader').style.display = show ? 'flex' : 'none';
+    } catch (e) {
+      console.error("Failed to toggle loader", e);
+    }
   }
 </script>
 

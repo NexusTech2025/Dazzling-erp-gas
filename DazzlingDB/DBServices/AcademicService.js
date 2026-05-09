@@ -3,32 +3,6 @@
  * Domain Service for Curriculum and Batch Management.
  */
 
-/**
- * 🏛️ ACADEMIC ERROR HIERARCHY
- */
-class AcademicBaseError extends Error {
-  constructor(message, context = {}) {
-    super(message);
-    this.name = this.constructor.name;
-    this.context = context;
-    this.timestamp = new Date().toISOString();
-  }
-}
-
-class AcademicValidationError extends AcademicBaseError {}
-class AcademicIntegrityError extends AcademicBaseError {}
-
-class MissingSegmentIdError extends AcademicValidationError {}
-class CourseTypeNotFoundError extends AcademicIntegrityError {}
-class TeacherNotFoundError extends AcademicIntegrityError {}
-class BranchNotFoundError extends AcademicIntegrityError {}
-class CourseNotFoundError extends AcademicIntegrityError {
-    constructor(message, context) {
-        super(message || "The specified Course ID does not exist.", context);
-    }
-}
-class PackageOrchestrationError extends AcademicBaseError {}
-
 const AcademicService = {
   /**
    * Registers a new curriculum segment (e.g., 'Academic', 'Vocational').
@@ -47,13 +21,13 @@ const AcademicService = {
     const db = DBContext.getInstance();
     
     if (!payload.segment_id) {
-      throw new MissingSegmentIdError("Course creation failed: 'segment_id' is required.");
+      throw new SheetDB.ValidationError("Course creation failed: 'segment_id' is required.");
     }
 
     // Health Check: Ensure CourseType exists
     const segment = db.CourseType.findById(payload.segment_id);
     if (!segment) {
-      throw new CourseTypeNotFoundError(`Invalid segment_id: ${payload.segment_id}. No such CourseType exists.`);
+      throw new SheetDB.EntityNotFoundError("CourseType", payload.segment_id, "Academic");
     }
 
     console.log(`[AcademicService] Creating Course: ${payload.name}`);
@@ -69,17 +43,17 @@ const AcademicService = {
 
     // 1. Verify Course
     if (!db.Course.findById(payload.item_id)) {
-      throw new CourseNotFoundError(null, { item_id: payload.item_id });
+      throw new SheetDB.EntityNotFoundError("Course", payload.item_id, "Academic");
     }
 
     // 2. Verify Teacher (Cross-Category Check: Staff)
     if (payload.teacher_id && !db.Teacher.findById(payload.teacher_id)) {
-      throw new TeacherNotFoundError(`Assigned Teacher ID '${payload.teacher_id}' was not found in the Staff registry.`, { teacher_id: payload.teacher_id });
+      throw new SheetDB.EntityNotFoundError("Teacher", payload.teacher_id, "Academic");
     }
 
     // 3. Verify Branch (Cross-Category Check: Staff)
     if (payload.branch_id && !db.Branch.findById(payload.branch_id)) {
-      throw new BranchNotFoundError(`Branch ID '${payload.branch_id}' is invalid.`, { branch_id: payload.branch_id });
+      throw new SheetDB.EntityNotFoundError("Branch", payload.branch_id, "Academic");
     }
 
     console.log(`[AcademicService] Creating Batch: ${payload.batch_name}`);

@@ -4,17 +4,6 @@
  * Implements Salted Hashing and Brute-Force Protection.
  */
 
-class AuthBaseError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
-class AuthAuthenticationError extends AuthBaseError {}
-class AuthAuthorizationError extends AuthBaseError {}
-class AuthAccountLockedError extends AuthAuthenticationError {}
-
 const AuthBridge = {
   
   _MAX_FAILED_ATTEMPTS: 5,
@@ -28,15 +17,16 @@ const AuthBridge = {
     console.log(`[AuthBridge] Registering user: ${payload.username}`);
 
     if (db.User.exists({ username: payload.username })) {
-      throw new AuthBaseError(`Username '${payload.username}' is already taken.`);
+      throw new SheetDB.ConflictError(`Username '${payload.username}' is already taken.`);
     }
 
     if (!AuthCore.isStrongPassword(payload.password)) {
-      throw new AuthBaseError("Password is too weak (minimum 8 characters).");
+      throw new SheetDB.ValidationError("Password is too weak (minimum 8 characters).");
     }
 
     const salt = AuthCore.generateSalt();
     const newUser = db.User.insert({
+      user_id: payload.user_id || Utilities.getUuid(),
       ...payload,
       password_salt: salt,
       password_hash: AuthCore.hashPassword(payload.password, salt),
@@ -160,6 +150,8 @@ const AuthBridge = {
    */
   isSystemInitialized() {
     const db = DBContext.getInstance();
+    // Safe Check: Verify table exists physically before checking for data
+    if (!db.User.isTableExist()) return false;
     return db.User.exists({ role: "admin" });
   },
 

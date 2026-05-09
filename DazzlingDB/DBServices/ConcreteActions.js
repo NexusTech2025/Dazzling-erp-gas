@@ -106,12 +106,14 @@ class CreatePromoCodeAction extends BaseAction {
 
 class ValidatePromoCodeAction extends BaseAction {
   _validate() {
-    this._requireParam("code");
-    this._requireParam("entity_type");
-    this._requireParam("entity_id");
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.code || !p.entity_type || !p.entity_id) {
+      throw new ActionValidationError("payload must contain 'code', 'entity_type', and 'entity_id'.");
+    }
   }
   _execute() {
-    const { code, entity_type, entity_id } = this._params;
+    const { code, entity_type, entity_id } = this._params.payload;
     return CoreService.validatePromoCode(code, entity_type, entity_id);
   }
 }
@@ -127,18 +129,26 @@ class UserRegisterAction extends BaseAction {
 
 class UserLoginAction extends BaseAction {
   _validate() {
-    this._requireParam("username");
-    this._requireParam("password");
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.username || !p.password) {
+      throw new ActionValidationError("payload must contain 'username' and 'password'.");
+    }
   }
   _execute() {
-    const { username, password } = this._params;
-    return AuthBridge.login(username, password, this._context);
+    const { username, password } = this._params.payload;
+    return AuthBridge.login(username, password, {});
   }
 }
 
 class UserLogoutAction extends BaseAction {
-  _validate() { this._requireParam("token"); }
-  _execute() { return AuthBridge.logout(this._params.token); }
+  _execute() {
+    // Note: token is usually passed in the root of the request, not payload, 
+    // but we support it in payload for consistency if provided.
+    const token = this._params.token || (this._params.payload && this._params.payload.token);
+    if (!token) throw new ActionValidationError("token is required.");
+    return AuthBridge.logout(token);
+  }
 }
 
 /**
@@ -152,11 +162,15 @@ class StaffOnboardTeacherAction extends BaseAction {
 
 class StaffAssignSubjectsAction extends BaseAction {
   _validate() {
-    this._requireParam("teacher_id");
-    this._requireParam("subject_ids");
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.teacher_id || !p.subject_ids) {
+      throw new ActionValidationError("payload must contain 'teacher_id' and 'subject_ids'.");
+    }
   }
   _execute() {
-    return StaffService.assignSubjects(this._params.teacher_id, this._params.subject_ids);
+    const { teacher_id, subject_ids } = this._params.payload;
+    return StaffService.assignSubjects(teacher_id, subject_ids);
   }
 }
 
@@ -177,17 +191,39 @@ class StaffRecordPaymentAction extends BaseAction {
 
 class StaffAddDocumentAction extends BaseAction {
   _validate() {
-    this._requireParam("teacher_id");
-    this._requireParam("document");
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.teacher_id || !p.document) {
+      throw new ActionValidationError("payload must contain 'teacher_id' and 'document'.");
+    }
   }
   _execute() {
-    return StaffService.addDocument(this._params.teacher_id, this._params.document);
+    const { teacher_id, document } = this._params.payload;
+    return StaffService.addDocument(teacher_id, document);
+  }
+}
+
+/**
+ * 🔍 ADVANCED QUERY ENGINE ACTION
+ */
+class QueryAction extends BaseAction {
+  _validate() {
+    this._requireParam("payload");
+    if (!this._params.payload.target) {
+      throw new ActionValidationError("Query 'target' table is required.");
+    }
+  }
+
+  _execute() {
+    // Inject the DB instance automatically via BaseAction's this._db
+    return QueryEngine.execute(this._params.payload, this._db);
   }
 }
 
 /**
  * 🛠️ ADMIN CONTROL CENTER (ACC) ACTIONS
  */
+
 
 class AdminSystemStatusAction extends BaseAction {
   _execute() {
@@ -202,23 +238,34 @@ class AdminSystemStatusAction extends BaseAction {
 
 class AdminBootstrapAction extends BaseAction {
   _validate() {
-    this._requireParam("setupKey");
-    this._requireParam("userData");
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.setupKey || !p.userData) {
+      throw new ActionValidationError("payload must contain 'setupKey' and 'userData'.");
+    }
   }
 
   _authorize() {
     if (AuthBridge.isSystemInitialized()) {
-      throw new ActionAuthorizationError("System already initialized. Bootstrap disabled.");
+      throw new SheetDB.ForbiddenError("System already initialized. Bootstrap disabled.");
     }
 
     const masterKey = PropertiesService.getScriptProperties().getProperty("SETUP_KEY") || "DAZZLING_2026";
-    if (this._params.setupKey !== masterKey) {
-      throw new ActionAuthorizationError("Invalid Setup Key.");
+    // Check inside payload
+    if (this._params.payload.setupKey !== masterKey) {
+      throw new SheetDB.ForbiddenError("Invalid Setup Key.");
     }
   }
 
   _execute() {
-    const { userData } = this._params;
+    const { userData } = this._params.payload;
+
+    // 1. Physically provision infrastructure (Self-Healing)
+    console.log("[AdminBootstrapAction] Provisioning physical infrastructure...");
+    this._db.setup.provision();
+
+    // 2. Register the Superadmin
+    console.log("[AdminBootstrapAction] Registering superadmin...");
     return AuthBridge.registerUser({
       ...userData,
       role: "admin"
@@ -260,14 +307,19 @@ class AdminRepairTableAction extends BaseAction {
 }
 
 class AdminPeekDataAction extends BaseAction {
-  _validate() { this._requireParam("table"); }
+  _validate() { 
+    this._requireParam("payload");
+    if (!this._params.payload.table) {
+      throw new ActionValidationError("payload must contain 'table'.");
+    }
+  }
   _authorize() {
     if (!this._user || this._user.role !== "admin") {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
   _execute() {
-    const { table } = this._params;
+    const { table } = this._params.payload;
     if (!this._db[table]) throw new ActionValidationError(`Table '${table}' not found.`);
     
     // Return last 5 rows

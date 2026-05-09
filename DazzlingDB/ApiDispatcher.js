@@ -28,9 +28,11 @@ const ApiDispatcher = (function() {
       "staff_set_salary_config": StaffSetSalaryConfigAction,
       "staff_mark_attendance": StaffMarkAttendanceAction,
       "staff_record_payment": StaffRecordPaymentAction,
-      "staff_add_document": StaffAddDocumentAction
+      "staff_add_document": StaffAddDocumentAction,
+      "data_query": QueryAction
     };
   }
+
 
   /**
    * Internal: Returns the map of administrative action keys to classes.
