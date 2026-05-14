@@ -1,4 +1,4 @@
-const DATABASE_SCHEMA ={
+{
   "version": "2.0.0",
   "database": "DazzlingDB",
   "categories": {

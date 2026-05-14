@@ -68,14 +68,10 @@ function executeActionViaUI(request) {
   console.log(`[Code] UI Action: ${action}`);
 
   // Handle flattened requests (where payload properties are at the top level)
+  // If the frontend didn't wrap it in 'payload', we do it here.
   if (!payload) {
     const { action: a, token: t, ...rest } = request;
     payload = rest;
-  }
-
-  // Special case for bootstrapping (doesn't require a token/session)
-  if (action === 'admin_bootstrap' || action === 'bootstrap_admin') {
-    return bootstrapAdminSystem(request);
   }
   
   const mockEvent = {
@@ -83,7 +79,9 @@ function executeActionViaUI(request) {
       action: action,
       token: token
     },
-    postData: { contents: JSON.stringify(payload) }
+    // We MUST wrap the payload object inside a { payload: ... } envelope so that 
+    // ApiDispatcher._extractParams assigns it correctly to params.payload
+    postData: { contents: JSON.stringify({ payload: payload }) }
   };
 
   const output = ApiDispatcher.dispatch(mockEvent);

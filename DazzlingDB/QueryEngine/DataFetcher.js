@@ -20,7 +20,8 @@ const DataFetcher = (function() {
     if (!table) throw new Error(`Table '${query.target}' not found.`);
 
     // 1. Fetch All (Normalized)
-    let rows = table.all();
+    // let rows = table.all();
+    let rows = table.gateway.all();
 
     // 2. Inject Metadata (Required for Hydrator)
     rows.forEach(row => {

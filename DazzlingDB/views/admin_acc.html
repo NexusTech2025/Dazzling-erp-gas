@@ -511,7 +511,7 @@
       const request = {
         action: action,
         token: sessionToken,
-        ...payload
+        payload: payload
       };
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {

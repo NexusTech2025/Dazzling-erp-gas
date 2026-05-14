@@ -1,0 +1,144 @@
+{
+  "batches": [
+    {
+      "batch_name": "Class 11 Commerce - Economics",
+      "target_class": "Class 11",
+      "stream": "Commerce",
+      "subject": "Economics",
+      "start_time": "03:00 PM",
+      "end_time": "03:40 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 11 Commerce - Business Studies (BST)",
+      "target_class": "Class 11",
+      "stream": "Commerce",
+      "subject": "Business Studies (BST)",
+      "start_time": "03:40 PM",
+      "end_time": "04:20 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 11 Commerce - Accounts",
+      "target_class": "Class 11",
+      "stream": "Commerce",
+      "subject": "Accounts",
+      "start_time": "04:20 PM",
+      "end_time": "05:00 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 11 Science - Physics",
+      "target_class": "Class 11",
+      "stream": "Science",
+      "subject": "Physics",
+      "start_time": "03:00 PM",
+      "end_time": "03:40 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 11 Science - Chemistry",
+      "target_class": "Class 11",
+      "stream": "Science",
+      "subject": "Chemistry",
+      "start_time": "03:40 PM",
+      "end_time": "04:20 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 11 Science - Mathematics",
+      "target_class": "Class 11",
+      "stream": "Science",
+      "subject": "Mathematics",
+      "start_time": "04:20 PM",
+      "end_time": "05:00 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 11 Science - Biology",
+      "target_class": "Class 11",
+      "stream": "Science",
+      "subject": "Biology",
+      "start_time": "05:00 PM",
+      "end_time": "05:40 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 12 Commerce - Accounts",
+      "target_class": "Class 12",
+      "stream": "Commerce",
+      "subject": "Accounts",
+      "start_time": "03:00 PM",
+      "end_time": "03:40 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 12 Commerce - Business Studies (BST)",
+      "target_class": "Class 12",
+      "stream": "Commerce",
+      "subject": "Business Studies (BST)",
+      "start_time": "03:40 PM",
+      "end_time": "04:20 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 12 Commerce - Economics",
+      "target_class": "Class 12",
+      "stream": "Commerce",
+      "subject": "Economics",
+      "start_time": "04:20 PM",
+      "end_time": "05:00 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 12 Science - Biology",
+      "target_class": "Class 12",
+      "stream": "Science",
+      "subject": "Biology",
+      "start_time": "03:00 PM",
+      "end_time": "03:40 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 12 Science - Mathematics",
+      "target_class": "Class 12",
+      "stream": "Science",
+      "subject": "Mathematics",
+      "start_time": "03:40 PM",
+      "end_time": "04:20 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 12 Science - Chemistry",
+      "target_class": "Class 12",
+      "stream": "Science",
+      "subject": "Chemistry",
+      "start_time": "04:20 PM",
+      "end_time": "05:00 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    },
+    {
+      "batch_name": "Class 12 Science - Physics",
+      "target_class": "Class 12",
+      "stream": "Science",
+      "subject": "Physics",
+      "start_time": "05:00 PM",
+      "end_time": "05:40 PM",
+      "duration_minutes": 40,
+      "status": "active"
+    }
+  ]
+}

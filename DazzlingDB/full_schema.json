@@ -546,7 +546,18 @@
               "editable": false
             }
           },
-          "relations": {}
+          "relations": {
+            "packagecourses": {
+              "type": "hasMany",
+              "target": "PackageCourse",
+              "foreignKey": "package_id"
+            },
+            "packageperks": {
+              "type": "hasMany",
+              "target": "PackagePerk",
+              "foreignKey": "package_id"
+            }
+          }
         },
         "PackageItem": {
           "primaryKey": "item_id",

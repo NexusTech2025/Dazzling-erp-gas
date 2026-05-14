@@ -1,0 +1,62 @@
+/**
+ * @file computer_course_template.js
+ * Contains the computer course preset data for DazzlingDB.
+ */
+
+const COMPUTER_COURSE_TEMPLATE = {
+  "computerCourses": [
+    // --- BASIC COMPUTER COURSES & OFFICE TOOLS ---
+    { "name": "Computer Basics & Device Introduction", "language_medium": "English", "base_fee": 2000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Basic & Office", "display_duration": "1 Month" } },
+    { "name": "Typing & Keyboard Skills", "language_medium": "English", "base_fee": 500, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Basic & Office", "display_duration": "1 Month" } },
+    { "name": "Basic Computer Operations", "language_medium": "English", "base_fee": 1500, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Basic & Office", "display_duration": "1 Month" } },
+    { "name": "MS Office Fundamentals (Word + PowerPoint + Excel)", "language_medium": "English", "base_fee": 3000, "duration_value": 2, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Basic & Office", "display_duration": "2 Month" } },
+    { "name": "Government Computer Course (RSCIT)", "language_medium": "English", "base_fee": 3500, "duration_value": 3, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Basic & Office", "display_duration": "3 Month" } },
+    { "name": "Advance Excel", "language_medium": "English", "base_fee": 2000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Advanced Office", "display_duration": "1 Month" } },
+    { "name": "Excel Data Expert", "language_medium": "English", "base_fee": 4000, "duration_value": 1.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Advanced Office", "display_duration": "1 - 1.5 Month" } },
+    { "name": "Excel VBA", "language_medium": "English", "base_fee": 3000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Advanced Office", "display_duration": "1 Month" } },
+
+    // --- COMPUTER PROGRAMMING COURSES ---
+    { "name": "C Programming", "language_medium": "English", "base_fee": 3000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Programming", "display_duration": "1 Month" } },
+    { "name": "C++ Programming", "language_medium": "English", "base_fee": 3000, "duration_value": 1.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Programming", "display_duration": "1.5 Month" } },
+    { "name": "C / C++ Programming", "language_medium": "English", "base_fee": 5000, "duration_value": 2.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Programming", "display_duration": "2 - 2.5 Month" } },
+    { "name": "Python Basic", "language_medium": "English", "base_fee": 8000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Programming", "display_duration": "1 Month" } },
+    { "name": "Python Advance", "language_medium": "English", "base_fee": 12000, "duration_value": 2.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Programming", "display_duration": "2 - 2.5 Month" } },
+    { "name": "Core Java", "language_medium": "English", "base_fee": 5000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Programming", "display_duration": "1 Month" } },
+    { "name": "Advance Java", "language_medium": "English", "base_fee": 10000, "duration_value": 3, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Programming", "display_duration": "3 Month" } },
+
+    // --- ADVANCED COMPUTER PROGRAMS ---
+    { "name": "Web Design (UI/UX)", "language_medium": "English", "base_fee": 6000, "duration_value": 3, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Web Development", "display_duration": "2 - 3 Months" } },
+    { "name": "React Basic", "language_medium": "English", "base_fee": 10000, "duration_value": 1.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Web Development", "display_duration": "1.5 Months" } },
+    { "name": "React Advanced", "language_medium": "English", "base_fee": 15000, "duration_value": 3, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Web Development", "display_duration": "2 - 3 Months" } },
+    { "name": "PHP", "language_medium": "English", "base_fee": 4000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Web Development", "display_duration": "1 Month" } },
+    { "name": "Django", "language_medium": "English", "base_fee": 8000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Web Development", "display_duration": "1 Month" } },
+    { "name": "Spring", "language_medium": "English", "base_fee": 10000, "duration_value": 1.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Web Development", "display_duration": "1.5 Months" } },
+    { "name": "Spring Boot", "language_medium": "English", "base_fee": 13000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Web Development", "display_duration": "1 Month" } },
+    
+    { "name": "MERN Stack", "language_medium": "English", "base_fee": 25000, "duration_value": 3.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Full Stack", "display_duration": "3 - 3.5 Months" } },
+    { "name": "Python Django Full Stack", "language_medium": "English", "base_fee": 25000, "duration_value": 6, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Full Stack", "display_duration": "6 Months" } },
+    { "name": "Java Spring Full Stack", "language_medium": "English", "base_fee": 28000, "duration_value": 7, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Full Stack", "display_duration": "7 Months" } },
+    { "name": "Java Spring Boot Full Stack", "language_medium": "English", "base_fee": 30000, "duration_value": 8, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Full Stack", "display_duration": "8 Months" } },
+
+    { "name": "Basic SQL", "language_medium": "English", "base_fee": 2000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Data Analysis", "display_duration": "0.5 - 1 Month" } },
+    { "name": "Advanced SQL", "language_medium": "English", "base_fee": 4000, "duration_value": 2, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Data Analysis", "display_duration": "1 - 2 Months" } },
+    { "name": "Data Analysis (SQL, Excel, Power BI)", "language_medium": "English", "base_fee": 20000, "duration_value": 4, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Data Analysis", "display_duration": "3 - 4 Months" } },
+
+    // --- DATA SCIENCE, AI & AUTOMATION ---
+    { "name": "Python Data Science", "language_medium": "English", "base_fee": 25000, "duration_value": 2, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Data Science & AI", "display_duration": "2 Months" } },
+    { "name": "Python Data Analysis", "language_medium": "English", "base_fee": 20000, "duration_value": 3, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Data Science & AI", "display_duration": "3 Months" } },
+    { "name": "R Programming", "language_medium": "English", "base_fee": 6000, "duration_value": 2, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Data Science & AI", "display_duration": "2 Months" } },
+    { "name": "AI / Machine Learning", "language_medium": "English", "base_fee": 30000, "duration_value": 4, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Data Science & AI", "display_duration": "3-4 Months" } },
+    { "name": "Deep Learning", "language_medium": "English", "base_fee": 30000, "duration_value": 3, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Data Science & AI", "display_duration": "2-3 Months" } },
+
+    { "name": "AI Tools for Daily Productivity", "language_medium": "English", "base_fee": 6000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "AI Automation", "display_duration": "1 Month" } },
+    { "name": "Excel, Data & Report Automation with AI", "language_medium": "English", "base_fee": 8000, "duration_value": 1.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "AI Automation", "display_duration": "1.5 Months" } },
+    { "name": "Document, PDF & Office Automation with AI", "language_medium": "English", "base_fee": 8000, "duration_value": 1, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "AI Automation", "display_duration": "1 Month" } },
+    { "name": "AI Coding Assistants & Development Automation", "language_medium": "English", "base_fee": 10000, "duration_value": 1.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "AI Automation", "display_duration": "1.5 Months" } },
+
+    { "name": "Introduction to Agentic AI Workflows", "language_medium": "English", "base_fee": 9000, "duration_value": 1.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Agentic Systems", "display_duration": "1.5 Months" } },
+    { "name": "AI Agents with Python & LLM Tools", "language_medium": "English", "base_fee": 12000, "duration_value": 2, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Agentic Systems", "display_duration": "2 Months" } },
+    { "name": "Multi-Agent Systems & Tool Orchestration", "language_medium": "English", "base_fee": 15000, "duration_value": 2, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Agentic Systems", "display_duration": "2 Months" } },
+    { "name": "Autonomous Workflow Automation", "language_medium": "English", "base_fee": 12000, "duration_value": 1.5, "duration_unit": "months", "entity_type": "course", "metadata": { "category": "Agentic Systems", "display_duration": "1.5 Months" } }
+  ]
+};
