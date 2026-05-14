@@ -165,14 +165,30 @@ class TableGateway {
   // ==========================================
 
   /**
-   * Maps an object to a 2D row array based on schema column order.
+   * Maps an object to a 2D row array based on the physical spreadsheet header order.
    * @private
    */
   _mapObjectToRow(obj) {
-    return Object.keys(this.columns).map(colKey => {
-      const val = obj[colKey];
-      return this._prepareForWrite(val, this.columns[colKey].type);
-    });
+    try {
+      // 1. Ask DataSource for the Absolute Truth (Physical Headers)
+      const physicalHeaders = this.dataSource.getHeaders(this.category, this.tableName);
+      
+      // 2. Map data EXACTLY to physical layout
+      return physicalHeaders.map(headerName => {
+        // Extract the value meant for this column
+        const rawValue = obj[headerName];
+        
+        // Get schema rules for this column (Fallback to string if not in schema)
+        const columnSchema = this.columns[headerName];
+        const type = columnSchema ? columnSchema.type : "string";
+        
+        // Serialize safely
+        return this._prepareForWrite(rawValue, type);
+      });
+    } catch (e) {
+      console.error(`[TableGateway] FATAL Error building row for ${this.tableName}: ${e.message}`);
+      throw new IntegrityError(`Failed to map object to row: ${e.message}`);
+    }
   }
 
   /**

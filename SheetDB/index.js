@@ -89,17 +89,17 @@ Object.assign(globalThis, {
   init,
 
   // --- Core Classes (Injected for Library Visibility) ---
-  BaseModel,
-  ModelRegistry,
-  FieldMapper,
-  SheetDBError,
-  SpreadsheetNotFoundError,
-  TableNotFoundError,
-  EntityNotFoundError,
-  ValidationError,
-  FieldError,
-  ConflictError,
-  IntegrityError,
-  ForbiddenError
+  BaseModel: globalThis.BaseModel,
+  ModelRegistry: globalThis.ModelRegistry,
+  FieldMapper: globalThis.FieldMapper,
+  SheetDBError: globalThis.SheetDBError,
+  SpreadsheetNotFoundError: globalThis.SpreadsheetNotFoundError,
+  TableNotFoundError: globalThis.TableNotFoundError,
+  EntityNotFoundError: globalThis.EntityNotFoundError,
+  ValidationError: globalThis.ValidationError,
+  FieldError: globalThis.FieldError,
+  ConflictError: globalThis.ConflictError,
+  IntegrityError: globalThis.IntegrityError,
+  ForbiddenError: globalThis.ForbiddenError
 });
 

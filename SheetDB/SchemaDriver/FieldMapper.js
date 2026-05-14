@@ -18,20 +18,28 @@ const FieldMapper = (function() {
    */
   function mapToField(colName, colMeta, isPK) {
     const options = {
+      ...colMeta, // Spread all metadata (maxLength, min, autoNow, prefix, etc.)
       name: colName,
       required: colMeta.required || false,
-      default: colMeta.default,
       choices: colMeta.enum || colMeta.choices || null,
       primaryKey: isPK
     };
 
     // Special Case: Auto-ID generation for Primary Keys
-    if (isPK && colMeta.type === "string" && !colMeta.required) {
-      return new AutoField({ ...options, prefix: _generatePrefix(colName) });
+    if (colMeta.type === "auto" || (isPK && colMeta.type === "string" && !colMeta.required)) {
+      options.prefix = colMeta.idPrefix || _generatePrefix(colName);
+      return new AutoField(options);
     }
 
-    // Map by Type
-    switch (colMeta.type) {
+    return _switchField(colMeta.type, options);
+  }
+
+  /**
+   * Internal: Maps a string type identifier to a concrete Field class.
+   * @private
+   */
+  function _switchField(type, options) {
+    switch (type) {
       case "string":
         return new CharField(options);
       case "number":
@@ -43,6 +51,7 @@ const FieldMapper = (function() {
       case "date":
       case "datetime":
         // Special check for auto-timestamp fields
+        const colName = options.name;
         const isTimestamp = (colName === "created_at" || colName === "__created_at" || colName === "updated_at");
         return new DateTimeField({ 
           ...options, 

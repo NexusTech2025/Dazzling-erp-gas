@@ -16,6 +16,9 @@ class BaseModel {
    * @param {Object} [context] - Optional framework context (gateway, resolver, etc).
    */
   constructor(data = {}, context = {}) {
+    // Determine if this is a new record or fetched from DB
+    this._isNew = context.isNew !== undefined ? context.isNew : true;
+
     // 1. Identify the schema (statically attached by ModelRegistry)
     const schema = this.constructor.schema;
     if (!schema) {
@@ -111,22 +114,70 @@ class BaseModel {
    * Validates, serializes, and routes to the TableGateway.
    */
   save() {
-    if (!this._gateway) throw new Error("Save failed: No TableGateway attached to this model.");
+    if (!this._gateway) {
+      console.error(`[BaseModel] Save failed for ${this.constructor.name}: No TableGateway attached.`);
+      throw new Error(`Save failed: No TableGateway attached to model '${this.constructor.name}'.`);
+    }
 
-    this.validate(); // Tier 1, 2, 4 Validation
-    const rowData = this.toDatabaseRow(); // Includes Auto-ID and Timestamp generation
+    try {
+      this.validate(); // Tier 1, 2, 4 Validation
+      const rowData = this.toDatabaseRow(); // Includes Auto-ID and Timestamp generation
 
-    const id = this[this._primaryKey];
-    if (id) {
-      // Update existing record
-      const rawUpdated = this._gateway.update(id, rowData);
-      Object.assign(this, rawUpdated); // Refresh with any sheet-level changes
-      return this;
-    } else {
-      // Insert new record
+      // Route execution based strictly on hydration state, NOT the presence of an ID.
+      if (this._isNew) {
+        return this._performInsert(rowData);
+      } else {
+        return this._performUpdate(rowData);
+      }
+    } catch (e) {
+      console.error(`[BaseModel] Error during save() for ${this.constructor.name}: ${e.message}`, e);
+      throw e;
+    }
+  }
+
+  /**
+   * Internal helper to execute insertion of a new record.
+   * @private
+   */
+  _performInsert(rowData) {
+    console.log(`[BaseModel] Attempting insert for new ${this.constructor.name}...`);
+    try {
       const rawSaved = this._gateway.insert(rowData);
       Object.assign(this, rawSaved); // Populate generated ID and created_at
+      
+      // State Transition: Once safely in the DB, it is no longer new.
+      this._isNew = false; 
+      
+      console.log(`[BaseModel] Successfully inserted new ${this.constructor.name} (ID: ${this[this._primaryKey]}).`);
       return this;
+    } catch (e) {
+      console.error(`[BaseModel] Insert failed for ${this.constructor.name}: ${e.message}`, e);
+      throw new Error(`Failed to insert ${this.constructor.name}: ${e.message}`);
+    }
+  }
+
+  /**
+   * Internal helper to execute update of an existing record.
+   * @private
+   */
+  _performUpdate(rowData) {
+    const id = this[this._primaryKey];
+    if (!id) {
+      const errorMsg = `Fatal: Attempting to update a record missing its Primary Key '${this._primaryKey}'.`;
+      console.error(`[BaseModel] ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+    
+    console.log(`[BaseModel] Attempting update for ${this.constructor.name} (ID: ${id})...`);
+    try {
+      const rawUpdated = this._gateway.update(id, rowData);
+      Object.assign(this, rawUpdated); // Refresh with any sheet-level changes
+      
+      console.log(`[BaseModel] Successfully updated ${this.constructor.name} (ID: ${id}).`);
+      return this;
+    } catch (e) {
+      console.error(`[BaseModel] Update failed for ${this.constructor.name} (ID: ${id}): ${e.message}`, e);
+      throw new Error(`Failed to update ${this.constructor.name} (ID: ${id}): ${e.message}`);
     }
   }
 

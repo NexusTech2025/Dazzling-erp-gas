@@ -37,7 +37,8 @@ class DynamicRepository {
     return new ModelClass(rawData, { 
       gateway: this.gateway,
       registry: this.registry,
-      resolver: this.resolver 
+      resolver: this.resolver,
+      isNew: false // Mark as existing database record
     });
   }
 
