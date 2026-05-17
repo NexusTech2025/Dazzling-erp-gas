@@ -50,7 +50,7 @@ const E2E_StudentRegistrationTest = (function() {
         contents: JSON.stringify({
           action: action,
           token: token,
-          payload: { payload: payload } // Wrap in payload as per ConcreteActions requirement
+          payload: payload
         })
       }
     };

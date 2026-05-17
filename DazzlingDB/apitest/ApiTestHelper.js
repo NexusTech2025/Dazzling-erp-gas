@@ -32,7 +32,7 @@ const ApiTestHelper = (function() {
         contents: JSON.stringify({
           action: action,
           token: token,
-          payload: { payload: payload } // Wrapped in nested payload as per ConcreteActions
+          payload: payload 
         })
       }
     };

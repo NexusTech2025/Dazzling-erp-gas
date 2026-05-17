@@ -76,3 +76,7 @@ const CourseQuery_ApiTest = (function() {
   };
 
 })();
+
+function runTest(){
+  CourseQuery_ApiTest.run();
+}

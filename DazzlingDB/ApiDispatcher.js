@@ -29,7 +29,8 @@ const ApiDispatcher = (function() {
       "staff_mark_attendance": StaffMarkAttendanceAction,
       "staff_record_payment": StaffRecordPaymentAction,
       "staff_add_document": StaffAddDocumentAction,
-      "data_query": QueryAction
+      "data_query": QueryAction,
+      "init_erp": InitErpAction
     };
   }
 

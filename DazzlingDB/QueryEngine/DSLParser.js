@@ -157,7 +157,7 @@ const DSLParser = (function() {
   function _sanitizePagination(p) {
     const pagination = p || {};
     return {
-      limit: Math.min(Number(pagination.limit) || 50, 200), // Max 200 rows per trip
+      limit: Math.min(Number(pagination.limit) || 50, 1000), // Max 1000 rows per trip
       offset: Math.max(Number(pagination.offset) || 0, 0)
     };
   }

@@ -206,6 +206,73 @@ class StaffAddDocumentAction extends BaseAction {
 /**
  * 🔍 ADVANCED QUERY ENGINE ACTION
  */
+class InitErpAction extends BaseAction {
+  _validate() {
+    this._requireParam("payload");
+    if (!this._params.payload || !Array.isArray(this._params.payload.targets)) {
+      throw new ActionValidationError("'payload.targets' must be an array of table names or query objects.");
+    }
+  }
+
+  _execute() {
+    var targets = this._params.payload.targets;
+    var result = {};
+    var dbSchema = DATABASE_SCHEMA;
+    
+    // Find column helper
+    function hasStatusColumn(tableName) {
+      for (var cat in dbSchema.categories) {
+        var tables = dbSchema.categories[cat].tables;
+        if (tables[tableName] && tables[tableName].columns && tables[tableName].columns.status) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    for (var i = 0; i < targets.length; i++) {
+      var item = targets[i];
+      var queryPayload;
+
+      if (typeof item === "string") {
+        // String Target: Apply Smart Hydration
+        queryPayload = {
+          target: item,
+          pagination: { limit: 1000 }
+        };
+        if (hasStatusColumn(item)) {
+          queryPayload.where = { status: "active" };
+        }
+      } else if (item && typeof item === "object" && item.target) {
+        // Object Target: Use as query payload, ensuring limit default
+        queryPayload = item;
+        if (!queryPayload.pagination) {
+          queryPayload.pagination = { limit: 1000 };
+        } else if (typeof queryPayload.pagination.limit === "undefined") {
+          queryPayload.pagination.limit = 1000;
+        }
+      } else {
+        throw new ActionValidationError("Invalid target at index " + i + ". Must be string or object with 'target' property.");
+      }
+
+      var target = queryPayload.target;
+
+      try {
+        var data = QueryEngine.execute(queryPayload, this._db);
+        
+        // Key Mapping (Pluralization)
+        var key = (target === "Batch") ? "batches" : (target.toLowerCase() + "s");
+        
+        result[key] = data;
+      } catch (e) {
+        throw new Error("Failed to hydrate " + target + ": " + e.message);
+      }
+    }
+
+    return result;
+  }
+}
+
 class QueryAction extends BaseAction {
   _validate() {
     this._requireParam("payload");

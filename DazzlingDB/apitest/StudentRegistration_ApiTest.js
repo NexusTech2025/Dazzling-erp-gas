@@ -150,3 +150,7 @@ const StudentRegistration_ApiTest = (function() {
   };
 
 })();
+
+function runTest(){
+  StudentRegistration_ApiTest.run();
+}
