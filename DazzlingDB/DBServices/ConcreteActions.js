@@ -218,7 +218,7 @@ class InitErpAction extends BaseAction {
     var targets = this._params.payload.targets;
     var result = {};
     var dbSchema = DATABASE_SCHEMA;
-    
+
     // Find column helper
     function hasStatusColumn(tableName) {
       for (var cat in dbSchema.categories) {
@@ -259,10 +259,10 @@ class InitErpAction extends BaseAction {
 
       try {
         var data = QueryEngine.execute(queryPayload, this._db);
-        
+
         // Key Mapping (Pluralization)
         var key = (target === "Batch") ? "batches" : (target.toLowerCase() + "s");
-        
+
         result[key] = data;
       } catch (e) {
         throw new Error("Failed to hydrate " + target + ": " + e.message);
@@ -374,7 +374,7 @@ class AdminRepairTableAction extends BaseAction {
 }
 
 class AdminPeekDataAction extends BaseAction {
-  _validate() { 
+  _validate() {
     this._requireParam("payload");
     if (!this._params.payload.table) {
       throw new ActionValidationError("payload must contain 'table'.");
@@ -388,8 +388,185 @@ class AdminPeekDataAction extends BaseAction {
   _execute() {
     const { table } = this._params.payload;
     if (!this._db[table]) throw new ActionValidationError(`Table '${table}' not found.`);
-    
+
     // Return last 5 rows
     return this._db[table].where({}, { limit: 5 });
+  }
+}
+
+// ----------------------------------------------------
+// GLOBAL CRUD ACTION CONTROLLERS & SAFEGUARD WHITELIST
+// ----------------------------------------------------
+
+
+
+class CreateRecordAction extends BaseAction {
+  constructor(options) {
+    super(options);
+    this._actionName = "data_create";
+  }
+
+  _validate() {
+    this._requireParam("payload");
+    const payload = this._params.payload;
+    if (!payload.table) {
+      throw new ActionValidationError("Payload must contain 'table' property.");
+    }
+    if (!payload.data || typeof payload.data !== "object") {
+      throw new ActionValidationError("Payload must contain a valid 'data' object.");
+    }
+    if (!GLOBAL_CRUD_WHITELIST.has(payload.table)) {
+      throw new ActionValidationError(`Table '${payload.table}' is not eligible for generic CRUD operations. Please use specialized endpoints.`);
+    }
+  }
+
+  _authorize() {
+    const tableName = this._params.payload.table;
+    if (!AuthBridge.checkAccess(this._user, tableName)) {
+      throw new ActionAuthorizationError(`Access denied: You are not authorized to create records in '${tableName}'.`);
+    }
+  }
+
+  _execute() {
+    const { table, data } = this._params.payload;
+    const dbGateway = this._db[table];
+
+    // 1. Resolve Table Schema in global DATABASE_SCHEMA
+    let tableSchema = null;
+    for (var cat in DATABASE_SCHEMA.categories) {
+      var tables = DATABASE_SCHEMA.categories[cat].tables;
+      if (tables[table]) {
+        tableSchema = tables[table];
+        break;
+      }
+    }
+
+    if (!tableSchema) {
+      throw new ActionValidationError(`Table '${table}' schema definition not found.`);
+    }
+
+    // 2. Schema-Driven Auto-ID Injection Logic
+    const primaryKey = tableSchema.primaryKey;
+    let generatedId = null;
+
+    if (primaryKey && tableSchema.columns[primaryKey]) {
+      const pkCol = tableSchema.columns[primaryKey];
+      if (pkCol.type === "auto" && !data[primaryKey]) {
+        const prefix = pkCol.idPrefix || "ID";
+        const utils = typeof SheetDB.Utils !== 'undefined' ? SheetDB.Utils : {
+          generateId: (p) => p + "-" + Math.random().toString(36).substring(2, 9).toUpperCase()
+        };
+        generatedId = utils.generateId(prefix);
+        data[primaryKey] = generatedId;
+      }
+    }
+
+    // 3. Perform Persistence Execution
+    const newRecord = dbGateway.insert(data);
+    const createdId = newRecord[primaryKey] || generatedId || "";
+
+    console.log(`[CreateRecordAction] [User: ${this._user ? this._user.username : 'Guest'}] [Table: ${table}] [ID: ${createdId}] [Status: SUCCESS]`);
+
+    return {
+      message: `Successfully created record in table '${table}' with ID '${createdId}'.`,
+      id: createdId,
+      record: newRecord
+    };
+  }
+}
+
+class UpdateRecordAction extends BaseAction {
+  constructor(options) {
+    super(options);
+    this._actionName = "data_update";
+  }
+
+  _validate() {
+    this._requireParam("payload");
+    const payload = this._params.payload;
+    if (!payload.table) {
+      throw new ActionValidationError("Payload must contain 'table' property.");
+    }
+    if (payload.id === undefined || payload.id === null || payload.id === "") {
+      throw new ActionValidationError("Payload must contain 'id' parameter.");
+    }
+    if (!payload.data || typeof payload.data !== "object") {
+      throw new ActionValidationError("Payload must contain a valid 'data' object.");
+    }
+    if (!GLOBAL_CRUD_WHITELIST.has(payload.table)) {
+      throw new ActionValidationError(`Table '${payload.table}' is not eligible for generic CRUD operations. Please use specialized endpoints.`);
+    }
+  }
+
+  _authorize() {
+    const tableName = this._params.payload.table;
+    if (!AuthBridge.checkAccess(this._user, tableName)) {
+      throw new ActionAuthorizationError(`Access denied: You are not authorized to update records in '${tableName}'.`);
+    }
+  }
+
+  _execute() {
+    const { table, id, data } = this._params.payload;
+
+    const record = this._db[table].findById(id);
+    if (!record) {
+      throw new SheetDB.EntityNotFoundError(table, id, "Category");
+    }
+
+    const updatedRecord = this._db[table].update(id, data);
+
+    console.log(`[UpdateRecordAction] [User: ${this._user ? this._user.username : 'Guest'}] [Table: ${table}] [ID: ${id}] [Status: SUCCESS]`);
+
+    return {
+      message: `Successfully updated record in table '${table}' with ID '${id}'.`,
+      id: id,
+      record: updatedRecord
+    };
+  }
+}
+
+class DeleteRecordAction extends BaseAction {
+  constructor(options) {
+    super(options);
+    this._actionName = "data_delete";
+  }
+
+  _validate() {
+    this._requireParam("payload");
+    const payload = this._params.payload;
+    if (!payload.table) {
+      throw new ActionValidationError("Payload must contain 'table' property.");
+    }
+    if (payload.id === undefined || payload.id === null || payload.id === "") {
+      throw new ActionValidationError("Payload must contain 'id' parameter.");
+    }
+    if (!GLOBAL_CRUD_WHITELIST.has(payload.table)) {
+      throw new ActionValidationError(`Table '${payload.table}' is not eligible for generic CRUD operations. Please use specialized endpoints.`);
+    }
+  }
+
+  _authorize() {
+    const tableName = this._params.payload.table;
+    if (!AuthBridge.checkAccess(this._user, tableName)) {
+      throw new ActionAuthorizationError(`Access denied: You are not authorized to delete records from '${tableName}'.`);
+    }
+  }
+
+  _execute() {
+    const { table, id } = this._params.payload;
+
+    const record = this._db[table].findById(id);
+    if (!record) {
+      throw new SheetDB.EntityNotFoundError(table, id, "Category");
+    }
+
+    this._db[table].remove(id);
+
+    console.log(`[DeleteRecordAction] [User: ${this._user ? this._user.username : 'Guest'}] [Table: ${table}] [ID: ${id}] [Status: SUCCESS]`);
+
+    return {
+      message: `Successfully deleted record in table '${table}' with ID '${id}'.`,
+      id: id
+    };
   }
 }

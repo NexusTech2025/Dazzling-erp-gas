@@ -5,7 +5,7 @@
  */
 
 const SessionManager = {
-  
+
   _CACHE_TTL: 3600, // 1 hour in cache
   _DB_TTL_HOURS: 8, // 8 hours in database
 
@@ -18,7 +18,7 @@ const SessionManager = {
   createSession(userId, clientInfo = {}) {
     const db = DBContext.getInstance();
     const token = AuthCore.generateToken();
-    
+
     const expiry = new Date();
     expiry.setHours(expiry.getHours() + this._DB_TTL_HOURS);
 

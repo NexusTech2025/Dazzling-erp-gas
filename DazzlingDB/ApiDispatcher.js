@@ -30,6 +30,9 @@ const ApiDispatcher = (function() {
       "staff_record_payment": StaffRecordPaymentAction,
       "staff_add_document": StaffAddDocumentAction,
       "data_query": QueryAction,
+      "data_create": CreateRecordAction,
+      "data_update": UpdateRecordAction,
+      "data_delete": DeleteRecordAction,
       "init_erp": InitErpAction
     };
   }

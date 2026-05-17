@@ -14,7 +14,7 @@ const DBContext = (function() {
    * Internal initializer.
    */
   function _init() {
-    const rootFolderId = "1PmHsRpmGXirOh5fmuA3VpNlDn2KuyKlp";
+    const rootFolderId = DATABASE_ROOT_FOLDER_ID;
     
     // DATABASE_SCHEMA is assumed to be globally available from Config.js
     if (typeof DATABASE_SCHEMA === 'undefined') {

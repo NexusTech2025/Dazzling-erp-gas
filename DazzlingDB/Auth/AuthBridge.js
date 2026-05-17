@@ -6,8 +6,8 @@
 
 const AuthBridge = {
   
-  _MAX_FAILED_ATTEMPTS: 5,
-  _LOCKOUT_TTL_CACHE: 900, // 15 minutes lockout in cache
+  _MAX_FAILED_ATTEMPTS: typeof SECURITY_LOCKOUT_ATTEMPTS !== 'undefined' ? SECURITY_LOCKOUT_ATTEMPTS : 5,
+  _LOCKOUT_TTL_CACHE: typeof SECURITY_LOCKOUT_DURATION_MINS !== 'undefined' ? SECURITY_LOCKOUT_DURATION_MINS * 60 : 900, // lockout in cache (seconds)
 
   /**
    * Registers a new user with a unique salt.
@@ -51,7 +51,7 @@ const AuthBridge = {
 
     // 1. Check Cache Lockout
     if (cache.get(`lockout_${username}`)) {
-      throw new AuthAccountLockedError("Account temporarily locked due to multiple failed attempts. Please try again in 15 minutes.");
+      throw new AuthAccountLockedError(`Account temporarily locked due to multiple failed attempts. Please try again in ${typeof SECURITY_LOCKOUT_DURATION_MINS !== 'undefined' ? SECURITY_LOCKOUT_DURATION_MINS : 15} minutes.`);
     }
 
     const user = db.User.findOne({ username: username });
