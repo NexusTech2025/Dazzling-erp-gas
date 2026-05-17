@@ -15,33 +15,147 @@ const StaffService = {
    */
   onboardTeacher(payload) {
     const db = DBContext.getInstance();
-    console.log(`[StaffService] Onboarding teacher: ${payload.full_name}`);
+    console.log(`[StaffService] Initiating onboarding transaction for teacher: ${payload.full_name}`);
 
-    // 1. Uniqueness check for mobile number
+    // Track successfully inserted records for rollback
+    const insertedRecords = [];
+
+    // 1. PRE-FLIGHT VALIDATION (Rich Multi-Field Collection)
+    const validationErrors = [];
+
+    // a. Mobile uniqueness
     if (db.Teacher.exists({ mobile_number: payload.mobile_number })) {
-      throw new SheetDB.ConflictError(`A teacher with mobile number ${payload.mobile_number} already exists.`);
+      validationErrors.push({
+        field: "mobile_number",
+        value: payload.mobile_number,
+        issue: "duplicate",
+        message: `A teacher with mobile number '${payload.mobile_number}' already exists.`
+      });
+    }
+
+    // b. Email uniqueness
+    if (payload.email && db.Teacher.exists({ email: payload.email })) {
+      validationErrors.push({
+        field: "email",
+        value: payload.email,
+        issue: "duplicate",
+        message: `A teacher with email '${payload.email}' already exists.`
+      });
+    }
+
+    // c. User account validation
+    if (payload.userData) {
+      if (db.User.exists({ username: payload.userData.username })) {
+        validationErrors.push({
+          field: "userData.username",
+          value: payload.userData.username,
+          issue: "duplicate",
+          message: `Username '${payload.userData.username}' is already taken.`
+        });
+      }
+    }
+
+    // d. Academic Subject validation
+    if (payload.subjects && Array.isArray(payload.subjects)) {
+      for (const subId of payload.subjects) {
+        if (!db.Course.findById(subId)) {
+          validationErrors.push({
+            field: "subjects",
+            value: subId,
+            issue: "not_found",
+            message: `Course/Subject with ID '${subId}' was not found in Academic.`
+          });
+        }
+      }
+    }
+
+    // Throw consolidated validation errors if any failures exist
+    if (validationErrors.length > 0) {
+      throw new SheetDB.ValidationError("Pre-flight validation failed for teacher onboarding.", {
+        fields: validationErrors
+      });
     }
 
     try {
-      // 2. Insert Teacher Record
+      // 2. CORE: INSERT TEACHER RECORD
+      // Strip out relation fields to keep clean columns in the Teacher sheet
+      const teacherInsertData = { ...payload };
+      delete teacherInsertData.userData;
+      delete teacherInsertData.salary_config;
+      delete teacherInsertData.subjects;
+      delete teacherInsertData.documents;
+
       const teacher = db.Teacher.insert({
-        ...payload,
+        ...teacherInsertData,
         status: payload.status || "active",
         created_at: new Date()
       });
 
-      // 3. Optional: Create Auth User
+      // Log insertion for potential rollback
+      insertedRecords.push({ table: "Teacher", id: teacher.teacher_id });
+
+      // 3. RELATION: CREATE AUTH USER PROFILE
       if (payload.userData) {
-        AuthBridge.registerUser({
+        const registeredUser = AuthBridge.registerUser({
           ...payload.userData,
+          user_id: teacher.teacher_id, // 1:1 Domain Key Sync
           role: "teacher"
         });
+        insertedRecords.push({ table: "User", id: registeredUser.user_id });
       }
 
+      // 4. RELATION: INITIAL COMPENSATION RATE
+      if (payload.salary_config) {
+        const salaryConfig = db.TeacherSalaryConfig.insert({
+          ...payload.salary_config,
+          teacher_id: teacher.teacher_id,
+          effective_from: payload.salary_config.effective_from || new Date()
+        });
+        insertedRecords.push({ table: "TeacherSalaryConfig", id: salaryConfig.salary_config_id });
+      }
+
+      // 5. RELATION: ASSIGN TEACHING SUBJECTS
+      if (payload.subjects && Array.isArray(payload.subjects)) {
+        for (const subId of payload.subjects) {
+          const teacherSubject = db.TeacherSubject.insert({
+            teacher_id: teacher.teacher_id,
+            subject_id: subId
+          });
+          insertedRecords.push({ table: "TeacherSubject", id: teacherSubject.teacher_subject_id });
+        }
+      }
+
+      // 6. RELATION: UPLOAD VERIFIED ONBOARDING DOCUMENTS
+      if (payload.documents && Array.isArray(payload.documents)) {
+        for (const doc of payload.documents) {
+          const teacherDoc = db.TeacherDocument.insert({
+            ...doc,
+            teacher_id: teacher.teacher_id,
+            uploaded_at: new Date()
+          });
+          insertedRecords.push({ table: "TeacherDocument", id: teacherDoc.document_id });
+        }
+      }
+
+      console.log(`[StaffService] Onboarding transaction complete for: ${teacher.teacher_id}`);
       return teacher;
+
     } catch (e) {
-      console.error("[StaffService] Onboarding failed:", e.message);
-      throw new SheetDB.IntegrityError("Failed to onboard teacher.", { originalError: e });
+      console.error("[StaffService] Onboarding transaction failed! Starting rollback sequence...", e.message);
+
+      // Perform transaction rollback in reverse order of insertions
+      for (let i = insertedRecords.length - 1; i >= 0; i--) {
+        const record = insertedRecords[i];
+        try {
+          console.log(`[Rollback] Deleting record from ${record.table} ID: ${record.id}`);
+          db[record.table].remove(record.id);
+        } catch (rollbackErr) {
+          console.error(`[Rollback Error] Failed to delete from ${record.table} ID: ${record.id}:`, rollbackErr.message);
+        }
+      }
+
+      // Re-throw the original business error for meaningful API dispatch notifications
+      throw e;
     }
   },
 

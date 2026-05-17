@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.0.1",
   "database": "DazzlingDB",
   "categories": {
     "Core": {
@@ -1562,77 +1562,6 @@
             }
           }
         },
-        "TeacherPayment": {
-          "primaryKey": "payment_id",
-          "columns": {
-            "teacher_id": {
-              "type": "string",
-              "required": true,
-              "maxLength": 255
-            },
-            "amount": {
-              "type": "number",
-              "required": true
-            },
-            "payment_date": {
-              "type": "date",
-              "required": true
-            },
-            "payment_type": {
-              "type": "string",
-              "choices": [
-                "salary",
-                "advance",
-                "bonus"
-              ],
-              "maxLength": 255
-            },
-            "description": {
-              "type": "string",
-              "maxLength": 255
-            },
-            "payment_id": {
-              "type": "auto",
-              "idPrefix": "TPM",
-              "editable": false,
-              "unique": true,
-              "required": false
-            },
-            "__tx_id": {
-              "type": "string",
-              "system": true,
-              "required": false,
-              "editable": false,
-              "description": "Unique Transaction ID"
-            },
-            "__tx_status": {
-              "type": "string",
-              "choices": [
-                "PENDING",
-                "COMMITTED",
-                "FAILED"
-              ],
-              "default": "PENDING",
-              "system": true,
-              "required": false,
-              "editable": false
-            },
-            "__created_at": {
-              "type": "datetime",
-              "autoNowAdd": true,
-              "system": true,
-              "required": false,
-              "editable": false
-            }
-          },
-          "relations": {
-            "teacher": {
-              "type": "belongsTo",
-              "target": "Teacher",
-              "foreignKey": "teacher_id"
-            }
-          }
-        },
         "TeacherDocument": {
           "primaryKey": "document_id",
           "columns": {
@@ -1661,73 +1590,6 @@
             "document_id": {
               "type": "auto",
               "idPrefix": "TDO",
-              "editable": false,
-              "unique": true,
-              "required": false
-            },
-            "__tx_id": {
-              "type": "string",
-              "system": true,
-              "required": false,
-              "editable": false,
-              "description": "Unique Transaction ID"
-            },
-            "__tx_status": {
-              "type": "string",
-              "choices": [
-                "PENDING",
-                "COMMITTED",
-                "FAILED"
-              ],
-              "default": "PENDING",
-              "system": true,
-              "required": false,
-              "editable": false
-            },
-            "__created_at": {
-              "type": "datetime",
-              "autoNowAdd": true,
-              "system": true,
-              "required": false,
-              "editable": false
-            }
-          },
-          "relations": {
-            "teacher": {
-              "type": "belongsTo",
-              "target": "Teacher",
-              "foreignKey": "teacher_id"
-            }
-          }
-        },
-        "SalaryConfig": {
-          "primaryKey": "config_id",
-          "columns": {
-            "teacher_id": {
-              "type": "string",
-              "required": true,
-              "maxLength": 255
-            },
-            "salary_type": {
-              "type": "string",
-              "choices": [
-                "monthly",
-                "per_class",
-                "hourly"
-              ],
-              "maxLength": 255
-            },
-            "base_amount": {
-              "type": "number",
-              "default": 0
-            },
-            "per_unit_rate": {
-              "type": "number",
-              "default": 0
-            },
-            "config_id": {
-              "type": "auto",
-              "idPrefix": "SCG",
               "editable": false,
               "unique": true,
               "required": false

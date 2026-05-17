@@ -36,8 +36,8 @@ class BaseAction {
     }
   }
 
-  _validate() {}
-  _authorize() {}
+  _validate() { }
+  _authorize() { }
   _execute() { throw new BaseActionError("_execute() must be implemented."); }
   _format(result) { return result; }
 

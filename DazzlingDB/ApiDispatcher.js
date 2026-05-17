@@ -3,8 +3,8 @@
  * Central Router and Dispatcher for Web Requests.
  */
 
-const ApiDispatcher = (function() {
-  
+const ApiDispatcher = (function () {
+
   /**
    * Internal: Returns the map of standard action keys to classes.
    */
@@ -59,7 +59,7 @@ const ApiDispatcher = (function() {
    */
   function dispatch(e) {
     let response;
-    
+
     try {
       // 1. Parse Request
       const params = _parseEvent(e);
@@ -84,7 +84,7 @@ const ApiDispatcher = (function() {
       // 4. Initialize the Action with automatic DB injection
       const ActionClass = registry[actionKey];
       const db = DBContext.getInstance();
-      
+
       const action = new ActionClass({
         db: db,
         params: params,
