@@ -98,6 +98,7 @@ const E2E_StudentRegistrationTest = (function() {
     const batch = _api("academic_create_batch", {
       item_id: course.course_id,
       batch_name: "Batch Alpha - 2026",
+      batch_type: "Academy",
       capacity: 30
     });
     _logger.success(`Batch Created with ID: ${batch.batch_id}`);

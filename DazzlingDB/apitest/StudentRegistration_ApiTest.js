@@ -51,6 +51,7 @@ const StudentRegistration_ApiTest = (function() {
     const batch = callApi("academic_create_batch", {
       item_id: course.course_id,
       batch_name: "API Test Batch A",
+      batch_type: "Academy",
       capacity: 20
     });
     logger.success(`Batch Created with ID: ${batch.batch_id}`);

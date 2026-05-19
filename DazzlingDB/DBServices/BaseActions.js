@@ -50,10 +50,33 @@ class BaseAction {
   }
 
   _normalizeError(error) {
-    return {
+    const norm = {
       type: error.name || "UnknownError",
       message: error.message || "Internal server error."
     };
+
+    // 1. Map details (Validation / Field-level violations)
+    if (error.context && error.context.fields) {
+      norm.details = error.context;
+    } else if (error.details) {
+      norm.details = error.details;
+    }
+
+    // 2. Map business context (Branch, Session, Role)
+    if (error.businessContext) {
+      norm.context = error.businessContext;
+    } else if (error.context && !error.context.fields) {
+      norm.context = error.context;
+    }
+
+    // 3. Map system telemetry (Timestamps, Request IDs)
+    if (error.meta) {
+      norm.meta = error.meta;
+    } else if (error.timestamp) {
+      norm.meta = { timestamp: error.timestamp };
+    }
+
+    return norm;
   }
 
   _requireParam(name) {

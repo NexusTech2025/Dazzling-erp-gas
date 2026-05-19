@@ -217,32 +217,17 @@ class InitErpAction extends BaseAction {
   _execute() {
     var targets = this._params.payload.targets;
     var result = {};
-    var dbSchema = DATABASE_SCHEMA;
-
-    // Find column helper
-    function hasStatusColumn(tableName) {
-      for (var cat in dbSchema.categories) {
-        var tables = dbSchema.categories[cat].tables;
-        if (tables[tableName] && tables[tableName].columns && tables[tableName].columns.status) {
-          return true;
-        }
-      }
-      return false;
-    }
 
     for (var i = 0; i < targets.length; i++) {
       var item = targets[i];
       var queryPayload;
 
       if (typeof item === "string") {
-        // String Target: Apply Smart Hydration
+        // String Target: Hydrate all rows with high default limit and no auto-filtering
         queryPayload = {
           target: item,
           pagination: { limit: 1000 }
         };
-        if (hasStatusColumn(item)) {
-          queryPayload.where = { status: "active" };
-        }
       } else if (item && typeof item === "object" && item.target) {
         // Object Target: Use as query payload, ensuring limit default
         queryPayload = item;

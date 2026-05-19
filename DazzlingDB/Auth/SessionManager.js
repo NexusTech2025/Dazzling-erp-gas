@@ -80,6 +80,6 @@ const SessionManager = {
 
     // 2. Clear Database
     const db = DBContext.getInstance();
-    db.Session.delete(token);
+    db.Session.remove(token);
   }
 };

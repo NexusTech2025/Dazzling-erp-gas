@@ -13,7 +13,15 @@
  */
 const BaseError = (typeof SheetDB !== 'undefined') ? SheetDB.SheetDBError : Error;
 
-class SystemError extends BaseError {}
+class SystemError extends BaseError {
+  constructor(message, options = {}) {
+    super(message);
+    this.name = this.constructor.name;
+    this.details = options.details || null;
+    this.context = options.context || null;
+    this.meta = options.meta || null;
+  }
+}
 
 /**
  * 🔐 AUTH ERRORS (Unique Business Logic)
@@ -30,9 +38,8 @@ class PackageOrchestrationError extends SystemError {}
  * ⚡ ACTION LAYER ERRORS (UI Compatibility)
  */
 class BaseActionError extends SystemError {
-  constructor(message, meta = {}) {
-    super(message, meta);
-    this.meta = meta;
+  constructor(message, options = {}) {
+    super(message, options);
   }
 }
 class ActionValidationError extends BaseActionError {}
