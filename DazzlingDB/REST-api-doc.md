@@ -63,7 +63,7 @@ Every request MUST include an `action` and a `payload`. For protected routes, a 
 | :--- | :--- | :--- |
 | `academic_create_course_type` | `{ "payload": { "segment_name": "..." } }` | Create segments like "Academic" or "Vocational". |
 | `academic_create_course` | `{ "payload": { "segment_id": "...", "name": "...", "base_fee": 0 } }` | Create a specific subject/course. |
-| `academic_create_batch` | `{ "payload": { "item_id": "...", "batch_name": "...", "capacity": 30 } }` | Create a batch for a course. |
+| `academic_create_batch` | `{ "payload": { "course_id": "...", "batch_name": "...", "capacity": 30 } }` | Create a batch for a course. |
 | `academic_create_package` | `{ "payload": { "name": "...", "package_fee": 1000, ... } }` | Bulk package creation with perks/courses. |
 | `academic_enroll_student` | `{ "payload": { "student_id": "...", "item_id": "...", "batch_id": "..." } }` | Enrolls a student in a batch. |
 

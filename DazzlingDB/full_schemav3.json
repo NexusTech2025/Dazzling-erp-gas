@@ -300,7 +300,7 @@
         "Batch": {
           "primaryKey": "batch_id",
           "columns": {
-            "item_id": {
+            "course_id": {
               "type": "string",
               "maxLength": 255
             },
@@ -389,7 +389,7 @@
             "course": {
               "type": "belongsTo",
               "target": "Course",
-              "foreignKey": "item_id"
+              "foreignKey": "course_id"
             },
             "teacher": {
               "type": "belongsTo",
@@ -1260,6 +1260,127 @@
               "type": "belongsTo",
               "target": "Student",
               "foreignKey": "student_id"
+            }
+          }
+        },
+        "StudentLead": {
+          "primaryKey": "lead_id",
+          "columns": {
+            "student_name": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255
+            },
+            "phone": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255
+            },
+            "email": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "batch_id": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255
+            },
+            "referral_id": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "internal_notes": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "lead_source": {
+              "type": "string",
+              "choices": [
+                "walk-in",
+                "online",
+                "referral",
+                "social_media",
+                "other"
+              ],
+              "default": "walk-in",
+              "required": true,
+              "maxLength": 255
+            },
+            "priority": {
+              "type": "string",
+              "choices": [
+                "ready_to_enroll",
+                "hot",
+                "warm",
+                "cold"
+              ],
+              "default": "ready_to_enroll",
+              "required": true,
+              "maxLength": 255
+            },
+            "status": {
+              "type": "string",
+              "choices": [
+                "prospect",
+                "contacted",
+                "converted",
+                "lost"
+              ],
+              "default": "prospect",
+              "required": true,
+              "maxLength": 255
+            },
+            "is_registered": {
+              "type": "boolean",
+              "default": false
+            },
+            "created_at": {
+              "type": "datetime",
+              "autoNowAdd": true
+            },
+            "updated_at": {
+              "type": "datetime",
+              "autoNow": true
+            },
+            "lead_id": {
+              "type": "auto",
+              "idPrefix": "SLD",
+              "editable": false,
+              "unique": true,
+              "required": false
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "batch": {
+              "type": "belongsTo",
+              "target": "Batch",
+              "foreignKey": "batch_id"
             }
           }
         }

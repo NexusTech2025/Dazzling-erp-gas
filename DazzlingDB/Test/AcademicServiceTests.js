@@ -56,7 +56,7 @@ function runAcademicServiceTests() {
   try {
     AcademicService.createBatch({
       batch_id: "B-FAIL",
-      item_id: "CRS-GHOST",
+      course_id: "CRS-GHOST",
       batch_name: "Ghost Batch"
     });
   } catch (e) {

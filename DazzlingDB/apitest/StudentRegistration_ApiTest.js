@@ -5,14 +5,14 @@
  * Instructions: Run `StudentRegistration_ApiTest.run()` from the Apps Script editor.
  */
 
-const StudentRegistration_ApiTest = (function() {
+const StudentRegistration_ApiTest = (function () {
 
   function run() {
     // Destructure the helper utilities
     const { logger, callApi } = ApiTestHelper;
 
     console.log("\n🧪 STARTING STUDENT REGISTRATION API TEST SUITE 🧪");
-    
+
     try {
       const academicData = _setupAcademicEnvironment(logger, callApi);
       const studentId = _registerStudent(academicData, logger, callApi);
@@ -83,7 +83,7 @@ const StudentRegistration_ApiTest = (function() {
     logger.action("Executing Student Registration...");
     const student = callApi("student_register", regPayload);
     logger.success(`Student Registered with ID: ${student.student_id}`);
-    
+
     logger.action("Enrolling Student...");
     callApi("academic_enroll_student", {
       student_id: student.student_id,
@@ -118,9 +118,9 @@ const StudentRegistration_ApiTest = (function() {
 
     logger.action("Fetching Student Profile via QueryEngine...");
     const result = callApi("data_query", queryPayload);
-    
+
     if (result.data.length === 0) throw new Error("Student not found in query results.");
-    
+
     const student = result.data[0];
     logger.data("Hydrated Student", {
       name: student.student_name,
@@ -132,7 +132,7 @@ const StudentRegistration_ApiTest = (function() {
 
   function _testUpdateAndDelete(studentId, logger) {
     logger.phase("4: ORM Structural Check (Update & Delete)");
-    
+
     const db = DBContext.getInstance();
 
     logger.action(`Testing ORM Update...`);
@@ -152,6 +152,6 @@ const StudentRegistration_ApiTest = (function() {
 
 })();
 
-function runTest(){
+function runTest() {
   StudentRegistration_ApiTest.run();
 }

@@ -1,0 +1,636 @@
+diff --git a/DazzlingDB/ApiDispatcher.js b/DazzlingDB/ApiDispatcher.js
+index 2758bb9..21f968a 100644
+--- a/DazzlingDB/ApiDispatcher.js
++++ b/DazzlingDB/ApiDispatcher.js
+@@ -12,6 +12,7 @@ const ApiDispatcher = (function () {
+     return {
+       "ping": PingAction,
+       "student_register": RegisterStudentAction,
++      "student_add_lead": AddStudentLeadAction,
+       "academic_create_course_type": CreateCourseTypeAction,
+       "academic_create_course": CreateCourseAction,
+       "academic_create_batch": CreateBatchAction,
+diff --git a/DazzlingDB/Code.js b/DazzlingDB/Code.js
+index 6b30ca3..b8a4daa 100644
+--- a/DazzlingDB/Code.js
++++ b/DazzlingDB/Code.js
+@@ -11,8 +11,36 @@ function bootstrapDatabase() {
+   const db = DBContext.getInstance();
+   
+   console.log("[App] Starting Physical Provisioning...");
+-  db.setup.provision();
+-  console.log("[App] Provisioning Complete.");
++  try {
++    const result = db.setup.provision();
++    
++    if (result.errors && result.errors.length > 0) {
++      console.warn(`[App] Provisioning finished with ${result.errors.length} error(s):`);
++      result.errors.forEach(err => console.warn(` - ${err}`));
++    }
++    
++    if (result.isChanged) {
++      console.log("[App] Provisioning Complete. Changes applied:");
++      if (result.createdFiles && result.createdFiles.length > 0) {
++        console.log(` - Files Created: ${result.createdFiles.join(', ')}`);
++      }
++      if (result.createdSheets && result.createdSheets.length > 0) {
++        console.log(` - Sheets Created: ${result.createdSheets.join(', ')}`);
++      }
++      if (result.updatedHeaders && result.updatedHeaders.length > 0) {
++        console.log(` - Headers Updated: ${result.updatedHeaders.join(', ')}`);
++      }
++      if (result.metaUpdated && result.metaUpdated.length > 0) {
++        console.log(` - Metadata Sheets Updated: ${result.metaUpdated.join(', ')}`);
++      }
++    } else {
++      console.log("[App] Provisioning Complete. Database is already up to date (No changes required).");
++    }
++    return result;
++  } catch (error) {
++    console.error("[App] Fatal Error during database provisioning:", error.message || error);
++    throw error;
++  }
+ }
+ 
+ /**
+diff --git a/DazzlingDB/Config.js b/DazzlingDB/Config.js
+index ab378af..161ebab 100644
+--- a/DazzlingDB/Config.js
++++ b/DazzlingDB/Config.js
+@@ -22,7 +22,7 @@ const SESSION_TTL_HOURS = 24;
+ const GLOBAL_CRUD_WHITELIST = new Set([
+     "Branch", "PromoCode",
+     "CourseType", "Course", "Batch", "PackageItem", "PackageCourse", "PackagePerk",
+-    "Address", "ContactInfo", "Education",
++    "Address", "ContactInfo", "Education", "StudentLead",
+     "TeacherSubject", "TeacherAttendance", "TeacherDocument", "TeacherSalaryConfig", "TeacherPaymentTransaction",
+     "FeePlan"
+ ]);
+\ No newline at end of file
+diff --git a/DazzlingDB/Config/database_schema.js b/DazzlingDB/Config/database_schema.js
+index 148c5c6..2fed165 100644
+--- a/DazzlingDB/Config/database_schema.js
++++ b/DazzlingDB/Config/database_schema.js
+@@ -300,7 +300,7 @@ const DATABASE_SCHEMA = {
+         "Batch": {
+           "primaryKey": "batch_id",
+           "columns": {
+-            "item_id": {
++            "course_id": {
+               "type": "string",
+               "maxLength": 255
+             },
+@@ -389,7 +389,7 @@ const DATABASE_SCHEMA = {
+             "course": {
+               "type": "belongsTo",
+               "target": "Course",
+-              "foreignKey": "item_id"
++              "foreignKey": "course_id"
+             },
+             "teacher": {
+               "type": "belongsTo",
+@@ -1262,6 +1262,127 @@ const DATABASE_SCHEMA = {
+               "foreignKey": "student_id"
+             }
+           }
++        },
++        "StudentLead": {
++          "primaryKey": "lead_id",
++          "columns": {
++            "student_name": {
++              "type": "string",
++              "required": true,
++              "maxLength": 255
++            },
++            "phone": {
++              "type": "string",
++              "required": true,
++              "maxLength": 255
++            },
++            "email": {
++              "type": "string",
++              "maxLength": 255
++            },
++            "batch_id": {
++              "type": "string",
++              "required": true,
++              "maxLength": 255
++            },
++            "referral_id": {
++              "type": "string",
++              "maxLength": 255
++            },
++            "internal_notes": {
++              "type": "string",
++              "maxLength": 255
++            },
++            "lead_source": {
++              "type": "string",
++              "choices": [
++                "walk-in",
++                "online",
++                "referral",
++                "social_media",
++                "other"
++              ],
++              "default": "walk-in",
++              "required": true,
++              "maxLength": 255
++            },
++            "priority": {
++              "type": "string",
++              "choices": [
++                "ready_to_enroll",
++                "hot",
++                "warm",
++                "cold"
++              ],
++              "default": "ready_to_enroll",
++              "required": true,
++              "maxLength": 255
++            },
++            "status": {
++              "type": "string",
++              "choices": [
++                "prospect",
++                "contacted",
++                "converted",
++                "lost"
++              ],
++              "default": "prospect",
++              "required": true,
++              "maxLength": 255
++            },
++            "is_registered": {
++              "type": "boolean",
++              "default": false
++            },
++            "created_at": {
++              "type": "datetime",
++              "autoNowAdd": true
++            },
++            "updated_at": {
++              "type": "datetime",
++              "autoNow": true
++            },
++            "lead_id": {
++              "type": "auto",
++              "idPrefix": "SLD",
++              "editable": false,
++              "unique": true,
++              "required": false
++            },
++            "__tx_id": {
++              "type": "string",
++              "system": true,
++              "required": false,
++              "editable": false,
++              "description": "Unique Transaction ID"
++            },
++            "__tx_status": {
++              "type": "string",
++              "choices": [
++                "PENDING",
++                "COMMITTED",
++                "FAILED"
++              ],
++              "default": "PENDING",
++              "system": true,
++              "required": false,
++              "editable": false
++            },
++            "__created_at": {
++              "type": "datetime",
++              "autoNowAdd": true,
++              "system": true,
++              "required": false,
++              "editable": false
++            }
++          },
++          "relations": {
++            "batch": {
++              "type": "belongsTo",
++              "target": "Batch",
++              "foreignKey": "batch_id"
++            }
++          }
+         }
+       }
+     },
+diff --git a/DazzlingDB/DBServices/AcademicService.js b/DazzlingDB/DBServices/AcademicService.js
+index 880166f..0b71f7b 100644
+--- a/DazzlingDB/DBServices/AcademicService.js
++++ b/DazzlingDB/DBServices/AcademicService.js
+@@ -19,7 +19,7 @@ const AcademicService = {
+    */
+   createCourse(payload) {
+     const db = DBContext.getInstance();
+-    
++
+     if (!payload.segment_id) {
+       throw new SheetDB.ValidationError("Course creation failed: 'segment_id' is required.");
+     }
+@@ -42,8 +42,8 @@ const AcademicService = {
+     const db = DBContext.getInstance();
+ 
+     // 1. Verify Course
+-    if (!db.Course.findById(payload.item_id)) {
+-      throw new SheetDB.EntityNotFoundError("Course", payload.item_id, "Academic");
++    if (!db.Course.findById(payload.course_id)) {
++      throw new SheetDB.EntityNotFoundError("Course", payload.course_id, "Academic");
+     }
+ 
+     // 2. Verify Teacher (Cross-Category Check: Staff)
+@@ -84,11 +84,11 @@ const AcademicService = {
+    */
+   enrollStudent(payload) {
+     const db = DBContext.getInstance();
+-    
++
+     // Existence checks
+     if (!db.Student.findById(payload.student_id)) throw new Error("Student not found.");
+-    
+-    console.log(`[AcademicService] Enrolling Student ${payload.student_id} into Batch/Item ${payload.item_id}`);
++
++    console.log(`[AcademicService] Enrolling Student ${payload.student_id} into Batch/Item ${payload.course_id}`);
+     return db.Enrollment.insert({
+       ...payload,
+       enrollment_date: payload.enrollment_date || new Date(),
+diff --git a/DazzlingDB/DBServices/ConcreteActions.js b/DazzlingDB/DBServices/ConcreteActions.js
+index f2a63f0..107df2c 100644
+--- a/DazzlingDB/DBServices/ConcreteActions.js
++++ b/DazzlingDB/DBServices/ConcreteActions.js
+@@ -30,6 +30,29 @@ class RegisterStudentAction extends BaseAction {
+   }
+ }
+ 
++/**
++ * Student Lead Domain: Add a new student lead
++ */
++class AddStudentLeadAction extends BaseAction {
++  _validate() {
++    this._requireParam("payload");
++    const p = this._params.payload;
++    if (!p.leadData) {
++      throw new ActionValidationError("payload must contain 'leadData'.");
++    }
++    if (!p.leadData.student_name) {
++      throw new ActionValidationError("leadData must contain 'student_name'.");
++    }
++    if (!p.leadData.phone) {
++      throw new ActionValidationError("leadData must contain 'phone'.");
++    }
++  }
++
++  _execute() {
++    return StudentService.addStudentLead(this._params.payload.leadData);
++  }
++}
++
+ /**
+  * Academic Domain: Create CourseType (Segment)
+  */
+diff --git a/DazzlingDB/DBServices/StudentService.js b/DazzlingDB/DBServices/StudentService.js
+index a18ea1a..f8bf8e6 100644
+--- a/DazzlingDB/DBServices/StudentService.js
++++ b/DazzlingDB/DBServices/StudentService.js
+@@ -9,6 +9,19 @@
+  */
+ 
+ const StudentService = {
++  /**
++   * Helper to generate unique identifiers, falling back to inline logic if SheetDB.Utils is unavailable.
++   * @param {string} prefix - The prefix for the ID (e.g. "STU", "ADDR")
++   * @returns {string} The generated unique ID.
++   * @private
++   */
++  _generateId(prefix) {
++    if (typeof SheetDB.Utils !== 'undefined' && typeof SheetDB.Utils.generateId === 'function') {
++      return SheetDB.Utils.generateId(prefix);
++    }
++    return prefix + "-" + Math.random().toString(36).substring(2, 9).toUpperCase();
++  },
++
+   /**
+    * Orchestrates the registration of a new student.
+    * Leverages SheetDB's native insertOne() for relational linkage.
+@@ -18,24 +31,23 @@ const StudentService = {
+    */
+   registerStudent(payload) {
+     const db = DBContext.getInstance();
+-    const utils = typeof SheetDB.Utils !== 'undefined' ? SheetDB.Utils : { generateId: (prefix) => prefix + "-" + Math.random().toString(36).substring(2, 9).toUpperCase() };
+ 
+     console.log(`[StudentService] Registering new student: ${payload.profile.student_name}`);
+ 
+     // 1. Generate Primary Identifiers (Required because library doesn't auto-generate IDs yet)
+-    const studentId = utils.generateId("STU");
+-    const addressId = utils.generateId("ADDR");
+-    const contactId = utils.generateId("CONT");
++    const studentId = this._generateId("STU");
++    const addressId = this._generateId("ADDR");
++    const contactId = this._generateId("CONT");
+ 
+     // 2. Build the nested payload for insertOne()
+     // The library will automatically inject student_id into address and contact
+-    // and address_id into contact if the schema relations are defined.
++    // and addre`ss_id into contact if the schema relations are defined.
+     const nestedPayload = {
+       ...payload.profile,
+       student_id: studentId,
+       created_at: new Date(),
+       status: payload.profile.status || "active",
+-      
++
+       // Nested Relation Keys (Must match the 'relations' keys in Student schema)
+       address: {
+         ...payload.address,
+@@ -50,10 +62,10 @@ const StudentService = {
+     try {
+       // 3. Execute Nested Relational Insert
+       const student = db.Student.insertOne(nestedPayload);
+-      
++
+       console.log(`[StudentService] Registration successful for ID: ${studentId}`);
+       return student;
+-      
++
+     } catch (error) {
+       console.error("[StudentService] Registration failed:", error);
+       throw new Error(`Failed to register student: ${error.message}`);
+@@ -67,6 +79,41 @@ const StudentService = {
+   getProfile(studentId) {
+     const db = DBContext.getInstance();
+     return db.Student.findById(studentId, ['Address', 'ContactInfo', 'Enrollment']);
++  },
++
++  /**
++   * Creates a new StudentLead record.
++   * 
++   * @param {Object} leadData
++   * @returns {Object} The created StudentLead record.
++   */
++  addStudentLead(leadData) {
++    const db = DBContext.getInstance();
++
++    console.log(`[StudentService] Adding new student lead: ${leadData.student_name}`);
++
++    // 1. Generate Primary Identifier
++    const leadId = this._generateId("SLD");
++
++    // 2. Build record payload
++    const recordPayload = {
++      ...leadData,
++      lead_id: leadId,
++      created_at: leadData.created_at ? new Date(leadData.created_at) : new Date(),
++      updated_at: leadData.updated_at ? new Date(leadData.updated_at) : new Date(),
++      status: leadData.status || "prospect",
++      is_registered: leadData.is_registered === true || leadData.is_registered === "true"
++    };
++
++    try {
++      // 3. Insert record using SheetDB
++      const record = db.StudentLead.insertOne(recordPayload);
++      console.log(`[StudentService] Lead successfully created with ID: ${leadId}`);
++      return record;
++    } catch (error) {
++      console.error("[StudentService] Failed to add student lead:", error);
++      throw new Error(`Failed to add student lead: ${error.message}`);
++    }
+   }
+ };
+ 
+diff --git a/DazzlingDB/REST-api-doc.md b/DazzlingDB/REST-api-doc.md
+index 47d1633..d42ff21 100644
+--- a/DazzlingDB/REST-api-doc.md
++++ b/DazzlingDB/REST-api-doc.md
+@@ -63,7 +63,7 @@ Every request MUST include an `action` and a `payload`. For protected routes, a
+ | :--- | :--- | :--- |
+ | `academic_create_course_type` | `{ "payload": { "segment_name": "..." } }` | Create segments like "Academic" or "Vocational". |
+ | `academic_create_course` | `{ "payload": { "segment_id": "...", "name": "...", "base_fee": 0 } }` | Create a specific subject/course. |
+-| `academic_create_batch` | `{ "payload": { "item_id": "...", "batch_name": "...", "capacity": 30 } }` | Create a batch for a course. |
++| `academic_create_batch` | `{ "payload": { "course_id": "...", "batch_name": "...", "capacity": 30 } }` | Create a batch for a course. |
+ | `academic_create_package` | `{ "payload": { "name": "...", "package_fee": 1000, ... } }` | Bulk package creation with perks/courses. |
+ | `academic_enroll_student` | `{ "payload": { "student_id": "...", "item_id": "...", "batch_id": "..." } }` | Enrolls a student in a batch. |
+ 
+diff --git a/DazzlingDB/Test/AcademicServiceTests.js b/DazzlingDB/Test/AcademicServiceTests.js
+index b01fa54..e9a27ab 100644
+--- a/DazzlingDB/Test/AcademicServiceTests.js
++++ b/DazzlingDB/Test/AcademicServiceTests.js
+@@ -56,7 +56,7 @@ function runAcademicServiceTests() {
+   try {
+     AcademicService.createBatch({
+       batch_id: "B-FAIL",
+-      item_id: "CRS-GHOST",
++      course_id: "CRS-GHOST",
+       batch_name: "Ghost Batch"
+     });
+   } catch (e) {
+diff --git a/DazzlingDB/apitest/StudentRegistration_ApiTest.js b/DazzlingDB/apitest/StudentRegistration_ApiTest.js
+index f28b161..9b48e35 100644
+--- a/DazzlingDB/apitest/StudentRegistration_ApiTest.js
++++ b/DazzlingDB/apitest/StudentRegistration_ApiTest.js
+@@ -5,14 +5,14 @@
+  * Instructions: Run `StudentRegistration_ApiTest.run()` from the Apps Script editor.
+  */
+ 
+-const StudentRegistration_ApiTest = (function() {
++const StudentRegistration_ApiTest = (function () {
+ 
+   function run() {
+     // Destructure the helper utilities
+     const { logger, callApi } = ApiTestHelper;
+ 
+     console.log("\n🧪 STARTING STUDENT REGISTRATION API TEST SUITE 🧪");
+-    
++
+     try {
+       const academicData = _setupAcademicEnvironment(logger, callApi);
+       const studentId = _registerStudent(academicData, logger, callApi);
+@@ -83,7 +83,7 @@ const StudentRegistration_ApiTest = (function() {
+     logger.action("Executing Student Registration...");
+     const student = callApi("student_register", regPayload);
+     logger.success(`Student Registered with ID: ${student.student_id}`);
+-    
++
+     logger.action("Enrolling Student...");
+     callApi("academic_enroll_student", {
+       student_id: student.student_id,
+@@ -118,9 +118,9 @@ const StudentRegistration_ApiTest = (function() {
+ 
+     logger.action("Fetching Student Profile via QueryEngine...");
+     const result = callApi("data_query", queryPayload);
+-    
++
+     if (result.data.length === 0) throw new Error("Student not found in query results.");
+-    
++
+     const student = result.data[0];
+     logger.data("Hydrated Student", {
+       name: student.student_name,
+@@ -132,7 +132,7 @@ const StudentRegistration_ApiTest = (function() {
+ 
+   function _testUpdateAndDelete(studentId, logger) {
+     logger.phase("4: ORM Structural Check (Update & Delete)");
+-    
++
+     const db = DBContext.getInstance();
+ 
+     logger.action(`Testing ORM Update...`);
+@@ -152,6 +152,6 @@ const StudentRegistration_ApiTest = (function() {
+ 
+ })();
+ 
+-function runTest(){
++function runTest() {
+   StudentRegistration_ApiTest.run();
+ }
+diff --git a/DazzlingDB/full_schemav3.json b/DazzlingDB/full_schemav3.json
+index b7f88a9..7ad9d26 100644
+--- a/DazzlingDB/full_schemav3.json
++++ b/DazzlingDB/full_schemav3.json
+@@ -300,7 +300,7 @@
+         "Batch": {
+           "primaryKey": "batch_id",
+           "columns": {
+-            "item_id": {
++            "course_id": {
+               "type": "string",
+               "maxLength": 255
+             },
+@@ -389,7 +389,7 @@
+             "course": {
+               "type": "belongsTo",
+               "target": "Course",
+-              "foreignKey": "item_id"
++              "foreignKey": "course_id"
+             },
+             "teacher": {
+               "type": "belongsTo",
+@@ -1262,6 +1262,127 @@
+               "foreignKey": "student_id"
+             }
+           }
++        },
++        "StudentLead": {
++          "primaryKey": "lead_id",
++          "columns": {
++            "student_name": {
++              "type": "string",
++              "required": true,
++              "maxLength": 255
++            },
++            "phone": {
++              "type": "string",
++              "required": true,
++              "maxLength": 255
++            },
++            "email": {
++              "type": "string",
++              "maxLength": 255
++            },
++            "batch_id": {
++              "type": "string",
++              "required": true,
++              "maxLength": 255
++            },
++            "referral_id": {
++              "type": "string",
++              "maxLength": 255
++            },
++            "internal_notes": {
++              "type": "string",
++              "maxLength": 255
++            },
++            "lead_source": {
++              "type": "string",
++              "choices": [
++                "walk-in",
++                "online",
++                "referral",
++                "social_media",
++                "other"
++              ],
++              "default": "walk-in",
++              "required": true,
++              "maxLength": 255
++            },
++            "priority": {
++              "type": "string",
++              "choices": [
++                "ready_to_enroll",
++                "hot",
++                "warm",
++                "cold"
++              ],
++              "default": "ready_to_enroll",
++              "required": true,
++              "maxLength": 255
++            },
++            "status": {
++              "type": "string",
++              "choices": [
++                "prospect",
++                "contacted",
++                "converted",
++                "lost"
++              ],
++              "default": "prospect",
++              "required": true,
++              "maxLength": 255
++            },
++            "is_registered": {
++              "type": "boolean",
++              "default": false
++            },
++            "created_at": {
++              "type": "datetime",
++              "autoNowAdd": true
++            },
++            "updated_at": {
++              "type": "datetime",
++              "autoNow": true
++            },
++            "lead_id": {
++              "type": "auto",
++              "idPrefix": "SLD",
++              "editable": false,
++              "unique": true,
++              "required": false
++            },
++            "__tx_id": {
++              "type": "string",
++              "system": true,
++              "required": false,
++              "editable": false,
++              "description": "Unique Transaction ID"
++            },
++            "__tx_status": {
++              "type": "string",
++              "choices": [
++                "PENDING",
++                "COMMITTED",
++                "FAILED"
++              ],
++              "default": "PENDING",
++              "system": true,
++              "required": false,
++              "editable": false
++            },
++            "__created_at": {
++              "type": "datetime",
++              "autoNowAdd": true,
++              "system": true,
++              "required": false,
++              "editable": false
++            }
++          },
++          "relations": {
++            "batch": {
++              "type": "belongsTo",
++              "target": "Batch",
++              "foreignKey": "batch_id"
++            }
++          }
+         }
+       }
+     },

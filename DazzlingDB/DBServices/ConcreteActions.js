@@ -31,6 +31,29 @@ class RegisterStudentAction extends BaseAction {
 }
 
 /**
+ * Student Lead Domain: Add a new student lead
+ */
+class AddStudentLeadAction extends BaseAction {
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.leadData) {
+      throw new ActionValidationError("payload must contain 'leadData'.");
+    }
+    if (!p.leadData.student_name) {
+      throw new ActionValidationError("leadData must contain 'student_name'.");
+    }
+    if (!p.leadData.phone) {
+      throw new ActionValidationError("leadData must contain 'phone'.");
+    }
+  }
+
+  _execute() {
+    return StudentService.addStudentLead(this._params.payload.leadData);
+  }
+}
+
+/**
  * Academic Domain: Create CourseType (Segment)
  */
 class CreateCourseTypeAction extends BaseAction {

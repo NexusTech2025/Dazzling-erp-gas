@@ -22,7 +22,7 @@ const SESSION_TTL_HOURS = 24;
 const GLOBAL_CRUD_WHITELIST = new Set([
     "Branch", "PromoCode",
     "CourseType", "Course", "Batch", "PackageItem", "PackageCourse", "PackagePerk",
-    "Address", "ContactInfo", "Education",
+    "Address", "ContactInfo", "Education", "StudentLead",
     "TeacherSubject", "TeacherAttendance", "TeacherDocument", "TeacherSalaryConfig", "TeacherPaymentTransaction",
     "FeePlan"
 ]);

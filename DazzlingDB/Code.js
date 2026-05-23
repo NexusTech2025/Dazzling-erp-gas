@@ -11,8 +11,36 @@ function bootstrapDatabase() {
   const db = DBContext.getInstance();
   
   console.log("[App] Starting Physical Provisioning...");
-  db.setup.provision();
-  console.log("[App] Provisioning Complete.");
+  try {
+    const result = db.setup.provision();
+    
+    if (result.errors && result.errors.length > 0) {
+      console.warn(`[App] Provisioning finished with ${result.errors.length} error(s):`);
+      result.errors.forEach(err => console.warn(` - ${err}`));
+    }
+    
+    if (result.isChanged) {
+      console.log("[App] Provisioning Complete. Changes applied:");
+      if (result.createdFiles && result.createdFiles.length > 0) {
+        console.log(` - Files Created: ${result.createdFiles.join(', ')}`);
+      }
+      if (result.createdSheets && result.createdSheets.length > 0) {
+        console.log(` - Sheets Created: ${result.createdSheets.join(', ')}`);
+      }
+      if (result.updatedHeaders && result.updatedHeaders.length > 0) {
+        console.log(` - Headers Updated: ${result.updatedHeaders.join(', ')}`);
+      }
+      if (result.metaUpdated && result.metaUpdated.length > 0) {
+        console.log(` - Metadata Sheets Updated: ${result.metaUpdated.join(', ')}`);
+      }
+    } else {
+      console.log("[App] Provisioning Complete. Database is already up to date (No changes required).");
+    }
+    return result;
+  } catch (error) {
+    console.error("[App] Fatal Error during database provisioning:", error.message || error);
+    throw error;
+  }
 }
 
 /**

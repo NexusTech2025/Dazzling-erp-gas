@@ -12,6 +12,7 @@ const ApiDispatcher = (function () {
     return {
       "ping": PingAction,
       "student_register": RegisterStudentAction,
+      "student_add_lead": AddStudentLeadAction,
       "academic_create_course_type": CreateCourseTypeAction,
       "academic_create_course": CreateCourseAction,
       "academic_create_batch": CreateBatchAction,

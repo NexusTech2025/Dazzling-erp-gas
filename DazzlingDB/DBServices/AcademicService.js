@@ -19,7 +19,7 @@ const AcademicService = {
    */
   createCourse(payload) {
     const db = DBContext.getInstance();
-    
+
     if (!payload.segment_id) {
       throw new SheetDB.ValidationError("Course creation failed: 'segment_id' is required.");
     }
@@ -42,8 +42,8 @@ const AcademicService = {
     const db = DBContext.getInstance();
 
     // 1. Verify Course
-    if (!db.Course.findById(payload.item_id)) {
-      throw new SheetDB.EntityNotFoundError("Course", payload.item_id, "Academic");
+    if (!db.Course.findById(payload.course_id)) {
+      throw new SheetDB.EntityNotFoundError("Course", payload.course_id, "Academic");
     }
 
     // 2. Verify Teacher (Cross-Category Check: Staff)
@@ -84,11 +84,11 @@ const AcademicService = {
    */
   enrollStudent(payload) {
     const db = DBContext.getInstance();
-    
+
     // Existence checks
     if (!db.Student.findById(payload.student_id)) throw new Error("Student not found.");
-    
-    console.log(`[AcademicService] Enrolling Student ${payload.student_id} into Batch/Item ${payload.item_id}`);
+
+    console.log(`[AcademicService] Enrolling Student ${payload.student_id} into Batch/Item ${payload.course_id}`);
     return db.Enrollment.insert({
       ...payload,
       enrollment_date: payload.enrollment_date || new Date(),
