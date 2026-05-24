@@ -50,7 +50,9 @@ const ApiDispatcher = (function () {
       "admin_get_schema": AdminGetSchemaAction,
       "admin_analyze_table": AdminAnalyzeTableAction,
       "admin_repair_table": AdminRepairTableAction,
-      "admin_peek_data": AdminPeekDataAction
+      "admin_peek_data": AdminPeekDataAction,
+      "admin_cache_analyze": AdminCacheAnalyzeAction,
+      "admin_purge_cache": AdminPurgeCacheAction
     };
   }
 

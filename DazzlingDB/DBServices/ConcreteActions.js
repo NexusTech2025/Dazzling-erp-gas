@@ -402,6 +402,32 @@ class AdminPeekDataAction extends BaseAction {
   }
 }
 
+class AdminCacheAnalyzeAction extends BaseAction {
+  _authorize() {
+    if (!this._user || this._user.role !== "admin") {
+      throw new ActionAuthorizationError("Superadmin privileges required.");
+    }
+  }
+  _execute() {
+    return CacheAnalyzer.getReportData();
+  }
+}
+
+class AdminPurgeCacheAction extends BaseAction {
+  _authorize() {
+    if (!this._user || this._user.role !== "admin") {
+      throw new ActionAuthorizationError("Superadmin privileges required.");
+    }
+  }
+  _execute() {
+    this._db.purge();
+    return {
+      message: "System caches purged successfully."
+    };
+  }
+}
+
+
 // ----------------------------------------------------
 // GLOBAL CRUD ACTION CONTROLLERS & SAFEGUARD WHITELIST
 // ----------------------------------------------------

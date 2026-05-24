@@ -34,16 +34,17 @@ const ProjectionEngine = (function() {
 
     keys.forEach(key => {
       let value = row[key];
+      const isDate = value && Object.prototype.toString.call(value) === '[object Date]';
 
       // 2. Handle Dates (Format to ISO)
-      if (value instanceof Date) {
+      if (isDate) {
         value = value.toISOString();
       }
 
       // 3. Handle Nested Relations (Recursive Projection)
       // Note: In our DSL, nested relations are already attached to the row by the Hydrator.
       // If the value is an array or object (not a Date), we check if it needs projection.
-      if (value !== null && typeof value === 'object' && !(value instanceof Date)) {
+      if (value !== null && typeof value === 'object' && !isDate) {
         if (Array.isArray(value)) {
           value = value.map(item => _projectRow(item, null)); // Nested select handling can be expanded
         } else {

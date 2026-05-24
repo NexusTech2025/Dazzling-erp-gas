@@ -30,7 +30,7 @@ This document describes the structure and usage of the `data_query` payload for 
 
 ## 2. Query Object Structure
 
-### `target` (Required)
+### `target` or `table` (Required)
 
 - **Type:** `String`
 - **Description:** The name of the table to query (e.g., "Student", "Course", "Teacher").

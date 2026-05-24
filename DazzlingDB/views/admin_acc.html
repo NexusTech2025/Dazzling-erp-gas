@@ -151,6 +151,9 @@
           <button class="nav-link border-0 w-100 text-start" onclick="showPanel('health', event)">
             <i class="fas fa-heartbeat me-2"></i> System Health
           </button>
+          <button class="nav-link border-0 w-100 text-start" onclick="showPanel('cache', event)">
+            <i class="fas fa-memory me-2"></i> Cache Analyzer
+          </button>
           <button class="nav-link border-0 w-100 text-start" onclick="showPanel('logs', event)">
             <i class="fas fa-list-ul me-2"></i> Activity Logs
           </button>
@@ -204,6 +207,63 @@
             </div>
             <div class="list-group list-group-flush" id="issue-list">
               <div class="p-5 text-center text-muted"><i class="fas fa-stethoscope fa-3x mb-3"></i><p>Run analysis to detect system health issues.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cache Panel -->
+        <div id="panel-cache" class="d-none">
+          <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+              <h2 class="fw-bold mb-0">Cache Analyzer</h2>
+              <p class="text-muted">Diagnostic overview of CacheService contents</p>
+            </div>
+            <div class="mb-2">
+              <button class="btn btn-outline-danger btn-sm me-2" onclick="purgeSystemCache()"><i class="fas fa-trash-alt me-1"></i> Purge All Caches</button>
+              <button class="btn btn-primary px-4 fw-bold" onclick="renderCache()">
+                <i class="fas fa-sync me-2"></i>Analyze Cache
+              </button>
+            </div>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col"><div class="card p-3 text-center shadow-sm"><div class="metric-value text-primary" id="cache-tables-count">0</div><div class="metric-label">Cached Tables</div></div></div>
+            <div class="col"><div class="card p-3 text-center shadow-sm"><div class="metric-value text-success" id="cache-sessions-hits">0</div><div class="metric-label">Session Cache Hits</div></div></div>
+            <div class="col"><div class="card p-3 text-center shadow-sm"><div class="metric-value text-danger" id="cache-lockouts-count">0</div><div class="metric-label">Active Lockouts</div></div></div>
+          </div>
+
+          <div class="row">
+            <!-- Headers Card -->
+            <div class="col-md-6 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                  <h5 class="fw-bold mb-0"><i class="fas fa-layer-group text-warning me-2"></i>Table Headers Cache</h5>
+                </div>
+                <div class="card-body overflow-auto" id="cache-headers-list" style="max-height: 450px;">
+                  <div class="text-center text-muted py-5"><i class="fas fa-search fa-3x mb-3"></i><p>Run analysis to view table headers cache.</p></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sessions and Lockouts Card -->
+            <div class="col-md-6 mb-4">
+              <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                  <h5 class="fw-bold mb-0"><i class="fas fa-key text-success me-2"></i>Active Sessions Cache</h5>
+                </div>
+                <div class="card-body overflow-auto" id="cache-sessions-list" style="max-height: 200px;">
+                  <div class="text-center text-muted py-4"><i class="fas fa-search fa-2x mb-2"></i><p>Run analysis to view active sessions.</p></div>
+                </div>
+              </div>
+
+              <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                  <h5 class="fw-bold mb-0"><i class="fas fa-shield-alt text-danger me-2"></i>Lockout Cache</h5>
+                </div>
+                <div class="card-body overflow-auto" id="cache-lockouts-list" style="max-height: 200px;">
+                  <div class="text-center text-muted py-4"><i class="fas fa-search fa-2x mb-2"></i><p>Run analysis to view lockout states.</p></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -562,6 +622,8 @@
 
       if (panelId === 'health') {
         renderHealth();
+      } else if (panelId === 'cache') {
+        renderCache();
       }
     } catch (err) {
       showErrorModal(`Exception caught executing showPanel('${panelId}')`, err);
@@ -694,6 +756,199 @@
       });
     } catch (e) {
       showErrorModal("Exception caught initiating repairAll", e);
+    }
+  }
+
+  function renderCache() {
+    try {
+      const headersList = document.getElementById('cache-headers-list');
+      const sessionsList = document.getElementById('cache-sessions-list');
+      const lockoutsList = document.getElementById('cache-lockouts-list');
+
+      if (headersList) headersList.innerHTML = '<div class="text-center text-muted py-5"><div class="spinner-border text-primary mb-3" role="status"></div><p>Analyzing headers cache...</p></div>';
+      if (sessionsList) sessionsList.innerHTML = '<div class="text-center text-muted py-4"><div class="spinner-border text-success mb-2" role="status"></div><p>Analyzing session cache...</p></div>';
+      if (lockoutsList) lockoutsList.innerHTML = '<div class="text-center text-muted py-4"><div class="spinner-border text-danger mb-2" role="status"></div><p>Analyzing lockout cache...</p></div>';
+
+      callApi("admin_cache_analyze", {}, (res) => {
+        try {
+          const cacheData = res.data;
+          if (!cacheData) return;
+
+          // 1. Calculate and update metrics
+          let totalCachedTables = 0;
+          if (cacheData.headers && cacheData.headers.categories) {
+            Object.values(cacheData.headers.categories).forEach(tablesList => {
+              totalCachedTables += tablesList.length;
+            });
+          }
+          
+          let sessionHits = 0;
+          if (cacheData.sessions && cacheData.sessions.list) {
+            sessionHits = cacheData.sessions.list.filter(s => s.isHit).length;
+          }
+          
+          let lockoutsCount = 0;
+          if (cacheData.lockouts && cacheData.lockouts.list) {
+            lockoutsCount = cacheData.lockouts.list.filter(l => l.isLocked).length;
+          }
+
+          document.getElementById('cache-tables-count').textContent = totalCachedTables;
+          document.getElementById('cache-sessions-hits').textContent = `${sessionHits}/${cacheData.sessions ? cacheData.sessions.list.length : 0}`;
+          document.getElementById('cache-lockouts-count').textContent = lockoutsCount;
+
+          // 2. Render Headers Cache list
+          if (headersList) {
+            headersList.innerHTML = "";
+            
+            if (totalCachedTables === 0 && (!cacheData.headers || !cacheData.headers.stale || cacheData.headers.stale.length === 0)) {
+              headersList.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-check-circle fa-3x text-success mb-3"></i><p>No table headers currently cached.</p></div>';
+            } else {
+              // Loop through categories
+              if (cacheData.headers && cacheData.headers.categories) {
+                Object.entries(cacheData.headers.categories).forEach(([catName, tablesList]) => {
+                  if (tablesList.length === 0) return;
+
+                  let catGroupHtml = `
+                    <div class="mb-4">
+                      <h6 class="fw-bold text-secondary mb-2"><i class="fas fa-folder me-2 text-warning"></i>${catName} Domain</h6>
+                      <div class="list-group shadow-sm rounded mb-2">
+                  `;
+
+                  tablesList.forEach(t => {
+                    catGroupHtml += `
+                      <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                          <span class="fw-bold text-dark">${t.table}</span>
+                          <span class="badge bg-success rounded-pill small">Cached</span>
+                        </div>
+                        <div class="small bg-light p-2 rounded border font-monospace text-secondary" style="font-size: 11px; white-space: pre-wrap; word-break: break-all;">
+                          [ ${t.columns.join(", ")} ]
+                        </div>
+                      </div>
+                    `;
+                  });
+
+                  catGroupHtml += `
+                      </div>
+                    </div>
+                  `;
+                  headersList.innerHTML += catGroupHtml;
+                });
+              }
+
+              // Render stale/dangling headers
+              if (cacheData.headers && cacheData.headers.stale && cacheData.headers.stale.length > 0) {
+                let staleGroupHtml = `
+                  <div class="mb-4">
+                    <h6 class="fw-bold text-danger mb-2"><i class="fas fa-exclamation-circle me-2"></i>Stale / Mismatch Cache</h6>
+                    <div class="list-group shadow-sm rounded">
+                `;
+
+                cacheData.headers.stale.forEach(s => {
+                  staleGroupHtml += `
+                    <div class="list-group-item p-3 border-danger">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-danger">${s.key}</span>
+                        <span class="badge bg-danger rounded-pill small">Orphaned</span>
+                      </div>
+                      <div class="small bg-light p-2 rounded border font-monospace text-secondary" style="font-size: 11px; white-space: pre-wrap; word-break: break-all;">
+                        [ ${s.columns.join(", ")} ]
+                      </div>
+                    </div>
+                  `;
+                });
+
+                staleGroupHtml += `
+                    </div>
+                  </div>
+                `;
+                headersList.innerHTML += staleGroupHtml;
+              }
+            }
+          }
+
+          // 3. Render Sessions list
+          if (sessionsList) {
+            sessionsList.innerHTML = "";
+            if (!cacheData.sessions || !cacheData.sessions.list || cacheData.sessions.list.length === 0) {
+              sessionsList.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-info-circle mb-2 fs-4"></i><p class="mb-0">No active login sessions found.</p></div>';
+            } else {
+              let sessionsHtml = '<div class="list-group">';
+              cacheData.sessions.list.forEach(s => {
+                const borderClass = s.isHit ? "border-success" : "border-warning";
+                const badgeClass = s.isHit ? "bg-success" : "bg-warning text-dark";
+                const statusLabel = s.isHit ? "Cache Hit" : "Cache Miss";
+                
+                sessionsHtml += `
+                  <div class="list-group-item border-0 border-start border-3 ${borderClass} mb-2 shadow-sm rounded p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div class="fw-bold text-dark font-monospace small" style="word-break: break-all;">Token: ${s.token}</div>
+                        <div class="small text-muted mt-1">User ID: ${s.userId} | Expires: ${s.expiresAt}</div>
+                      </div>
+                      <span class="badge ${badgeClass} text-uppercase small" style="font-size: 10px;">${statusLabel}</span>
+                    </div>
+                  </div>
+                `;
+              });
+              sessionsHtml += '</div>';
+              sessionsList.innerHTML = sessionsHtml;
+            }
+          }
+
+          // 4. Render Lockouts list
+          if (lockoutsList) {
+            lockoutsList.innerHTML = "";
+            if (!cacheData.lockouts || !cacheData.lockouts.list || cacheData.lockouts.list.length === 0) {
+              lockoutsList.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-info-circle mb-2 fs-4"></i><p class="mb-0">No registered users in the database.</p></div>';
+            } else {
+              let lockoutsHtml = '<div class="list-group">';
+              cacheData.lockouts.list.forEach(l => {
+                const borderClass = l.isLocked ? "border-danger" : "border-success";
+                const badgeClass = l.isLocked ? "bg-danger" : "bg-success";
+                const statusLabel = l.isLocked ? "Locked Out" : "Active";
+                
+                lockoutsHtml += `
+                  <div class="list-group-item border-0 border-start border-3 ${borderClass} mb-2 shadow-sm rounded p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div class="fw-bold text-dark">${l.username}</div>
+                        <div class="small text-muted mt-1">User ID: ${l.userId} | Fail Counter: ${l.failedAttempts}</div>
+                      </div>
+                      <span class="badge ${badgeClass} text-uppercase small" style="font-size: 10px;">${statusLabel}</span>
+                    </div>
+                  </div>
+                `;
+              });
+              lockoutsHtml += '</div>';
+              lockoutsList.innerHTML = lockoutsHtml;
+            }
+          }
+
+        } catch (e) {
+          showErrorModal("Exception caught processing data inside renderCache callback", e);
+        }
+      });
+    } catch (e) {
+      showErrorModal("Exception caught initiating renderCache", e);
+    }
+  }
+
+  function purgeSystemCache() {
+    try {
+      if (!confirm("This will permanently clear all script header caches and physically reset cell caching. Action cannot be undone. Proceed?")) return;
+      setLoading(true);
+      callApi("admin_purge_cache", {}, (res) => {
+        try {
+          setLoading(false);
+          alert("✅ Caches Purged Successfully!");
+          renderCache();
+        } catch (e) {
+          showErrorModal("Error resolving purge cache callback", e);
+        }
+      });
+    } catch (e) {
+      showErrorModal("Exception caught initiating purgeSystemCache", e);
     }
   }
 
