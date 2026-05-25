@@ -34,10 +34,11 @@ class AuthService {
 
   /**
    * Register a new user and their corresponding profile.
+   * Implements manual rollback to maintain cross-sheet integrity.
    *
    * @param {Object} userData - { username, password, email, role }
    * @param {Object} profileData - Data for Student/Teacher/Admin profile
-   * @returns {BaseModel} The created User model
+   * @returns {Object} { user: BaseModel, profile: BaseModel }
    */
   register(userData, profileData = {}) {
     const { username, password, email, role } = userData;
@@ -47,49 +48,75 @@ class AuthService {
       throw new Error(`Username '${username}' is already taken.`);
     }
 
-    // 2. Generate Identity Anchor
+    // 2. Generate Identity Anchor (UUID)
     const userId = AuthUtils.generateToken();
 
     // 3. Secure the password
     const passwordHash = AuthUtils.hashPassword(password);
 
-    // 4. Create the User (The "Key")
+    // 4. STEP 1: Create the User (The "Security Anchor")
     const now = new Date();
-    const newUserRaw = this._repo.create({
-      id: userId,
-      username,
-      password_hash: passwordHash,
-      email,
-      role,
-      status: "active",
-      created_at: now,
-      updated_at: now,
-      last_login: null // Initialized as null
-    });
-
-    // 5. Create the Profile (The "Identity")
-    const profileEntityMap = {
-      "student": "Student",
-      "teacher": "Teacher",
-      "admin":   "Admin"
-    };
-
-    const entityName = profileEntityMap[role.toLowerCase()];
-    if (!entityName) {
-      throw new Error(`Invalid role '${role}' provided during registration.`);
+    let newUserRaw;
+    
+    try {
+      newUserRaw = this._repo.create({
+        id: userId,
+        username,
+        password_hash: passwordHash,
+        email,
+        role,
+        status: "active",
+        created_at: now,
+        updated_at: now,
+        last_login: null
+      });
+    } catch (e) {
+      Logger.log(`[AuthService.register] Critical failure creating User: ${e.message}`);
+      throw new Error("Failed to initialize user account.");
     }
 
-    const profileRepo = this._orm.getRepository(entityName);
-    
-    const finalProfileData = {
-      ...profileData,
-      id: AuthUtils.generateToken(),
-      user_id: userId
-    };
+    // 5. STEP 2: Create the Profile (The "Domain Identity")
+    try {
+      const profileEntityMap = {
+        "student": "Student",
+        "teacher": "Teacher",
+        "admin":   "Admin"
+      };
 
-    profileRepo.create(finalProfileData);
+      const entityName = profileEntityMap[role.toLowerCase()];
+      if (!entityName) {
+        throw new Error(`Invalid role '${role}' provided during registration.`);
+      }
 
-    return this._orm._wrap("User", newUserRaw);
+      const profileRepo = this._orm.getRepository(entityName);
+      
+      const finalProfileData = {
+        ...profileData,
+        id: AuthUtils.generateToken(),
+        user_id: userId // Linking to the anchor created above
+      };
+
+      const newProfileRaw = profileRepo.create(finalProfileData);
+
+      // Success: Return both wrapped models
+      return {
+        user: this._orm._wrap("User", newUserRaw),
+        profile: this._orm._wrap(entityName, newProfileRaw)
+      };
+
+    } catch (error) {
+      // --- THE MANUAL ROLLBACK ---
+      Logger.log(`[AuthService.register] Profile creation failed. ROLLING BACK user "${userId}"...`);
+      
+      try {
+        this._repo.delete(userId);
+        Logger.log(`[AuthService.register] Rollback Successful: User "${userId}" physically removed.`);
+      } catch (rollbackError) {
+        Logger.log(`[AuthService.register] CRITICAL: Rollback failed! Orphaned user "${userId}" remains. ${rollbackError.message}`);
+      }
+
+      throw new Error(`Registration failed during profile creation: ${error.message}. System state has been restored.`);
+    }
   }
 
   /**
@@ -161,15 +188,20 @@ class AuthService {
 
   /**
    * Simple RBAC helper.
-   *
-   * @param {BaseModel} user
+   * 
+   * @param {BaseModel|Object} user - Accepts either wrapped model or raw data
    * @param {string|Array} requiredRole
    * @returns {boolean}
    */
   hasRole(user, requiredRole) {
-    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    const userRole = user.get("role");
+    if (!user) return false;
 
+    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    
+    // Robust access: use .get() if available (Model), fallback to direct property (Object)
+    const userRole = (typeof user.get === "function") 
+      ? user.get("role") 
+      : user.role;
     // Super-admin logic could be added here
     return roles.includes(userRole);
   }

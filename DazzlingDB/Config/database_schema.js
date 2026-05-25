@@ -1,5 +1,5 @@
 const DATABASE_SCHEMA = {
-  "version": "2.0.1",
+  "version": "2.0.2",
   "database": "DazzlingDB",
   "categories": {
     "Core": {
@@ -1471,6 +1471,16 @@ const DATABASE_SCHEMA = {
               "type": "string",
               "maxLength": 255
             },
+            "branch_id": {
+              "type": "string",
+              "description": "FK reference to the Branch where this teacher is assigned",
+              "maxLength": 255
+            },
+            "address": {
+              "type": "string",
+              "description": "Residential address of the teacher",
+              "maxLength": 500
+            },
             "teacher_id": {
               "type": "auto",
               "idPrefix": "TCH",
@@ -1506,6 +1516,11 @@ const DATABASE_SCHEMA = {
             }
           },
           "relations": {
+            "branch": {
+              "type": "belongsTo",
+              "target": "Branch",
+              "foreignKey": "branch_id"
+            },
             "teachersubject": {
               "type": "hasMany",
               "target": "TeacherSubject",

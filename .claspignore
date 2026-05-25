@@ -2,3 +2,5 @@ gemini.md
 .claspignore
 .git
 .gitignore
+git/
+docs/

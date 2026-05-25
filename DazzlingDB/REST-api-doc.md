@@ -465,3 +465,80 @@ This endpoint permanently deletes a batch record from the database using its pri
 }
 ```
 
+---
+
+## 8. Standard Request and Response Payload Architecture
+
+All communications with the DazzlingDB API MUST conform to a strict structural contract. This section describes the layout of the full HTTP body for requests and responses.
+
+### A. API Request Full Body Structure
+
+Every request sent to the API must be a single JSON object containing three top-level keys:
+
+```json
+{
+  "action": "action_key",
+  "token": "session_token_string",
+  "payload": {
+    "param1": "value1"
+  }
+}
+```
+
+#### Request Fields Contract:
+
+1. **`action`** *(String, Required)*: 
+   The specific endpoint registry key identifier (e.g., `user_login`, `data_query`, `data_delete`). This determines which backend action controller resolves and executes the request.
+2. **`token`** *(String, Optional/Required)*: 
+   The session token string retrieved during login. Required for all protected actions. If provided, the dispatcher automatically resolves user credentials and verifies RBAC table access permissions.
+3. **`payload`** *(Object, Required)*: 
+   The parameters container. **All input variables and arguments must live inside this object.** Placing fields outside of `payload` (at the root) will result in a `ValidationError` or parse failure.
+
+---
+
+### B. Expected Response Envelope Structure
+
+The API always returns a standard JSON envelope with a consistent root-level format, indicating either a successful operation or a structured failure.
+
+#### 1. Success Response Structure
+
+When the action completes successfully, `success` is set to `true`, and the execution output is returned inside `data`.
+
+```json
+{
+  "success": true,
+  "action": "action_key",
+  "data": {
+    "message": "Operation completed successfully.",
+    "id": "BAT-E20D1E4B",
+    "record": { ... }
+  }
+}
+```
+
+*   **`success`** *(Boolean)*: Always `true`.
+*   **`action`** *(String)*: Echoes the action key that was requested and executed.
+*   **`data`** *(Object|Array)*: Contains the return values (e.g., database records, pagination metadata, session token, or status message).
+
+#### 2. Error Response Structure
+
+If validation fails, unauthorized access is detected, or a database rule is violated, the API sets `success` to `false` and populates the `error` object.
+
+```json
+{
+  "success": false,
+  "action": "action_key",
+  "error": {
+    "type": "ActionValidationError",
+    "message": "Payload must contain 'id' parameter."
+  }
+}
+```
+
+*   **`success`** *(Boolean)*: Always `false`.
+*   **`action`** *(String)*: Echoes the requested action key.
+*   **`error`** *(Object)*: Encloses the error details:
+    *   **`type`** *(String)*: The system error class name (e.g., `ActionValidationError`, `ActionAuthorizationError`, `ValidationError`, `EntityNotFoundError`, `ForbiddenError`).
+    *   **`message`** *(String)*: A descriptive, human-readable reason for the failure.
+
+

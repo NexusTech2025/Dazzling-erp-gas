@@ -1,6 +1,15 @@
 {
   "timeZone": "Asia/Kolkata",
-  "dependencies": {},
+  "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "SheetDB",
+        "libraryId": "1ek-F2mutmrsXcSmVY6twMY2kGfUPtJlb-IFKLEN8wo06gpfTP67AKley",
+        "version": "0",
+        "developmentMode": true
+      }
+    ]
+  },
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
   "webapp": {

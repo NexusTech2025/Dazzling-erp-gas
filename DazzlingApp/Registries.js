@@ -278,7 +278,15 @@ class ActionRegistry {
       register: RegisterAction,
       login: LoginAction,
       logout: LogoutAction,
-      bootstrap_admin: BootstrapAdminAction
+      bootstrap_admin: BootstrapAdminAction,
+      
+      // Dedicated Entity Actions
+      addstudent: AddStudentAction,
+      updatestudent: UpdateStudentAction,
+      deletestudent: DeleteStudentAction,
+      addteacher: AddTeacherAction,
+      updateteacher: UpdateTeacherAction,
+      deleteteacher: DeleteTeacherAction
     };
   }
 

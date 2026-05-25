@@ -182,13 +182,30 @@ class BaseAction {
    *
    * @returns {Object} Structured API response envelope
    */
+  /**
+   * run()
+   * ----------------------------------------------------------
+   * Public execution entrypoint.
+   *
+   * Enhanced Envelope:
+   * Returns { success, action, data, message }
+   */
   run() {
     try {
       this._validate();
       this._authorize();
 
       const result = this._execute();
-      return this._successEnvelope(this._format(result));
+      const payload = this._format(result);
+      
+      // Extract optional message if the action provided one in its result
+      // otherwise default to null
+      const message = (typeof result === 'object' && result.message) ? result.message : null;
+
+      return this._successEnvelope({ 
+        data: payload,
+        message: message 
+      });
 
     } catch (error) {
       return this._errorEnvelope(this._normalizeError(error));
@@ -249,52 +266,10 @@ class BaseAction {
    * ----------------------------------------------------------
    * Converts execution result into serializable payload.
    *
-   * Handles:
-   * - Array<BaseModel>
-   * - Single BaseModel
-   * - Primitive values
-   * - Null values
-   *
-   * Rationale:
-   * - Keep serialization centralized
-   * - Guarantee consistent API structure
+   * Baseline Implementation: Returns the result as-is wrapped in data.
    */
   _format(result) {
-    if (result === null || result === undefined) {
-      return { data: null };
-    }
-
-    if (Array.isArray(result)) {
-      return {
-        entity: this._entity || null,
-        count: result.length,
-        data: result.map(item => this._serialize(item))
-      };
-    }
-
-    if (typeof result === "object" && typeof result.toJSON === "function") {
-      return {
-        entity: this._entity || null,
-        data: result.toJSON()
-      };
-    }
-
     return { data: result };
-  }
-
-  /**
-   * _serialize(item)
-   * ----------------------------------------------------------
-   * Internal helper for safe model serialization.
-   *
-   * Ensures that BaseModel instances are converted
-   * using toJSON() before being returned.
-   */
-  _serialize(item) {
-    if (item && typeof item.toJSON === "function") {
-      return item.toJSON();
-    }
-    return item;
   }
 
   /**
@@ -464,6 +439,14 @@ class QueryAction extends BaseAction {
 
     return this._orm.fetch(entity, filterObject);
   }
+
+  _format(result) {
+    return {
+      entity: this._entity,
+      count: result ? result.length : 0,
+      data: result ? result.map(m => m._data) : []
+    };
+  }
 }
 
 
@@ -493,6 +476,13 @@ class RetrieveAction extends BaseAction {
     const id = this._params.id;
 
     return this._orm.findById(entity, id);
+  }
+
+  _format(result) {
+    return {
+      entity: this._entity,
+      data: result ? result._data : null
+    };
   }
 }
 
@@ -539,11 +529,16 @@ class RelatedQueryAction extends BaseAction {
   }
 
   _format(result) {
-    const base = super._format(result);
+    let formattedData = null;
+    if (Array.isArray(result)) {
+      formattedData = result.map(m => m._data);
+    } else if (result && result._data) {
+      formattedData = result._data;
+    }
 
     return {
       relation: this._params.relation,
-      ...base
+      data: formattedData
     };
   }
 }
@@ -594,6 +589,13 @@ class RegisterAction extends BaseAction {
     // Delegate atomic registration to AuthService
     return authService.register(userData, profileData);
   }
+
+  _format(result) {
+    return {
+      user: result.user._data,
+      profile: result.profile._data
+    };
+  }
 }
 
 /**
@@ -619,10 +621,9 @@ class LoginAction extends BaseAction {
   }
 
   _format(result) {
-    // result contains { token, user }
     return {
       token: result.token,
-      user: result.user.toJSON()
+      user: result.user._data
     };
   }
 }
@@ -698,5 +699,134 @@ class BootstrapAdminAction extends BaseAction {
     PropertiesService.getScriptProperties().deleteProperty("SETUP_KEY");
 
     return result;
+  }
+
+  _format(result) {
+    return {
+      user: result.user._data,
+      profile: result.profile._data
+    };
+  }
+}
+
+/**
+ * --------------------------------------------------------------
+ * Base Entity Management Actions
+ * --------------------------------------------------------------
+ * 
+ * Shared logic for adding, updating, and deleting profiles.
+ */
+
+class AdminOnlyAction extends BaseAction {
+  _authorize() {
+    if (!this._user) throw new AuthorizationError("Login required.");
+    const authService = this._orm.getAuthService();
+    if (!authService.hasRole(this._user, "admin")) {
+      throw new AuthorizationError("Admin privileges required for this action.");
+    }
+  }
+}
+
+/**
+ * AddStudentAction
+ */
+class AddStudentAction extends AdminOnlyAction {
+  _validate() {
+    this._requireParam("userData");
+    this._requireParam("profileData");
+  }
+  _execute() {
+    const authService = this._orm.getAuthService();
+    const userData = { ...this._params.userData, role: "student" };
+    return authService.register(userData, this._params.profileData);
+  }
+
+  _format(result) {
+    return {
+      user: result.user._data,
+      profile: result.profile._data
+    };
+  }
+}
+
+/**
+ * UpdateStudentAction
+ */
+class UpdateStudentAction extends AdminOnlyAction {
+  _validate() {
+    this._requireParam("id");
+    this._requireParam("data");
+  }
+  _execute() {
+    const repo = this._orm.getRepository("Student");
+    return repo.update(this._params.id, this._params.data);
+  }
+
+  _format(result) {
+    return { data: result }; // Repo update returns raw data already
+  }
+}
+
+/**
+ * DeleteStudentAction
+ */
+class DeleteStudentAction extends AdminOnlyAction {
+  _validate() { this._requireParam("id"); }
+  _execute() {
+    const repo = this._orm.getRepository("Student");
+    repo.delete(this._params.id);
+    return `Student ${this._params.id} removed.`;
+  }
+}
+
+/**
+ * AddTeacherAction
+ */
+class AddTeacherAction extends AdminOnlyAction {
+  _validate() {
+    this._requireParam("userData");
+    this._requireParam("profileData");
+  }
+  _execute() {
+    const authService = this._orm.getAuthService();
+    const userData = { ...this._params.userData, role: "teacher" };
+    return authService.register(userData, this._params.profileData);
+  }
+
+  _format(result) {
+    return {
+      user: result.user._data,
+      profile: result.profile._data
+    };
+  }
+}
+
+/**
+ * UpdateTeacherAction
+ */
+class UpdateTeacherAction extends AdminOnlyAction {
+  _validate() {
+    this._requireParam("id");
+    this._requireParam("data");
+  }
+  _execute() {
+    const repo = this._orm.getRepository("Teacher");
+    return repo.update(this._params.id, this._params.data);
+  }
+
+  _format(result) {
+    return { data: result };
+  }
+}
+
+/**
+ * DeleteTeacherAction
+ */
+class DeleteTeacherAction extends AdminOnlyAction {
+  _validate() { this._requireParam("id"); }
+  _execute() {
+    const repo = this._orm.getRepository("Teacher");
+    repo.delete(this._params.id);
+    return `Teacher ${this._params.id} removed.`;
   }
 }

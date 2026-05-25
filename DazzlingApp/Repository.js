@@ -305,6 +305,16 @@ toString() {
 class StudentRepository extends BaseRepository {
 
   /**
+   * Enforce user_id requirement for Students
+   */
+  create(data) {
+    if (!data.user_id) {
+      throw new BaseRepositoryError("Integrity Error: user_id is required to create a Student profile.");
+    }
+    return super.create(data);
+  }
+
+  /**
    * Retrieve students belonging to a specific class.
    *
    * @param {string} className
@@ -422,6 +432,16 @@ class SubjectRepository extends BaseRepository {
 class TeacherRepository extends BaseRepository {
 
   /**
+   * Enforce user_id requirement for Teachers
+   */
+  create(data) {
+    if (!data.user_id) {
+      throw new BaseRepositoryError("Integrity Error: user_id is required to create a Teacher profile.");
+    }
+    return super.create(data);
+  }
+
+  /**
    * Retrieve teachers assigned to a specific subject code.
    *
    * @param {string} subjectCode
@@ -520,6 +540,16 @@ class UserRepository extends BaseRepository {
 }
 
 class AdminRepository extends BaseRepository {
+  /**
+   * Enforce user_id requirement for Admins
+   */
+  create(data) {
+    if (!data.user_id) {
+      throw new BaseRepositoryError("Integrity Error: user_id is required to create an Admin profile.");
+    }
+    return super.create(data);
+  }
+
   /**
    * Find admin by user id.
    * @param {string} userId
