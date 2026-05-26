@@ -25,6 +25,7 @@ const ApiDispatcher = (function () {
       "user_login": UserLoginAction,
       "user_logout": UserLogoutAction,
       "staff_onboard_teacher": StaffOnboardTeacherAction,
+      "staff_update_teacher": StaffUpdateTeacherAction,
       "staff_assign_subjects": StaffAssignSubjectsAction,
       "staff_set_salary_config": StaffSetSalaryConfigAction,
       "staff_mark_attendance": StaffMarkAttendanceAction,

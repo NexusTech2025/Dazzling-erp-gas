@@ -71,6 +71,7 @@ Every request MUST include an `action` and a `payload`. For protected routes, a 
 | Action Key | Payload Requirements | Description |
 | :--- | :--- | :--- |
 | `staff_onboard_teacher` | `{ "payload": { "full_name": "...", "mobile_number": "..." } }` | Register teacher profile. |
+| `staff_update_teacher` | `{ "payload": { "teacher_id": "...", "data": { "full_name": "..." } } }` | Updates an existing teacher profile with validation checks. |
 | `staff_assign_subjects` | `{ "payload": { "teacher_id": "...", "subject_ids": ["ID1", "ID2"] } }` | Link teacher to courses. |
 | `staff_mark_attendance` | `{ "payload": { "teacher_id": "...", "status": "present", "attendance_date": "YYYY-MM-DD" } }` | Record attendance. |
 | `staff_record_payment` | `{ "payload": { "teacher_id": "...", "amount": 5000, "payment_type": "salary" } }` | Log financial transactions for staff. |

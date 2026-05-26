@@ -264,5 +264,86 @@ const StaffService = {
       teacher_id: teacherId,
       uploaded_at: new Date()
     });
+  },
+
+  /**
+   * Updates an existing teacher profile with validation checks, including subject maps and salary config.
+   */
+  updateTeacher(payload) {
+    const db = DBContext.getInstance();
+    console.log(`[StaffService] Initiating validation for teacher update: ${payload.teacher_id}`);
+
+    // Extract relational fields if present
+    const subjects = payload.data ? payload.data.subjects : undefined;
+    const salaryConfig = payload.data ? payload.data.salary_config : undefined;
+
+    const ctx = new ValidationContext(db, payload.teacher_id, payload.data);
+    ValidationEngine.run(ctx, TeacherUpdateRules);
+
+    if (!ctx.isValid()) {
+      throw new SheetDB.ValidationError("Validation failed for teacher update.", { fields: ctx.errors });
+    }
+
+    // Clean relations from payload so they don't merge into Teacher model fields
+    delete ctx.payload.subjects;
+    delete ctx.payload.salary_config;
+
+    // 1. Update Core Profile
+    const updatedTeacher = db.Teacher.update(ctx.entityId, ctx.payload);
+
+    // 2. Synchronize Subjects (if provided)
+    if (subjects !== undefined) {
+      this.updateTeacherSubjects(db, ctx.entityId, subjects);
+    }
+
+    // 3. Synchronize Salary Configuration (if provided)
+    if (salaryConfig) {
+      this.setSalaryConfig({
+        teacher_id: ctx.entityId,
+        ...salaryConfig
+      });
+    }
+
+    console.log(`[StaffService] Update successful for teacher: ${ctx.entityId}`);
+    return updatedTeacher;
+  },
+
+  /**
+   * Synchronizes a teacher's subject assignments using fast bulk database operations.
+   */
+  updateTeacherSubjects(db, teacherId, subjectIds) {
+    if (!teacherId) {
+      throw new Error("teacher_id is required for updating subjects.");
+    }
+
+    // 1. Bulk delete currently assigned subjects
+    const currentSubjects = db.TeacherSubject.where({ teacher_id: teacherId });
+    currentSubjects.forEach(sub => {
+      try {
+        db.TeacherSubject.remove(sub.teacher_subject_id);
+      } catch (err) {
+        console.warn(`[StaffService] Failed to remove subject mapping ${sub.teacher_subject_id}:`, err.message);
+      }
+    });
+
+    // 2. Bulk insert new assignments if any subjects are provided
+    if (Array.isArray(subjectIds) && subjectIds.length > 0) {
+      const recordsToInsert = [];
+      subjectIds.forEach(subId => {
+        // Relational Check: Does course exist?
+        if (!db.Course.findById(subId)) {
+          console.warn(`[StaffService] Skipping invalid Course ID in batch update: ${subId}`);
+          return;
+        }
+        recordsToInsert.push({
+          teacher_id: teacherId,
+          subject_id: subId
+        });
+      });
+
+      if (recordsToInsert.length > 0) {
+        db.TeacherSubject.insertMany(recordsToInsert);
+      }
+    }
   }
 };

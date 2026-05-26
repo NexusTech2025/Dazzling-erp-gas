@@ -183,6 +183,19 @@ class StaffOnboardTeacherAction extends BaseAction {
   _execute() { return StaffService.onboardTeacher(this._params.payload); }
 }
 
+class StaffUpdateTeacherAction extends BaseAction {
+  _validate() {
+    this._requireParam("payload");
+    if (!this._params.payload.teacher_id) {
+      throw new ActionValidationError("payload must contain 'teacher_id'.");
+    }
+  }
+
+  _execute() {
+    return StaffService.updateTeacher(this._params.payload);
+  }
+}
+
 class StaffAssignSubjectsAction extends BaseAction {
   _validate() {
     this._requireParam("payload");

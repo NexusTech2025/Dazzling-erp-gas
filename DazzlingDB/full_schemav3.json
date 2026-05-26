@@ -1,5 +1,5 @@
 {
-  "version": "2.0.2",
+  "version": "2.0.3",
   "database": "DazzlingDB",
   "categories": {
     "Core": {
@@ -1480,6 +1480,17 @@
               "type": "string",
               "description": "Residential address of the teacher",
               "maxLength": 500
+            },
+            "prefered_time_slot": {
+              "type": "string",
+              "choices": [
+                "Morning",
+                "Afternoon",
+                "Evening"
+              ],
+              "description": "Preferred time slot for teaching",
+              "maxLength": 255,
+              "required": false
             },
             "teacher_id": {
               "type": "auto",
