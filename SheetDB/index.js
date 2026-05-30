@@ -92,6 +92,7 @@ Object.assign(globalThis, {
   BaseModel: globalThis.BaseModel,
   ModelRegistry: globalThis.ModelRegistry,
   FieldMapper: globalThis.FieldMapper,
+  ValidationRegistry: globalThis.ValidationRegistry,
   SheetDBError: globalThis.SheetDBError,
   SpreadsheetNotFoundError: globalThis.SpreadsheetNotFoundError,
   TableNotFoundError: globalThis.TableNotFoundError,

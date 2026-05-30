@@ -349,14 +349,121 @@ class SchemaSetupEngine {
     if (!this.schema.categories) errors.push("Schema missing 'categories' object");
     
     if (errors.length === 0) {
+      // 1. Gather all tables globally to resolve cross-category targets
+      const allTables = {};
       for (const [catName, catData] of Object.entries(this.schema.categories)) {
-        if (!catData.tables) errors.push(`Category '${catName}' missing 'tables'`);
-        else {
+        if (catData.tables) {
           for (const [tableName, tableData] of Object.entries(catData.tables)) {
-            if (tableName.length > 100) errors.push(`Table '${tableName}' name too long.`);
-            if (/[\[\]:*?/\\]/.test(tableName)) errors.push(`Table '${tableName}' has illegal characters.`);
-            if (!tableData.columns) errors.push(`Table '${tableName}' missing 'columns'`);
-            if (!tableData.primaryKey) errors.push(`Table '${tableName}' missing 'primaryKey'`);
+            allTables[tableName] = tableData;
+          }
+        }
+      }
+
+      for (const [catName, catData] of Object.entries(this.schema.categories)) {
+        if (!catData.tables) {
+          errors.push(`Category '${catName}' missing 'tables'`);
+          continue;
+        }
+
+        for (const [tableName, tableData] of Object.entries(catData.tables)) {
+          // Table Name Checks
+          if (tableName.length > 100) {
+            errors.push(`Table '${tableName}' name too long.`);
+          }
+          if (/[\[\]:*?/\\]/.test(tableName)) {
+            errors.push(`Table '${tableName}' has illegal characters.`);
+          }
+          if (!tableData.columns) {
+            errors.push(`Table '${tableName}' missing 'columns'`);
+            continue;
+          }
+          if (!tableData.primaryKey) {
+            errors.push(`Table '${tableName}' missing 'primaryKey'`);
+            continue;
+          }
+
+          const columns = tableData.columns;
+
+          // 1. Primary Key Validation
+          if (!columns[tableData.primaryKey]) {
+            errors.push(`Table '${tableName}' primaryKey '${tableData.primaryKey}' must match one of its declared columns.`);
+          }
+
+          // 2. Column Configurations & Custom Validation Check
+          for (const [colName, colConfig] of Object.entries(columns)) {
+            if (!colConfig) continue;
+
+            // Numeric check limits
+            if (colConfig.min !== undefined && typeof colConfig.min !== 'number') {
+              errors.push(`Table '${tableName}', Column '${colName}': 'min' limit must be a number.`);
+            }
+            if (colConfig.max !== undefined && typeof colConfig.max !== 'number') {
+              errors.push(`Table '${tableName}', Column '${colName}': 'max' limit must be a number.`);
+            }
+
+            // String check limits
+            if (colConfig.minLength !== undefined && typeof colConfig.minLength !== 'number') {
+              errors.push(`Table '${tableName}', Column '${colName}': 'minLength' limit must be a number.`);
+            }
+            if (colConfig.maxLength !== undefined && typeof colConfig.maxLength !== 'number') {
+              errors.push(`Table '${tableName}', Column '${colName}': 'maxLength' limit must be a number.`);
+            }
+
+            // Enum choices check
+            const choices = colConfig.choices || colConfig.enum;
+            if (choices !== undefined && !Array.isArray(choices)) {
+              errors.push(`Table '${tableName}', Column '${colName}': 'choices'/'enum' must be an Array.`);
+            }
+
+            // Regex pattern check
+            if (colConfig.pattern !== undefined) {
+              try {
+                new RegExp(colConfig.pattern);
+              } catch (e) {
+                errors.push(`Table '${tableName}', Column '${colName}': regex pattern '/${colConfig.pattern}/' is invalid: ${e.message}`);
+              }
+            }
+
+            // Custom validation handler registration check
+            if (colConfig.handler) {
+              if (typeof ValidationRegistry === 'undefined' || !ValidationRegistry.has(colConfig.handler)) {
+                errors.push(`Table '${tableName}', Column '${colName}': Custom validation handler '${colConfig.handler}' is not registered in ValidationRegistry.`);
+              }
+            }
+          }
+
+          // 3. Relational Integrity Checks
+          const relations = tableData.relations || {};
+          for (const [relName, relConfig] of Object.entries(relations)) {
+            if (!relConfig) continue;
+
+            if (relConfig.type === 'belongsTo') {
+              // foreignKey must exist in the local table columns
+              if (!relConfig.foreignKey) {
+                errors.push(`Table '${tableName}', Relation '${relName}': missing 'foreignKey' definition.`);
+              } else if (!columns[relConfig.foreignKey]) {
+                errors.push(`Table '${tableName}', Relation '${relName}': foreignKey '${relConfig.foreignKey}' is not defined locally in table columns.`);
+              }
+            } else if (relConfig.type === 'hasMany' || relConfig.type === 'hasOne') {
+              const targetTableName = relConfig.target;
+              if (!targetTableName) {
+                errors.push(`Table '${tableName}', Relation '${relName}': missing relation 'target' table.`);
+                continue;
+              }
+
+              const targetTable = allTables[targetTableName];
+              if (!targetTable) {
+                errors.push(`Table '${tableName}', Relation '${relName}': target table '${targetTableName}' not found in schema.`);
+                continue;
+              }
+
+              // The foreignKey must exist in the target table columns
+              if (!relConfig.foreignKey) {
+                errors.push(`Table '${tableName}', Relation '${relName}': missing relation 'foreignKey' definition.`);
+              } else if (!targetTable.columns || !targetTable.columns[relConfig.foreignKey]) {
+                errors.push(`Table '${tableName}', Relation '${relName}': target table '${targetTableName}' does not define relation foreignKey '${relConfig.foreignKey}'.`);
+              }
+            }
           }
         }
       }
