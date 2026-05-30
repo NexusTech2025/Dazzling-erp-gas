@@ -1,0 +1,36 @@
+{
+  "primaryKey": "segment_id",
+  "columns": {
+    "segment_name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "entity_label": {
+      "type": "string",
+      "description": "Singular label for items in this segment",
+      "maxLength": 255
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "segment_id": {
+      "type": "auto",
+      "idPrefix": "SEG",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {}
+}

@@ -1,0 +1,41 @@
+{
+  "primaryKey": "salary_config_id",
+  "columns": {
+    "teacher_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "salary_type": {
+      "type": "string",
+      "required": true,
+      "choices": [
+        "monthly",
+        "per_class"
+      ],
+      "maxLength": 255
+    },
+    "base_amount": {
+      "type": "number",
+      "required": true
+    },
+    "effective_from": {
+      "type": "date",
+      "required": true
+    },
+    "salary_config_id": {
+      "type": "auto",
+      "idPrefix": "TSC",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "teacher": {
+      "type": "belongsTo",
+      "target": "Teacher",
+      "foreignKey": "teacher_id"
+    }
+  }
+}

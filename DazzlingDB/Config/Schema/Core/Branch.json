@@ -1,0 +1,31 @@
+{
+  "primaryKey": "branch_id",
+  "columns": {
+    "branch_name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "location": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "branch_id": {
+      "type": "auto",
+      "idPrefix": "BRN",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {}
+}

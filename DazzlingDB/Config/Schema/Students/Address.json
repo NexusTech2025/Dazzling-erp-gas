@@ -1,0 +1,52 @@
+{
+  "primaryKey": "address_id",
+  "columns": {
+    "student_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "line1": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "line2": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "city": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "state": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "pin_code": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "country": {
+      "type": "string",
+      "default": "India",
+      "maxLength": 255
+    },
+    "address_id": {
+      "type": "auto",
+      "idPrefix": "ADR",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "student": {
+      "type": "hasOne",
+      "target": "Student",
+      "foreignKey": "student_id"
+    }
+  }
+}

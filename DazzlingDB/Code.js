@@ -4,21 +4,38 @@
  */
 
 /**
+ * Registers custom validation handlers in the global ValidationRegistry.
+ */
+function registerDatabaseValidators() {
+  console.log("[App] Registering database custom validators...");
+  if (typeof ValidationRegistry !== 'undefined') {
+    // Example custom validator registration:
+    ValidationRegistry.register("validateEmail", function (value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(String(value)) ? null : "Invalid email address.";
+    });
+  }
+}
+
+/**
  * Bootstraps the database and provisions infrastructure.
  * Run this once to setup the physical spreadsheets.
  */
 function bootstrapDatabase() {
+  // Execute the validation registration hook prior to boot
+  registerDatabaseValidators();
+
   const db = DBContext.getInstance();
-  
+
   console.log("[App] Starting Physical Provisioning...");
   try {
     const result = db.setup.provision();
-    
+
     if (result.errors && result.errors.length > 0) {
       console.warn(`[App] Provisioning finished with ${result.errors.length} error(s):`);
       result.errors.forEach(err => console.warn(` - ${err}`));
     }
-    
+
     if (result.isChanged) {
       console.log("[App] Provisioning Complete. Changes applied:");
       if (result.createdFiles && result.createdFiles.length > 0) {
@@ -101,9 +118,9 @@ function executeActionViaUI(request) {
     const { action: a, token: t, ...rest } = request;
     payload = rest;
   }
-  
+
   const mockEvent = {
-    parameter: { 
+    parameter: {
       action: action,
       token: token
     },
@@ -113,7 +130,7 @@ function executeActionViaUI(request) {
   };
 
   const output = ApiDispatcher.dispatch(mockEvent);
-  
+
   // Handle both ContentOutput (standard) and raw objects (bootstrap)
   if (output.getContent) {
     return JSON.parse(output.getContent());

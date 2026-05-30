@@ -1,0 +1,70 @@
+{
+  "primaryKey": "allocation_id",
+  "columns": {
+    "student_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "enrollment_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "course_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "batch_id": {
+      "type": "string",
+      "required": false,
+      "maxLength": 255
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "suspended",
+        "completed",
+        "dropped"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "assigned_at": {
+      "type": "datetime",
+      "autoNowAdd": true,
+      "required": false
+    },
+    "allocation_id": {
+      "type": "auto",
+      "idPrefix": "BAL",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "student": {
+      "type": "belongsTo",
+      "target": "Student",
+      "foreignKey": "student_id"
+    },
+    "enrollment": {
+      "type": "belongsTo",
+      "target": "Enrollment",
+      "foreignKey": "enrollment_id"
+    },
+    "course": {
+      "type": "belongsTo",
+      "target": "Course",
+      "foreignKey": "course_id"
+    },
+    "batch": {
+      "type": "belongsTo",
+      "target": "Batch",
+      "foreignKey": "batch_id"
+    }
+  }
+}

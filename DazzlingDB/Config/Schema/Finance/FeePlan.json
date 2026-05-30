@@ -1,0 +1,42 @@
+{
+  "primaryKey": "fee_plan_id",
+  "columns": {
+    "entity_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "entity_type": {
+      "type": "string",
+      "choices": [
+        "course",
+        "package"
+      ],
+      "maxLength": 255
+    },
+    "plan_name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "total_fee": {
+      "type": "number",
+      "required": true
+    },
+    "discount_allowed": {
+      "type": "boolean",
+      "default": true
+    },
+    "installment_allowed": {
+      "type": "boolean",
+      "default": true
+    },
+    "fee_plan_id": {
+      "type": "auto",
+      "idPrefix": "FPL",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {}
+}

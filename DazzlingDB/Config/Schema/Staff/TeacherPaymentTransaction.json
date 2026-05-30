@@ -1,0 +1,79 @@
+{
+  "primaryKey": "transaction_id",
+  "columns": {
+    "teacher_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "salary_config_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "payment_type": {
+      "type": "string",
+      "required": true,
+      "choices": [
+        "salary",
+        "advance",
+        "bonus",
+        "deduction"
+      ],
+      "maxLength": 255
+    },
+    "amount": {
+      "type": "number",
+      "required": true
+    },
+    "payment_mode": {
+      "type": "string",
+      "required": true,
+      "choices": [
+        "cash",
+        "bank_transfer",
+        "upi",
+        "cheque"
+      ],
+      "maxLength": 255
+    },
+    "transaction_date": {
+      "type": "date",
+      "required": true
+    },
+    "reference_number": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "salary_month": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "created_by": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "transaction_id": {
+      "type": "auto",
+      "idPrefix": "TPT",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "teacher": {
+      "type": "belongsTo",
+      "target": "Teacher",
+      "foreignKey": "teacher_id"
+    },
+    "teachersalaryconfig": {
+      "type": "belongsTo",
+      "target": "TeacherSalaryConfig",
+      "foreignKey": "salary_config_id"
+    }
+  }
+}

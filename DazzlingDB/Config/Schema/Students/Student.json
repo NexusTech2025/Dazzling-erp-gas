@@ -1,0 +1,82 @@
+{
+  "primaryKey": "student_id",
+  "columns": {
+    "student_name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "email": {
+      "type": "string",
+      "unique": true,
+      "maxLength": 255
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "gender": {
+      "type": "string",
+      "choices": [
+        "Male",
+        "Female",
+        "Other"
+      ],
+      "maxLength": 255
+    },
+    "dob": {
+      "type": "date"
+    },
+    "mother_name": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "father_name": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "avatarUrl": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "inactive",
+        "applicant"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "student_id": {
+      "type": "auto",
+      "idPrefix": "STU",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "address": {
+      "type": "hasOne",
+      "target": "Address",
+      "foreignKey": "student_id"
+    },
+    "contact": {
+      "type": "hasOne",
+      "target": "ContactInfo",
+      "foreignKey": "student_id"
+    },
+    "education": {
+      "type": "hasMany",
+      "target": "Education",
+      "foreignKey": "student_id"
+    },
+    "enrollments": {
+      "type": "hasMany",
+      "target": "Enrollment",
+      "foreignKey": "student_id"
+    }
+  }
+}

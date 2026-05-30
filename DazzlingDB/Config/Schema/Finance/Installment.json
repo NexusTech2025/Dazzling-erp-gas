@@ -1,0 +1,53 @@
+{
+  "primaryKey": "installment_id",
+  "columns": {
+    "student_fee_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "installment_number": {
+      "type": "number"
+    },
+    "due_amount": {
+      "type": "number",
+      "required": true
+    },
+    "paid_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "late_fee_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "due_date": {
+      "type": "date",
+      "required": true
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "pending",
+        "partially_paid",
+        "paid",
+        "overdue"
+      ],
+      "default": "pending",
+      "maxLength": 255
+    },
+    "installment_id": {
+      "type": "auto",
+      "idPrefix": "INS",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "studentfeeaccount": {
+      "type": "belongsTo",
+      "target": "StudentFeeAccount",
+      "foreignKey": "student_fee_id"
+    }
+  }
+}

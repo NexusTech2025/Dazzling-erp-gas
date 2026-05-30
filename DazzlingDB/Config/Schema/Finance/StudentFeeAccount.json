@@ -1,0 +1,94 @@
+{
+  "primaryKey": "student_fee_id",
+  "columns": {
+    "enrollment_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "fee_plan_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "total_fee": {
+      "type": "number"
+    },
+    "discount": {
+      "type": "number",
+      "default": 0
+    },
+    "adjustment_type": {
+      "type": "string",
+      "choices": [
+        "scholarship",
+        "coupon",
+        "referral",
+        "manual_override",
+        "none"
+      ],
+      "maxLength": 255
+    },
+    "coupon_code": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "final_fee": {
+      "type": "number"
+    },
+    "amount_paid": {
+      "type": "number",
+      "default": 0
+    },
+    "balance_due": {
+      "type": "number"
+    },
+    "is_overdue": {
+      "type": "boolean",
+      "default": false
+    },
+    "penalty_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "next_due_date": {
+      "type": "date"
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "completed",
+        "defaulted",
+        "refunded"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "remarks": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "created_by": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "student_fee_id": {
+      "type": "auto",
+      "idPrefix": "SFA",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "enrollment": {
+      "type": "hasOne",
+      "target": "Enrollment",
+      "foreignKey": "enrollment_id"
+    },
+    "feeplan": {
+      "type": "belongsTo",
+      "target": "FeePlan",
+      "foreignKey": "fee_plan_id"
+    }
+  }
+}

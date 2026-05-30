@@ -1,0 +1,56 @@
+{
+  "primaryKey": "user_id",
+  "columns": {
+    "username": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 255
+    },
+    "password_hash": {
+      "type": "string",
+      "required": true,
+      "editable": false,
+      "maxLength": 255
+    },
+    "password_salt": {
+      "type": "string",
+      "required": true,
+      "editable": false,
+      "description": "Unique salt for password hashing",
+      "maxLength": 255
+    },
+    "failed_attempts": {
+      "type": "number",
+      "default": 0,
+      "description": "Counter for failed login attempts"
+    },
+    "role": {
+      "type": "string",
+      "required": true,
+      "default": "guest",
+      "maxLength": 255
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "locked",
+        "disabled"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "last_login": {
+      "type": "datetime"
+    },
+    "user_id": {
+      "type": "auto",
+      "idPrefix": "USR",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {}
+}

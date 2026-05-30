@@ -21,7 +21,7 @@ const SESSION_TTL_HOURS = 24;
  */
 const GLOBAL_CRUD_WHITELIST = new Set([
     "Branch", "PromoCode",
-    "CourseType", "Course", "Batch", "PackageItem", "PackagePerk",
+    "CourseType", "Course", "Batch", "BatchAllocation", "PackageItem", "PackagePerk",
     "Address", "ContactInfo", "Education", "StudentLead",
     "TeacherSubject", "TeacherAttendance", "TeacherDocument", "TeacherSalaryConfig", "TeacherPaymentTransaction",
     "FeePlan"

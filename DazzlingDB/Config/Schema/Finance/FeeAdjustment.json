@@ -1,0 +1,45 @@
+{
+  "primaryKey": "adjustment_id",
+  "columns": {
+    "student_fee_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "adjustment_type": {
+      "type": "string",
+      "choices": [
+        "scholarship",
+        "coupon",
+        "referral",
+        "manual"
+      ],
+      "maxLength": 255
+    },
+    "amount": {
+      "type": "number",
+      "required": true
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "created_by": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "adjustment_id": {
+      "type": "auto",
+      "idPrefix": "FAD",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "studentfeeaccount": {
+      "type": "belongsTo",
+      "target": "StudentFeeAccount",
+      "foreignKey": "student_fee_id"
+    }
+  }
+}

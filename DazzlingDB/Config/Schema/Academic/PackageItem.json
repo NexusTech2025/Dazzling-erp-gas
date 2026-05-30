@@ -1,0 +1,36 @@
+{
+  "primaryKey": "item_id",
+  "columns": {
+    "package_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "entity_type": {
+      "type": "string",
+      "choices": [
+        "course"
+      ],
+      "maxLength": 255
+    },
+    "entity_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "item_id": {
+      "type": "auto",
+      "idPrefix": "PKI",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "package": {
+      "type": "belongsTo",
+      "target": "Package",
+      "foreignKey": "package_id"
+    }
+  }
+}

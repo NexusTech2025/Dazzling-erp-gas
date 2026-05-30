@@ -1,0 +1,72 @@
+{
+  "primaryKey": "enrollment_id",
+  "columns": {
+    "student_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "enrollment_type": {
+      "type": "string",
+      "choices": [
+        "course",
+        "package",
+        "subject"
+      ],
+      "required": true,
+      "maxLength": 255
+    },
+    "item_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "roll_number": {
+      "type": "number",
+      "required": false
+    },
+    "enrollment_date": {
+      "type": "date",
+      "required": false
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "completed",
+        "withdrawn"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "academic_status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "suspended",
+        "completed",
+        "withdrawn"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "metadata": {
+      "type": "json",
+      "required": false
+    },
+    "enrollment_id": {
+      "type": "auto",
+      "idPrefix": "ENR",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "student": {
+      "type": "belongsTo",
+      "target": "Student",
+      "foreignKey": "student_id"
+    }
+  }
+}

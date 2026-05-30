@@ -1,0 +1,33 @@
+{
+  "primaryKey": "token",
+  "columns": {
+    "user_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "expires_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "client_info": {
+      "type": "string",
+      "description": "JSON string of device/browser info",
+      "maxLength": 255
+    },
+    "token": {
+      "type": "auto",
+      "idPrefix": "SES",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "user": {
+      "type": "belongsTo",
+      "target": "User",
+      "foreignKey": "user_id"
+    }
+  }
+}

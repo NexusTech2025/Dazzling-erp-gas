@@ -1,0 +1,39 @@
+{
+  "primaryKey": "perk_id",
+  "columns": {
+    "package_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "perk_title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "perk_description": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "icon": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "display_order": {
+      "type": "number"
+    },
+    "perk_id": {
+      "type": "auto",
+      "idPrefix": "PRK",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "package": {
+      "type": "belongsTo",
+      "target": "Package",
+      "foreignKey": "package_id"
+    }
+  }
+}

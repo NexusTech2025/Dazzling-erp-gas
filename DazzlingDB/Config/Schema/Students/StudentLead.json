@@ -1,0 +1,95 @@
+{
+  "primaryKey": "lead_id",
+  "columns": {
+    "student_name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "phone": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "email": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "batch_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "referral_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "internal_notes": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "lead_source": {
+      "type": "string",
+      "choices": [
+        "walk-in",
+        "online",
+        "referral",
+        "social_media",
+        "other"
+      ],
+      "default": "walk-in",
+      "required": true,
+      "maxLength": 255
+    },
+    "priority": {
+      "type": "string",
+      "choices": [
+        "ready_to_enroll",
+        "hot",
+        "warm",
+        "cold"
+      ],
+      "default": "ready_to_enroll",
+      "required": true,
+      "maxLength": 255
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "prospect",
+        "contacted",
+        "converted",
+        "lost"
+      ],
+      "default": "prospect",
+      "required": true,
+      "maxLength": 255
+    },
+    "is_registered": {
+      "type": "boolean",
+      "default": false
+    },
+    "created_at": {
+      "type": "datetime",
+      "autoNowAdd": true
+    },
+    "updated_at": {
+      "type": "datetime",
+      "autoNow": true
+    },
+    "lead_id": {
+      "type": "auto",
+      "idPrefix": "SLD",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "batch": {
+      "type": "belongsTo",
+      "target": "Batch",
+      "foreignKey": "batch_id"
+    }
+  }
+}

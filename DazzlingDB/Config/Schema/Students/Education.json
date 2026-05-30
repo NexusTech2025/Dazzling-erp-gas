@@ -1,0 +1,38 @@
+{
+  "primaryKey": "education_id",
+  "columns": {
+    "student_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "highest_qualification": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "institution_name": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "year_of_passing": {
+      "type": "number"
+    },
+    "percentage_or_cgpa": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "education_id": {
+      "type": "auto",
+      "idPrefix": "EDU",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "student": {
+      "type": "belongsTo",
+      "target": "Student",
+      "foreignKey": "student_id"
+    }
+  }
+}

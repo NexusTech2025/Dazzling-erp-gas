@@ -1,0 +1,88 @@
+{
+  "primaryKey": "course_id",
+  "columns": {
+    "segment_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "entity_type": {
+      "type": "string",
+      "choices": [
+        "subject",
+        "course"
+      ],
+      "maxLength": 255
+    },
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "short_code": {
+      "type": "string",
+      "unique": true,
+      "maxLength": 255
+    },
+    "language_medium": {
+      "type": "string",
+      "required": true,
+      "choices": [
+        "English",
+        "Hindi",
+        "Urdu"
+      ],
+      "maxLength": 255
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "duration_value": {
+      "type": "number"
+    },
+    "duration_unit": {
+      "type": "string",
+      "choices": [
+        "months",
+        "days",
+        "weeks"
+      ],
+      "default": "months",
+      "maxLength": 255
+    },
+    "base_fee": {
+      "type": "number",
+      "required": true
+    },
+    "default_installment_count": {
+      "type": "number",
+      "default": 1
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "metadata": {
+      "type": "json"
+    },
+    "course_id": {
+      "type": "auto",
+      "idPrefix": "CRS",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "coursetype": {
+      "type": "belongsTo",
+      "target": "CourseType",
+      "foreignKey": "segment_id"
+    }
+  }
+}

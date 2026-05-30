@@ -1,0 +1,41 @@
+{
+  "primaryKey": "document_id",
+  "columns": {
+    "teacher_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "document_type": {
+      "type": "string",
+      "choices": [
+        "id_proof",
+        "resume",
+        "other"
+      ],
+      "maxLength": 255
+    },
+    "file_url": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "uploaded_at": {
+      "type": "datetime"
+    },
+    "document_id": {
+      "type": "auto",
+      "idPrefix": "TDO",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "teacher": {
+      "type": "belongsTo",
+      "target": "Teacher",
+      "foreignKey": "teacher_id"
+    }
+  }
+}

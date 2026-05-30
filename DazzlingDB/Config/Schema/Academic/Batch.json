@@ -1,0 +1,80 @@
+{
+  "primaryKey": "batch_id",
+  "columns": {
+    "course_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "teacher_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "branch_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "batch_name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "start_date": {
+      "type": "date"
+    },
+    "end_date": {
+      "type": "date"
+    },
+    "capacity": {
+      "type": "number",
+      "default": 30
+    },
+    "batch_type": {
+      "type": "string",
+      "required": true,
+      "choices": [
+        "Academy",
+        "Computer",
+        "Foundation",
+        "Competitive"
+      ],
+      "maxLength": 255
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "completed",
+        "cancelled"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "schedule": {
+      "type": "json"
+    },
+    "batch_id": {
+      "type": "auto",
+      "idPrefix": "BAT",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "course": {
+      "type": "belongsTo",
+      "target": "Course",
+      "foreignKey": "course_id"
+    },
+    "teacher": {
+      "type": "belongsTo",
+      "target": "Teacher",
+      "foreignKey": "teacher_id"
+    },
+    "branch": {
+      "type": "belongsTo",
+      "target": "Branch",
+      "foreignKey": "branch_id"
+    }
+  }
+}

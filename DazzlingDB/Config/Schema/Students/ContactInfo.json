@@ -1,0 +1,52 @@
+{
+  "primaryKey": "contact_id",
+  "columns": {
+    "student_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "address_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "email": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "mobile_number": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "emergency_name": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "emergency_phone": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "emergency_relationship": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "contact_id": {
+      "type": "auto",
+      "idPrefix": "CON",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "student": {
+      "type": "hasOne",
+      "target": "Student",
+      "foreignKey": "student_id"
+    },
+    "address": {
+      "type": "belongsTo",
+      "target": "Address",
+      "foreignKey": "address_id"
+    }
+  }
+}

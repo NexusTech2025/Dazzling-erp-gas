@@ -1,0 +1,71 @@
+{
+  "primaryKey": "payment_id",
+  "columns": {
+    "installment_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "student_fee_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "amount_paid": {
+      "type": "number",
+      "required": true
+    },
+    "payment_date": {
+      "type": "datetime"
+    },
+    "payment_method": {
+      "type": "string",
+      "choices": [
+        "cash",
+        "upi",
+        "bank_transfer",
+        "cheque"
+      ],
+      "maxLength": 255
+    },
+    "transaction_reference": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "success",
+        "pending",
+        "failed"
+      ],
+      "default": "success",
+      "maxLength": 255
+    },
+    "remarks": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "created_by": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "payment_id": {
+      "type": "auto",
+      "idPrefix": "PAY",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "installment": {
+      "type": "belongsTo",
+      "target": "Installment",
+      "foreignKey": "installment_id"
+    },
+    "studentfeeaccount": {
+      "type": "belongsTo",
+      "target": "StudentFeeAccount",
+      "foreignKey": "student_fee_id"
+    }
+  }
+}

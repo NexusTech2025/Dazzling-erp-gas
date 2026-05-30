@@ -1,0 +1,57 @@
+{
+  "primaryKey": "package_id",
+  "columns": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "target_class": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "board": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "month": {
+      "type": "number",
+      "description": "Duration in months"
+    },
+    "package_fee": {
+      "type": "number",
+      "required": true
+    },
+    "discount_percent": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "inactive",
+        "draft"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "package_id": {
+      "type": "auto",
+      "idPrefix": "PKG",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "packageperks": {
+      "type": "hasMany",
+      "target": "PackagePerk",
+      "foreignKey": "package_id"
+    }
+  }
+}

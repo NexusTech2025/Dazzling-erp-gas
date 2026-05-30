@@ -1,0 +1,61 @@
+{
+  "primaryKey": "promo_id",
+  "columns": {
+    "code": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 255
+    },
+    "entity_type": {
+      "type": "string",
+      "choices": [
+        "course",
+        "package"
+      ],
+      "maxLength": 255
+    },
+    "entity_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "discount_type": {
+      "type": "string",
+      "choices": [
+        "percentage",
+        "amount"
+      ],
+      "maxLength": 255
+    },
+    "discount_value": {
+      "type": "number"
+    },
+    "max_usage": {
+      "type": "number"
+    },
+    "valid_from": {
+      "type": "date"
+    },
+    "valid_until": {
+      "type": "date"
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "expired",
+        "disabled"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "promo_id": {
+      "type": "auto",
+      "idPrefix": "PRM",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {}
+}

@@ -1,0 +1,140 @@
+{
+  "primaryKey": "teacher_id",
+  "columns": {
+    "full_name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "mobile_number": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 255
+    },
+    "email": {
+      "type": "string",
+      "unique": true,
+      "maxLength": 255
+    },
+    "gender": {
+      "type": "string",
+      "choices": [
+        "male",
+        "female",
+        "other"
+      ],
+      "maxLength": 255
+    },
+    "date_of_birth": {
+      "type": "date"
+    },
+    "profile_photo_url": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "experience_years": {
+      "type": "number",
+      "required": true
+    },
+    "qualification": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "specialization": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "previous_institute": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "teacher_type": {
+      "type": "string",
+      "required": true,
+      "choices": [
+        "full_time",
+        "part_time",
+        "guest"
+      ],
+      "maxLength": 255
+    },
+    "joining_date": {
+      "type": "date",
+      "required": true
+    },
+    "status": {
+      "type": "string",
+      "choices": [
+        "active",
+        "inactive",
+        "pending"
+      ],
+      "default": "active",
+      "maxLength": 255
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "created_by": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "branch_id": {
+      "type": "string",
+      "description": "FK reference to the Branch where this teacher is assigned",
+      "maxLength": 255
+    },
+    "address": {
+      "type": "string",
+      "description": "Residential address of the teacher",
+      "maxLength": 500
+    },
+    "prefered_time_slot": {
+      "type": "string",
+      "choices": [
+        "Morning",
+        "Afternoon",
+        "Evening"
+      ],
+      "description": "Preferred time slot for teaching",
+      "maxLength": 255,
+      "required": false
+    },
+    "teacher_id": {
+      "type": "auto",
+      "idPrefix": "TCH",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "branch": {
+      "type": "belongsTo",
+      "target": "Branch",
+      "foreignKey": "branch_id"
+    },
+    "teachersubject": {
+      "type": "hasMany",
+      "target": "TeacherSubject",
+      "foreignKey": "teacher_id"
+    },
+    "teachersalaryconfig": {
+      "type": "hasMany",
+      "target": "TeacherSalaryConfig",
+      "foreignKey": "teacher_id"
+    },
+    "teacherdocument": {
+      "type": "hasMany",
+      "target": "TeacherDocument",
+      "foreignKey": "teacher_id"
+    },
+    "teacherpaymenttransaction": {
+      "type": "hasMany",
+      "target": "TeacherPaymentTransaction",
+      "foreignKey": "teacher_id"
+    }
+  }
+}
