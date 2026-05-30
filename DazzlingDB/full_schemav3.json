@@ -1,5 +1,5 @@
 {
-  "version": "2.0.3",
+  "version": "2.0.5",
   "database": "DazzlingDB",
   "categories": {
     "Core": {
@@ -435,6 +435,26 @@
               "default": "active",
               "maxLength": 255
             },
+            "package_enrollment_id": {
+              "type": "string",
+              "maxLength": 255,
+              "required": false
+            },
+            "academic_status": {
+              "type": "string",
+              "choices": [
+                "active",
+                "suspended",
+                "completed",
+                "withdrawn"
+              ],
+              "default": "active",
+              "maxLength": 255
+            },
+            "metadata": {
+              "type": "json",
+              "required": false
+            },
             "enrollment_id": {
               "type": "auto",
               "idPrefix": "ENR",
@@ -479,6 +499,11 @@
               "type": "belongsTo",
               "target": "Batch",
               "foreignKey": "batch_id"
+            },
+            "package_enrollment": {
+              "type": "belongsTo",
+              "target": "Enrollment",
+              "foreignKey": "package_enrollment_id"
             }
           }
         },
@@ -558,11 +583,6 @@
             }
           },
           "relations": {
-            "packagecourses": {
-              "type": "hasMany",
-              "target": "PackageCourse",
-              "foreignKey": "package_id"
-            },
             "packageperks": {
               "type": "hasMany",
               "target": "PackagePerk",
@@ -805,64 +825,6 @@
               "type": "belongsTo",
               "target": "CourseType",
               "foreignKey": "segment_id"
-            }
-          }
-        },
-        "PackageCourse": {
-          "primaryKey": "package_course_id",
-          "columns": {
-            "package_id": {
-              "type": "string",
-              "maxLength": 255
-            },
-            "course_id": {
-              "type": "string",
-              "maxLength": 255
-            },
-            "package_course_id": {
-              "type": "auto",
-              "idPrefix": "PKC",
-              "editable": false,
-              "unique": true,
-              "required": false
-            },
-            "__tx_id": {
-              "type": "string",
-              "system": true,
-              "required": false,
-              "editable": false,
-              "description": "Unique Transaction ID"
-            },
-            "__tx_status": {
-              "type": "string",
-              "choices": [
-                "PENDING",
-                "COMMITTED",
-                "FAILED"
-              ],
-              "default": "PENDING",
-              "system": true,
-              "required": false,
-              "editable": false
-            },
-            "__created_at": {
-              "type": "datetime",
-              "autoNowAdd": true,
-              "system": true,
-              "required": false,
-              "editable": false
-            }
-          },
-          "relations": {
-            "package": {
-              "type": "belongsTo",
-              "target": "Package",
-              "foreignKey": "package_id"
-            },
-            "course": {
-              "type": "belongsTo",
-              "target": "Course",
-              "foreignKey": "course_id"
             }
           }
         },

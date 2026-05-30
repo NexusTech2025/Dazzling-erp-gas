@@ -31,6 +31,58 @@ class RegisterStudentAction extends BaseAction {
 }
 
 /**
+ * Student Domain: Withdraw a subject from package enrollment
+ */
+class WithdrawStudentSubjectAction extends BaseAction {
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.student_id || !p.course_id) {
+      throw new ActionValidationError("payload must contain 'student_id' and 'course_id'.");
+    }
+  }
+
+  _execute() {
+    return StudentService.processSubjectWithdrawal(this._params.payload.student_id, this._params.payload.course_id);
+  }
+}
+
+/**
+ * Student Domain: Upgrade standalone course enrollments to a package
+ */
+class UpgradeStudentPackageAction extends BaseAction {
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.student_id || !p.current_enrollment_ids || !p.target_package_id || !p.package_batches) {
+      throw new ActionValidationError("payload must contain 'student_id', 'current_enrollment_ids', 'target_package_id', and 'package_batches'.");
+    }
+  }
+
+  _execute() {
+    const { student_id, current_enrollment_ids, target_package_id, package_batches } = this._params.payload;
+    return StudentService.upgradeToPackage(student_id, current_enrollment_ids, target_package_id, package_batches);
+  }
+}
+
+/**
+ * Student Domain: Verify class/portal access control
+ */
+class VerifyStudentAccessAction extends BaseAction {
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.student_id || !p.course_id) {
+      throw new ActionValidationError("payload must contain 'student_id' and 'course_id'.");
+    }
+  }
+
+  _execute() {
+    return StudentService.verifyAccess(this._params.payload.student_id, this._params.payload.course_id);
+  }
+}
+
+/**
  * Student Lead Domain: Add a new student lead
  */
 class AddStudentLeadAction extends BaseAction {
