@@ -477,6 +477,11 @@ const DATABASE_SCHEMA = {
               "type": "belongsTo",
               "target": "Student",
               "foreignKey": "student_id"
+            },
+            "item": {
+              "type": "belongsToPolymorphic",
+              "typeField": "enrollment_type",
+              "idField": "item_id"
             }
           }
         },
@@ -622,6 +627,11 @@ const DATABASE_SCHEMA = {
               "type": "belongsTo",
               "target": "Package",
               "foreignKey": "package_id"
+            },
+            "entity": {
+              "type": "belongsToPolymorphic",
+              "typeField": "entity_type",
+              "idField": "entity_id"
             }
           }
         },

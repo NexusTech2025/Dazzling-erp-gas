@@ -10,19 +10,38 @@
 const DBContext = (function() {
   let instance = null;
 
-  /**
-   * Internal initializer.
-   */
   function _init() {
     const rootFolderId = DATABASE_ROOT_FOLDER_ID;
+    const activeEnv = typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : 'development';
     
     // DATABASE_SCHEMA is assumed to be globally available from Config.js
     if (typeof DATABASE_SCHEMA === 'undefined') {
       throw new Error("[DBContext] Fatal: DATABASE_SCHEMA not found. Ensure Config.js is loaded.");
     }
 
+    console.log(`[DBContext] RESOLVED ENVIRONMENT: '${activeEnv.toUpperCase()}'`);
+    console.log(`[DBContext] TARGET ROOT FOLDER ID: '${rootFolderId}'`);
+
+    // 1. Run registrations prior to bootstrapping SheetDB
+    if (typeof registerDatabaseValidators === 'function') {
+      registerDatabaseValidators();
+    }
+    if (typeof registerPolymorphicMappings === 'function') {
+      registerPolymorphicMappings();
+    }
+
     console.log(`[DBContext] Bootstrapping SheetDB for ${DATABASE_SCHEMA.database}...`);
-    return SheetDB.init(rootFolderId, DATABASE_SCHEMA);
+    const isDev = activeEnv === "development";
+    const db = SheetDB.init(rootFolderId, DATABASE_SCHEMA, {
+      allowAutoOverride: isDev
+    });
+
+    // 2. Lock the ValidationRegistry to prevent runtime tampering
+    if (typeof SheetDB !== 'undefined' && typeof SheetDB.ValidationRegistry !== 'undefined') {
+      SheetDB.ValidationRegistry.lock();
+    }
+
+    return db;
   }
 
   return {

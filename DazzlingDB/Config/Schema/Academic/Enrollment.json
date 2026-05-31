@@ -67,6 +67,11 @@
       "type": "belongsTo",
       "target": "Student",
       "foreignKey": "student_id"
+    },
+    "item": {
+      "type": "belongsToPolymorphic",
+      "typeField": "enrollment_type",
+      "idField": "item_id"
     }
   }
 }

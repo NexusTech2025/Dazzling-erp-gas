@@ -6,10 +6,16 @@
  * (auto-generation, type-casting, constraints) are strictly enforced by BaseModel.
  */
 
-const FieldSystemTestSuite = (function() {
+const FieldSystemTestSuite = (function () {
 
   function runAll() {
     console.log("=== STARTING FIELD SYSTEM ORM TESTS ===");
+
+    // Ensure DB context is initialized to compile dynamic models
+    if (typeof DBContext !== 'undefined') {
+      DBContext.getInstance();
+    }
+
     let passed = 0;
     let failed = 0;
 
@@ -37,15 +43,15 @@ const FieldSystemTestSuite = (function() {
   }
 
   function testDynamicModelGeneration() {
-    const StudentModel = ModelRegistry.getModel("Student");
+    const StudentModel = SheetDB.ModelRegistry.getModel("Student");
     if (!StudentModel) throw new Error("ModelRegistry failed to generate Student model.");
     if (StudentModel.tableName !== "Student") throw new Error("Generated model missing static tableName.");
     if (!StudentModel.schema.student_name) throw new Error("Generated schema missing 'student_name' field.");
   }
 
   function testHydrationAndTypeCasting() {
-    const StudentModel = ModelRegistry.getModel("Student");
-    
+    const StudentModel = SheetDB.ModelRegistry.getModel("Student");
+
     // Simulate raw data from Google Sheets (e.g., date as string, number as string)
     const rawData = {
       student_name: "Rahul Sharma",
@@ -56,12 +62,12 @@ const FieldSystemTestSuite = (function() {
     const student = new StudentModel(rawData);
 
     if (student.student_name !== "Rahul Sharma") throw new Error("Hydration failed for string field.");
-    if (!(student.dob instanceof Date)) throw new Error("DateField failed to cast string to Date object.");
+    if (!SheetDB.isDate(student.dob)) throw new Error("DateField failed to cast string to Date object.");
     if (student.__rowNumber !== 5) throw new Error("Metadata preservation failed during hydration.");
   }
 
   function testValidationSuccess() {
-    const StudentModel = ModelRegistry.getModel("Student");
+    const StudentModel = SheetDB.ModelRegistry.getModel("Student");
     const student = new StudentModel({
       student_name: "Anita Desai",
       gender: "Female", // Valid Enum
@@ -69,11 +75,11 @@ const FieldSystemTestSuite = (function() {
     });
 
     // Should pass without throwing
-    student.validate(); 
+    student.validate();
   }
 
   function testValidationFailureRequired() {
-    const StudentModel = ModelRegistry.getModel("Student");
+    const StudentModel = SheetDB.ModelRegistry.getModel("Student");
     const student = new StudentModel({
       gender: "Male"
       // Missing 'student_name' which is required: true
@@ -83,7 +89,7 @@ const FieldSystemTestSuite = (function() {
       student.validate();
       throw new Error("Validation SHOULD HAVE FAILED for missing required field, but it passed.");
     } catch (e) {
-      if (!(e instanceof ValidationError)) {
+      if (!(e instanceof SheetDB.ValidationError)) {
         throw new Error(`Expected ValidationError, got: ${e.name}`);
       }
       if (!e.message.includes("student_name")) {
@@ -93,7 +99,7 @@ const FieldSystemTestSuite = (function() {
   }
 
   function testValidationFailureEnum() {
-    const StudentModel = ModelRegistry.getModel("Student");
+    const StudentModel = SheetDB.ModelRegistry.getModel("Student");
     const student = new StudentModel({
       student_name: "John Doe",
       gender: "Alien" // Invalid Enum choice
@@ -110,7 +116,7 @@ const FieldSystemTestSuite = (function() {
   }
 
   function testAutoGenerationAndSerialization() {
-    const StudentModel = ModelRegistry.getModel("Student");
+    const StudentModel = SheetDB.ModelRegistry.getModel("Student");
     const student = new StudentModel({
       student_name: "New Student",
       dob: new Date("2005-01-01")
@@ -145,3 +151,8 @@ const FieldSystemTestSuite = (function() {
   };
 
 })();
+
+
+function test_FieldSystemTestSuite() {
+  FieldSystemTestSuite.runAll()
+}

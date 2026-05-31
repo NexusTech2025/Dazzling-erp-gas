@@ -1,179 +1,236 @@
-# Implementation Plan: `staff_teacher_update` — Design Pattern Approach
+# Implementation Plan - Phase 2 (SheetDB Database Engine Upgrades)
 
-> [!NOTE]
-> No test file exists yet for teacher update scenarios. A follow-up test file `UpdateTeacherTests.js` in `DazzlingDB/Test/` can be created after approval.
-
-## Design Pattern Proposal
-
-Two complementary patterns solve this cleanly in the GAS global-scope environment:
-
-### Pattern 1: Chain of Responsibility — Validation Pipeline
-
-Each validation concern becomes an independent **handler** with a single job. They are composed into a chain and executed in sequence. Critically, all handlers **collect errors** rather than short-circuit on the first failure.
-
-```
- TeacherUpdateContext
- { db, teacher_id, patch, errors: [] }
-       │
-       ▼
- ┌─────────────────────────────┐
- │ ExistenceCheckHandler       │  Does teacher_id exist?
- └──────────┬──────────────────┘
-            │
-            ▼
- ┌─────────────────────────────┐
- │ ImmutableFieldStripHandler  │  Removes teacher_id, __tx_*, __created_at
- └──────────┬──────────────────┘
-            │
-            ▼
- ┌─────────────────────────────┐
- │ UniqueMobileHandler         │  mobile_number conflict (excluding self)
- └──────────┬──────────────────┘
-            │
-            ▼
- ┌─────────────────────────────┐
- │ UniqueEmailHandler          │  email conflict (excluding self)
- └──────────┬──────────────────┘
-            │
-            ▼
- ┌─────────────────────────────┐
- │ BranchFKHandler             │  branch_id must resolve to real Branch
- └──────────┬──────────────────┘
-            │
-            ▼
-      [ errors.length > 0 ]
-         YES → throw ValidationError (consolidated)
-         NO  → db.Teacher.update(teacher_id, patch)
-```
-
-### Pattern 2: Context Object (Value Object)
-
-A plain `TeacherUpdateContext` object carries all shared state through the chain — avoiding threading multiple parameters through every handler signature:
-
-```javascript
-// { db, teacher_id, patch, errors[], existingRecord }
-const ctx = new TeacherUpdateContext(db, "TCH-...", { full_name: "..." });
-```
-
-### Context Class Implementation Detail
-```javascript
-class TeacherUpdateContext {
-  /**
-   * @param {Object} db - Database Instance
-   * @param {string} teacherId - Teacher ID to update
-   * @param {Object} patch - Fields to update
-   */
-  constructor(db, teacherId, patch) {
-    this.db = db;
-    this.teacherId = teacherId;
-    this.patch = { ...(patch || {}) };
-    this.errors = [];
-    this.existingRecord = null;
-  }
-
-  /**
-   * Adds a validation error to the context
-   * @param {string} field - Field that failed validation
-   * @param {string} message - Descriptive error message
-   */
-  addError(field, message) {
-    this.errors.push({ field, message });
-  }
-}
-```
-
-### Chain of Responsibility Implementation Detail
-#### 1. Base Handler Structure
-```javascript
-class TeacherUpdateHandler {
-  constructor() {
-    this.nextHandler = null;
-  }
-
-  setNext(handler) {
-    this.nextHandler = handler;
-    return handler; // Allows chaining: h1.setNext(h2).setNext(h3)
-  }
-
-  handle(ctx) {
-    this.process(ctx);
-    if (this.nextHandler) {
-      this.nextHandler.handle(ctx);
-    }
-  }
-
-  /**
-   * @abstract
-   * @param {TeacherUpdateContext} ctx 
-   */
-  process(ctx) {
-    throw new Error("process() must be implemented by concrete subclass");
-  }
-}
-```
-
-#### 2. Example Concrete Handler
-```javascript
-class UniqueMobileHandler extends TeacherUpdateHandler {
-  process(ctx) {
-    const { mobile_number } = ctx.patch;
-    if (!mobile_number) return; 
-
-    const duplicate = ctx.db.Teacher.findOne({ mobile_number });
-    if (duplicate && duplicate.teacher_id !== ctx.teacherId) {
-      ctx.addError("mobile_number", `Mobile number ${mobile_number} is already in use by teacher ${duplicate.teacher_id}.`);
-    }
-  }
-}
-```
-
-#### 3. Chain Execution and Orchestration
-```javascript
-class TeacherUpdateValidationChain {
-  static run(ctx) {
-    const existenceCheck = new ExistenceCheckHandler();
-    const immutableStrip = new ImmutableFieldStripHandler();
-    const uniqueMobile   = new UniqueMobileHandler();
-    const uniqueEmail    = new UniqueEmailHandler();
-    const branchFK       = new BranchFKHandler();
-
-    existenceCheck
-      .setNext(immutableStrip)
-      .setNext(uniqueMobile)
-      .setNext(uniqueEmail)
-      .setNext(branchFK);
-
-    existenceCheck.handle(ctx);
-  }
-}
-```
-
-**Benefit**: Every handler only receives `ctx` and mutates it. Adding a new validation rule = adding a new handler and wiring it in. Zero changes to existing handlers or the service method.
+This implementation plan details the architectural designs, protocols, and class schemas for the SheetDB Database Engine upgrades. The goal is to build a robust, self-validating, and high-performance database foundation that handles complex associations, enforces integrity, and provides rich validation diagnostics.
 
 ---
 
-## Why Not Other Patterns?
+## User Review Required
 
-| Pattern | Why Rejected |
-|---|---|
-| **Strategy** | Strategies swap algorithms — validators don't swap, they *compose*. CoR is the correct fit. |
-| **Decorator** | Best for wrapping a single object; our validators operate on shared mutable context, not wrapping each other. |
-| **Template Method** | Already used by `BaseAction`. Applying it to the service layer would create an inheritance hierarchy for a single use case — over-engineering. |
-| **Builder** | Good for constructing objects step-by-step; the patch isn't being *built* — it's being validated and stripped. Semantics don't match. |
+> [!IMPORTANT]
+> The upgrades in Phase 2 introduce the following changes:
+> 1. **Polymorphic Traversal & Validation:** Requires declaring relations as `belongsToPolymorphic` in the JSON schemas (e.g. `Enrollment.json` and `PackageItem.json`).
+> 2. **Aggregated Field Validations:** Field validations will no longer throw fail-fast errors on individual fields. Instead, `BaseModel.validate()` will return all validation errors across all fields in a single consolidated `ValidationError`.
+> 3. **Manual Override Security:** Prevents manual overrides on `type: "auto"` fields during record insertion unless bypassed via database configuration (`allowAutoOverride: true`).
+> 4. **Production-Grade Custom Validator Registry:** Implements locked immutability, bulk registration (`registerMany`), and robust typing checks with custom errors.
+
+---
+
+## Architectural Design & Protocols
+
+### 1. Unified Validation & Write Flow (Data Lifecycle)
+
+Below is the logical flow diagram illustrating how a record is validated, relationship-checked, and written to Google Sheets:
+
+```
+      +----------------------------------------------------+
+      |                  BaseModel.save()                  |
+      +-------------------------+--------------------------+
+                                |
+                                v
+      +----------------------------------------------------+
+      |            BaseModel.validate() (Tier 1,2,4)       |
+      |   (Runs each Field's validation rule pipeline)     |
+      +-------------------------+--------------------------+
+                                |
+                                v
+      +----------------------------------------------------+
+      |       BaseModel._validateRelational() (Tier 3)     |
+      |     (Verifies FKs & Polymorphic references using   |
+      |             the PrimaryKeyCache Set)               |
+      +-------------------------+--------------------------+
+                                |
+                                v
+      +----------------------------------------------------+
+      |             Blocked Override Check                 |
+      |  (Blocks manual inputs on AutoFields if isNew)     |
+      +-------------------------+--------------------------+
+                                |
+                                v
+      +----------------------------------------------------+
+      |               Persist to TableGateway              |
+      |       (Invalidates & syncs PrimaryKeyCache)        |
+      +----------------------------------------------------+
+```
+
+---
+
+### 2. Code Contracts & APIs
+
+#### A. PolymorphicRegistry Protocol
+`PolymorphicRegistry` is a global mapping registry to translate logical shorthand types to table/sheet entities.
+
+```typescript
+interface PolymorphicRegistry {
+  register(typeCode: string, targetTable: string): void;
+  resolve(typeCode: string): string; // Returns target table name, throws if missing
+  has(typeCode: string): boolean;
+  clear(): void;
+}
+```
+
+#### B. PrimaryKeyCache Protocol
+`PrimaryKeyCache` stores the set of physical primary keys for each table to enable fast relationship validations.
+
+```typescript
+class PrimaryKeyCache {
+  constructor(db: Object);
+  get(tableName: string): Set<string>; // Lazily loads from spreadsheet if cache miss
+  add(tableName: string, id: string): void;
+  remove(tableName: string, id: string): void;
+  invalidate(tableName: string): void;
+  clear(): void;
+}
+```
+
+#### C. ValidationRegistry Protocol (Production-Grade)
+Manages custom callback registration, checking type constraints, double registration warnings, and locking behavior.
+
+```typescript
+interface ValidationRegistry {
+  register(name: string, handlerFn: Function): void;
+  registerMany(handlers: Record<string, Function>): void;
+  execute(name: string, value: any): any; // Executes under try-catch; wraps errors
+  get(name: string): Function | undefined;
+  has(name: string): boolean;
+  lock(): void; // Lock registry to prevent runtime tampering
+  unlock(): void;
+  clear(): void;
+}
+```
+
+#### D. ValidationRule & Pipeline Contracts
+`ValidationRule` instances are stateless rule declarations that evaluate field constraints.
+
+```typescript
+class ValidationRule {
+  validate(value: any, fieldName: string): string | null; // Returns error message or null
+}
+
+class ValidationPipeline {
+  constructor(fieldName: string);
+  addRule(rule: ValidationRule): this;
+  validate(value: any): FieldError[]; // Aggregates and returns all failures
+}
+```
 
 ---
 
 ## Proposed Changes
 
-## Verification Plan
-* Create a dedicated integration suite `DazzlingDB/Test/UpdateTeacherTests.js` covering:
-  - Base field updates (e.g. `full_name`, `address`).
-  - Mobile number uniqueness validation (excluding own ID).
-  - Email uniqueness validation (excluding own ID).
-  - User credentials creation/updating with dynamic hashing.
-  - Verification of teaching subjects synchronization.
-  - Foreign key verification on `branch_id`.
-  - Non-existent teacher ID rejection.
+### Component 1: Custom Errors & System Safety
 
-### Manual Verification
-* Deploy a test payload and confirm proper database state updates and transaction-level integrity on GSheets.
+#### [MODIFY] [Errors.js](file:///e:/NAST/Dazzling/GAS/SheetDB/Errors.js)
+Introduce validation registry exception classes:
+- `ValidationRegistryError`: Base class.
+- `ValidationRegistryLockedError`: Thrown on attempts to write to the locked registry.
+- `ValidatorRegistrationError`: Thrown on invalid registration parameters.
+- `ValidatorNotFoundError`: Thrown on references to unregistered validator names.
+- `ValidatorExecutionError`: Thrown on runtime exceptions caught during execution.
+
+---
+
+### Component 2: Validation Rules & Engine
+
+We will introduce a decoupled validation rules system under a new folder: [NEW] [SheetDB/Validation/](file:///e:/NAST/Dazzling/GAS/SheetDB/Validation/)
+
+#### [NEW] [ValidationRules.js](file:///e:/NAST/Dazzling/GAS/SheetDB/Validation/ValidationRules.js)
+Define standard stateless rules:
+- `RequiredRule`: Verifies values are non-empty.
+- `MaxLengthRule(max)`: Limits string lengths.
+- `MinLengthRule(min)`: Enforces minimum string lengths.
+- `MinRule(min)`: Enforces minimum numeric values.
+- `MaxRule(max)`: Enforces maximum numeric values.
+- `ChoiceRule(choices)`: Checks values against whitelist options.
+- `RegexRule(pattern)`: Tests string pattern matching.
+- `CustomCallbackRule(handlerName)`: Executes callbacks registered in `ValidationRegistry`.
+- `FunctionalCallbackRule(fn)`: Executes anonymous callback functions.
+
+#### [NEW] [ValidationPipeline.js](file:///e:/NAST/Dazzling/GAS/SheetDB/Validation/ValidationPipeline.js)
+Define `ValidationPipeline` to group rules and run them sequentially, collecting all failures instead of stopping on the first error.
+
+#### [MODIFY] [Fields.js](file:///e:/NAST/Dazzling/GAS/SheetDB/ORM/Fields.js)
+- Update `BaseField` and subclasses to compile rules during construction:
+  - `BaseField` compiles `RequiredRule`, `ChoiceRule`, and functional `validators`.
+  - `CharField` compiles `MaxLengthRule` and `MinLengthRule`.
+  - `IntegerField` compiles `MinRule` and `MaxRule`.
+- Update `BaseField.prototype.validate(value)` to execute the compiled pipeline and return an array of `FieldError` objects.
+
+---
+
+### Component 3: Models & Relation Parsing
+
+#### [MODIFY] [BaseModel.js](file:///e:/NAST/Dazzling/GAS/SheetDB/ORM/BaseModel.js)
+- **Aggregated Field Error Collection:**
+  - Update `BaseModel.prototype.validate()` to execute `field.validate(value)` for each field, gathering all returned `FieldError` elements, and raising a unified `ValidationError` at the end.
+- **Relational & Polymorphic Validation:**
+  - Add `BaseModel.prototype._validateRelational()` to inspect all relationships (including polymorphic associations) and verify foreign keys exist in the `PrimaryKeyCache`.
+- **Manual Override Block check:**
+  - Update the write pipeline within `BaseModel.prototype.save()` to scan fields. If a field is an `AutoField` and the record is new, raise a `ValidationError` if a manual ID is supplied, unless `allowAutoOverride: true` is configured.
+- **Detailed Logging:**
+  - Add detailed logging using `console.log` and `console.error` specifying tables, fields, and error context.
+
+#### [MODIFY] [RelationResolver.js](file:///e:/NAST/Dazzling/GAS/SheetDB/ORM/RelationResolver.js)
+- Implement `belongsToPolymorphic` relation type resolving. It reads the dynamic type column from the source model, maps it to the target table via `PolymorphicRegistry`, and queries the corresponding repository.
+
+---
+
+### Component 4: Registries & Caching
+
+#### [MODIFY] [ValidationRegistry.js](file:///e:/NAST/Dazzling/GAS/SheetDB/Registries/ValidationRegistry.js)
+- Implement production-grade locking state checks.
+- Add `registerMany(handlers)` for bulk registrations.
+- Throw custom `ValidationRegistryLockedError`, `ValidatorRegistrationError`, `ValidatorNotFoundError`, and `ValidatorExecutionError` exceptions.
+
+#### [NEW] [PolymorphicRegistry.js](file:///e:/NAST/Dazzling/GAS/SheetDB/Registries/PolymorphicRegistry.js)
+- Implement `PolymorphicRegistry` to maintain type mappings.
+
+#### [NEW] [PrimaryKeyCache.js](file:///e:/NAST/Dazzling/GAS/SheetDB/Registries/PrimaryKeyCache.js)
+- Implement `PrimaryKeyCache` for primary-key loading and operations.
+
+#### [MODIFY] [index.js](file:///e:/NAST/Dazzling/GAS/SheetDB/index.js)
+- Initialize `PolymorphicRegistry` and `PrimaryKeyCache`.
+- Instantiate `PrimaryKeyCache` during `init()` and bind it to the `db` facade.
+- Pass `db` or `PrimaryKeyCache` to `TableGateway` to allow cache sync on writes.
+- Export new registries, errors, and rules to global namespace.
+
+#### [MODIFY] [TableGatway.js](file:///e:/NAST/Dazzling/GAS/SheetDB/TableGateway/TableGatway.js)
+- Accept the `db` facade in constructor.
+- Update `insert()`, `insertBatch()`, and `remove()` to update the `db._pkCache` directly.
+
+#### [MODIFY] [DynamicRepository.js](file:///e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js)
+- Ensure all save/delete operations correctly flow through TableGateway to sync the cache.
+
+#### [MODIFY] [BatchBucket.js](file:///e:/NAST/Dazzling/GAS/SheetDB/Repositories/BatchBucket.js)
+- Refactor `_buildValidationContext()` to load parent PKs directly from the `db._pkCache`.
+- Update logic to dynamically determine parent tables for polymorphic relationships.
+
+#### [MODIFY] [SchemaValidator.js](file:///e:/NAST/Dazzling/GAS/SheetDB/SchemaDriver/SchemaValidator.js)
+- Update `validateRelational` to validate polymorphic relationships against resolved tables in the validation context.
+
+---
+
+### Component 5: Application Context Setup
+
+#### [MODIFY] [Code.js](file:///e:/NAST/Dazzling/GAS/DazzlingDB/Code.js)
+- Add a setup hook `registerPolymorphicMappings()` to configure standard type mappings:
+  - `"course"` -> `"Course"`
+  - `"package"` -> `"Package"`
+  - `"subject"` -> `"Course"`
+- Wire `registerPolymorphicMappings()` to load on bootstrapping and DB initialization.
+- Call `ValidationRegistry.lock()` after database configuration completes.
+
+---
+
+## Verification Plan
+
+### 1. Automated Unit & Integration Tests (Report only - no auto execution)
+We will add diagnostic tests in `SheetDB/Tests/` to verify:
+- **Pipeline Validation:** Asserts that multiple field validation errors are gathered and returned in a single exception.
+- **Relational & Polymorphic Validation:** Simulates valid and invalid relationships to verify `PrimaryKeyCache` correctly permits valid IDs and blocks mismatched IDs.
+- **Override Blocker:** Verifies manual ID inserts on `AutoField` throw unless bypassed.
+- **Validation Registry Locks & Custom Errors:** Verifies attempts to add validators runtime after locking throws `ValidationRegistryLockedError`, and bad registrations throw `ValidatorRegistrationError`.
+
+### 2. Manual Execution Steps
+1. Push modifications manually to Google Apps Script.
+2. Execute the database test suite in the Apps Script console.
+3. Review console output to verify log details indicating validation phases and cache synchronization.

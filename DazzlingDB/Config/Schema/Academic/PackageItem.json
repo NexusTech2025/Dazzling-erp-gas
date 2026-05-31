@@ -31,6 +31,11 @@
       "type": "belongsTo",
       "target": "Package",
       "foreignKey": "package_id"
+    },
+    "entity": {
+      "type": "belongsToPolymorphic",
+      "typeField": "entity_type",
+      "idField": "entity_id"
     }
   }
 }

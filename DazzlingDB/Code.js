@@ -8,12 +8,26 @@
  */
 function registerDatabaseValidators() {
   console.log("[App] Registering database custom validators...");
-  if (typeof ValidationRegistry !== 'undefined') {
-    // Example custom validator registration:
-    ValidationRegistry.register("validateEmail", function (value) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(String(value)) ? null : "Invalid email address.";
+  if (typeof SheetDB !== 'undefined' && typeof SheetDB.ValidationRegistry !== 'undefined') {
+    // Bulk register all custom validators
+    SheetDB.ValidationRegistry.registerMany({
+      validateEmail: function (value) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(String(value)) ? null : "Invalid email address.";
+      }
     });
+  }
+}
+
+/**
+ * Registers polymorphic shorthand type mappings.
+ */
+function registerPolymorphicMappings() {
+  console.log("[App] Registering polymorphic mappings...");
+  if (typeof SheetDB !== 'undefined' && typeof SheetDB.PolymorphicRegistry !== 'undefined') {
+    SheetDB.PolymorphicRegistry.register("course", "Course");
+    SheetDB.PolymorphicRegistry.register("package", "Package");
+    SheetDB.PolymorphicRegistry.register("subject", "Course");
   }
 }
 
@@ -136,4 +150,30 @@ function executeActionViaUI(request) {
     return JSON.parse(output.getContent());
   }
   return output;
+}
+
+/**
+ * Console Trigger: Executes dry-run diagnostics on Student table.
+ */
+function runStudentDiagnostics() {
+  const db = DBContext.getInstance();
+  console.log("[Diagnostics] Starting dry-run diagnostics on table 'Student'...");
+  const result = db.setup.diagnose('Student');
+  console.log("[Diagnostics] Result Plan:", JSON.stringify(result, null, 2));
+}
+
+/**
+ * Diagnostic Trigger: Prints the active environment settings and folder mappings.
+ */
+function checkEnvironmentConfiguration() {
+  console.log("=== [DazzlingDB Environment Diagnostics] ===");
+  console.log(`Active Environment (SYSTEM_ENV): ${SYSTEM_ENV}`);
+  console.log(`Root Folder Target (DATABASE_ROOT_FOLDER_ID): ${DATABASE_ROOT_FOLDER_ID}`);
+  
+  if (typeof PropertiesService !== 'undefined') {
+    const props = PropertiesService.getScriptProperties().getProperties();
+    console.log("Online Script Properties Cached:", JSON.stringify(props, null, 2));
+  } else {
+    console.log("GAS PropertiesService is not available in the current context.");
+  }
 }
