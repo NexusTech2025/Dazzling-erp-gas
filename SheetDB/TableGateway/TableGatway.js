@@ -15,10 +15,11 @@ class TableGateway {
    * @param {Object} registry - Instance of SchemaRegistry.
    * @param {Object} dataSource - Instance of SheetDataSource.
    */
-  constructor(tableName, registry, dataSource) {
+  constructor(tableName, registry, dataSource, db) {
     this.tableName = tableName;
     this.registry = registry;
     this.dataSource = dataSource;
+    this.db = db || null;
 
     // Self-Configure from Schema
     this.category = registry.getCategoryForTable(tableName);
@@ -106,6 +107,12 @@ class TableGateway {
     
     const rowArray = this._mapObjectToRow(data);
     this.dataSource.insertRows(this.category, this.tableName, [rowArray]);
+    
+    // Sync PrimaryKeyCache
+    if (this.db && this.db._pkCache) {
+      this.db._pkCache.add(this.tableName, data[this.primaryKey]);
+    }
+    
     return this._normalizeRow(data);
   }
 
@@ -122,6 +129,13 @@ class TableGateway {
     
     // Batch Write
     this.dataSource.insertRows(this.category, this.tableName, rows2D);
+
+    // Sync PrimaryKeyCache
+    if (this.db && this.db._pkCache) {
+      dataArray.forEach(data => {
+        this.db._pkCache.add(this.tableName, data[this.primaryKey]);
+      });
+    }
 
     return dataArray.map(data => this._normalizeRow(data));
   }
@@ -157,6 +171,12 @@ class TableGateway {
     if (!existing) throw new Error(`Delete failed: Record '${id}' not found.`);
 
     this.dataSource.deleteRow(this.category, this.tableName, existing.__rowNumber);
+    
+    // Sync PrimaryKeyCache
+    if (this.db && this.db._pkCache) {
+      this.db._pkCache.remove(this.tableName, id);
+    }
+    
     return true;
   }
 

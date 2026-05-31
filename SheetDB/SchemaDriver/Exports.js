@@ -50,6 +50,24 @@ function provisionSchema(rootFolderId, schema, config = {}) {
   return engine.provision();
 }
 
+/**
+ * Stage 4: DIAGNOSE
+ * Executes a targeted dry-run diagnostic on a specific table.
+ * @param {string} rootFolderId - Google Drive Folder ID
+ * @param {Object} schema - Canonical Database Schema
+ * @param {string} tableName - Name of the table to check
+ * @returns {Object} Structured dry-run validation and provisioning plan
+ */
+function diagnoseTable(rootFolderId, schema, tableName) {
+  const fs = createFileSystem(rootFolderId);
+  const engine = new SchemaSetupEngine(fs, schema, null, null, {
+    dryRun: true,
+    targetTables: [tableName],
+    verbose: false
+  });
+  return engine.provision();
+}
+
 // ==========================================
 // 🟡 SEMANTIC VARIANTS
 // ==========================================

@@ -78,44 +78,58 @@ class BatchBucket {
   _buildValidationContext() {
     const context = { parentPKs: {} };
     
-    // Find all 'belongsTo' relations needed by the tables in this batch
+    // Find all 'belongsTo' and 'belongsToPolymorphic' relations needed by the tables in this batch
     const requiredParents = new Set();
     
     this.sequence.forEach(tableName => {
       const relations = this.db._registry.getRelations(tableName);
+      const records = this.buckets[tableName] || [];
+      
       for (const relDef of Object.values(relations)) {
         if (relDef.type === 'belongsTo') {
           requiredParents.add(relDef.target);
+        } else if (relDef.type === 'belongsToPolymorphic') {
+          // Dynmically resolve and fetch polymorphic target tables from batch record type codes
+          records.forEach(row => {
+            const typeValue = row[relDef.typeField];
+            if (typeValue && typeof PolymorphicRegistry !== 'undefined') {
+              try {
+                const targetTable = PolymorphicRegistry.resolve(typeValue);
+                requiredParents.add(targetTable);
+              } catch (e) {
+                // Ignore, will fail validation during validateRelational
+              }
+            }
+          });
         }
       }
     });
 
-    // Pre-fetch primary keys for all required parent tables (ONE full scan per table)
+    // Populate primary keys for required parent tables using cache and batch records
     requiredParents.forEach(parentTable => {
-      const repo = this.db[parentTable];
-      if (repo) {
-        const pkName = this.db._registry.getPrimaryKey(parentTable);
-        const parentSet = new Set();
+      const pkName = this.db._registry.getPrimaryKey(parentTable);
+      const parentSet = new Set();
 
-        // 1. Get existing records from the database
-        const existingRows = repo.all(); 
-        existingRows.forEach(row => {
+      // 1. Get existing records from PrimaryKeyCache (fast O(1) cache / lazy physical scan)
+      if (this.db._pkCache) {
+        try {
+          const cachedKeys = this.db._pkCache.get(parentTable);
+          cachedKeys.forEach(k => parentSet.add(k));
+        } catch (e) {
+          console.warn(`[BatchBucket] Cache lookup failed for parent table '${parentTable}':`, e.message);
+        }
+      }
+
+      // 2. Add records that are part of this current batch (Pending creation)
+      if (this.buckets[parentTable]) {
+        this.buckets[parentTable].forEach(row => {
           if (row[pkName] !== undefined && row[pkName] !== null) {
-            parentSet.add(row[pkName]);
+            parentSet.add(String(row[pkName]).trim());
           }
         });
-
-        // 2. Add records that are part of this current batch (Pending creation)
-        if (this.buckets[parentTable]) {
-          this.buckets[parentTable].forEach(row => {
-            if (row[pkName] !== undefined && row[pkName] !== null) {
-              parentSet.add(row[pkName]);
-            }
-          });
-        }
-
-        context.parentPKs[parentTable] = parentSet;
       }
+
+      context.parentPKs[parentTable] = parentSet;
     });
 
     return context;

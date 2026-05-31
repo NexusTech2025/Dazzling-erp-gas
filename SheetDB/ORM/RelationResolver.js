@@ -3,8 +3,7 @@
  * Layer: ORM (Object-Relational Mapping)
  * 
  * Responsibility:
- * - Traversal: Navigate links between tables (belongsTo, hasMany, hasOne).
- * - Metadata-Driven: Uses Schema V1 'relations' definitions to automate queries.
+ * - Traversal: Dispatch relation calls to first-class relation objects.
  * - Integration: Bridges a Model instance to the Repository layer.
  */
 
@@ -16,6 +15,35 @@ class RelationResolver {
   constructor(dbContext, registry) {
     this.db = dbContext;
     this.registry = registry;
+    this.relationFactory = {
+      belongsTo: BelongsToRelation,
+      hasMany: HasManyRelation,
+      hasOne: HasOneRelation,
+      belongsToPolymorphic: BelongsToPolymorphicRelation
+    };
+  }
+
+  /**
+   * Factory utility to compile and return a Relation instance.
+   * @param {BaseModel} sourceModel
+   * @param {string} relationName
+   * @returns {BaseRelation}
+   */
+  getRelation(sourceModel, relationName) {
+    const entity = sourceModel.getEntityType();
+    const relations = this.registry.getRelations(entity);
+    const definition = relations[relationName];
+
+    if (!definition) {
+      throw new Error(`Relation '${relationName}' is not defined for entity '${entity}'.`);
+    }
+
+    const RelationClass = this.relationFactory[definition.type];
+    if (!RelationClass) {
+      throw new Error(`Unsupported relation type: ${definition.type}`);
+    }
+
+    return new RelationClass(relationName, definition, this.db, this.registry);
   }
 
   /**
@@ -26,46 +54,15 @@ class RelationResolver {
    * @returns {BaseModel|Array<BaseModel>|null}
    */
   resolve(sourceModel, relationName) {
-    const entity = sourceModel.getEntityType();
-    const relations = this.registry.getRelations(entity);
-    const definition = relations[relationName];
-
-    if (!definition) {
-      throw new Error(`Relation '${relationName}' is not defined for entity '${entity}'.`);
+    if (!sourceModel || typeof sourceModel.getEntityType !== 'function') {
+      throw new Error("[RelationResolver] Source model must be a hydrated BaseModel instance.");
     }
-
-    const { type, target, foreignKey } = definition;
-    const targetRepo = this.db[target];
-
-    if (!targetRepo) {
-      throw new Error(`Resolution failed: Repository for '${target}' not found in database facade.`);
-    }
-
-    // --- Execution Logic based on Relation Type ---
-    switch (type) {
-      case 'belongsTo':
-        // Source has the FK. Find ONE parent.
-        // Example: Address.student_id -> Student.findById()
-        const parentId = sourceModel[foreignKey];
-        return parentId ? targetRepo.findById(parentId) : null;
-
-      case 'hasMany':
-        // Target has the FK. Find MANY children.
-        // Example: Student.student_id -> Enrollment.where({ student_id: ... })
-        const sourcePk = this.registry.getPrimaryKey(entity);
-        const sourceId = sourceModel[sourcePk];
-        return targetRepo.where({ [foreignKey]: sourceId });
-
-      case 'hasOne':
-        // Target has the FK. Find ONE child.
-        // Example: Student.student_id -> FeeAccount.where({ student_id: ... })
-        const pkName = this.registry.getPrimaryKey(entity);
-        const sid = sourceModel[pkName];
-        const results = targetRepo.where({ [foreignKey]: sid });
-        return results.length > 0 ? results[0] : null;
-
-      default:
-        throw new Error(`Unknown relation type: ${type}`);
-    }
+    
+    console.log(`[RelationResolver] Initiating traversal for relation '${relationName}' on entity '${sourceModel.getEntityType()}'`);
+    const relation = this.getRelation(sourceModel, relationName);
+    return relation.resolve(sourceModel);
   }
 }
+
+// Export to Global Namespace
+globalThis.RelationResolver = RelationResolver;

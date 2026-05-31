@@ -28,6 +28,8 @@ class SchemaSetupEngine {
       mode: config.mode || 'safe', 
       dryRun: config.dryRun || false,
       continueOnError: config.continueOnError || false,
+      targetTables: config.targetTables || null,
+      targetCategories: config.targetCategories || null,
       verbose: config.verbose !== undefined ? config.verbose : true
     };
   }
@@ -78,6 +80,24 @@ class SchemaSetupEngine {
     }
   }
 
+  /**
+   * Runs scoped dry-run diagnostics on a specific table.
+   * @param {string} tableName
+   * @returns {Object} Structured dry-run validation and provisioning plan
+   */
+  diagnose(tableName) {
+    const originalTargetTables = this.config.targetTables;
+    const originalDryRun = this.config.dryRun;
+    try {
+      this.config.targetTables = [tableName];
+      this.config.dryRun = true;
+      return this.plan();
+    } finally {
+      this.config.targetTables = originalTargetTables;
+      this.config.dryRun = originalDryRun;
+    }
+  }
+
   // ==========================================
   // 🔷 1. DECISION ENGINE (PURE FUNCTION)
   // ==========================================
@@ -94,7 +114,7 @@ class SchemaSetupEngine {
       summary: { createFile: 0, createSheet: 0, ensureHeader: 0, metaUpdates: 0, errors: 0 }
     };
 
-    // Step 0: Base Schema Validation
+    // Step 0: Base Schema Validation (Global in-memory structural validation)
     const validationErrors = this._validateSchema();
     if (validationErrors.length > 0) {
       validationErrors.forEach(err => {
@@ -104,11 +124,31 @@ class SchemaSetupEngine {
       return plan; // Abort deep planning if schema is fundamentally broken
     }
 
-    // Step 1: Capture Physical Snapshot (The only impure call, isolated at start)
-    const physicalSnapshot = this.inspector.getPhysicalSnapshot(this.schema.categories);
+    // Step 1: Filter active categories based on target selection settings
+    const activeCategories = {};
+    for (const [catName, catData] of Object.entries(this.schema.categories)) {
+      if (this.config.targetCategories && !this.config.targetCategories.includes(catName)) {
+        continue;
+      }
 
-    // Step 2: Compare Desired State (Schema) vs Actual State (Snapshot)
-    for (const [categoryName, catSchema] of Object.entries(this.schema.categories)) {
+      const filteredTables = {};
+      for (const [tableName, tableData] of Object.entries(catData.tables)) {
+        if (this.config.targetTables && !this.config.targetTables.includes(tableName)) {
+          continue;
+        }
+        filteredTables[tableName] = tableData;
+      }
+
+      if (Object.keys(filteredTables).length > 0) {
+        activeCategories[catName] = { tables: filteredTables };
+      }
+    }
+
+    // Step 2: Capture Scoped Physical Snapshot (Incredibly fast, zero-latency inspect on target categories only!)
+    const physicalSnapshot = this.inspector.getPhysicalSnapshot(activeCategories);
+
+    // Step 3: Compare Desired State (Active Schema) vs Actual State (Snapshot)
+    for (const [categoryName, catSchema] of Object.entries(activeCategories)) {
       const physicalCat = physicalSnapshot[categoryName];
 
       if (!physicalCat) {

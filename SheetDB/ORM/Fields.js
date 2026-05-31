@@ -30,6 +30,38 @@ class BaseField {
     this.default = options.default !== undefined ? options.default : null;
     this.choices = options.choices || null;
     this.validators = options.validators || [];
+
+    // Instantiate and compile validation pipeline
+    this.pipeline = new ValidationPipeline(this.name);
+    this._compilePipeline(options);
+  }
+
+  /**
+   * Compiles option configurations into the ValidationPipeline.
+   * @protected
+   */
+  _compilePipeline(options) {
+    if (this.required) {
+      this.pipeline.addRule(new RequiredRule());
+    }
+    if (this.choices) {
+      this.pipeline.addRule(new ChoiceRule(this.choices));
+    }
+    if (this.validators && Array.isArray(this.validators)) {
+      this.validators.forEach(validator => {
+        this.pipeline.addRule(new FunctionalCallbackRule(validator));
+      });
+    }
+    // Declarative schema rules compilation
+    if (options.validations && Array.isArray(options.validations)) {
+      options.validations.forEach(val => {
+        if (val.rule === "custom" && val.handler) {
+          this.pipeline.addRule(new CustomCallbackRule(val.handler));
+        } else if (val.rule === "regex" && val.pattern) {
+          this.pipeline.addRule(new RegexRule(val.pattern));
+        }
+      });
+    }
   }
 
   /**
@@ -59,26 +91,10 @@ class BaseField {
   /**
    * Validates a value against schema constraints.
    * @param {*} value - The value to check.
-   * @throws {FieldError} If validation fails.
+   * @returns {FieldError[]} List of validation failures.
    */
   validate(value) {
-    // 1. Check Required
-    if (this.required && (value === null || value === undefined || value === "")) {
-      throw new FieldError(this.name, "This field is required.", value);
-    }
-
-    // 2. Check Choices
-    if (this.choices && value !== null && value !== "" && !this.choices.includes(value)) {
-      throw new FieldError(this.name, `Value '${value}' is not a valid choice. Allowed: [${this.choices.join(", ")}]`, value);
-    }
-
-    // 3. Run Custom Validators
-    this.validators.forEach(validator => {
-      const result = validator(value);
-      if (result !== true) {
-        throw new FieldError(this.name, typeof result === 'string' ? result : "Custom validation failed.", value);
-      }
-    });
+    return this.pipeline.validate(value);
   }
 
   /**
@@ -96,21 +112,18 @@ class BaseField {
 class CharField extends BaseField {
   constructor(options = {}) {
     super(options);
-    this.maxLength = options.maxLength || null;
-    this.minLength = options.minLength || null;
   }
 
   /** @override */
-  validate(value) {
-    super.validate(value);
-    if (value === null || value === "") return;
-
-    const strVal = String(value);
-    if (this.maxLength && strVal.length > this.maxLength) {
-      throw new FieldError(this.name, `Length ${strVal.length} exceeds maximum of ${this.maxLength}.`, value);
+  _compilePipeline(options) {
+    this.maxLength = options.maxLength || null;
+    this.minLength = options.minLength || null;
+    super._compilePipeline(options);
+    if (this.maxLength !== null && this.maxLength !== undefined) {
+      this.pipeline.addRule(new MaxLengthRule(this.maxLength));
     }
-    if (this.minLength && strVal.length < this.minLength) {
-      throw new FieldError(this.name, `Length ${strVal.length} is below minimum of ${this.minLength}.`, value);
+    if (this.minLength !== null && this.minLength !== undefined) {
+      this.pipeline.addRule(new MinLengthRule(this.minLength));
     }
   }
 
@@ -136,8 +149,19 @@ class CharField extends BaseField {
 class IntegerField extends BaseField {
   constructor(options = {}) {
     super(options);
+  }
+
+  /** @override */
+  _compilePipeline(options) {
     this.min = options.min !== undefined ? options.min : null;
     this.max = options.max !== undefined ? options.max : null;
+    super._compilePipeline(options);
+    if (this.min !== null && this.min !== undefined) {
+      this.pipeline.addRule(new MinRule(this.min));
+    }
+    if (this.max !== null && this.max !== undefined) {
+      this.pipeline.addRule(new MaxRule(this.max));
+    }
   }
 
   /** @override */
@@ -146,19 +170,6 @@ class IntegerField extends BaseField {
     if (val === null || val === "") return null;
     const parsed = parseInt(val, 10);
     return isNaN(parsed) ? null : parsed;
-  }
-
-  /** @override */
-  validate(value) {
-    super.validate(value);
-    if (value === null || value === "") return;
-
-    if (this.min !== null && value < this.min) {
-      throw new FieldError(this.name, `Value ${value} is below minimum of ${this.min}.`, value);
-    }
-    if (this.max !== null && value > this.max) {
-      throw new FieldError(this.name, `Value ${value} exceeds maximum of ${this.max}.`, value);
-    }
   }
 }
 
@@ -237,7 +248,7 @@ class DateTimeField extends BaseField {
   fromSheetValue(value) {
     const val = super.fromSheetValue(value);
     if (!val) return null;
-    if (val instanceof Date) return val;
+    if (isDate(val)) return val;
     const d = new Date(val);
     return isNaN(d.getTime()) ? null : d;
   }
@@ -252,7 +263,7 @@ class DateTimeField extends BaseField {
     }
 
     if (!date) return "";
-    return date instanceof Date ? date.toISOString() : new Date(date).toISOString();
+    return isDate(date) ? date.toISOString() : new Date(date).toISOString();
   }
 }
 

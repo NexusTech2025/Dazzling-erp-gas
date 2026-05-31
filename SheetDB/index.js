@@ -40,20 +40,29 @@ function init(rootFolderId, schema, config = {}) {
     _registry: registry,
     _dataSource: dataSource,
     _schema: schema,
+    _config: {
+      allowAutoOverride: config.allowAutoOverride === true,
+      ...config
+    },
 
     // Setup Engine Access (Now wired to dataSource for cache sync)
     setup: new SchemaSetupEngine(fs, schema, registry, dataSource, config),
 
     // Relation Resolver
-    _resolver: null // Will be wired below
+    _resolver: null, // Will be wired below
+    _pkCache: null  // Will be wired below
   };
 
   /**
    * Manually purge the spreadsheet cache.
    */
-  db.purge = () => dataSource.purgeCache();
+  db.purge = () => {
+    dataSource.purgeCache();
+    if (db._pkCache) db._pkCache.clear();
+  };
 
-  // 3. Prepare the Relation Resolver
+  // 3. Prepare the Relation Resolver & PrimaryKeyCache
+  db._pkCache = new PrimaryKeyCache(db);
   db._resolver = new RelationResolver(db, registry);
 
   // 4. Initialize Dynamic Model Registry
@@ -64,8 +73,8 @@ function init(rootFolderId, schema, config = {}) {
   const tableNames = registry.listAllTables();
   
   tableNames.forEach(tableName => {
-    // Create a dedicated gateway for this table
-    const gateway = new TableGateway(tableName, registry, dataSource);
+    // Create a dedicated gateway for this table, passing db context
+    const gateway = new TableGateway(tableName, registry, dataSource, db);
     
     // Create and attach the repository
     // Example: db.Student = new DynamicRepository(...)
@@ -93,6 +102,19 @@ Object.assign(globalThis, {
   ModelRegistry: globalThis.ModelRegistry,
   FieldMapper: globalThis.FieldMapper,
   ValidationRegistry: globalThis.ValidationRegistry,
+  PolymorphicRegistry: globalThis.PolymorphicRegistry,
+  PrimaryKeyCache: globalThis.PrimaryKeyCache,
+  isDate: globalThis.isDate,
+  
+  // Relations OOP Classes
+  BaseRelation: globalThis.BaseRelation,
+  BelongsToRelation: globalThis.BelongsToRelation,
+  HasManyRelation: globalThis.HasManyRelation,
+  HasOneRelation: globalThis.HasOneRelation,
+  BelongsToPolymorphicRelation: globalThis.BelongsToPolymorphicRelation,
+  RelationResolver: globalThis.RelationResolver,
+  
+  diagnoseTable: globalThis.diagnoseTable,
   SheetDBError: globalThis.SheetDBError,
   SpreadsheetNotFoundError: globalThis.SpreadsheetNotFoundError,
   TableNotFoundError: globalThis.TableNotFoundError,
@@ -101,6 +123,16 @@ Object.assign(globalThis, {
   FieldError: globalThis.FieldError,
   ConflictError: globalThis.ConflictError,
   IntegrityError: globalThis.IntegrityError,
-  ForbiddenError: globalThis.ForbiddenError
+  ForbiddenError: globalThis.ForbiddenError,
+  
+  // Custom Validation & Relational Errors
+  ValidationRegistryError: globalThis.ValidationRegistryError,
+  ValidationRegistryLockedError: globalThis.ValidationRegistryLockedError,
+  ValidatorRegistrationError: globalThis.ValidatorRegistrationError,
+  ValidatorNotFoundError: globalThis.ValidatorNotFoundError,
+  ValidatorExecutionError: globalThis.ValidatorExecutionError,
+  RelationError: globalThis.RelationError,
+  RelationResolutionError: globalThis.RelationResolutionError,
+  RelationValidationError: globalThis.RelationValidationError
 });
 

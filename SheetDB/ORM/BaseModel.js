@@ -121,6 +121,30 @@ class BaseModel {
 
     try {
       this.validate(); // Tier 1, 2, 4 Validation
+      
+      const relErrors = this._validateRelational(); // Tier 3 Relational validation
+      if (relErrors.length > 0) {
+        const messages = relErrors.map(err => err.message).join("; ");
+        throw new ValidationError(`Relational validation failed for ${this.constructor.name}: ${messages}`, { errors: relErrors });
+      }
+
+      // Block manual overrides on AutoFields when inserting new records
+      const schema = this.constructor.schema;
+      if (this._isNew && schema) {
+        Object.keys(schema).forEach(fieldName => {
+          const field = schema[fieldName];
+          if (field instanceof AutoField) {
+            const value = this[fieldName];
+            if (value !== undefined && value !== null && value !== "") {
+              const allowAutoOverride = this._gateway.db && this._gateway.db._config && this._gateway.db._config.allowAutoOverride;
+              if (!allowAutoOverride) {
+                throw new ValidationError(`Security Error: Manual override of auto-generated field '${fieldName}' (value: '${value}') is blocked.`, { fieldName });
+              }
+            }
+          }
+        });
+      }
+
       const rowData = this.toDatabaseRow(); // Includes Auto-ID and Timestamp generation
 
       // Route execution based strictly on hydration state, NOT the presence of an ID.
@@ -202,14 +226,9 @@ class BaseModel {
 
     const errors = [];
     Object.keys(schema).forEach(fieldName => {
-      try {
-        schema[fieldName].validate(this[fieldName]);
-      } catch (e) {
-        if (e instanceof FieldError) {
-          errors.push(e);
-        } else {
-          throw e;
-        }
+      const fieldFailures = schema[fieldName].validate(this[fieldName]);
+      if (fieldFailures && fieldFailures.length > 0) {
+        errors.push(...fieldFailures);
       }
     });
 
@@ -219,6 +238,50 @@ class BaseModel {
     }
 
     return true;
+  }
+
+  /**
+   * Performs relational integrity and constraints checks using PK cache.
+   * @private
+   * @returns {FieldError[]} List of relational constraint violations.
+   */
+  _validateRelational() {
+    const errors = [];
+    const entity = this.getEntityType();
+    
+    if (!this._gateway || !this._gateway.registry) return errors;
+    
+    const relations = this._gateway.registry.getRelations(entity);
+    const db = this._gateway.db;
+    
+    if (!db || !db._pkCache) {
+      console.warn(`[BaseModel:${entity}] PrimaryKeyCache is not initialized. Skipping relational validation.`);
+      return errors;
+    }
+    
+    const resolver = db._resolver;
+    if (!resolver) {
+      console.warn(`[BaseModel:${entity}] RelationResolver is not initialized. Skipping relational validation.`);
+      return errors;
+    }
+
+    console.log(`[BaseModel:${entity}] Starting relational checks across ${Object.keys(relations).length} relationship declarations...`);
+
+    Object.keys(relations).forEach(relationName => {
+      try {
+        const relationObj = resolver.getRelation(this, relationName);
+        const relationErrors = relationObj.validate(this, db._pkCache);
+        if (relationErrors && relationErrors.length > 0) {
+          errors.push(...relationErrors);
+        }
+      } catch (e) {
+        console.error(`[BaseModel:${entity}] Relation checking exception caught on '${relationName}':`, e.message);
+        errors.push(new FieldError(relationName, `Relational check failed: ${e.message}`, null));
+      }
+    });
+
+    console.log(`[BaseModel:${entity}] Relational checking finished. Total relationship errors: ${errors.length}`);
+    return errors;
   }
 
   /**

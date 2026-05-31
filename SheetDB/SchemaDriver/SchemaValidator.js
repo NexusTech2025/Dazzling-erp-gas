@@ -130,17 +130,65 @@ class SchemaValidator {
         const fkValue = record[relDef.foreignKey];
         
         // If the FK is present, validate it against the pre-fetched Set of valid PKs
-        if (fkValue !== undefined && fkValue !== null) {
+        if (fkValue !== undefined && fkValue !== null && fkValue !== '') {
           const targetTable = relDef.target;
           const validPks = context.parentPKs ? context.parentPKs[targetTable] : null;
+          const coercedFk = String(fkValue).trim();
 
-          if (!validPks || !validPks.has(fkValue)) {
+          if (!validPks || !validPks.has(coercedFk)) {
             errors.push({
               field: relDef.foreignKey,
               message: `Foreign Key Mismatch: Parent ID '${fkValue}' not found in '${targetTable}'.`,
               value: fkValue
             });
           }
+        }
+      } else if (relDef.type === 'belongsToPolymorphic') {
+        const typeValue = record[relDef.typeField];
+        const fkValue = record[relDef.idField];
+
+        if (!typeValue && (fkValue === null || fkValue === undefined || fkValue === '')) {
+          continue; // Optional and empty is valid
+        }
+
+        if (!typeValue && fkValue) {
+          errors.push({
+            field: relDef.typeField,
+            message: `Polymorphic type must be provided when a dynamic ID is set.`,
+            value: typeValue
+          });
+          continue;
+        }
+
+        if (typeValue && !fkValue) {
+          errors.push({
+            field: relDef.idField,
+            message: `Polymorphic ID must be provided when a type is set.`,
+            value: fkValue
+          });
+          continue;
+        }
+
+        try {
+          if (typeof PolymorphicRegistry !== 'undefined') {
+            const targetTable = PolymorphicRegistry.resolve(typeValue);
+            const validPks = context.parentPKs ? context.parentPKs[targetTable] : null;
+            const coercedFk = String(fkValue).trim();
+
+            if (!validPks || !validPks.has(coercedFk)) {
+              errors.push({
+                field: relDef.idField,
+                message: `Polymorphic ID Mismatch: ID '${fkValue}' not found in dynamically resolved table '${targetTable}' for type '${typeValue}'.`,
+                value: fkValue
+              });
+            }
+          }
+        } catch (e) {
+          errors.push({
+            field: relDef.typeField,
+            message: `Polymorphic mapping resolution failed: ${e.message}`,
+            value: typeValue
+          });
         }
       }
     }
