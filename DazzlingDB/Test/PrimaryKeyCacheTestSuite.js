@@ -66,7 +66,7 @@ const PrimaryKeyCacheTestSuite = (function () {
         try {
           const rec = repo.findById(id);
           if (rec) rec.delete();
-        } catch (e) {}
+        } catch (e) { }
       });
     }
   }
@@ -76,14 +76,14 @@ const PrimaryKeyCacheTestSuite = (function () {
   function testLazyLoading(db) {
     db._pkCache.clear();
     const cacheObj = db._pkCache._cache;
-    
+
     if (cacheObj.Student !== undefined) {
       throw new Error("Initial state error: Cache for Student should be undefined.");
     }
 
     // Trigger lazy loading
     const keys = db._pkCache.get("Student");
-    
+
     if (!keys || typeof keys.has !== 'function' || typeof keys.size !== 'number') {
       throw new Error("Cache get() must return a Set instance.");
     }
@@ -122,9 +122,9 @@ const PrimaryKeyCacheTestSuite = (function () {
 
   function testCacheInvalidate(db) {
     db._pkCache.get("Student"); // Populate
-    
+
     db._pkCache.invalidate("Student");
-    
+
     const cacheObj = db._pkCache._cache;
     if (cacheObj.Student !== undefined) {
       throw new Error("Cache entry was not deleted upon invalidate() call.");
@@ -133,9 +133,9 @@ const PrimaryKeyCacheTestSuite = (function () {
 
   function testCacheBulkPurge(db) {
     db._pkCache.get("Student"); // Populate
-    
+
     db.purge(); // Calls clear() internally
-    
+
     const cacheObj = db._pkCache._cache;
     if (Object.keys(cacheObj).length !== 0) {
       throw new Error("Cache bulk purge failed; internal cache object is not empty.");
@@ -151,7 +151,7 @@ const PrimaryKeyCacheTestSuite = (function () {
     cache.add("Student", null);
     cache.add("Student", undefined);
     cache.add("Student", "");
-    
+
     if (cache.get("Student").size !== initialSize) {
       throw new Error("Edge case failure: Null, undefined, or empty inputs mutated the cache size.");
     }
@@ -159,11 +159,11 @@ const PrimaryKeyCacheTestSuite = (function () {
     // 2. Trim verification
     const idWithSpaces = "  STU-PK-EDGE   ";
     cache.add("Student", idWithSpaces);
-    
+
     if (!cache.get("Student").has("STU-PK-EDGE")) {
       throw new Error("Edge case failure: ID was not trimmed prior to cache insertion.");
     }
-    
+
     cache.remove("Student", idWithSpaces);
     if (cache.get("Student").has("STU-PK-EDGE")) {
       throw new Error("Edge case failure: ID was not trimmed prior to cache removal.");

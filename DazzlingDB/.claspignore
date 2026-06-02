@@ -1,0 +1,16 @@
+# Ignore the node_test folder and all its contents recursively
+**/node_test/**
+node_test/**
+
+# Ignore local AI chat histories, plans, and memory
+**/.antigravitycli/**
+.antigravitycli/**
+
+# Ignore standard markdown docs and local diffs
+**/*.md
+**/*.diff
+dazzling_db.diff
+
+# Ignore database template files
+**/database_template/**
+database_template/**

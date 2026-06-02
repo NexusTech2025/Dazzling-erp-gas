@@ -83,3 +83,35 @@ const GLOBAL_CRUD_WHITELIST = new Set([
   "TeacherSubject", "TeacherAttendance", "TeacherDocument", "TeacherSalaryConfig", "TeacherPaymentTransaction",
   "FeePlan"
 ]);
+
+/**
+ * 🏷️ ID Prefix Fallback Registry.
+ * Used when schema definitions are not fully hydrated or available.
+ */
+const ID_PREFIX_FALLBACK_REGISTRY = {
+  Student: "STU",
+  Address: "ADDR",
+  ContactInfo: "CONT",
+  Education: "EDU",
+  Enrollment: "ENR",
+  StudentFeeAccount: "SFA",
+  Installment: "INS",
+  Payment: "PAY",
+  BatchAllocation: "BAL",
+  FeePlan: "FPL",
+  Branch: "BRN",
+  PromoCode: "PRM",
+  CourseType: "SEG",
+  Course: "CRS",
+  Package: "PKG",
+  PackageItem: "PKI",
+  PackagePerk: "PRK",
+  Batch: "BAT",
+  StudentLead: "SLD",
+  Teacher: "TCH",
+  TeacherSubject: "TSB",
+  TeacherAttendance: "TAT",
+  TeacherDocument: "TDO",
+  TeacherSalaryConfig: "TSC",
+  TeacherPaymentTransaction: "TPT"
+};

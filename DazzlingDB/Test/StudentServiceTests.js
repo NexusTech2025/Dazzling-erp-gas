@@ -25,6 +25,7 @@ function run_student_tests() {
     contact: { mobile_number: "9999999999" },
     enrollments: [
       {
+        enrollment_type: "package",
         item_id: packageId,
         fee: 12000,
         package_batches: [
@@ -53,6 +54,7 @@ function run_student_tests() {
     contact: { mobile_number: "9888888888", email: "alice@test.com" },
     enrollments: [
       {
+        enrollment_type: "package",
         item_id: packageId,
         fee: 12000,
         package_batches: [
@@ -61,6 +63,7 @@ function run_student_tests() {
         ]
       },
       {
+        enrollment_type: "course",
         item_id: webDevId,
         batch_id: batchWdId,
         fee: 5000
@@ -89,8 +92,8 @@ function run_student_tests() {
 
   // Validate enrollments created
   const enrollments = db.Enrollment.where({ student_id: studentId });
-  console.log(`Active enrollments created: ${enrollments.length} (Expected: 4 - Pkg, Phy, Che, and WebDev)`);
-  if (enrollments.length !== 4) console.error("❌ Incorrect enrollment count!");
+  console.log(`Active enrollments created: ${enrollments.length} (Expected: 2 - Pkg and WebDev)`);
+  if (enrollments.length !== 2) console.error("❌ Incorrect enrollment count!");
 
   const parentPkgEnrollment = enrollments.find(e => e.item_id === packageId);
   const metadata = parentPkgEnrollment.metadata;
@@ -98,6 +101,11 @@ function run_student_tests() {
   if (!metadata || !metadata.course_fees || metadata.course_fees[physicsId] !== 5000) {
     console.error("❌ Metadata base fees snapshot invalid!");
   }
+
+  // Validate batch allocations created
+  const allocations = db.BatchAllocation.where({ student_id: studentId });
+  console.log(`Active batch allocations created: ${allocations.length} (Expected: 3 - Physics, Chemistry, and WebDev)`);
+  if (allocations.length !== 3) console.error("❌ Incorrect batch allocation count!");
 
   // Validate proportional finance splitting
   const feeAccounts = enrollments.map(e => db.StudentFeeAccount.findOne({ enrollment_id: e.enrollment_id })).filter(Boolean);
@@ -165,8 +173,8 @@ function run_student_tests() {
   if (accessAfter.allowed) console.error("❌ WebDev access should have been suspended due to overdue installment!");
 
   // Verify database record has been updated to suspended
-  const updatedWebDevEnrollment = db.Enrollment.findOne({ student_id: studentId, item_id: webDevId });
-  console.log(`Updated WebDev Enrollment academic_status: ${updatedWebDevEnrollment.academic_status} (Expected: suspended)`);
+  const updatedWebDevAllocation = db.BatchAllocation.findOne({ student_id: studentId, course_id: webDevId });
+  console.log(`Updated WebDev Allocation status: ${updatedWebDevAllocation.status} (Expected: suspended)`);
 
   // -------------------------------------------------------------
   // Test Case 5: Transactional Package Upgrade (Plan 3)
@@ -178,8 +186,8 @@ function run_student_tests() {
     address: { line1: "Flat 5C, Jaipur", city: "Jaipur", state: "Rajasthan", pin_code: "302017" },
     contact: { mobile_number: "9777777777", email: "up@test.com" },
     enrollments: [
-      { item_id: physicsId, batch_id: batchPhyId, fee: 5000 },
-      { item_id: chemistryId, batch_id: batchCheId, fee: 5000 }
+      { enrollment_type: "course", item_id: physicsId, batch_id: batchPhyId, fee: 5000 },
+      { enrollment_type: "course", item_id: chemistryId, batch_id: batchCheId, fee: 5000 }
     ],
     feeAccount: {
       total_fee: 10000,
@@ -235,13 +243,18 @@ function run_student_tests() {
     console.error("❌ Rollover amount not credited correctly!");
   }
 
-  // Verify new child enrollments link to package
+  // Verify new batch allocations link to package
   const activeEnrollmentsAfter = db.Enrollment.where({ student_id: upStudentId, status: "active" });
-  console.log(`Active enrollments after upgrade: ${activeEnrollmentsAfter.length} (Expected: 4 - Parent Pkg, and 3 Child courses)`);
+  console.log(`Active enrollments after upgrade: ${activeEnrollmentsAfter.length} (Expected: 1 - Parent Pkg)`);
+  if (activeEnrollmentsAfter.length !== 1) console.error("❌ Incorrect active enrollment count after upgrade!");
+
   const parentEnroll = activeEnrollmentsAfter.find(e => e.item_id === packageId);
-  const childEnroll = activeEnrollmentsAfter.filter(e => e.package_enrollment_id === parentEnroll.enrollment_id);
-  console.log(`Child enrollments linked to package: ${childEnroll.length} (Expected: 3)`);
-  if (childEnroll.length !== 3) console.error("❌ Children enrollments not linked to package correctly!");
+
+  const activeAllocationsAfter = db.BatchAllocation.where({ student_id: upStudentId, status: "active" });
+  console.log(`Active allocations after upgrade: ${activeAllocationsAfter.length} (Expected: 3)`);
+  const childAlloc = activeAllocationsAfter.filter(a => a.enrollment_id === parentEnroll.enrollment_id);
+  console.log(`Allocations linked to package enrollment: ${childAlloc.length} (Expected: 3)`);
+  if (childAlloc.length !== 3) console.error("❌ Batch allocations not linked to package correctly!");
 
   console.log("\n=== ALL STUDENT SERVICE TESTS COMPLETED ===");
 }

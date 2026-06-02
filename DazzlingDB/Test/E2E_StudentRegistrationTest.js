@@ -136,6 +136,7 @@ const E2E_StudentRegistrationTest = (function() {
     _logger.action(`Enrolling Student [${student.student_id}] into Batch [${academicData.batch.batch_id}]...`);
     _api("academic_enroll_student", {
       student_id: student.student_id,
+      enrollment_type: "course",
       item_id: academicData.course.course_id,
       batch_id: academicData.batch.batch_id
     });

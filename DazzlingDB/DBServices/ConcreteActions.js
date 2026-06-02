@@ -154,6 +154,40 @@ class CreatePackageAction extends BaseAction {
 }
 
 /**
+ * Academic Domain: Package Updates with Polymorphic & Casing Support
+ */
+class UpdatePackageAction extends BaseAction {
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.package_id) {
+      throw new ActionValidationError("Payload must contain 'package_id'.");
+    }
+  }
+
+  _execute() {
+    return AcademicService.updatePackage(this._params.payload);
+  }
+}
+
+/**
+ * Academic Domain: Specialized Package Deletion Action
+ */
+class DeletePackageAction extends BaseAction {
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.package_id) {
+      throw new ActionValidationError("Payload must contain 'package_id'.");
+    }
+  }
+
+  _execute() {
+    return AcademicService.deletePackage(this._params.payload.package_id);
+  }
+}
+
+/**
  * Academic Domain: Enroll Student
  */
 class EnrollStudentAction extends BaseAction {
@@ -218,8 +252,6 @@ class UserLoginAction extends BaseAction {
 
 class UserLogoutAction extends BaseAction {
   _execute() {
-    // Note: token is usually passed in the root of the request, not payload, 
-    // but we support it in payload for consistency if provided.
     const token = this._params.token || (this._params.payload && this._params.payload.token);
     if (!token) throw new ActionValidationError("token is required.");
     return AuthBridge.logout(token);
@@ -311,13 +343,11 @@ class InitErpAction extends BaseAction {
       var queryPayload;
 
       if (typeof item === "string") {
-        // String Target: Hydrate all rows with high default limit and no auto-filtering
         queryPayload = {
           target: item,
           pagination: { limit: 1000 }
         };
       } else if (item && typeof item === "object" && item.target) {
-        // Object Target: Use as query payload, ensuring limit default
         queryPayload = item;
         if (!queryPayload.pagination) {
           queryPayload.pagination = { limit: 1000 };
@@ -332,10 +362,7 @@ class InitErpAction extends BaseAction {
 
       try {
         var data = QueryEngine.execute(queryPayload, this._db);
-
-        // Key Mapping (Pluralization)
         var key = (target === "Batch") ? "batches" : (target.toLowerCase() + "s");
-
         result[key] = data;
       } catch (e) {
         throw new Error("Failed to hydrate " + target + ": " + e.message);
@@ -355,7 +382,6 @@ class QueryAction extends BaseAction {
   }
 
   _execute() {
-    // Inject the DB instance automatically via BaseAction's this._db
     return QueryEngine.execute(this._params.payload, this._db);
   }
 }
@@ -363,7 +389,6 @@ class QueryAction extends BaseAction {
 /**
  * 🛠️ ADMIN CONTROL CENTER (ACC) ACTIONS
  */
-
 
 class AdminSystemStatusAction extends BaseAction {
   _execute() {
@@ -391,7 +416,6 @@ class AdminBootstrapAction extends BaseAction {
     }
 
     const masterKey = PropertiesService.getScriptProperties().getProperty("SETUP_KEY") || "DAZZLING_2026";
-    // Check inside payload
     if (this._params.payload.setupKey !== masterKey) {
       throw new SheetDB.ForbiddenError("Invalid Setup Key.");
     }
@@ -400,11 +424,9 @@ class AdminBootstrapAction extends BaseAction {
   _execute() {
     const { userData } = this._params.payload;
 
-    // 1. Physically provision infrastructure (Self-Healing)
     console.log("[AdminBootstrapAction] Provisioning physical infrastructure...");
     this._db.setup.provision();
 
-    // 2. Register the Superadmin
     console.log("[AdminBootstrapAction] Registering superadmin...");
     return AuthBridge.registerUser({
       ...userData,
@@ -429,7 +451,6 @@ class AdminAnalyzeTableAction extends BaseAction {
     }
   }
   _execute() {
-    // SchemaSetupEngine.plan() returns the full intent/health check
     return this._db.setup.plan();
   }
 }
@@ -441,7 +462,6 @@ class AdminRepairTableAction extends BaseAction {
     }
   }
   _execute() {
-    // SchemaSetupEngine.provision() performs actual repair/creation
     return this._db.setup.provision();
   }
 }
@@ -462,7 +482,6 @@ class AdminPeekDataAction extends BaseAction {
     const { table } = this._params.payload;
     if (!this._db[table]) throw new ActionValidationError(`Table '${table}' not found.`);
 
-    // Return last 5 rows
     return this._db[table].where({}, { limit: 5 });
   }
 }
@@ -492,12 +511,9 @@ class AdminPurgeCacheAction extends BaseAction {
   }
 }
 
-
 // ----------------------------------------------------
 // GLOBAL CRUD ACTION CONTROLLERS & SAFEGUARD WHITELIST
 // ----------------------------------------------------
-
-
 
 class CreateRecordAction extends BaseAction {
   constructor(options) {
@@ -530,7 +546,6 @@ class CreateRecordAction extends BaseAction {
     const { table, data } = this._params.payload;
     const dbGateway = this._db[table];
 
-    // 1. Resolve Table Schema in global DATABASE_SCHEMA
     let tableSchema = null;
     for (var cat in DATABASE_SCHEMA.categories) {
       var tables = DATABASE_SCHEMA.categories[cat].tables;
@@ -544,14 +559,14 @@ class CreateRecordAction extends BaseAction {
       throw new ActionValidationError(`Table '${table}' schema definition not found.`);
     }
 
-    // 2. Schema-Driven Auto-ID Injection Logic
     const primaryKey = tableSchema.primaryKey;
     let generatedId = null;
 
     if (primaryKey && tableSchema.columns[primaryKey]) {
       const pkCol = tableSchema.columns[primaryKey];
       if (pkCol.type === "auto" && !data[primaryKey]) {
-        const prefix = pkCol.idPrefix || "ID";
+        const fallbackRegistry = typeof ID_PREFIX_FALLBACK_REGISTRY !== 'undefined' ? ID_PREFIX_FALLBACK_REGISTRY : {};
+        const prefix = pkCol.idPrefix || fallbackRegistry[table] || "ID";
         const utils = typeof SheetDB.Utils !== 'undefined' ? SheetDB.Utils : {
           generateId: (p) => p + "-" + Math.random().toString(36).substring(2, 9).toUpperCase()
         };
@@ -560,7 +575,6 @@ class CreateRecordAction extends BaseAction {
       }
     }
 
-    // 3. Perform Persistence Execution
     const newRecord = dbGateway.insert(data);
     const createdId = newRecord[primaryKey] || generatedId || "";
 

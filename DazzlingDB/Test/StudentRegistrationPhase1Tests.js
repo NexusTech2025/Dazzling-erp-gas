@@ -26,6 +26,7 @@ function run_phase1_tests() {
     contact: { mobile_number: "8888888888" },
     enrollments: [
       {
+        enrollment_type: "package",
         item_id: packageId,
         fee: 12000,
         package_batches: [
@@ -60,6 +61,7 @@ function run_phase1_tests() {
     ],
     enrollments: [
       {
+        enrollment_type: "package",
         item_id: packageId,
         fee: 12000,
         package_batches: [
@@ -68,6 +70,7 @@ function run_phase1_tests() {
         ]
       },
       {
+        enrollment_type: "course",
         item_id: webDevId,
         fee: 5000,
         batch_id: batchWdId
@@ -96,8 +99,8 @@ function run_phase1_tests() {
 
   // Validate enrollments created
   const enrollments = db.Enrollment.where({ student_id: studentId });
-  console.log(`Active enrollments created: ${enrollments.length} (Expected: 4 - Parent Pkg, Physics, Chemistry, and WebDev)`);
-  if (enrollments.length !== 4) console.error("❌ Incorrect enrollment count!");
+  console.log(`Active enrollments created: ${enrollments.length} (Expected: 2 - Package and WebDev)`);
+  if (enrollments.length !== 2) console.error("❌ Incorrect enrollment count!");
 
   const parentPkgEnrollment = enrollments.find(e => e.item_id === packageId);
   const metadata = parentPkgEnrollment.metadata;
@@ -106,13 +109,17 @@ function run_phase1_tests() {
     console.error("❌ Metadata base fees snapshot invalid!");
   }
 
-  // Validate child relation pointing back to parent package enrollment
-  const childPhy = enrollments.find(e => e.item_id === physicsId);
-  const childChe = enrollments.find(e => e.item_id === chemistryId);
-  console.log(`Child Physics points to Package Enrollment: ${childPhy.package_enrollment_id === parentPkgEnrollment.enrollment_id}`);
-  console.log(`Child Chemistry points to Package Enrollment: ${childChe.package_enrollment_id === parentPkgEnrollment.enrollment_id}`);
-  if (childPhy.package_enrollment_id !== parentPkgEnrollment.enrollment_id || childChe.package_enrollment_id !== parentPkgEnrollment.enrollment_id) {
-    console.error("❌ Sibling child enrollments do not point to parent package enrollment ID!");
+  // Validate batch allocations created
+  const allocations = db.BatchAllocation.where({ student_id: studentId });
+  console.log(`Active batch allocations created: ${allocations.length} (Expected: 3 - Physics, Chemistry, and WebDev)`);
+  if (allocations.length !== 3) console.error("❌ Incorrect batch allocation count!");
+
+  const allocPhy = allocations.find(a => a.course_id === physicsId);
+  const allocChe = allocations.find(a => a.course_id === chemistryId);
+  console.log(`Physics allocation links to Package Enrollment: ${allocPhy.enrollment_id === parentPkgEnrollment.enrollment_id}`);
+  console.log(`Chemistry allocation links to Package Enrollment: ${allocChe.enrollment_id === parentPkgEnrollment.enrollment_id}`);
+  if (allocPhy.enrollment_id !== parentPkgEnrollment.enrollment_id || allocChe.enrollment_id !== parentPkgEnrollment.enrollment_id) {
+    console.error("❌ Physics/Chemistry allocations do not point to parent package enrollment ID!");
   }
 
   // Validate proportional finance splitting

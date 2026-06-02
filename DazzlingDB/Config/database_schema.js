@@ -1,5 +1,5 @@
 const DATABASE_SCHEMA = {
-  "version": "2.1.0",
+  "version": "2.1.1",
   "database": "DazzlingDB",
   "categories": {
     "Academic": {
@@ -107,6 +107,11 @@ const DATABASE_SCHEMA = {
               "type": "belongsTo",
               "target": "Branch",
               "foreignKey": "branch_id"
+            },
+            "allocations": {
+              "type": "hasMany",
+              "target": "BatchAllocation",
+              "foreignKey": "batch_id"
             }
           }
         },
@@ -144,9 +149,18 @@ const DATABASE_SCHEMA = {
               "default": "active",
               "maxLength": 255
             },
+            "remarks": {
+              "type": "string",
+              "required": false,
+              "maxLength": 500
+            },
             "assigned_at": {
               "type": "datetime",
               "autoNowAdd": true,
+              "required": false
+            },
+            "dropped_at": {
+              "type": "datetime",
               "required": false
             },
             "allocation_id": {
@@ -482,6 +496,11 @@ const DATABASE_SCHEMA = {
               "type": "belongsToPolymorphic",
               "typeField": "enrollment_type",
               "idField": "item_id"
+            },
+            "allocations": {
+              "type": "hasMany",
+              "target": "BatchAllocation",
+              "foreignKey": "enrollment_id"
             }
           }
         },
@@ -579,7 +598,8 @@ const DATABASE_SCHEMA = {
             "entity_type": {
               "type": "string",
               "choices": [
-                "course"
+                "course",
+                "subject"
               ],
               "maxLength": 255
             },
@@ -1079,7 +1099,8 @@ const DATABASE_SCHEMA = {
               "type": "string",
               "choices": [
                 "course",
-                "package"
+                "package",
+                "subject"
               ],
               "maxLength": 255
             },
@@ -2324,6 +2345,11 @@ const DATABASE_SCHEMA = {
             "enrollments": {
               "type": "hasMany",
               "target": "Enrollment",
+              "foreignKey": "student_id"
+            },
+            "allocations": {
+              "type": "hasMany",
+              "target": "BatchAllocation",
               "foreignKey": "student_id"
             }
           }

@@ -65,6 +65,8 @@ Every request MUST include an `action` and a `payload`. For protected routes, a 
 | `academic_create_course` | `{ "payload": { "segment_id": "...", "name": "...", "base_fee": 0 } }` | Create a specific subject/course. |
 | `academic_create_batch` | `{ "payload": { "course_id": "...", "batch_name": "...", "capacity": 30 } }` | Create a batch for a course. |
 | `academic_create_package` | `{ "payload": { "name": "...", "package_fee": 1000, ... } }` | Bulk package creation with perks/courses. |
+| `academic_update_package` | `{ "payload": { "package_id": "...", ... } }` | Transactional update of package details, perks, and courses. |
+| `academic_delete_package` | `{ "payload": { "package_id": "..." } }` | Deletes a package with RESTRICT validation and CASCADE cleanup. |
 | `academic_enroll_student` | `{ "payload": { "student_id": "...", "item_id": "...", "batch_id": "..." } }` | Enrolls a student in a batch. |
 
 ### D. Staff & HR
@@ -468,7 +470,160 @@ This endpoint permanently deletes a batch record from the database using its pri
 
 ---
 
-## 8. Standard Request and Response Payload Architecture
+## 8. Package REST API (CRUD Reference)
+
+The `Package` table stores bundled offerings of courses/subjects and their associated student perks. These operations are managed via specialized, transaction-safe endpoints that support automated cascades and rollback features.
+
+### Package Schema Reference
+
+| Field Name | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `package_id` | `string` | Read-only, Primary Key | Auto-generated ID with prefix `PKG-` (e.g., `PKG-F93C08AE`). |
+| `name` | `string` | **Required**, max 255 chars | The name/label of the package. |
+| `description` | `string` | Optional, max 255 chars | Detailed description of the package. |
+| `target_class` | `string` | Optional, max 255 chars | The academic grade/class targeted. |
+| `board` | `string` | Optional, max 255 chars | Academic board (e.g., CBSE, ICSE, State). |
+| `month` | `number` | Optional | Duration of the package in months. |
+| `package_fee` | `number` | **Required** | The base fee for the package. |
+| `discount_percent` | `number` | Optional | The discount percentage applicable to the package fee. |
+| `status` | `string` | Enum, default: `active` | Choices: `active`, `inactive`, `draft`. |
+
+---
+
+### A. Create Package (`academic_create_package`)
+
+This endpoint inserts a new package, along with associated perks (`PackagePerk`) and items (`PackageItem`), in a single transaction.
+
+**Key Points:**
+* **Cascading Insert:** Child elements are automatically created and linked to the new package.
+* **Polymorphic Normalization:** Course entities automatically trim and normalize `entity_type` (e.g. `"Course "` and `" subject"` normalize to `"course"` and `"subject"`).
+* **Rollback Safety:** If any course/perk insertion fails, the entire transaction is rolled back, removing all partially created records.
+
+**Request Body:**
+```json
+{
+  "action": "academic_create_package",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "name": "Class 10 Science Combo",
+    "description": "Includes Physics, Chemistry & Biology with perks",
+    "target_class": "10th",
+    "board": "CBSE",
+    "month": 12,
+    "package_fee": 15000,
+    "discount_percent": 10,
+    "status": "active",
+    "courses": [
+      { "entity_type": "Course", "entity_id": "CRS-D40D4661" },
+      { "entity_type": "Subject", "entity_id": "CRS-9A8D7C" }
+    ],
+    "perks": [
+      { "perk_title": "Monthly Mock Tests", "perk_description": "Online MCQ tests", "icon": "check-square" },
+      { "perk_title": "Doubt Sessions", "perk_description": "Weekly 1-on-1 calls", "icon": "help-circle", "display_order": 2 }
+    ]
+  }
+}
+```
+
+**Response Body (Success):**
+```json
+{
+  "success": true,
+  "action": "academic_create_package",
+  "data": {
+    "name": "Class 10 Science Combo",
+    "description": "Includes Physics, Chemistry & Biology with perks",
+    "target_class": "10th",
+    "board": "CBSE",
+    "month": 12,
+    "package_fee": 15000,
+    "discount_percent": 10,
+    "status": "active",
+    "package_id": "PKG-D2C6F12A",
+    "__tx_id": "TX-98765432",
+    "__tx_status": "COMMITTED"
+  }
+}
+```
+
+---
+
+### B. Update Package (`academic_update_package`)
+
+This endpoint updates core package columns and synchronizes the list of courses/subjects and perks by rewriting and validating relationships.
+
+**Key Points:**
+* **Full Sync:** Submitting new `courses` or `perks` arrays replaces existing items and perks for the package.
+* **Transaction Rollback:** Powered by `TransactionTracker`, if any step fails (e.g., duplicate key or validation error), the database state is rolled back. Sub-records are restored using the sheet's raw gateway to preserve their original identifiers.
+
+**Request Body:**
+```json
+{
+  "action": "academic_update_package",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "package_id": "PKG-D2C6F12A",
+    "name": "Class 10 Science Combo - Premium",
+    "package_fee": 18000,
+    "courses": [
+      { "entity_type": "course", "entity_id": "CRS-D40D4661" }
+    ],
+    "perks": [
+      { "perk_title": "Weekly Mock Tests", "perk_description": "Rigorous prep", "icon": "star" }
+    ]
+  }
+}
+```
+
+**Response Body (Success):**
+```json
+{
+  "success": true,
+  "action": "academic_update_package",
+  "data": {
+    "success": true,
+    "message": "Package 'PKG-D2C6F12A' successfully updated."
+  }
+}
+```
+
+---
+
+### C. Delete Package (`academic_delete_package`)
+
+This endpoint permanently deletes a package along with all child records.
+
+**Key Points:**
+* **RESTRICT Check:** Deletion is blocked and throws a validation error if any student `Enrollment` record exists referencing the package (`enrollment_type === 'package'` and `item_id === packageId`).
+* **CASCADE Delete:** Automatically deletes all associated `PackagePerk` and `PackageItem` records.
+* **Transactional Rollback:** Uses `TransactionTracker` to store deleted records. If the deletion of the core package or any child record fails, all deleted parent and child records are restored to the sheet with their original primary keys.
+
+**Request Body:**
+```json
+{
+  "action": "academic_delete_package",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "package_id": "PKG-D2C6F12A"
+  }
+}
+```
+
+**Response Body (Success):**
+```json
+{
+  "success": true,
+  "action": "academic_delete_package",
+  "data": {
+    "success": true,
+    "message": "Package 'PKG-D2C6F12A' successfully deleted."
+  }
+}
+```
+
+---
+
+## 9. Standard Request and Response Payload Architecture
 
 All communications with the DazzlingDB API MUST conform to a strict structural contract. This section describes the layout of the full HTTP body for requests and responses.
 

@@ -21,6 +21,22 @@ const StudentService = {
     }
     return prefix + "-" + Math.random().toString(36).substring(2, 9).toUpperCase();
   },
+  _getTablePrefix(tableName) {
+    if (typeof DATABASE_SCHEMA !== 'undefined' && DATABASE_SCHEMA.categories) {
+      for (const catName in DATABASE_SCHEMA.categories) {
+        const category = DATABASE_SCHEMA.categories[catName];
+        if (category.tables && category.tables[tableName]) {
+          const tableDef = category.tables[tableName];
+          const pkName = tableDef.primaryKey;
+          if (pkName && tableDef.columns[pkName] && tableDef.columns[pkName].idPrefix) {
+            return tableDef.columns[pkName].idPrefix;
+          }
+        }
+      }
+    }
+    const fallbackRegistry = typeof ID_PREFIX_FALLBACK_REGISTRY !== 'undefined' ? ID_PREFIX_FALLBACK_REGISTRY : {};
+    return fallbackRegistry[tableName] || tableName.substring(0, 3).toUpperCase();
+  },
 
   /**
    * Orchestrates the registration of a new student.
@@ -34,15 +50,15 @@ const StudentService = {
 
     console.log(`[StudentService] Registering new student: ${payload.profile.student_name}`);
 
-    // 1. Generate Root Identifiers
-    const studentId = this._generateId("STU");
-    const addressId = this._generateId("ADDR");
-    const contactId = this._generateId("CONT");
+    // 1. Generate Root Identifiers using schema-driven prefixes
+    const studentId = this._generateId(this._getTablePrefix("Student"));
+    const addressId = this._generateId(this._getTablePrefix("Address"));
+    const contactId = this._generateId(this._getTablePrefix("ContactInfo"));
 
     // 2. Perform Strict Pre-flight Package Verification (Plan 2)
     (payload.enrollments || []).forEach(item => {
-      if (item.item_id.indexOf("PKG") === 0) {
-        const packageItems = db.PackageItem.where({ package_id: item.item_id, entity_type: "course" });
+      if (item.enrollment_type === "package") {
+        const packageItems = db.PackageItem.where({ package_id: item.item_id });
         const requiredCourseIds = packageItems.map(pi => pi.entity_id);
         
         const providedCourseIds = (item.package_batches || []).map(pb => pb.course_id);
@@ -76,7 +92,7 @@ const StudentService = {
       },
       education: (payload.education || []).map(edu => ({
         ...edu,
-        education_id: this._generateId("EDU")
+        education_id: this._generateId(this._getTablePrefix("Education"))
       })),
       enrollments: [] // Managed manually below due to dynamic metadata and package linkages
     };
@@ -87,50 +103,90 @@ const StudentService = {
 
       // 5. Process Enrollments, Fee Accounts, and Payments
       (payload.enrollments || []).forEach(item => {
-        const enrollmentId = this._generateId("ENR");
+        const enrollmentId = this._generateId(this._getTablePrefix("Enrollment"));
+        const enrollmentType = item.enrollment_type;
+        const isPackage = enrollmentType === "package";
 
         // Resolve item metadata if it is a Package
         let metadata = null;
-        const isPackage = item.item_id.indexOf("PKG") === 0;
         
         if (isPackage) {
-          const packageItems = db.PackageItem.where({ package_id: item.item_id, entity_type: "course" });
+          const packageItems = db.PackageItem.where({ package_id: item.item_id });
           const courseFeesMap = {};
           packageItems.forEach(pi => {
-            const course = db.Course.findById(pi.entity_id);
+            let course = null;
+            if (pi.entity_type === "course" || pi.entity_type === "subject") {
+              course = db.Course.findById(pi.entity_id);
+            }
             courseFeesMap[pi.entity_id] = course ? course.base_fee : 0;
           });
           metadata = { course_fees: courseFeesMap };
         }
 
-        // Insert Parent Enrollment row
+        // Insert exactly 1 Enrollment contract row
         db.Enrollment.insert({
           enrollment_id: enrollmentId,
           student_id: studentId,
+          enrollment_type: enrollmentType,
           item_id: item.item_id,
-          batch_id: isPackage ? null : item.batch_id,
           enrollment_date: new Date(),
           status: "active",
           academic_status: "active",
-          package_enrollment_id: null,
           metadata: metadata
         });
 
-        // If Package, insert child subject enrollments pointing to this parent
-        if (isPackage && item.package_batches) {
-          item.package_batches.forEach(batch => {
-            const childEnrollmentId = this._generateId("ENR");
-            db.Enrollment.insert({
-              enrollment_id: childEnrollmentId,
-              student_id: studentId,
-              item_id: batch.course_id,
-              batch_id: batch.batch_id,
-              enrollment_date: new Date(),
-              status: "active",
-              academic_status: "active",
-              package_enrollment_id: enrollmentId,
-              metadata: null
+        // Resolve or dynamically provision default plan
+        const feePlanPrefix = this._getTablePrefix("FeePlan");
+        const defaultPlanId = `${feePlanPrefix}-${item.item_id}-DEFAULT`;
+
+        let plan = db.FeePlan.findById(defaultPlanId);
+        if (!plan) {
+          let baseFee = 0;
+          if (isPackage) {
+            const pkg = db.Package.findById(item.item_id);
+            baseFee = pkg ? pkg.package_fee : item.fee;
+          } else {
+            const course = db.Course.findById(item.item_id);
+            baseFee = course ? course.base_fee : item.fee;
+          }
+
+          db.FeePlan.insert({
+            fee_plan_id: defaultPlanId,
+            entity_id: item.item_id,
+            entity_type: enrollmentType,
+            plan_name: "Default Standard Plan",
+            total_fee: baseFee,
+            discount_allowed: true,
+            installment_allowed: true
+          });
+        }
+
+        const feePlanId = payload.feeAccount.fee_plan_id || defaultPlanId;
+
+        // Insert BatchAllocation row(s) for course seats
+        if (isPackage) {
+          if (item.package_batches) {
+            item.package_batches.forEach(batch => {
+              db.BatchAllocation.insert({
+                allocation_id: this._generateId(this._getTablePrefix("BatchAllocation")),
+                student_id: studentId,
+                enrollment_id: enrollmentId,
+                course_id: batch.course_id,
+                batch_id: batch.batch_id,
+                status: "active",
+                remarks: "Assigned during package registration"
+              });
             });
+          }
+        } else {
+          db.BatchAllocation.insert({
+            allocation_id: this._generateId(this._getTablePrefix("BatchAllocation")),
+            student_id: studentId,
+            enrollment_id: enrollmentId,
+            course_id: item.item_id,
+            batch_id: item.batch_id,
+            status: "active",
+            remarks: `Assigned during ${enrollmentType} registration`
           });
         }
 
@@ -142,12 +198,12 @@ const StudentService = {
           const calculatedAmountPaid = Math.round((payload.feeAccount.amount_paid || 0) * proportion);
           const balanceDue = calculatedFinalFee - calculatedAmountPaid;
           
-          const feeAccountId = this._generateId("SFA");
+          const feeAccountId = this._generateId(this._getTablePrefix("StudentFeeAccount"));
 
           db.StudentFeeAccount.insert({
             student_fee_id: feeAccountId,
             enrollment_id: enrollmentId,
-            fee_plan_id: payload.feeAccount.fee_plan_id || "FPL-DEFAULT",
+            fee_plan_id: feePlanId,
             total_fee: item.fee,
             discount: calculatedDiscount,
             final_fee: calculatedFinalFee,
@@ -162,7 +218,7 @@ const StudentService = {
 
           if (payload.feeAccount.installments && payload.feeAccount.installments.length > 0) {
             payload.feeAccount.installments.forEach((ins, idx) => {
-              const installmentId = this._generateId("INS");
+              const installmentId = this._generateId(this._getTablePrefix("Installment"));
               if (idx === 0) firstInstallmentId = installmentId;
 
               const installmentDue = Math.round(ins.due_amount * proportion);
@@ -181,7 +237,7 @@ const StudentService = {
             });
           } else {
             // Generate default single installment
-            const installmentId = this._generateId("INS");
+            const installmentId = this._generateId(this._getTablePrefix("Installment"));
             firstInstallmentId = installmentId;
 
             db.Installment.insert({
@@ -199,7 +255,7 @@ const StudentService = {
           // Record Proportional Payment
           if (calculatedAmountPaid > 0 && payload.payment) {
             db.Payment.insert({
-              payment_id: this._generateId("PAY"),
+              payment_id: this._generateId(this._getTablePrefix("Payment")),
               student_fee_id: feeAccountId,
               installment_id: firstInstallmentId,
               amount_paid: calculatedAmountPaid,
@@ -242,7 +298,7 @@ const StudentService = {
     console.log(`[StudentService] Adding new student lead: ${leadData.student_name}`);
 
     // 1. Generate Primary Identifier
-    const leadId = this._generateId("SLD");
+    const leadId = this._generateId(this._getTablePrefix("StudentLead"));
 
     // 2. Build record payload
     const recordPayload = {
@@ -272,36 +328,37 @@ const StudentService = {
   processSubjectWithdrawal(studentId, courseId) {
     const db = DBContext.getInstance();
     
-    // 1. Locate the child enrollment
-    const childEnrollment = db.Enrollment.findOne({
+    // 1. Locate the batch allocation
+    const allocation = db.BatchAllocation.findOne({
       student_id: studentId,
-      item_id: courseId,
+      course_id: courseId,
       status: "active"
     });
-    if (!childEnrollment) {
-      throw new Error(`Active course enrollment not found for Student ${studentId} and Course ${courseId}`);
+    if (!allocation) {
+      throw new Error(`Active batch allocation not found for Student ${studentId} and Course ${courseId}`);
     }
     
-    // Check if this enrollment belongs to a package
-    const parentEnrollmentId = childEnrollment.package_enrollment_id;
-    if (!parentEnrollmentId) {
-      throw new Error(`Enrollment ${childEnrollment.enrollment_id} is a standalone course, not part of a package.`);
+    // Check if this allocation belongs to a package enrollment contract
+    const enrollment = db.Enrollment.findById(allocation.enrollment_id);
+    if (!enrollment) {
+      throw new Error(`Enrollment contract ${allocation.enrollment_id} not found.`);
+    }
+    if (enrollment.enrollment_type !== "package") {
+      throw new Error(`Enrollment ${enrollment.enrollment_id} is a standalone course, not part of a package.`);
     }
 
-    const parentEnrollment = db.Enrollment.findById(parentEnrollmentId);
-    if (!parentEnrollment) {
-      throw new Error(`Parent enrollment ${parentEnrollmentId} not found.`);
-    }
+    const parentEnrollmentId = enrollment.enrollment_id;
 
     return Database.transaction(function(db) {
-      // 2. Mark child enrollment as withdrawn and suspended
-      db.Enrollment.update(childEnrollment.enrollment_id, {
-        status: "withdrawn",
-        academic_status: "withdrawn"
+      // 2. Mark allocation as dropped
+      db.BatchAllocation.update(allocation.allocation_id, {
+        status: "dropped",
+        dropped_at: new Date(),
+        remarks: "Dropped via subject withdrawal"
       });
 
       // 3. Retrieve base fee from metadata snapshot stored in parent package enrollment
-      const metadata = parentEnrollment.metadata;
+      const metadata = enrollment.metadata;
       if (!metadata || !metadata.course_fees || typeof metadata.course_fees[courseId] === "undefined") {
         throw new Error(`Metadata snapshot for course ${courseId} is missing in parent enrollment.`);
       }
@@ -371,7 +428,7 @@ const StudentService = {
       let creditOwed = 0;
       if (remainingReduction > 0) {
         creditOwed = remainingReduction;
-        const refundPaymentId = StudentService._generateId("PAY");
+        const refundPaymentId = StudentService._generateId(StudentService._getTablePrefix("Payment"));
         db.Payment.insert({
           payment_id: refundPaymentId,
           student_fee_id: parentSfa.student_fee_id,
@@ -425,7 +482,7 @@ const StudentService = {
       });
 
       // 2. Insert parent package enrollment
-      const pkgEnrollmentId = StudentService._generateId("ENR");
+      const pkgEnrollmentId = StudentService._generateId(StudentService._getTablePrefix("Enrollment"));
       
       const pkgDetails = db.Package.findById(targetPackageId);
       if (!pkgDetails) {
@@ -444,24 +501,40 @@ const StudentService = {
       db.Enrollment.insert({
         enrollment_id: pkgEnrollmentId,
         student_id: studentId,
+        enrollment_type: "package",
         item_id: targetPackageId,
-        batch_id: null,
         enrollment_date: new Date(),
         status: "active",
         academic_status: "active",
-        package_enrollment_id: null,
         metadata: metadata
       });
 
       // 3. Create parent StudentFeeAccount
-      const parentFeeId = StudentService._generateId("SFA");
+      const parentFeeId = StudentService._generateId(StudentService._getTablePrefix("StudentFeeAccount"));
       const packageFee = pkgDetails.package_fee;
       const balanceDue = Math.max(0, packageFee - totalPaymentsToRollover);
+
+      // Resolve or dynamically provision default fee plan for target package
+      const feePlanPrefix = StudentService._getTablePrefix("FeePlan");
+      const defaultPlanId = `${feePlanPrefix}-${targetPackageId}-DEFAULT`;
+
+      let plan = db.FeePlan.findById(defaultPlanId);
+      if (!plan) {
+        db.FeePlan.insert({
+          fee_plan_id: defaultPlanId,
+          entity_id: targetPackageId,
+          entity_type: "package",
+          plan_name: "Default Standard Plan",
+          total_fee: packageFee,
+          discount_allowed: true,
+          installment_allowed: true
+        });
+      }
 
       db.StudentFeeAccount.insert({
         student_fee_id: parentFeeId,
         enrollment_id: pkgEnrollmentId,
-        fee_plan_id: "FPL-DEFAULT",
+        fee_plan_id: defaultPlanId,
         total_fee: packageFee,
         discount: 0,
         final_fee: packageFee,
@@ -471,33 +544,43 @@ const StudentService = {
         remarks: "Created during package upgrade transaction"
       });
 
-      // 4. Update existing child enrollments & create new child enrollments
+      // 4. Mark old standalone Enrollment records as completed/upgraded
+      currentEnrollmentIds.forEach(eid => {
+        db.Enrollment.update(eid, {
+          status: "completed",
+          academic_status: "completed"
+        });
+      });
+
+      // 5. Redirect existing BatchAllocations or create new ones
       packageBatches.forEach(batch => {
-        const existingEnrollment = db.Enrollment.findOne({ student_id: studentId, item_id: batch.course_id });
-        if (existingEnrollment) {
-          db.Enrollment.update(existingEnrollment.enrollment_id, {
-            package_enrollment_id: pkgEnrollmentId,
+        const existingAllocation = db.BatchAllocation.findOne({
+          student_id: studentId,
+          course_id: batch.course_id,
+          status: "active"
+        });
+        if (existingAllocation) {
+          db.BatchAllocation.update(existingAllocation.allocation_id, {
+            enrollment_id: pkgEnrollmentId,
             batch_id: batch.batch_id
           });
         } else {
-          db.Enrollment.insert({
-            enrollment_id: StudentService._generateId("ENR"),
+          db.BatchAllocation.insert({
+            allocation_id: StudentService._generateId(StudentService._getTablePrefix("BatchAllocation")),
             student_id: studentId,
-            item_id: batch.course_id,
+            enrollment_id: pkgEnrollmentId,
+            course_id: batch.course_id,
             batch_id: batch.batch_id,
-            enrollment_date: new Date(),
             status: "active",
-            academic_status: "active",
-            package_enrollment_id: pkgEnrollmentId,
-            metadata: null
+            remarks: "Assigned during package upgrade"
           });
         }
       });
 
-      // 5. Record the rollover credit payment
+      // 6. Record the rollover credit payment
       if (totalPaymentsToRollover > 0) {
         db.Payment.insert({
-          payment_id: StudentService._generateId("PAY"),
+          payment_id: StudentService._generateId(StudentService._getTablePrefix("Payment")),
           student_fee_id: parentFeeId,
           installment_id: null,
           amount_paid: totalPaymentsToRollover,
@@ -509,10 +592,10 @@ const StudentService = {
         });
       }
 
-      // 6. Generate new installment for remaining balance
+      // 7. Generate new installment for remaining balance
       if (balanceDue > 0) {
         db.Installment.insert({
-          installment_id: StudentService._generateId("INS"),
+          installment_id: StudentService._generateId(StudentService._getTablePrefix("Installment")),
           student_fee_id: parentFeeId,
           installment_number: 1,
           due_amount: balanceDue,
@@ -537,19 +620,21 @@ const StudentService = {
    */
   verifyAccess(studentId, courseId) {
     const db = DBContext.getInstance();
-    const enrollment = db.Enrollment.findOne({ student_id: studentId, item_id: courseId });
-    if (!enrollment) return { allowed: false, reason: "No active enrollment found." };
+    const allocation = db.BatchAllocation.findOne({
+      student_id: studentId,
+      course_id: courseId,
+      status: ["active", "suspended"]
+    });
+    if (!allocation) return { allowed: false, reason: "No active enrollment found." };
     
-    if (enrollment.academic_status === "suspended") {
+    if (allocation.status === "suspended") {
       return { allowed: false, reason: "Access suspended due to outstanding dues." };
     }
     
-    let feeAccount = db.StudentFeeAccount.findOne({ enrollment_id: enrollment.enrollment_id });
+    const enrollment = db.Enrollment.findById(allocation.enrollment_id);
+    if (!enrollment) return { allowed: false, reason: "No active enrollment found." };
     
-    if (!feeAccount && enrollment.package_enrollment_id) {
-      feeAccount = db.StudentFeeAccount.findOne({ enrollment_id: enrollment.package_enrollment_id });
-    }
-    
+    const feeAccount = db.StudentFeeAccount.findOne({ enrollment_id: enrollment.enrollment_id });
     if (!feeAccount) return { allowed: true };
     
     const gracePeriodDays = 7;
@@ -568,11 +653,14 @@ const StudentService = {
     
     if (isOverdue) {
       Database.transaction(function(db) {
-        db.Enrollment.update(enrollment.enrollment_id, { academic_status: "suspended" });
-        if (enrollment.package_enrollment_id) {
-          const children = db.Enrollment.where({ package_enrollment_id: enrollment.package_enrollment_id });
-          children.forEach(c => db.Enrollment.update(c.enrollment_id, { academic_status: "suspended" }));
-        }
+        db.BatchAllocation.update(allocation.allocation_id, { status: "suspended" });
+        const sisterAllocations = db.BatchAllocation.where({
+          enrollment_id: allocation.enrollment_id,
+          status: "active"
+        });
+        sisterAllocations.forEach(sa => {
+          db.BatchAllocation.update(sa.allocation_id, { status: "suspended" });
+        });
       });
       return { allowed: false, reason: "Suspended: Overdue installment payment." };
     }

@@ -72,6 +72,11 @@
       "type": "belongsToPolymorphic",
       "typeField": "enrollment_type",
       "idField": "item_id"
+    },
+    "allocations": {
+      "type": "hasMany",
+      "target": "BatchAllocation",
+      "foreignKey": "enrollment_id"
     }
   }
 }

@@ -9,7 +9,8 @@
     "entity_type": {
       "type": "string",
       "choices": [
-        "course"
+        "course",
+        "subject"
       ],
       "maxLength": 255
     },

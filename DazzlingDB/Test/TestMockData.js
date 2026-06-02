@@ -109,11 +109,19 @@ const TestMockData = {
   Enrollment: {
     enrollment_id: "ENR-MOCK-1",
     student_id: "STU-MOCK-1",
+    enrollment_type: "course",
     item_id: "CRS-MOCK-PHY",
-    batch_id: "BAT-MOCK-PHY",
     roll_number: 1,
     status: "active",
     academic_status: "active"
+  },
+  BatchAllocation: {
+    allocation_id: "BAL-MOCK-1",
+    student_id: "STU-MOCK-1",
+    enrollment_id: "ENR-MOCK-1",
+    course_id: "CRS-MOCK-PHY",
+    batch_id: "BAT-MOCK-PHY",
+    status: "active"
   },
 
   // =========================================================================

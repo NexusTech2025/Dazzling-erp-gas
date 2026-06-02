@@ -9,7 +9,8 @@
       "type": "string",
       "choices": [
         "course",
-        "package"
+        "package",
+        "subject"
       ],
       "maxLength": 255
     },

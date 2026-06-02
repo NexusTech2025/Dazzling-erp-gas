@@ -20,6 +20,8 @@ const ApiDispatcher = (function () {
       "academic_create_course": CreateCourseAction,
       "academic_create_batch": CreateBatchAction,
       "academic_create_package": CreatePackageAction,
+      "academic_update_package": UpdatePackageAction,
+      "academic_delete_package": DeletePackageAction,
       "academic_enroll_student": EnrollStudentAction,
       "core_create_branch": CreateBranchAction,
       "core_create_promo": CreatePromoCodeAction,

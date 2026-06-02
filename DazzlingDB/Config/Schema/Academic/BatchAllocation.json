@@ -32,9 +32,18 @@
       "default": "active",
       "maxLength": 255
     },
+    "remarks": {
+      "type": "string",
+      "required": false,
+      "maxLength": 500
+    },
     "assigned_at": {
       "type": "datetime",
       "autoNowAdd": true,
+      "required": false
+    },
+    "dropped_at": {
+      "type": "datetime",
       "required": false
     },
     "allocation_id": {

@@ -75,6 +75,11 @@
       "type": "belongsTo",
       "target": "Branch",
       "foreignKey": "branch_id"
+    },
+    "allocations": {
+      "type": "hasMany",
+      "target": "BatchAllocation",
+      "foreignKey": "batch_id"
     }
   }
 }
