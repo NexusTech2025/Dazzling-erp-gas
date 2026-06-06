@@ -1,0 +1,26 @@
+{
+  "include": [
+    "packageitems",
+    "enrollments",
+    "batches",
+    "batchallocations"
+  ],
+  "limit": 200,
+  "display": {
+    "select": [
+      "course_id",
+      "name",
+      "packageitems",
+      "enrollments",
+      "batches",
+      "batchallocations"
+    ],
+    "sort": {
+      "by": "name",
+      "order": "desc"
+    },
+    "filter": {
+      "hasRelations": false
+    }
+  }
+}

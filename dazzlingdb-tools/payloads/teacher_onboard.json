@@ -1,0 +1,12 @@
+{
+  "full_name": "Manish Kumar Test",
+  "mobile_number": "9123456789",
+  "email": "manish.test@gmail.com",
+  "gender": "male",
+  "date_of_birth": "1998-06-21",
+  "experience_years": 5,
+  "qualification": "B.A.",
+  "specialization": "Mathematics",
+  "previous_institute": "Gyan Jyoti",
+  "teacher_type": "part_time"
+}

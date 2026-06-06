@@ -1,0 +1,626 @@
+🔍 Querying table "Course" with params: {
+  "target": "Course",
+  "where": {},
+  "include": [
+    "packageitems",
+    "enrollments",
+    "batches",
+    "batchallocations"
+  ],
+  "limit": 200,
+  "display": {
+    "select": [
+      "course_id",
+      "name",
+      "packageitems",
+      "enrollments",
+      "batches",
+      "batchallocations"
+    ],
+    "sort": {
+      "by": "name",
+      "order": "desc"
+    },
+    "filter": {
+      "hasRelations": false
+    }
+  }
+}
+
+✅ Query completed successfully!
+📊 Metadata: Total: 124, Limit: 200, Offset: 0
+
+==================================================
+📊 QUERY STATS (Course)
+==================================================
+🔹 Total matching rows in database : 124
+🔹 Rows rendered in table          : 115
+🔹 Hydrated Relations Statistics :
+   - "packageitems": 0 items total across all rendered rows
+   - "enrollments": 0 items total across all rendered rows
+   - "batches": 0 items total across all rendered rows
+   - "batchallocations": 0 items total across all rendered rows
+==================================================
+
+📦 Retrieved 115 rows:
+┌─────────┬────────────────┬───────────────────────────────────────────────────────┬────────────────────┬────────────────────┬────────────────────┬────────────────────┐
+│ (index) │ course_id      │ name                                                  │ packageitems       │ enrollments        │ batches            │ batchallocations   │
+├─────────┼────────────────┼───────────────────────────────────────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┤
+│ 0       │ 'CRS-598E1476' │ 'Web Design (UI/UX)'                                  │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 1       │ 'CRS-F515F47A' │ 'Typing & Keyboard Skills'                            │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 2       │ 'CRS-E6FA95CB' │ 'Spring Boot'                                         │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 3       │ 'CRS-8FDE7907' │ 'Spring'                                              │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 4       │ 'CRS-732809'   │ 'RSCIT - GOV.'                                        │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 5       │ 'CRS-9E21CB74' │ 'React Basic'                                         │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 6       │ 'CRS-EFEF2495' │ 'React Advanced'                                      │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 7       │ 'CRS-DDF78F54' │ 'R Programming'                                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 8       │ 'CRS-AADB3923' │ 'Python Django Full Stack'                            │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 9       │ 'CRS-CB5F5C1C' │ 'Python Data Science'                                 │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 10      │ 'CRS-C04753ED' │ 'Python Data Analysis'                                │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 11      │ 'CRS-058B1E53' │ 'Python Basic'                                        │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 12      │ 'CRS-DA73EB24' │ 'Python Advance'                                      │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 13      │ 'CRS-51184B92' │ 'PHP'                                                 │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 14      │ 'CRS-C4DE3892' │ 'Multi-Agent Systems & Tool Orchestration'            │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 15      │ 'CRS-B277A722' │ 'MS Office Fundamentals (Word + PowerPoint + Excel)'  │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 16      │ 'CRS-A316C0C3' │ 'MERN Stack'                                          │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 17      │ 'CRS-16E39D68' │ 'Java Spring Full Stack'                              │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 18      │ 'CRS-A833C108' │ 'Java Spring Boot Full Stack'                         │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 19      │ 'CRS-3A17515A' │ 'Introduction to Agentic AI Workflows'                │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 20      │ 'CRS-9D0DC753' │ 'Government Computer Course (RSCIT)'                  │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 21      │ 'CRS-5D74E429' │ 'Excel, Data & Report Automation with AI'             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 22      │ 'CRS-B5CE52C9' │ 'Excel VBA'                                           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 23      │ 'CRS-212F6655' │ 'Excel Data Expert'                                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 24      │ 'CRS-DCCC3D29' │ 'Document, PDF & Office Automation with AI'           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 25      │ 'CRS-3FB56B30' │ 'Django'                                              │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 26      │ 'CRS-03427DE6' │ 'Deep Learning'                                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 27      │ 'CRS-792889DD' │ 'Data Analysis (SQL, Excel, Power BI)'                │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 28      │ 'CRS-33C85B49' │ 'Core Java'                                           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 29      │ 'CRS-98902FD2' │ 'Computer Basics & Device Introduction'               │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 30      │ 'CRS-A8418556' │ 'Class 6 Social Science'                              │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 31      │ 'CRS-5CC845CD' │ 'Class 6 Science'                                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 32      │ 'CRS-E72B3E66' │ 'Class 12 Political Science - RBSE (Hindi)'           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 33      │ 'CRS-3802BA8F' │ 'Class 12 Political Science - RBSE (Eng)'             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 34      │ 'CRS-A29A0D93' │ 'Class 12 Political Science - CBSE'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 35      │ 'CRS-C1764AB4' │ 'Class 12 Physics - RBSE (Hindi)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 36      │ 'CRS-088B73DA' │ 'Class 12 Physics - RBSE (Eng)'                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 37      │ 'CRS-02AC77A0' │ 'Class 12 Physics - CBSE'                             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 38      │ 'CRS-6A4B7E00' │ 'Class 12 Mathematics - RBSE (Hindi)'                 │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 39      │ 'CRS-0A9CC547' │ 'Class 12 Mathematics - RBSE (Eng)'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 40      │ 'CRS-03CC0885' │ 'Class 12 Mathematics - CBSE'                         │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 41      │ 'CRS-113566AA' │ 'Class 12 History - RBSE (Hindi)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 42      │ 'CRS-4E72762F' │ 'Class 12 History - RBSE (Eng)'                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 43      │ 'CRS-60D0E1A3' │ 'Class 12 History - CBSE'                             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 44      │ 'CRS-C9DD6725' │ 'Class 12 Geography - RBSE (Hindi)'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 45      │ 'CRS-5A4A8DF3' │ 'Class 12 Geography - RBSE (Eng)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 46      │ 'CRS-56E76981' │ 'Class 12 Geography - CBSE'                           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 47      │ 'CRS-D227E271' │ 'Class 12 English - RBSE (Hindi)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 48      │ 'CRS-815FABCD' │ 'Class 12 English - RBSE (Eng)'                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 49      │ 'CRS-17FBC052' │ 'Class 12 English - CBSE'                             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 50      │ 'CRS-589BB417' │ 'Class 12 Economics - RBSE (Hindi)'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 51      │ 'CRS-5540FAD3' │ 'Class 12 Economics - RBSE (Eng)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 52      │ 'CRS-DA47F7D2' │ 'Class 12 Economics - CBSE'                           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 53      │ 'CRS-7B372E07' │ 'Class 12 Chemistry - RBSE (Hindi)'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 54      │ 'CRS-FB0CD490' │ 'Class 12 Chemistry - RBSE (Eng)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 55      │ 'CRS-6DF81E8C' │ 'Class 12 Chemistry - CBSE'                           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 56      │ 'CRS-9B0E8B14' │ 'Class 12 Business Studies - RBSE (Hindi)'            │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 57      │ 'CRS-DB4B5A43' │ 'Class 12 Business Studies - RBSE (Eng)'              │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 58      │ 'CRS-13E24A58' │ 'Class 12 Business Studies - CBSE'                    │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 59      │ 'CRS-B6A5016F' │ 'Class 12 Biology - RBSE (Hindi)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 60      │ 'CRS-4A4EEA10' │ 'Class 12 Biology - RBSE (Eng)'                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 61      │ 'CRS-DF1EB46C' │ 'Class 12 Biology - CBSE'                             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 62      │ 'CRS-E6662772' │ 'Class 12 Accountancy - RBSE (Hindi)'                 │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 63      │ 'CRS-8C2E932E' │ 'Class 12 Accountancy - RBSE (Eng)'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 64      │ 'CRS-B7D92BD1' │ 'Class 12 Accountancy - CBSE'                         │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 65      │ 'CRS-2A67E61D' │ 'Class 11 Political Science - RBSE (Hindi)'           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 66      │ 'CRS-0928CADE' │ 'Class 11 Political Science - RBSE (Eng)'             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 67      │ 'CRS-BB0D9E21' │ 'Class 11 Political Science - CBSE'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 68      │ 'CRS-617F8475' │ 'Class 11 Physics - RBSE (Hindi)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 69      │ 'CRS-05735188' │ 'Class 11 Physics - RBSE (Eng)'                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 70      │ 'CRS-44044C60' │ 'Class 11 Physics - CBSE'                             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 71      │ 'CRS-FA9DD4A3' │ 'Class 11 Mathematics - RBSE (Hindi)'                 │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 72      │ 'CRS-593E5007' │ 'Class 11 Mathematics - RBSE (Eng)'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 73      │ 'CRS-0A89F8B4' │ 'Class 11 Mathematics - CBSE'                         │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 74      │ 'CRS-A8B1288F' │ 'Class 11 History - RBSE (Hindi)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 75      │ 'CRS-A695AB28' │ 'Class 11 History - RBSE (Eng)'                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 76      │ 'CRS-4C72D4A4' │ 'Class 11 History - CBSE'                             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 77      │ 'CRS-99FA1826' │ 'Class 11 Geography - RBSE (Hindi)'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 78      │ 'CRS-1C28C288' │ 'Class 11 Geography - RBSE (Eng)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 79      │ 'CRS-9731D712' │ 'Class 11 Geography - CBSE'                           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 80      │ 'CRS-BC4EA7C5' │ 'Class 11 English - RBSE (Hindi)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 81      │ 'CRS-B06293A2' │ 'Class 11 English - RBSE (Eng)'                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 82      │ 'CRS-88274209' │ 'Class 11 English - CBSE'                             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 83      │ 'CRS-4FA4813B' │ 'Class 11 Economics - RBSE (Hindi)'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 84      │ 'CRS-271D8959' │ 'Class 11 Economics - RBSE (Eng)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 85      │ 'CRS-12215E8D' │ 'Class 11 Economics - CBSE'                           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 86      │ 'CRS-2369DB4F' │ 'Class 11 Chemistry - RBSE (Hindi)'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 87      │ 'CRS-4C98FB96' │ 'Class 11 Chemistry - RBSE (Eng)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 88      │ 'CRS-F613B412' │ 'Class 11 Chemistry - CBSE'                           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 89      │ 'CRS-A69CF907' │ 'Class 11 Business Studies - RBSE (Hindi)'            │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 90      │ 'CRS-AAE7C14B' │ 'Class 11 Business Studies - RBSE (Eng)'              │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 91      │ 'CRS-D0FB19B6' │ 'Class 11 Business Studies - CBSE'                    │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 92      │ 'CRS-2B87720F' │ 'Class 11 Biology - RBSE (Hindi)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 93      │ 'CRS-CD00C1F9' │ 'Class 11 Biology - RBSE (Eng)'                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 94      │ 'CRS-0544D81B' │ 'Class 11 Biology - CBSE'                             │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 95      │ 'CRS-F86DB334' │ 'Class 11 Accountancy - RBSE (Hindi)'                 │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 96      │ 'CRS-14E6BAD7' │ 'Class 11 Accountancy - RBSE (Eng)'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 97      │ 'CRS-485113EB' │ 'Class 11 Accountancy - CBSE'                         │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 98      │ 'CRS-E8116188' │ 'Class 10 Standard Mathematics Program (R.D. Sharma)' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 99      │ 'CRS-87BBADBB' │ 'Class 10 Social Science - RBSE (Hindi)'              │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 100     │ 'CRS-BB28F965' │ 'Class 10 Science - RBSE (Hindi)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 101     │ 'CRS-9F84CD81' │ 'Class 10 English - RBSE (Hindi)'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 102     │ 'CRS-36BDE7D5' │ 'C++ Programming'                                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 103     │ 'CRS-69796F5E' │ 'C Programming'                                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 104     │ 'CRS-DB7AAEB8' │ 'C / C++ Programming'                                 │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 105     │ 'CRS-1649378F' │ 'Basic SQL'                                           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 106     │ 'CRS-9C6A2098' │ 'Basic Computer Operations'                           │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 107     │ 'CRS-B00E2048' │ 'Autonomous Workflow Automation'                      │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 108     │ 'CRS-0F6CFC9F' │ 'AI Tools for Daily Productivity'                     │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 109     │ 'CRS-F916672A' │ 'AI Coding Assistants & Development Automation'       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 110     │ 'CRS-5C4B0780' │ 'AI Agents with Python & LLM Tools'                   │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 111     │ 'CRS-A0FE8775' │ 'AI / Machine Learning'                               │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 112     │ 'CRS-FB59C278' │ 'Advanced SQL'                                        │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 113     │ 'CRS-2D7DCBF7' │ 'Advance Java'                                        │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+│ 114     │ 'CRS-8A6612B5' │ 'Advance Excel'                                       │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │ '[Array: 0 items]' │
+└─────────┴────────────────┴───────────────────────────────────────────────────────┴────────────────────┴────────────────────┴────────────────────┴────────────────────┘
+
+📋 Deep Hydrated Relation Details:
+
+================================================================================
+📄 Course [course_id: CRS-598E1476] (Web Design (UI/UX))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-F515F47A] (Typing & Keyboard Skills)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-E6FA95CB] (Spring Boot)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-8FDE7907] (Spring)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-732809] (RSCIT - GOV.)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-9E21CB74] (React Basic)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-EFEF2495] (React Advanced)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-DDF78F54] (R Programming)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-AADB3923] (Python Django Full Stack)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-CB5F5C1C] (Python Data Science)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-C04753ED] (Python Data Analysis)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-058B1E53] (Python Basic)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-DA73EB24] (Python Advance)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-51184B92] (PHP)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-C4DE3892] (Multi-Agent Systems & Tool Orchestration)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-B277A722] (MS Office Fundamentals (Word + PowerPoint + Excel))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-A316C0C3] (MERN Stack)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-16E39D68] (Java Spring Full Stack)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-A833C108] (Java Spring Boot Full Stack)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-3A17515A] (Introduction to Agentic AI Workflows)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-9D0DC753] (Government Computer Course (RSCIT))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-5D74E429] (Excel, Data & Report Automation with AI)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-B5CE52C9] (Excel VBA)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-212F6655] (Excel Data Expert)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-DCCC3D29] (Document, PDF & Office Automation with AI)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-3FB56B30] (Django)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-03427DE6] (Deep Learning)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-792889DD] (Data Analysis (SQL, Excel, Power BI))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-33C85B49] (Core Java)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-98902FD2] (Computer Basics & Device Introduction)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-A8418556] (Class 6 Social Science)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-5CC845CD] (Class 6 Science)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-E72B3E66] (Class 12 Political Science - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-3802BA8F] (Class 12 Political Science - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-A29A0D93] (Class 12 Political Science - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-C1764AB4] (Class 12 Physics - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-088B73DA] (Class 12 Physics - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-02AC77A0] (Class 12 Physics - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-6A4B7E00] (Class 12 Mathematics - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-0A9CC547] (Class 12 Mathematics - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-03CC0885] (Class 12 Mathematics - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-113566AA] (Class 12 History - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-4E72762F] (Class 12 History - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-60D0E1A3] (Class 12 History - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-C9DD6725] (Class 12 Geography - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-5A4A8DF3] (Class 12 Geography - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-56E76981] (Class 12 Geography - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-D227E271] (Class 12 English - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-815FABCD] (Class 12 English - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-17FBC052] (Class 12 English - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-589BB417] (Class 12 Economics - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-5540FAD3] (Class 12 Economics - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-DA47F7D2] (Class 12 Economics - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-7B372E07] (Class 12 Chemistry - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-FB0CD490] (Class 12 Chemistry - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-6DF81E8C] (Class 12 Chemistry - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-9B0E8B14] (Class 12 Business Studies - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-DB4B5A43] (Class 12 Business Studies - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-13E24A58] (Class 12 Business Studies - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-B6A5016F] (Class 12 Biology - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-4A4EEA10] (Class 12 Biology - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-DF1EB46C] (Class 12 Biology - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-E6662772] (Class 12 Accountancy - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-8C2E932E] (Class 12 Accountancy - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-B7D92BD1] (Class 12 Accountancy - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-2A67E61D] (Class 11 Political Science - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-0928CADE] (Class 11 Political Science - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-BB0D9E21] (Class 11 Political Science - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-617F8475] (Class 11 Physics - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-05735188] (Class 11 Physics - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-44044C60] (Class 11 Physics - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-FA9DD4A3] (Class 11 Mathematics - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-593E5007] (Class 11 Mathematics - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-0A89F8B4] (Class 11 Mathematics - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-A8B1288F] (Class 11 History - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-A695AB28] (Class 11 History - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-4C72D4A4] (Class 11 History - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-99FA1826] (Class 11 Geography - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-1C28C288] (Class 11 Geography - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-9731D712] (Class 11 Geography - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-BC4EA7C5] (Class 11 English - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-B06293A2] (Class 11 English - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-88274209] (Class 11 English - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-4FA4813B] (Class 11 Economics - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-271D8959] (Class 11 Economics - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-12215E8D] (Class 11 Economics - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-2369DB4F] (Class 11 Chemistry - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-4C98FB96] (Class 11 Chemistry - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-F613B412] (Class 11 Chemistry - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-A69CF907] (Class 11 Business Studies - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-AAE7C14B] (Class 11 Business Studies - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-D0FB19B6] (Class 11 Business Studies - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-2B87720F] (Class 11 Biology - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-CD00C1F9] (Class 11 Biology - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-0544D81B] (Class 11 Biology - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-F86DB334] (Class 11 Accountancy - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-14E6BAD7] (Class 11 Accountancy - RBSE (Eng))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-485113EB] (Class 11 Accountancy - CBSE)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-E8116188] (Class 10 Standard Mathematics Program (R.D. Sharma))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-87BBADBB] (Class 10 Social Science - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-BB28F965] (Class 10 Science - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-9F84CD81] (Class 10 English - RBSE (Hindi))
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-36BDE7D5] (C++ Programming)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-69796F5E] (C Programming)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-DB7AAEB8] (C / C++ Programming)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-1649378F] (Basic SQL)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-9C6A2098] (Basic Computer Operations)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-B00E2048] (Autonomous Workflow Automation)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-0F6CFC9F] (AI Tools for Daily Productivity)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-F916672A] (AI Coding Assistants & Development Automation)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-5C4B0780] (AI Agents with Python & LLM Tools)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-A0FE8775] (AI / Machine Learning)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-FB59C278] (Advanced SQL)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-2D7DCBF7] (Advance Java)
+================================================================================
+
+================================================================================
+📄 Course [course_id: CRS-8A6612B5] (Advance Excel)
+================================================================================

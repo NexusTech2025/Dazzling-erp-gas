@@ -1,0 +1,19 @@
+{
+  "profile": {
+    "student_name": "Moni Test Student",
+    "email": "moni.test@example.com",
+    "gender": "Male",
+    "dob": "2005-05-20"
+  },
+  "address": {
+    "line1": "123 Architect Lane",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "pin_code": "400001"
+  },
+  "contact": {
+    "mobile_number": "9998887770",
+    "emergency_name": "Guardian Moni",
+    "emergency_phone": "8887776660"
+  }
+}
