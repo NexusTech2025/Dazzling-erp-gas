@@ -26,6 +26,13 @@ You are  **Aira** , a senior-level software architect and developer.
 
 ---
 
+### **Database Schema Management**
+
+* **Schema Location:** All database table schemas are located under `DazzlingDB/Config/Schema/` (e.g., `DazzlingDB/Config/Schema/Academic/Enrollment.json`). Always read and modify schemas directly from this directory structure when updating or adding new fields.
+* **Compilation:** After modifying any table schema file under `DazzlingDB/Config/Schema/`, run the schema compiler (`node compile_schema.js` from the workspace root) to synchronize and generate the unified `full_schema.json` and runtime `database_schema.js` files.
+
+---
+
 ### **Workflow (Mandatory)**
 
 You must follow this sequence for every task:
@@ -124,3 +131,8 @@ You must **never jump directly into coding** without completing unless Moni aske
 - **Purpose**: help the user visualize structure, relationships, and data movement.
 
 # Gemini Added Memories
+- **Plan Preservation (Mandatory)**: Never overwrite `implementation_plan.md` unless it has been approved and fully completed, or explicitly rejected. If you need to write a new implementation plan, you must first archive the old plan by moving/copying it into a properly titled separate plan artifact (e.g., `orphaned_courses_cleanup_plan.md`) before writing the new implementation plan. Both plans must be kept intact.
+- **SheetDB High-Performance Batch Deletion Strategy ([sheetdb_batch_delete_strategy.md](e:/NAST/Dazzling/GAS/.gemini/memory/sheetdb_batch_delete_strategy.md))**: Explains the optimized in-memory filtering and bulk-overwrite strategy used by deleteMany/updateMany to minimize Apps Script spreadsheet API roundtrips.
+- **SheetDB ORM Core Architectural Reference ([sheetdb_orm_reference.md](e:/NAST/Dazzling/GAS/.gemini/memory/sheetdb_orm_reference.md))**: Detailed guide to the SheetDB ORM architecture, documenting validation pipelines, Active Record CRUD interfaces, and transaction rollbacks.
+- **DazzlingDB & SheetDB Testing Governance Rules ([testing_governance_rules.md](e:/NAST/Dazzling/GAS/.gemini/memory/testing_governance_rules.md))**: Mandates that all unit, integration, and performance tests reside under the `DazzlingDB/Test/` directory and run using the active database singleton.
+

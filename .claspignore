@@ -4,3 +4,4 @@ gemini.md
 .gitignore
 git/
 docs/
+DazzlingDB/node_test/
