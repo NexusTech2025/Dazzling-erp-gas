@@ -76,6 +76,15 @@ class IntegrityError extends SheetDBError {}
 class ForbiddenError extends SheetDBError {}
 
 /**
+ * Thrown when a batch deletion operation fails due to invalid parameters or constraint violations.
+ */
+class BatchDeleteError extends SheetDBError {
+  constructor(message, context = {}) {
+    super(message, context);
+  }
+}
+
+/**
  * 🔒 VALIDATION REGISTRY ERRORS
  */
 class ValidationRegistryError extends SheetDBError {}
@@ -149,3 +158,4 @@ globalThis.ValidatorExecutionError = ValidatorExecutionError;
 globalThis.RelationError = RelationError;
 globalThis.RelationResolutionError = RelationResolutionError;
 globalThis.RelationValidationError = RelationValidationError;
+globalThis.BatchDeleteError = BatchDeleteError;

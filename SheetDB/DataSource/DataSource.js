@@ -153,6 +153,139 @@ class SheetDataSource {
   }
 
   /**
+   * Deletes multiple rows by matching primary key values.
+   * 
+   * @param {string} categoryName 
+   * @param {string} tableName 
+   * @param {string} primaryKeyName 
+   * @param {Array<any>} ids - Array of target primary key values to remove.
+   * @returns {number} The count of records deleted.
+   */
+  deleteRowsBatch(categoryName, tableName, primaryKeyName, ids) {
+    console.log(`[SheetDataSource] Starting batch delete in '${tableName}' for ${ids.length} IDs.`);
+    const idsToMatch = new Set(ids.map(id => String(id).trim()));
+
+    return this._withLock(() => {
+      const ss = this._getSpreadsheet(categoryName);
+      const sheet = ss.getSheetByName(tableName);
+      if (!sheet) {
+        throw new TableNotFoundError(tableName, categoryName);
+      }
+
+      // 1. Read all rows including headers
+      const values = sheet.getDataRange().getValues();
+      if (values.length < 2) {
+        console.log(`[SheetDataSource] Table '${tableName}' is empty or only has headers. Aborting.`);
+        return 0; 
+      }
+
+      const headers = values[0];
+      const dataRows = values.slice(1);
+      const pkIndex = headers.indexOf(primaryKeyName);
+      if (pkIndex === -1) {
+        throw new BatchDeleteError(`Data Integrity Error: Primary key '${primaryKeyName}' not found in headers for table '${tableName}'.`, { tableName, headers });
+      }
+
+      // 2. Filter in JS Memory
+      const remainingRows = [];
+      let deleteCount = 0;
+
+      dataRows.forEach((row, index) => {
+        const rowId = String(row[pkIndex]).trim();
+        if (idsToMatch.has(rowId)) {
+          deleteCount++;
+          console.log(`[SheetDataSource] [Debug] Match found for deletion at row index ${index + 2}: ID '${rowId}'`);
+        } else {
+          remainingRows.push(row);
+        }
+      });
+
+      console.log(`[SheetDataSource] Scan finished. Matches to delete: ${deleteCount}/${dataRows.length}. Remaining rows: ${remainingRows.length}`);
+
+      if (deleteCount === 0) {
+        console.log(`[SheetDataSource] No matching records found for deletion. Skipping write.`);
+        return 0; 
+      }
+
+      // 3. Clear data rows (retaining header in row 1)
+      console.log(`[SheetDataSource] Clearing data rows in sheet '${tableName}'...`);
+      sheet.getRange(2, 1, values.length - 1, headers.length).clearContent();
+
+      // 4. Bulk Write remaining data rows back
+      if (remainingRows.length > 0) {
+        console.log(`[SheetDataSource] Bulk writing ${remainingRows.length} remaining rows back to sheet '${tableName}'...`);
+        sheet.getRange(2, 1, remainingRows.length, headers.length).setValues(remainingRows);
+      }
+
+      console.log(`[SheetDataSource] Batch delete write sequence completed successfully.`);
+      return deleteCount;
+    });
+  }
+
+  /**
+   * Updates multiple rows in a single batch write operation.
+   * @param {string} categoryName 
+   * @param {string} tableName 
+   * @param {string} primaryKeyName 
+   * @param {Object} updatesMap - Map of { id: { columnName: newValue } }
+   * @returns {number} Count of records successfully updated.
+   */
+  updateRowsBatch(categoryName, tableName, primaryKeyName, updatesMap) {
+    console.log(`[SheetDataSource] Starting batch update in '${tableName}' for ${Object.keys(updatesMap).length} IDs.`);
+    const idsToMatch = new Set(Object.keys(updatesMap).map(id => String(id).trim()));
+
+    return this._withLock(() => {
+      const ss = this._getSpreadsheet(categoryName);
+      const sheet = ss.getSheetByName(tableName);
+      if (!sheet) {
+        throw new TableNotFoundError(tableName, categoryName);
+      }
+
+      const values = sheet.getDataRange().getValues();
+      if (values.length < 2) return 0; // Only headers present
+
+      const headers = values[0];
+      const dataRows = values.slice(1);
+      const pkIndex = headers.indexOf(primaryKeyName);
+      if (pkIndex === -1) {
+        throw new Error(`Primary key '${primaryKeyName}' not found in table '${tableName}' headers.`);
+      }
+
+      let updateCount = 0;
+      const updatedDataRows = dataRows.map((row) => {
+        const rowId = String(row[pkIndex]).trim();
+        if (idsToMatch.has(rowId)) {
+          const rowUpdates = updatesMap[rowId];
+          const updatedRow = [...row];
+          
+          // Apply changes to respective column indices
+          Object.entries(rowUpdates).forEach(([colName, newVal]) => {
+            const colIndex = headers.indexOf(colName);
+            if (colIndex !== -1 && colName !== primaryKeyName) {
+              updatedRow[colIndex] = newVal;
+            }
+          });
+          
+          updateCount++;
+          return updatedRow;
+        }
+        return row;
+      });
+
+      if (updateCount === 0) {
+        console.log(`[SheetDataSource] No matching records found for batch update. Skipping write.`);
+        return 0;
+      }
+
+      // Overwrite the data range in a single range write (no clearContent required)
+      sheet.getRange(2, 1, updatedDataRows.length, headers.length).setValues(updatedDataRows);
+      
+      console.log(`[SheetDataSource] Batch update complete. Updated ${updateCount} rows.`);
+      return updateCount;
+    });
+  }
+
+  /**
    * Internal wrapper for concurrency safety.
    * @private
    */

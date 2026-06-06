@@ -273,4 +273,23 @@ class DynamicRepository {
   remove(id) {
     return this.gateway.remove(id);
   }
+
+  /**
+   * Deletes multiple records by their primary keys.
+   * @param {Array<any>} ids - Array of primary key values to delete.
+   * @returns {number} Count of successfully deleted records.
+   */
+  deleteMany(ids) {
+    return this.gateway.deleteMany(ids);
+  }
+
+  /**
+   * Batch update multiple records and return hydrated models.
+   * @param {Object} updatesMap - Map of { id: { column: value } }
+   * @returns {Array<BaseModel>} Array of updated and hydrated Model instances.
+   */
+  updateMany(updatesMap) {
+    const rawRows = this.gateway.updateMany(updatesMap);
+    return rawRows.map(row => this._hydrate(row));
+  }
 }

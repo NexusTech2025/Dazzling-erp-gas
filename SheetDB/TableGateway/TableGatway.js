@@ -180,6 +180,87 @@ class TableGateway {
     return true;
   }
 
+  /**
+   * Delete multiple records by their primary keys.
+   * @param {Array<any>} ids - Array of primary key values to delete.
+   * @returns {number} Count of successfully deleted records.
+   */
+  deleteMany(ids) {
+    console.log(`[TableGateway:${this.tableName}] Initiating deleteMany operation.`);
+    
+    // Input validation
+    if (!ids) {
+      throw new BatchDeleteError("Batch delete failed: 'ids' parameter is required.");
+    }
+    if (!Array.isArray(ids)) {
+      throw new BatchDeleteError(`Batch delete failed: 'ids' must be an Array. Received type: ${typeof ids}`, { ids });
+    }
+    if (ids.length === 0) {
+      console.log(`[TableGateway:${this.tableName}] Empty ID list passed. Returning 0.`);
+      return 0;
+    }
+    
+    try {
+      // 1. Delegate batch deletion to data source
+      const deleteCount = this.dataSource.deleteRowsBatch(this.category, this.tableName, this.primaryKey, ids);
+      
+      if (deleteCount > 0) {
+        // 2. Sync the PrimaryKeyCache
+        if (this.db && this.db._pkCache) {
+          console.log(`[TableGateway:${this.tableName}] Syncing PrimaryKeyCache for ${ids.length} IDs.`);
+          ids.forEach(id => {
+            this.db._pkCache.remove(this.tableName, id);
+          });
+        }
+      }
+
+      console.log(`[TableGateway:${this.tableName}] deleteMany complete. Deleted rows: ${deleteCount}.`);
+      return deleteCount;
+    } catch (e) {
+      console.error(`[TableGateway:${this.tableName}] Exception caught during deleteMany: ${e.message}`);
+      if (e instanceof SheetDBError) throw e;
+      throw new BatchDeleteError(`System error during batch delete on '${this.tableName}': ${e.message}`, { originalError: e });
+    }
+  }
+
+  /**
+   * Batch update multiple records.
+   * @param {Object} updatesMap - Map of { id: { column: value } }
+   * @returns {Array<Object>} List of updated, normalized row objects.
+   */
+  updateMany(updatesMap) {
+    if (!updatesMap || typeof updatesMap !== 'object') {
+      throw new Error("Batch update failed: 'updatesMap' must be an object.");
+    }
+    
+    const ids = Object.keys(updatesMap);
+    if (ids.length === 0) return [];
+
+    // Pre-serialize values for sheet compatibility
+    const serializedUpdates = {};
+    for (const [id, fields] of Object.entries(updatesMap)) {
+      serializedUpdates[id] = {};
+      for (const [colName, val] of Object.entries(fields)) {
+        // Enforce PK isolation - do not allow PK alterations (TC 2)
+        if (colName === this.primaryKey) continue;
+        
+        const colSchema = this.columns[colName];
+        const type = colSchema ? colSchema.type : "string";
+        serializedUpdates[id][colName] = this._prepareForWrite(val, type);
+      }
+    }
+
+    // Call batch update on datasource
+    const count = this.dataSource.updateRowsBatch(this.category, this.tableName, this.primaryKey, serializedUpdates);
+    
+    // Fetch and return the newly updated rows
+    if (count > 0) {
+      const allRows = this.all();
+      return allRows.filter(row => ids.includes(String(row[this.primaryKey])));
+    }
+    return [];
+  }
+
   // ==========================================
   // ⚙️ INTERNAL MAPPING & NORMALIZATION
   // ==========================================
