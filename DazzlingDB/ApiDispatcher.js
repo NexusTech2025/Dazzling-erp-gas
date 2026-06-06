@@ -40,6 +40,7 @@ const ApiDispatcher = (function () {
       "data_create": CreateRecordAction,
       "data_update": UpdateRecordAction,
       "data_delete": DeleteRecordAction,
+      "data_delete_many": DeleteManyRecordsAction,
       "init_erp": InitErpAction
     };
   }

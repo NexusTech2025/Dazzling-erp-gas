@@ -164,3 +164,134 @@ function executeScenario2_ValidationErrorOnEdit(db, validIds) {
 
   return passed ? "✅ PASSED" : `❌ FAILED: ${messages.join(" | ")}`;
 }
+
+/**
+ * Main Runner for Batch Update Benchmark Tests.
+ * Relies on DazzlingDB scope and DBContext.
+ */
+function runAllBatchUpdateTests() {
+  console.log("🚀 Starting Academic Batch Update Benchmark Tests...");
+
+  const db = DBContext.getInstance();
+  const timings = {};
+
+  // 0. Setup Curriculum dependency (Branch, CourseType, etc.)
+  console.log("--- Step 0: Bootstrapping Mock Curriculum ---");
+  const setupStart = new Date().getTime();
+  const mockIds = TestMockData.setupCurriculum(db);
+  const setupEnd = new Date().getTime();
+  const segmentId = mockIds.courseTypeId; // "SEG-TEST-1"
+  timings["Step 0: Bootstrapping Mock Curriculum"] = setupEnd - setupStart;
+  console.log(`   ✅ Curriculum setup complete. CourseType ID: ${segmentId} (took ${setupEnd - setupStart}ms)`);
+
+  try {
+    // 1. Setup Benchmark Data (Insert 100 Courses)
+    console.log("\n--- Scenario 1: Setup 100 Course Records ---");
+    const coursesToInsert = [];
+    for (let i = 1; i <= 100; i++) {
+      coursesToInsert.push({
+        segment_id: segmentId,
+        entity_type: "course",
+        name: "Benchmark Course " + i,
+        language_medium: "English",
+        base_fee: 1000 + i,
+        status: "active"
+      });
+    }
+
+    console.log("Inserting 100 courses in batch using insertMany...");
+    const insertStart = new Date().getTime();
+    const insertedCourses = db.Course.insertMany(coursesToInsert);
+    const insertEnd = new Date().getTime();
+    timings["Scenario 1: Setup 100 Course Records (insertMany)"] = insertEnd - insertStart;
+    console.log(`✅ Success: 100 courses inserted in ${insertEnd - insertStart}ms.`);
+
+    const courseIds = insertedCourses.map(c => c.course_id);
+
+    // 2. Run Batch Update Benchmark (updateMany)
+    console.log("\n--- Scenario 2: Batch Update 100 Records (updateMany) ---");
+    const updatesMap = {};
+    courseIds.forEach(id => {
+      updatesMap[id] = { status: "inactive" };
+    });
+
+    console.log("Dispatching updateMany to update status to 'inactive' for all 100 courses...");
+    const updateStart = new Date().getTime();
+    const updatedModels = db.Course.updateMany(updatesMap);
+    const updateEnd = new Date().getTime();
+    const elapsed = updateEnd - updateStart;
+    timings["Scenario 2: Batch Update 100 Records (updateMany)"] = elapsed;
+    console.log(`⏱️ BENCHMARK COMPLETE: Batch update on 100 records took ${elapsed}ms.`);
+
+    // 3. Verification of values
+    console.log("\n--- Scenario 3: Verifying Updated Values ---");
+    const verifyStart = new Date().getTime();
+    if (updatedModels.length !== 100) {
+      throw new Error(`Verification Failed: Expected 100 updated models returned, got ${updatedModels.length}`);
+    }
+
+    const allCourses = db.Course.all();
+    const benchmarkCourses = allCourses.filter(c => courseIds.includes(c.course_id));
+    const inactiveCount = benchmarkCourses.filter(c => c.status === "inactive").length;
+    if (inactiveCount !== 100) {
+      throw new Error(`Verification Failed: Expected 100 records to be 'inactive', found ${inactiveCount}`);
+    }
+    const verifyEnd = new Date().getTime();
+    timings["Scenario 3: Verifying Updated Values"] = verifyEnd - verifyStart;
+    console.log(`✅ Verified: All 100 course statuses successfully updated to 'inactive' (took ${verifyEnd - verifyStart}ms).`);
+
+    // 4. Primary Key Protection Test
+    console.log("\n--- Scenario 4: Verify Primary Key Protection ---");
+    const testId = courseIds[0];
+    const pkUpdates = {};
+    pkUpdates[testId] = {
+      course_id: "CRS-MUTATED-ID", // Attempt to change PK
+      name: "Protected Name"
+    };
+    
+    const pkStart = new Date().getTime();
+    db.Course.updateMany(pkUpdates);
+    
+    const courseOne = db.Course.findById(testId);
+    if (!courseOne) {
+      throw new Error(`Verification Failed: Primary key ${testId} not found.`);
+    }
+    if (courseOne.name !== "Protected Name") {
+      throw new Error("Verification Failed: Valid column updates should still apply.");
+    }
+    const pkEnd = new Date().getTime();
+    timings["Scenario 4: Verify Primary Key Protection"] = pkEnd - pkStart;
+    console.log(`✅ Verified: Attempts to mutate primary key field were safely ignored (took ${pkEnd - pkStart}ms).`);
+
+    // 5. Cleanup
+    console.log("\n--- Scenario 5: Cleanup Test Data ---");
+    const deleteStart = new Date().getTime();
+    const deletedCount = db.Course.deleteMany(courseIds);
+    const deleteEnd = new Date().getTime();
+    timings["Scenario 5: Cleanup Test Data (deleteMany)"] = deleteEnd - deleteStart;
+    console.log(`✅ Success: Cleaned up ${deletedCount} records in ${deleteEnd - deleteStart}ms.`);
+
+    console.log("\n🎉 ALL BATCH UPDATE TEST SCENARIOS PASSED SUCCESSFULLY!");
+
+    // Print Timing Summary Table at the end
+    console.log("\n========================================================");
+    console.log("⏱️  BATCH UPDATE BENCHMARK PERFORMANCE TIMING SUMMARY  ⏱️");
+    console.log("========================================================");
+    let grandTotal = 0;
+    Object.keys(timings).forEach(op => {
+      const ms = timings[op];
+      grandTotal += ms;
+      console.log(`- ${op.padEnd(50)}: ${String(ms).padStart(6)} ms`);
+    });
+    console.log("--------------------------------------------------------");
+    console.log(`- ${"Total Execution Time".padEnd(50)}: ${String(grandTotal).padStart(6)} ms`);
+    console.log("========================================================\n");
+
+  } catch (e) {
+    console.error("\n❌ BATCH UPDATE TEST FAILED: " + e.message);
+    if (e.stack) {
+      console.error(e.stack);
+    }
+  }
+}
+

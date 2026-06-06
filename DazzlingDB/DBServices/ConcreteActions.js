@@ -683,3 +683,177 @@ class DeleteRecordAction extends BaseAction {
     };
   }
 }
+
+class DeleteManyRecordsAction extends BaseAction {
+  constructor(options) {
+    super(options);
+    this._actionName = "data_delete_many";
+  }
+
+  _validate() {
+    this._requireParam("payload");
+    const payload = this._params.payload;
+    if (!payload.table) {
+      throw new ActionValidationError("Payload must contain 'table' property.");
+    }
+    if (!payload.ids || !Array.isArray(payload.ids)) {
+      throw new ActionValidationError("Payload must contain 'ids' array parameter.");
+    }
+    if (payload.ids.length === 0) {
+      throw new ActionValidationError("Payload 'ids' array must contain at least one ID.");
+    }
+    const maxLimit = typeof MAX_DELETE_BATCH_SIZE !== 'undefined' ? MAX_DELETE_BATCH_SIZE : 200;
+    if (payload.ids.length > maxLimit) {
+      throw new ActionValidationError(`Payload 'ids' array size (${payload.ids.length}) exceeds the maximum limit of ${maxLimit}.`);
+    }
+    if (!GLOBAL_CRUD_WHITELIST.has(payload.table)) {
+      throw new ActionValidationError(`Table '${payload.table}' is not eligible for generic CRUD operations. Please use specialized endpoints.`);
+    }
+  }
+
+  _authorize() {
+    const tableName = this._params.payload.table;
+    if (!AuthBridge.checkAccess(this._user, tableName)) {
+      throw new ActionAuthorizationError(`Access denied: You are not authorized to delete records from '${tableName}'.`);
+    }
+  }
+
+  _execute() {
+    const { table, ids } = this._params.payload;
+    // Default dryRun to true unless explicitly set to false
+    const dryRun = this._params.payload.dryRun !== false;
+
+    console.log(`[DeleteManyRecordsAction] Resolving dependencies for table: ${table}. Dry-run: ${dryRun}`);
+    const dependencies = this._getDependentTables(table);
+    console.log(`[DeleteManyRecordsAction] Found ${dependencies.length} dependent relations: ${JSON.stringify(dependencies)}`);
+
+    // 1. Build foreign key Sets for each dependency
+    const dependencySets = dependencies.map(dep => {
+      let depRows = [];
+      try {
+        if (this._db[dep.table]) {
+          depRows = this._db[dep.table].all();
+        }
+      } catch (e) {
+        console.warn(`[DeleteManyRecordsAction] Could not load dependent table '${dep.table}': ${e.message}`);
+      }
+      
+      const set = new Set();
+      depRows.forEach(row => {
+        if (row[dep.fk] !== undefined && row[dep.fk] !== null) {
+          set.add(String(row[dep.fk]).trim());
+        }
+      });
+      return { table: dep.table, fk: dep.fk, set };
+    });
+
+    // 2. Fetch target table primary keys
+    const targetGateway = this._db[table].gateway;
+    const targetPk = targetGateway.primaryKey;
+    const allTargetRows = this._db[table].all();
+    const targetIdsSet = new Set(allTargetRows.map(row => String(row[targetPk] || "").trim()));
+
+    // 3. Evaluate each ID
+    const safeToQuery = [];
+    const skipped = [];
+    const failed = {};
+
+    ids.forEach(rawId => {
+      const id = String(rawId).trim();
+      
+      // Check existence
+      if (!targetIdsSet.has(id)) {
+        skipped.push(id);
+        return;
+      }
+
+      // Check relation constraint
+      let violationMsg = null;
+      for (let i = 0; i < dependencySets.length; i++) {
+        const dep = dependencySets[i];
+        if (dep.set.has(id)) {
+          violationMsg = `Blocked: Active reference found in dependent table '${dep.table}' (column '${dep.fk}').`;
+          break;
+        }
+      }
+
+      if (violationMsg) {
+        failed[id] = violationMsg;
+        console.warn(`[DeleteManyRecordsAction] Deletion blocked for ID '${id}': ${violationMsg}`);
+      } else {
+        safeToQuery.push(id);
+      }
+    });
+
+    let deletedCount = 0;
+    if (!dryRun && safeToQuery.length > 0) {
+      console.log(`[DeleteManyRecordsAction] Performing physical deletion of ${safeToQuery.length} records in table '${table}'`);
+      deletedCount = this._db[table].deleteMany(safeToQuery);
+    } else if (dryRun) {
+      console.log(`[DeleteManyRecordsAction] [DRY RUN] Would have deleted ${safeToQuery.length} records in table '${table}': ${JSON.stringify(safeToQuery)}`);
+    }
+
+    return {
+      success: true,
+      dryRun: dryRun,
+      deletedCount: deletedCount,
+      manifest: {
+        deleted: safeToQuery,
+        skipped: skipped,
+        failed: failed
+      }
+    };
+  }
+
+  /**
+   * Identifies all downstream referencing tables and their foreign keys.
+   * @private
+   */
+  _getDependentTables(targetTable) {
+    const dependencies = [];
+    const schema = DATABASE_SCHEMA;
+    
+    // Find the target table's category & definition
+    let targetTableDef = null;
+    for (const cat in schema.categories) {
+      if (schema.categories[cat].tables[targetTable]) {
+        targetTableDef = schema.categories[cat].tables[targetTable];
+        break;
+      }
+    }
+    
+    if (!targetTableDef) return dependencies;
+    
+    // 1. Scan target table's own hasMany/hasOne relations
+    if (targetTableDef.relations) {
+      Object.keys(targetTableDef.relations).forEach(relKey => {
+        const rel = targetTableDef.relations[relKey];
+        if (rel.type === "hasMany" || rel.type === "hasOne") {
+          dependencies.push({ table: rel.target, fk: rel.foreignKey });
+        }
+      });
+    }
+    
+    // 2. Scan all other tables in the schema for belongsTo pointing to targetTable
+    for (const cat in schema.categories) {
+      const tables = schema.categories[cat].tables;
+      for (const tableName in tables) {
+        if (tableName === targetTable) continue;
+        const tDef = tables[tableName];
+        if (tDef.relations) {
+          Object.keys(tDef.relations).forEach(relKey => {
+            const rel = tDef.relations[relKey];
+            if (rel.type === "belongsTo" && rel.target === targetTable) {
+              // Avoid duplicates
+              if (!dependencies.some(d => d.table === tableName && d.fk === rel.foreignKey)) {
+                dependencies.push({ table: tableName, fk: rel.foreignKey });
+              }
+            }
+          });
+        }
+      }
+    }
+    
+    return dependencies;
+  }
+}

@@ -70,6 +70,9 @@ const SECURITY_LOCKOUT_ATTEMPTS = 5;
 const SECURITY_LOCKOUT_DURATION_MINS = 15;
 const SESSION_TTL_HOURS = 24;
 
+// Bulk Deletion Configuration Settings
+const MAX_DELETE_BATCH_SIZE = 200;
+
 // NOTE: The relational DATABASE_SCHEMA is automatically loaded in the global
 // namespace from 'Config/database_schema.js'.
 

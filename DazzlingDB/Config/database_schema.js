@@ -331,6 +331,31 @@ const DATABASE_SCHEMA = {
               "type": "belongsTo",
               "target": "CourseType",
               "foreignKey": "segment_id"
+            },
+            "batches": {
+              "type": "hasMany",
+              "target": "Batch",
+              "foreignKey": "course_id"
+            },
+            "batchallocations": {
+              "type": "hasMany",
+              "target": "BatchAllocation",
+              "foreignKey": "course_id"
+            },
+            "teachersubjects": {
+              "type": "hasMany",
+              "target": "TeacherSubject",
+              "foreignKey": "subject_id"
+            },
+            "enrollments": {
+              "type": "hasMany",
+              "target": "Enrollment",
+              "foreignKey": "item_id"
+            },
+            "packageitems": {
+              "type": "hasMany",
+              "target": "PackageItem",
+              "foreignKey": "entity_id"
             }
           }
         },
