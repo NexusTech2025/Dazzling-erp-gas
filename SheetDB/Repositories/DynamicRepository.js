@@ -8,6 +8,33 @@
  * - Provide a consistent, high-level CRUD interface.
  */
 
+const DELETE_STRATEGIES = {
+  protect: (targetRepo, dep, id, entityName) => {
+    const count = targetRepo.count({ [dep.fk]: id });
+    if (count > 0) {
+      throw new IntegrityError(`Delete Protected: Cannot delete from '${entityName}' because active records in '${dep.table}' refer to it (FK: '${dep.fk}').`);
+    }
+  },
+  cascade: (targetRepo, dep, id) => {
+    const childRecords = targetRepo.where({ [dep.fk]: id });
+    if (childRecords.length > 0) {
+      const childIds = childRecords.map(r => r[targetRepo.gateway.primaryKey]);
+      targetRepo.deleteMany(childIds);
+    }
+  },
+  set_null: (targetRepo, dep, id) => {
+    const childRecords = targetRepo.where({ [dep.fk]: id });
+    if (childRecords.length > 0) {
+      const updates = {};
+      childRecords.forEach(r => {
+        const childId = r[targetRepo.gateway.primaryKey];
+        updates[childId] = { [dep.fk]: null };
+      });
+      targetRepo.updateMany(updates);
+    }
+  }
+};
+
 class DynamicRepository {
   /**
    * @param {string} entityName - The name of the entity/table.
@@ -266,11 +293,45 @@ class DynamicRepository {
   }
 
   /**
+   * Enforces relational database constraints (protect, cascade, set_null) on deletion.
+   * Uses a strategy registry mapping to resolve constraint actions.
+   * @param {any} id - The primary key value of the record being deleted.
+   */
+  enforceDeleteConstraints(id) {
+    let graph = null;
+    if (this.resolver && this.resolver.db && this.resolver.db._config && this.resolver.db._config.dependencyGraph) {
+      graph = this.resolver.db._config.dependencyGraph;
+      console.log("[DynamicRepository] Using configured dependency graph for deletion constraints.");
+    } else if (typeof DEPENDENCY_GRAPH !== 'undefined') {
+      graph = DEPENDENCY_GRAPH;
+    }
+
+    if (!graph) {
+      throw new DependencyGraphError("Dependency graph is not defined. DependencyGraph is required for constraint enforcement.");
+    }
+
+    const dependents = graph[this.entityName] || [];
+    for (const dep of dependents) {
+      const targetRepo = this.resolver.db[dep.table];
+      if (!targetRepo) continue;
+
+      const policy = dep.onDelete || 'protect';
+      const strategy = DELETE_STRATEGIES[policy];
+      if (strategy) {
+        strategy(targetRepo, dep, id, this.entityName);
+      } else {
+        DELETE_STRATEGIES.protect(targetRepo, dep, id, this.entityName);
+      }
+    }
+  }
+
+  /**
    * Deletes a record by its primary key.
    * @param {any} id
    * @returns {boolean} Success status.
    */
   remove(id) {
+    this.enforceDeleteConstraints(id);
     return this.gateway.remove(id);
   }
 
@@ -280,6 +341,9 @@ class DynamicRepository {
    * @returns {number} Count of successfully deleted records.
    */
   deleteMany(ids) {
+    if (ids && Array.isArray(ids)) {
+      ids.forEach(id => this.enforceDeleteConstraints(id));
+    }
     return this.gateway.deleteMany(ids);
   }
 

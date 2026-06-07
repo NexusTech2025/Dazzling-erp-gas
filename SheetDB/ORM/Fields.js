@@ -287,6 +287,78 @@ class AutoField extends BaseField {
   }
 }
 
+/**
+ * Alphanumeric Field representing a reference (Foreign Key) to another table.
+ */
+class ForeignKeyField extends CharField {
+  constructor(options = {}) {
+    super(options);
+    this.target = options.target || null;
+    this.onDelete = options.onDelete || "protect";
+    this.typeField = options.typeField || null;
+    this.mapping = options.mapping || null;
+  }
+
+  /** @override */
+  validate(value, context = {}) {
+    // 1. Run standard CharField validation (presence, length)
+    const errors = super.validate(value);
+    if (errors.length > 0) return errors;
+
+    // Early exit if value is empty/null (CharField's required check handled this if mandated)
+    if (value === null || value === undefined || value === "") {
+      return [];
+    }
+
+    // 2. Perform relational validation if db context is present
+    const { db, model } = context;
+    if (!db || !db._pkCache) {
+      return []; // Skip if no DB context is provided (e.g. offline testing)
+    }
+
+    // Determine the target table. If polymorphic, read target table name from the model's typeField.
+    let targetTable = this.target;
+    if (targetTable === "polymorphic" && this.typeField && model) {
+      const typeCode = model[this.typeField];
+      if (this.mapping && this.mapping[typeCode]) {
+        targetTable = this.mapping[typeCode];
+      } else if (typeof PolymorphicRegistry !== 'undefined' && PolymorphicRegistry.has(typeCode)) {
+        targetTable = PolymorphicRegistry.resolve(typeCode);
+      } else {
+        targetTable = typeCode;
+      }
+    }
+
+    if (!targetTable || targetTable === "polymorphic") {
+      return []; // Can't resolve target table dynamically if missing typeField
+    }
+
+    const validPks = db._pkCache.get(targetTable);
+    if (!validPks) {
+      errors.push(new FieldError(
+        this.name,
+        `Foreign Key Target Error: Target table '${targetTable}' is not registered in the database.`,
+        value
+      ));
+      return errors;
+    }
+
+    const original = String(value).trim();
+    const upper = original.toUpperCase();
+    const lower = original.toLowerCase();
+
+    if (!validPks.has(original) && !validPks.has(upper) && !validPks.has(lower)) {
+      errors.push(new FieldError(
+        this.name,
+        `Foreign Key Mismatch: ID '${value}' not found in parent table '${targetTable}'.`,
+        value
+      ));
+    }
+
+    return errors;
+  }
+}
+
 // Export to Global Namespace
 globalThis.BaseField = BaseField;
 globalThis.CharField = CharField;
@@ -296,3 +368,4 @@ globalThis.BooleanField = BooleanField;
 globalThis.JSONField = JSONField;
 globalThis.DateTimeField = DateTimeField;
 globalThis.AutoField = AutoField;
+globalThis.ForeignKeyField = ForeignKeyField;

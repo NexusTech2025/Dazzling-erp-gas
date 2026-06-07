@@ -140,6 +140,16 @@ class RelationValidationError extends RelationError {
   }
 }
 
+/**
+ * Thrown when a system level/critical database error occurs.
+ */
+class SystemError extends SheetDBError {}
+
+/**
+ * Thrown when the required dependency graph is missing or invalid.
+ */
+class DependencyGraphError extends SystemError {}
+
 // Export to Global Namespace for Library usage
 globalThis.SheetDBError = SheetDBError;
 globalThis.SpreadsheetNotFoundError = SpreadsheetNotFoundError;
@@ -159,3 +169,5 @@ globalThis.RelationError = RelationError;
 globalThis.RelationResolutionError = RelationResolutionError;
 globalThis.RelationValidationError = RelationValidationError;
 globalThis.BatchDeleteError = BatchDeleteError;
+globalThis.SystemError = SystemError;
+globalThis.DependencyGraphError = DependencyGraphError;

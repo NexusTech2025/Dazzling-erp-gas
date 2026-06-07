@@ -104,6 +104,7 @@ Object.assign(globalThis, {
   ValidationRegistry: globalThis.ValidationRegistry,
   PolymorphicRegistry: globalThis.PolymorphicRegistry,
   PrimaryKeyCache: globalThis.PrimaryKeyCache,
+  ForeignKeyField: globalThis.ForeignKeyField,
   isDate: globalThis.isDate,
   
   // Relations OOP Classes
@@ -116,6 +117,8 @@ Object.assign(globalThis, {
   
   diagnoseTable: globalThis.diagnoseTable,
   SheetDBError: globalThis.SheetDBError,
+  SystemError: globalThis.SystemError,
+  DependencyGraphError: globalThis.DependencyGraphError,
   SpreadsheetNotFoundError: globalThis.SpreadsheetNotFoundError,
   TableNotFoundError: globalThis.TableNotFoundError,
   EntityNotFoundError: globalThis.EntityNotFoundError,
@@ -133,6 +136,15 @@ Object.assign(globalThis, {
   ValidatorExecutionError: globalThis.ValidatorExecutionError,
   RelationError: globalThis.RelationError,
   RelationResolutionError: globalThis.RelationResolutionError,
-  RelationValidationError: globalThis.RelationValidationError
+  RelationValidationError: globalThis.RelationValidationError,
+  BatchDeleteError: globalThis.BatchDeleteError,
+  
+  Graph: (globalThis.Graph = {
+    GraphNode: globalThis.GraphNode,
+    GraphEdge: globalThis.GraphEdge,
+    DynamicGraph: globalThis.DynamicGraph,
+    DynamicGraphBuilder: globalThis.DynamicGraphBuilder,
+    DeletionValidationRegistry: globalThis.DeletionValidationRegistry
+  })
 });
 

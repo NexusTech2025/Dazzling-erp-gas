@@ -120,13 +120,7 @@ class BaseModel {
     }
 
     try {
-      this.validate(); // Tier 1, 2, 4 Validation
-      
-      const relErrors = this._validateRelational(); // Tier 3 Relational validation
-      if (relErrors.length > 0) {
-        const messages = relErrors.map(err => err.message).join("; ");
-        throw new ValidationError(`Relational validation failed for ${this.constructor.name}: ${messages}`, { errors: relErrors });
-      }
+      this.validate(); // Tier 1, 2, 3, 4 Validation (includes referential checks in ForeignKeyField)
 
       // Block manual overrides on AutoFields when inserting new records
       const schema = this.constructor.schema;
@@ -225,8 +219,13 @@ class BaseModel {
     if (!schema) return true;
 
     const errors = [];
+    const context = {
+      db: this._gateway ? this._gateway.db : null,
+      model: this
+    };
+
     Object.keys(schema).forEach(fieldName => {
-      const fieldFailures = schema[fieldName].validate(this[fieldName]);
+      const fieldFailures = schema[fieldName].validate(this[fieldName], context);
       if (fieldFailures && fieldFailures.length > 0) {
         errors.push(...fieldFailures);
       }
@@ -243,6 +242,7 @@ class BaseModel {
   /**
    * Performs relational integrity and constraints checks using PK cache.
    * @private
+   * @deprecated Relocated directly into ForeignKeyField.validate().
    * @returns {FieldError[]} List of relational constraint violations.
    */
   _validateRelational() {

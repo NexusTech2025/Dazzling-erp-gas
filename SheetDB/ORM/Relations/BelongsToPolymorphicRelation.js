@@ -23,10 +23,15 @@ class BelongsToPolymorphicRelation extends BaseRelation {
 
     let targetTable;
     try {
-      if (typeof PolymorphicRegistry === 'undefined') {
-        throw new Error("PolymorphicRegistry is not globally available.");
+      const mapping = this.definition.mapping;
+      if (mapping && mapping[typeValue]) {
+        targetTable = mapping[typeValue];
+      } else {
+        if (typeof PolymorphicRegistry === 'undefined') {
+          throw new Error("PolymorphicRegistry is not globally available.");
+        }
+        targetTable = PolymorphicRegistry.resolve(typeValue);
       }
-      targetTable = PolymorphicRegistry.resolve(typeValue);
     } catch (err) {
       throw new RelationResolutionError(
         this.name, 
@@ -74,10 +79,16 @@ class BelongsToPolymorphicRelation extends BaseRelation {
     }
 
     try {
-      if (typeof PolymorphicRegistry === 'undefined') {
-        throw new Error("PolymorphicRegistry is not globally available.");
+      const mapping = this.definition.mapping;
+      let targetTable;
+      if (mapping && mapping[typeValue]) {
+        targetTable = mapping[typeValue];
+      } else {
+        if (typeof PolymorphicRegistry === 'undefined') {
+          throw new Error("PolymorphicRegistry is not globally available.");
+        }
+        targetTable = PolymorphicRegistry.resolve(typeValue);
       }
-      const targetTable = PolymorphicRegistry.resolve(typeValue);
       const validPks = pkCache.get(targetTable);
       const coercedFk = this.normalizeKey(fkValue);
 

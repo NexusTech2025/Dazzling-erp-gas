@@ -40,6 +40,8 @@ const FieldMapper = (function() {
    */
   function _switchField(type, options) {
     switch (type) {
+      case "foreign_key":
+        return new ForeignKeyField(options);
       case "string":
         return new CharField(options);
       case "number":

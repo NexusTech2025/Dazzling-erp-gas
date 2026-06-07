@@ -55,7 +55,31 @@ const ModelRegistry = (function() {
     const pk = tableMeta.primaryKey;
     
     for (const [colName, colMeta] of Object.entries(tableMeta.columns)) {
-      fields[colName] = FieldMapper.mapToField(colName, colMeta, colName === pk);
+      let enrichedMeta = { ...colMeta };
+      
+      // If it is a foreign key, enrich metadata from relations block
+      if (colMeta.type === "foreign_key" && tableMeta.relations) {
+        // 1. Search for a standard belongsTo relation using this FK
+        const matchingRelation = Object.values(tableMeta.relations).find(
+          rel => rel.type === "belongsTo" && rel.foreignKey === colName
+        );
+        if (matchingRelation) {
+          enrichedMeta.target = matchingRelation.target;
+          enrichedMeta.onDelete = matchingRelation.onDelete || "protect";
+        }
+
+        // 2. Search for a polymorphic belongsToPolymorphic relation using this FK (idField)
+        const matchingPolymorphic = Object.values(tableMeta.relations).find(
+          rel => rel.type === "belongsToPolymorphic" && rel.idField === colName
+        );
+        if (matchingPolymorphic) {
+          enrichedMeta.target = "polymorphic";
+          enrichedMeta.typeField = matchingPolymorphic.typeField;
+          enrichedMeta.mapping = matchingPolymorphic.mapping || null;
+        }
+      }
+      
+      fields[colName] = FieldMapper.mapToField(colName, enrichedMeta, colName === pk);
     }
     return fields;
   }
