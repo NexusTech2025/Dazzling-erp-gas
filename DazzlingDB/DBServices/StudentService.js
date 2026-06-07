@@ -161,7 +161,7 @@ const StudentService = {
           });
         }
 
-        const feePlanId = payload.feeAccount.fee_plan_id || defaultPlanId;
+        const feePlanId = (payload.feeAccount && payload.feeAccount.fee_plan_id) || defaultPlanId;
 
         // Insert BatchAllocation row(s) for course seats
         if (isPackage) {

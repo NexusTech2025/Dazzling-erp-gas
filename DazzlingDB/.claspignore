@@ -14,3 +14,14 @@ dazzling_db.diff
 # Ignore database template files
 **/database_template/**
 database_template/**
+
+# Ignore the entire apitest directory
+apitest/**
+
+# Ignore all files in the Test folder by default
+Test/*
+
+# BUT explicitly allow our focused test suites
+!Test/StaticGraphTestSuite.js
+!Test/GraphBuilderTestSuite.js
+!Test/TestMockData.js

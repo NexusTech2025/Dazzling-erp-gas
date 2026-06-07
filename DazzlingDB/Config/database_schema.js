@@ -2175,7 +2175,8 @@ const DATABASE_SCHEMA = {
             "student_id": {
               "type": "foreign_key",
               "maxLength": 255,
-              "onDelete": "cascade"
+              "onDelete": "cascade",
+              "unique": true
             },
             "line1": {
               "type": "string",
@@ -2260,7 +2261,8 @@ const DATABASE_SCHEMA = {
             "student_id": {
               "type": "foreign_key",
               "maxLength": 255,
-              "onDelete": "cascade"
+              "onDelete": "cascade",
+              "unique": true
             },
             "address_id": {
               "type": "foreign_key",

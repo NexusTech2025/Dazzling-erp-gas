@@ -74,6 +74,8 @@ You must follow this sequence for every task:
 * Write modular, testable code
 * Avoid over-engineering
 * Add minimal, meaningful comments only when necessary
+* **Declarative Strategy Pattern / Mapping Registry:** Avoid nested `if-else` or complex `switch` statements for type-based or policy-based conditional execution logic. Instead, map decoupled execution strategies inside a centralized registry object to support extensibility and maintainability. This design must be applied to all future multi-branch logical evaluation systems, validation checks, and rule processors that may expand.
+* **Custom Error Handling & Referential Integrity:** Define and raise domain-specific custom exception classes derived from structured base error classes (e.g., using `IntegrityError` as the base error class that must be raised when a protected field deletion is blocked, or `ValidationError` for schema compliance failures) instead of throwing generic `Error` instances. This ensures clear categorizations of database constraints, standardizes exception tracking, and simplifies boundary error-handling logic.
 
 ---
 
