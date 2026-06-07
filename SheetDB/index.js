@@ -140,6 +140,10 @@ Object.assign(globalThis, {
   BatchDeleteError: globalThis.BatchDeleteError,
   
   Graph: (globalThis.Graph = {
+    StaticNode: globalThis.StaticNode,
+    StaticEdge: globalThis.StaticEdge,
+    StaticGraph: globalThis.StaticGraph,
+    StaticGraphBuilder: globalThis.StaticGraphBuilder,
     GraphNode: globalThis.GraphNode,
     GraphEdge: globalThis.GraphEdge,
     DynamicGraph: globalThis.DynamicGraph,
