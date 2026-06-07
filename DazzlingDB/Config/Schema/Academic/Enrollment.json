@@ -2,9 +2,10 @@
   "primaryKey": "enrollment_id",
   "columns": {
     "student_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "cascade"
     },
     "enrollment_type": {
       "type": "string",
@@ -17,9 +18,10 @@
       "maxLength": 255
     },
     "item_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "roll_number": {
       "type": "number",
@@ -66,16 +68,27 @@
     "student": {
       "type": "belongsTo",
       "target": "Student",
-      "foreignKey": "student_id"
+      "foreignKey": "student_id",
+      "onDelete": "cascade"
     },
     "item": {
       "type": "belongsToPolymorphic",
       "typeField": "enrollment_type",
-      "idField": "item_id"
+      "idField": "item_id",
+      "mapping": {
+        "course": "Course",
+        "package": "Package",
+        "subject": "Course"
+      }
     },
     "allocations": {
       "type": "hasMany",
       "target": "BatchAllocation",
+      "foreignKey": "enrollment_id"
+    },
+    "studentfeeaccounts": {
+      "type": "hasMany",
+      "target": "StudentFeeAccount",
       "foreignKey": "enrollment_id"
     }
   }

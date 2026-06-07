@@ -2,8 +2,9 @@
   "primaryKey": "address_id",
   "columns": {
     "student_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "cascade"
     },
     "line1": {
       "type": "string",
@@ -44,9 +45,15 @@
   },
   "relations": {
     "student": {
-      "type": "hasOne",
+      "type": "belongsTo",
       "target": "Student",
-      "foreignKey": "student_id"
+      "foreignKey": "student_id",
+      "onDelete": "cascade"
+    },
+    "contactinfos": {
+      "type": "hasMany",
+      "target": "ContactInfo",
+      "foreignKey": "address_id"
     }
   }
 }

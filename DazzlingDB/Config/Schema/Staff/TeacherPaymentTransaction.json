@@ -2,13 +2,15 @@
   "primaryKey": "transaction_id",
   "columns": {
     "teacher_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "salary_config_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "payment_type": {
       "type": "string",

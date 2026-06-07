@@ -2,9 +2,10 @@
   "primaryKey": "item_id",
   "columns": {
     "package_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "entity_type": {
       "type": "string",
@@ -15,9 +16,10 @@
       "maxLength": 255
     },
     "entity_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "item_id": {
       "type": "auto",
@@ -36,7 +38,11 @@
     "entity": {
       "type": "belongsToPolymorphic",
       "typeField": "entity_type",
-      "idField": "entity_id"
+      "idField": "entity_id",
+      "mapping": {
+        "course": "Course",
+        "subject": "Course"
+      }
     }
   }
 }

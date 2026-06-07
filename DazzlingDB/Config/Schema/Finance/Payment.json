@@ -2,12 +2,14 @@
   "primaryKey": "payment_id",
   "columns": {
     "installment_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "student_fee_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "amount_paid": {
       "type": "number",
@@ -60,12 +62,14 @@
     "installment": {
       "type": "belongsTo",
       "target": "Installment",
-      "foreignKey": "installment_id"
+      "foreignKey": "installment_id",
+      "onDelete": "protect"
     },
     "studentfeeaccount": {
       "type": "belongsTo",
       "target": "StudentFeeAccount",
-      "foreignKey": "student_fee_id"
+      "foreignKey": "student_fee_id",
+      "onDelete": "protect"
     }
   }
 }

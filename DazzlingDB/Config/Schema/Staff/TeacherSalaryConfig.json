@@ -2,9 +2,10 @@
   "primaryKey": "salary_config_id",
   "columns": {
     "teacher_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "salary_type": {
       "type": "string",
@@ -36,6 +37,11 @@
       "type": "belongsTo",
       "target": "Teacher",
       "foreignKey": "teacher_id"
+    },
+    "teacherpaymenttransactions": {
+      "type": "hasMany",
+      "target": "TeacherPaymentTransaction",
+      "foreignKey": "salary_config_id"
     }
   }
 }

@@ -2,24 +2,28 @@
   "primaryKey": "allocation_id",
   "columns": {
     "student_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "cascade"
     },
     "enrollment_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "course_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "batch_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": false,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "status": {
       "type": "string",
@@ -58,7 +62,8 @@
     "student": {
       "type": "belongsTo",
       "target": "Student",
-      "foreignKey": "student_id"
+      "foreignKey": "student_id",
+      "onDelete": "cascade"
     },
     "enrollment": {
       "type": "belongsTo",

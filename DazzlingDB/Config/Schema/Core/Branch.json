@@ -27,5 +27,16 @@
       "required": false
     }
   },
-  "relations": {}
+  "relations": {
+    "batches": {
+      "type": "hasMany",
+      "target": "Batch",
+      "foreignKey": "branch_id"
+    },
+    "teachers": {
+      "type": "hasMany",
+      "target": "Teacher",
+      "foreignKey": "branch_id"
+    }
+  }
 }

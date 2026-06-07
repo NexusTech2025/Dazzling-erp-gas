@@ -2,8 +2,9 @@
   "primaryKey": "education_id",
   "columns": {
     "student_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "cascade"
     },
     "highest_qualification": {
       "type": "string",
@@ -32,7 +33,8 @@
     "student": {
       "type": "belongsTo",
       "target": "Student",
-      "foreignKey": "student_id"
+      "foreignKey": "student_id",
+      "onDelete": "cascade"
     }
   }
 }

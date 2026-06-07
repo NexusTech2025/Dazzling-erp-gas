@@ -16,9 +16,10 @@
       "maxLength": 255
     },
     "batch_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "referral_id": {
       "type": "string",

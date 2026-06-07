@@ -52,11 +52,14 @@ Every request MUST include an `action` and a `payload`. For protected routes, a 
 | `user_login` | `{ "payload": { "username": "...", "password": "..." } }` | Returns a session `token`. |
 | `user_register` | `{ "payload": { "username": "...", "password": "...", "role": "..." } }` | Creates a new system user. |
 | `user_logout` | `{ "payload": { "token": "..." } }` | Invalidates the current session. |
+| `auth_delete_many_users` | `{ "payload": { "ids": ["USR1", "USR2"], "dryRun": true/false } }` | **Bulk Delete Users:** Restricts deleting admin/self, cascade deletes sessions. |
+| `auth_delete_many_sessions` | `{ "payload": { "ids": ["SES1", "SES2"], "dryRun": true/false } }` | **Bulk Delete Sessions:** Deletes user active session tokens. |
 
 ### B. Student Management
 | Action Key | Payload Requirements | Description |
 | :--- | :--- | :--- |
 | `student_register` | `{ "payload": { "profile": {...}, "address": {...}, "contact": {...} } }` | **Relational Insert:** Creates student, address, and contact in one transaction. |
+| `student_delete_many_students` | `{ "payload": { "ids": ["STU1", "STU2"], "dryRun": true/false } }` | **Bulk Delete Students:** Restricts if active enrollments/fees exist, cascades to addresses/contacts/education. |
 
 ### C. Academic & Curriculum
 | Action Key | Payload Requirements | Description |
@@ -68,6 +71,8 @@ Every request MUST include an `action` and a `payload`. For protected routes, a 
 | `academic_update_package` | `{ "payload": { "package_id": "...", ... } }` | Transactional update of package details, perks, and courses. |
 | `academic_delete_package` | `{ "payload": { "package_id": "..." } }` | Deletes a package with RESTRICT validation and CASCADE cleanup. |
 | `academic_enroll_student` | `{ "payload": { "student_id": "...", "item_id": "...", "batch_id": "..." } }` | Enrolls a student in a batch. |
+| `academic_delete_many_enrollments` | `{ "payload": { "ids": ["ENR1", "ENR2"], "dryRun": true/false } }` | **Bulk Delete Enrollments:** Restricts if fee accounts have payments, cascades to batch allocations/fees/installments. |
+| `academic_delete_many_packages` | `{ "payload": { "ids": ["PKG1", "PKG2"], "dryRun": true/false } }` | **Bulk Delete Packages:** Restricts if student enrollment exists, cascades to perks/items. |
 
 ### D. Staff & HR
 | Action Key | Payload Requirements | Description |
@@ -79,6 +84,15 @@ Every request MUST include an `action` and a `payload`. For protected routes, a 
 | `staff_record_payment` | `{ "payload": { "teacher_id": "...", "amount": 5000, "payment_type": "salary" } }` | Log financial transactions for staff. |
 | `staff_set_salary_config` | `{ "payload": { "teacher_id": "...", "salary_type": "monthly", "base_amount": 20000 } }` | Define payroll rules. |
 | `staff_add_document` | `{ "payload": { "teacher_id": "...", "document": {...} } }` | Attach file links to staff. |
+| `staff_delete_many_teachers` | `{ "payload": { "ids": ["TCH1", "TCH2"], "dryRun": true/false } }` | **Bulk Delete Teachers:** Restricts if assigned to active batches or payroll transactions exist, cascades to subjects/docs/salary configs. |
+
+### E. Finance Management
+| Action Key | Payload Requirements | Description |
+| :--- | :--- | :--- |
+| `finance_delete_many_fee_accounts` | `{ "payload": { "ids": ["SFA1", "SFA2"], "dryRun": true/false } }` | **Bulk Delete Fee Accounts:** Restricts if payments exist (`amount_paid > 0`), cascades to installments/adjustments. |
+| `finance_delete_many_installments` | `{ "payload": { "ids": ["INS1", "INS2"], "dryRun": true/false } }` | **Bulk Delete Installments:** Restricts if paid/partially paid, cascades recalculation of parent fee account balances. |
+| `finance_delete_many_payments` | `{ "payload": { "ids": ["PAY1", "PAY2"], "dryRun": true/false } }` | **Bulk Delete Payments:** Reverts paid amounts from installment status/balances and parent fee account balances. |
+| `finance_delete_many_adjustments` | `{ "payload": { "ids": ["ADJ1", "ADJ2"], "dryRun": true/false } }` | **Bulk Delete Adjustments:** Reverts adjustment amounts and parent fee account balances. |
 
 ---
 
@@ -144,7 +158,7 @@ const login = async () => {
 
 ## 7. Batch REST API (CRUD Reference)
 
-The `Batch` table stores academic/course batch instances. Because it is in the `GLOBAL_CRUD_WHITELIST`, it can be manipulated using generic data actions (`data_create`, `data_query`, `data_update`, `data_delete`) as well as the specialized endpoint `academic_create_batch` for creation.
+The `Batch` table stores academic/course batch instances. Because it is in the `GLOBAL_CRUD_WHITELIST`, it can be manipulated using generic data actions (`data_create`, `data_query`, `data_update`, `data_delete`, `data_delete_many`) as well as the specialized endpoint `academic_create_batch` for creation.
 
 ### Batch Schema Reference
 
@@ -464,6 +478,69 @@ This endpoint permanently deletes a batch record from the database using its pri
   "data": {
     "message": "Successfully deleted record in table 'Batch' with ID 'BAT-E20D1E4B'.",
     "id": "BAT-E20D1E4B"
+  }
+}
+```
+
+---
+
+### E. Batch Delete Records (`data_delete_many`)
+
+This endpoint deletes multiple records in a single high-performance operation with integrated dependency resolution and dry-run safety.
+
+> [!IMPORTANT]
+> **Safeguard Whitelist Restriction:**
+> `data_delete_many` is a generic data API action and **only** operates on tables listed in the `GLOBAL_CRUD_WHITELIST` (e.g. `Branch`, `PromoCode`, `Course`, `Batch`, `BatchAllocation`, etc.).
+> 
+> Attempting to use `data_delete_many` on non-generic tables (such as `User`, `Student`, `Enrollment`, `Installment`, etc.) will fail with a `ValidationError`: `"Table '[table]' is not eligible for generic CRUD operations. Please use specialized endpoints."`
+>
+> For bulk deletes of non-generic tables, you MUST call their specialized bulk delete endpoints:
+> *   **`User`**: Use `auth_delete_many_users`
+> *   **`Session`**: Use `auth_delete_many_sessions`
+> *   **`Enrollment`**: Use `academic_delete_many_enrollments`
+> *   **`Package`**: Use `academic_delete_many_packages`
+> *   **`Student`**: Use `student_delete_many_students`
+> *   **`StudentFeeAccount`**: Use `finance_delete_many_fee_accounts`
+> *   **`Installment`**: Use `finance_delete_many_installments`
+> *   **`Payment`**: Use `finance_delete_many_payments`
+> *   **`FeeAdjustment`**: Use `finance_delete_many_adjustments`
+> *   **`Teacher`**: Use `staff_delete_many_teachers`
+
+**Key Points:**
+* **Safety Dry-Run:** By default, `dryRun` is `true`. The API checks referential constraints and reports exactly what would be deleted without executing the changes. Set `"dryRun": false` to perform physical deletes.
+* **RESTRICT Dependency Checks:** Automatically scans for references to the target records in downstream tables. If a referencing child record exists, the deletion for that specific ID is blocked.
+* **Batch Limits:** The number of IDs is capped (defaults to a maximum batch size of 200).
+* **Detailed Manifest:** Returns a manifest detailing which IDs were successfully deleted, skipped (non-existent), or failed (blocked by constraints with reasons).
+
+**Request Body:**
+```json
+{
+  "action": "data_delete_many",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "table": "Batch",
+    "ids": ["BAT-E20D1E4B", "BAT-NONEXISTENT", "BAT-BLOCKED"],
+    "dryRun": false
+  }
+}
+```
+
+**Response Body (Success):**
+```json
+{
+  "success": true,
+  "action": "data_delete_many",
+  "data": {
+    "success": true,
+    "dryRun": false,
+    "deletedCount": 1,
+    "manifest": {
+      "deleted": ["BAT-E20D1E4B"],
+      "skipped": ["BAT-NONEXISTENT"],
+      "failed": {
+        "BAT-BLOCKED": "Blocked: Active reference found in dependent table 'BatchAllocation' (column 'batch_id')."
+      }
+    }
   }
 }
 ```

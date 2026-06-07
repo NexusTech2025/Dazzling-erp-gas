@@ -2,8 +2,9 @@
   "primaryKey": "course_id",
   "columns": {
     "segment_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "entity_type": {
       "type": "string",

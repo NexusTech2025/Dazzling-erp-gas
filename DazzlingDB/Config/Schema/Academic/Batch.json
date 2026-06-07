@@ -2,16 +2,19 @@
   "primaryKey": "batch_id",
   "columns": {
     "course_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "teacher_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "branch_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "batch_name": {
       "type": "string",
@@ -79,6 +82,11 @@
     "allocations": {
       "type": "hasMany",
       "target": "BatchAllocation",
+      "foreignKey": "batch_id"
+    },
+    "studentleads": {
+      "type": "hasMany",
+      "target": "StudentLead",
       "foreignKey": "batch_id"
     }
   }

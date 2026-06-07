@@ -2,12 +2,14 @@
   "primaryKey": "student_fee_id",
   "columns": {
     "enrollment_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "cascade"
     },
     "fee_plan_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "total_fee": {
       "type": "number"
@@ -81,14 +83,30 @@
   },
   "relations": {
     "enrollment": {
-      "type": "hasOne",
+      "type": "belongsTo",
       "target": "Enrollment",
-      "foreignKey": "enrollment_id"
+      "foreignKey": "enrollment_id",
+      "onDelete": "cascade"
     },
     "feeplan": {
       "type": "belongsTo",
       "target": "FeePlan",
       "foreignKey": "fee_plan_id"
+    },
+    "feeadjustments": {
+      "type": "hasMany",
+      "target": "FeeAdjustment",
+      "foreignKey": "student_fee_id"
+    },
+    "installments": {
+      "type": "hasMany",
+      "target": "Installment",
+      "foreignKey": "student_fee_id"
+    },
+    "payments": {
+      "type": "hasMany",
+      "target": "Payment",
+      "foreignKey": "student_fee_id"
     }
   }
 }

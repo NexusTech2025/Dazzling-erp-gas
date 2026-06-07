@@ -2,12 +2,14 @@
   "primaryKey": "contact_id",
   "columns": {
     "student_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "cascade"
     },
     "address_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "cascade"
     },
     "email": {
       "type": "string",
@@ -39,14 +41,16 @@
   },
   "relations": {
     "student": {
-      "type": "hasOne",
+      "type": "belongsTo",
       "target": "Student",
-      "foreignKey": "student_id"
+      "foreignKey": "student_id",
+      "onDelete": "cascade"
     },
     "address": {
       "type": "belongsTo",
       "target": "Address",
-      "foreignKey": "address_id"
+      "foreignKey": "address_id",
+      "onDelete": "cascade"
     }
   }
 }

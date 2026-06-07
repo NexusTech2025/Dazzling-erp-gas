@@ -2,8 +2,9 @@
   "primaryKey": "adjustment_id",
   "columns": {
     "student_fee_id": {
-      "type": "string",
-      "maxLength": 255
+      "type": "foreign_key",
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "adjustment_type": {
       "type": "string",
@@ -39,7 +40,8 @@
     "studentfeeaccount": {
       "type": "belongsTo",
       "target": "StudentFeeAccount",
-      "foreignKey": "student_fee_id"
+      "foreignKey": "student_fee_id",
+      "onDelete": "protect"
     }
   }
 }

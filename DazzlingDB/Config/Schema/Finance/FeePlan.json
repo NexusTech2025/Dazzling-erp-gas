@@ -39,5 +39,11 @@
       "required": false
     }
   },
-  "relations": {}
+  "relations": {
+    "studentfeeaccounts": {
+      "type": "hasMany",
+      "target": "StudentFeeAccount",
+      "foreignKey": "fee_plan_id"
+    }
+  }
 }

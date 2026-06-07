@@ -33,7 +33,8 @@ const DBContext = (function() {
     console.log(`[DBContext] Bootstrapping SheetDB for ${DATABASE_SCHEMA.database}...`);
     const isDev = activeEnv === "development";
     const db = SheetDB.init(rootFolderId, DATABASE_SCHEMA, {
-      allowAutoOverride: isDev
+      allowAutoOverride: isDev,
+      dependencyGraph: typeof DEPENDENCY_GRAPH !== 'undefined' ? DEPENDENCY_GRAPH : null
     });
 
     // 2. Lock the ValidationRegistry to prevent runtime tampering

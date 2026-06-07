@@ -82,9 +82,10 @@
       "maxLength": 255
     },
     "branch_id": {
-      "type": "string",
+      "type": "foreign_key",
       "description": "FK reference to the Branch where this teacher is assigned",
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "address": {
       "type": "string",
@@ -134,6 +135,16 @@
     "teacherpaymenttransaction": {
       "type": "hasMany",
       "target": "TeacherPaymentTransaction",
+      "foreignKey": "teacher_id"
+    },
+    "batches": {
+      "type": "hasMany",
+      "target": "Batch",
+      "foreignKey": "teacher_id"
+    },
+    "teacherattendance": {
+      "type": "hasMany",
+      "target": "TeacherAttendance",
       "foreignKey": "teacher_id"
     }
   }

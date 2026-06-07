@@ -1,5 +1,5 @@
 const DATABASE_SCHEMA = {
-  "version": "2.1.1",
+  "version": "2.1.3",
   "database": "DazzlingDB",
   "categories": {
     "Academic": {
@@ -8,16 +8,19 @@ const DATABASE_SCHEMA = {
           "primaryKey": "batch_id",
           "columns": {
             "course_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "teacher_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "branch_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "batch_name": {
               "type": "string",
@@ -112,6 +115,11 @@ const DATABASE_SCHEMA = {
               "type": "hasMany",
               "target": "BatchAllocation",
               "foreignKey": "batch_id"
+            },
+            "studentleads": {
+              "type": "hasMany",
+              "target": "StudentLead",
+              "foreignKey": "batch_id"
             }
           }
         },
@@ -119,24 +127,28 @@ const DATABASE_SCHEMA = {
           "primaryKey": "allocation_id",
           "columns": {
             "student_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "cascade"
             },
             "enrollment_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "course_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "batch_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": false,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "status": {
               "type": "string",
@@ -201,7 +213,8 @@ const DATABASE_SCHEMA = {
             "student": {
               "type": "belongsTo",
               "target": "Student",
-              "foreignKey": "student_id"
+              "foreignKey": "student_id",
+              "onDelete": "cascade"
             },
             "enrollment": {
               "type": "belongsTo",
@@ -224,8 +237,9 @@ const DATABASE_SCHEMA = {
           "primaryKey": "course_id",
           "columns": {
             "segment_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "entity_type": {
               "type": "string",
@@ -419,15 +433,22 @@ const DATABASE_SCHEMA = {
               "editable": false
             }
           },
-          "relations": {}
+          "relations": {
+            "courses": {
+              "type": "hasMany",
+              "target": "Course",
+              "foreignKey": "segment_id"
+            }
+          }
         },
         "Enrollment": {
           "primaryKey": "enrollment_id",
           "columns": {
             "student_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "cascade"
             },
             "enrollment_type": {
               "type": "string",
@@ -440,9 +461,10 @@ const DATABASE_SCHEMA = {
               "maxLength": 255
             },
             "item_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "roll_number": {
               "type": "number",
@@ -515,16 +537,27 @@ const DATABASE_SCHEMA = {
             "student": {
               "type": "belongsTo",
               "target": "Student",
-              "foreignKey": "student_id"
+              "foreignKey": "student_id",
+              "onDelete": "cascade"
             },
             "item": {
               "type": "belongsToPolymorphic",
               "typeField": "enrollment_type",
-              "idField": "item_id"
+              "idField": "item_id",
+              "mapping": {
+                "course": "Course",
+                "package": "Package",
+                "subject": "Course"
+              }
             },
             "allocations": {
               "type": "hasMany",
               "target": "BatchAllocation",
+              "foreignKey": "enrollment_id"
+            },
+            "studentfeeaccounts": {
+              "type": "hasMany",
+              "target": "StudentFeeAccount",
               "foreignKey": "enrollment_id"
             }
           }
@@ -609,6 +642,11 @@ const DATABASE_SCHEMA = {
               "type": "hasMany",
               "target": "PackagePerk",
               "foreignKey": "package_id"
+            },
+            "packageitems": {
+              "type": "hasMany",
+              "target": "PackageItem",
+              "foreignKey": "package_id"
             }
           }
         },
@@ -616,9 +654,10 @@ const DATABASE_SCHEMA = {
           "primaryKey": "item_id",
           "columns": {
             "package_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "entity_type": {
               "type": "string",
@@ -629,9 +668,10 @@ const DATABASE_SCHEMA = {
               "maxLength": 255
             },
             "entity_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "item_id": {
               "type": "auto",
@@ -676,7 +716,11 @@ const DATABASE_SCHEMA = {
             "entity": {
               "type": "belongsToPolymorphic",
               "typeField": "entity_type",
-              "idField": "entity_id"
+              "idField": "entity_id",
+              "mapping": {
+                "course": "Course",
+                "subject": "Course"
+              }
             }
           }
         },
@@ -684,8 +728,9 @@ const DATABASE_SCHEMA = {
           "primaryKey": "perk_id",
           "columns": {
             "package_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "perk_title": {
               "type": "string",
@@ -753,9 +798,10 @@ const DATABASE_SCHEMA = {
           "primaryKey": "token",
           "columns": {
             "user_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "expires_at": {
               "type": "datetime",
@@ -888,7 +934,13 @@ const DATABASE_SCHEMA = {
               "editable": false
             }
           },
-          "relations": {}
+          "relations": {
+            "sessions": {
+              "type": "hasMany",
+              "target": "Session",
+              "foreignKey": "user_id"
+            }
+          }
         }
       }
     },
@@ -949,7 +1001,18 @@ const DATABASE_SCHEMA = {
               "editable": false
             }
           },
-          "relations": {}
+          "relations": {
+            "batches": {
+              "type": "hasMany",
+              "target": "Batch",
+              "foreignKey": "branch_id"
+            },
+            "teachers": {
+              "type": "hasMany",
+              "target": "Teacher",
+              "foreignKey": "branch_id"
+            }
+          }
         },
         "PromoCode": {
           "primaryKey": "promo_id",
@@ -1046,8 +1109,9 @@ const DATABASE_SCHEMA = {
           "primaryKey": "adjustment_id",
           "columns": {
             "student_fee_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "adjustment_type": {
               "type": "string",
@@ -1109,7 +1173,8 @@ const DATABASE_SCHEMA = {
             "studentfeeaccount": {
               "type": "belongsTo",
               "target": "StudentFeeAccount",
-              "foreignKey": "student_fee_id"
+              "foreignKey": "student_fee_id",
+              "onDelete": "protect"
             }
           }
         },
@@ -1180,14 +1245,21 @@ const DATABASE_SCHEMA = {
               "editable": false
             }
           },
-          "relations": {}
+          "relations": {
+            "studentfeeaccounts": {
+              "type": "hasMany",
+              "target": "StudentFeeAccount",
+              "foreignKey": "fee_plan_id"
+            }
+          }
         },
         "Installment": {
           "primaryKey": "installment_id",
           "columns": {
             "student_fee_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "installment_number": {
               "type": "number"
@@ -1257,7 +1329,13 @@ const DATABASE_SCHEMA = {
             "studentfeeaccount": {
               "type": "belongsTo",
               "target": "StudentFeeAccount",
-              "foreignKey": "student_fee_id"
+              "foreignKey": "student_fee_id",
+              "onDelete": "protect"
+            },
+            "payments": {
+              "type": "hasMany",
+              "target": "Payment",
+              "foreignKey": "installment_id"
             }
           }
         },
@@ -1265,12 +1343,14 @@ const DATABASE_SCHEMA = {
           "primaryKey": "payment_id",
           "columns": {
             "installment_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "student_fee_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "amount_paid": {
               "type": "number",
@@ -1349,12 +1429,14 @@ const DATABASE_SCHEMA = {
             "installment": {
               "type": "belongsTo",
               "target": "Installment",
-              "foreignKey": "installment_id"
+              "foreignKey": "installment_id",
+              "onDelete": "protect"
             },
             "studentfeeaccount": {
               "type": "belongsTo",
               "target": "StudentFeeAccount",
-              "foreignKey": "student_fee_id"
+              "foreignKey": "student_fee_id",
+              "onDelete": "protect"
             }
           }
         },
@@ -1362,12 +1444,14 @@ const DATABASE_SCHEMA = {
           "primaryKey": "student_fee_id",
           "columns": {
             "enrollment_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "cascade"
             },
             "fee_plan_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "total_fee": {
               "type": "number"
@@ -1467,14 +1551,30 @@ const DATABASE_SCHEMA = {
           },
           "relations": {
             "enrollment": {
-              "type": "hasOne",
+              "type": "belongsTo",
               "target": "Enrollment",
-              "foreignKey": "enrollment_id"
+              "foreignKey": "enrollment_id",
+              "onDelete": "cascade"
             },
             "feeplan": {
               "type": "belongsTo",
               "target": "FeePlan",
               "foreignKey": "fee_plan_id"
+            },
+            "feeadjustments": {
+              "type": "hasMany",
+              "target": "FeeAdjustment",
+              "foreignKey": "student_fee_id"
+            },
+            "installments": {
+              "type": "hasMany",
+              "target": "Installment",
+              "foreignKey": "student_fee_id"
+            },
+            "payments": {
+              "type": "hasMany",
+              "target": "Payment",
+              "foreignKey": "student_fee_id"
             }
           }
         }
@@ -1566,9 +1666,10 @@ const DATABASE_SCHEMA = {
               "maxLength": 255
             },
             "branch_id": {
-              "type": "string",
+              "type": "foreign_key",
               "description": "FK reference to the Branch where this teacher is assigned",
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "address": {
               "type": "string",
@@ -1645,6 +1746,16 @@ const DATABASE_SCHEMA = {
               "type": "hasMany",
               "target": "TeacherPaymentTransaction",
               "foreignKey": "teacher_id"
+            },
+            "batches": {
+              "type": "hasMany",
+              "target": "Batch",
+              "foreignKey": "teacher_id"
+            },
+            "teacherattendance": {
+              "type": "hasMany",
+              "target": "TeacherAttendance",
+              "foreignKey": "teacher_id"
             }
           }
         },
@@ -1652,9 +1763,10 @@ const DATABASE_SCHEMA = {
           "primaryKey": "attendance_id",
           "columns": {
             "teacher_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "attendance_date": {
               "type": "date",
@@ -1747,9 +1859,10 @@ const DATABASE_SCHEMA = {
           "primaryKey": "document_id",
           "columns": {
             "teacher_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "document_type": {
               "type": "string",
@@ -1814,13 +1927,15 @@ const DATABASE_SCHEMA = {
           "primaryKey": "transaction_id",
           "columns": {
             "teacher_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "salary_config_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "payment_type": {
               "type": "string",
@@ -1919,9 +2034,10 @@ const DATABASE_SCHEMA = {
           "primaryKey": "salary_config_id",
           "columns": {
             "teacher_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "salary_type": {
               "type": "string",
@@ -1979,6 +2095,11 @@ const DATABASE_SCHEMA = {
               "type": "belongsTo",
               "target": "Teacher",
               "foreignKey": "teacher_id"
+            },
+            "teacherpaymenttransactions": {
+              "type": "hasMany",
+              "target": "TeacherPaymentTransaction",
+              "foreignKey": "salary_config_id"
             }
           }
         },
@@ -1986,14 +2107,16 @@ const DATABASE_SCHEMA = {
           "primaryKey": "teacher_subject_id",
           "columns": {
             "teacher_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "subject_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "teacher_subject_id": {
               "type": "auto",
@@ -2050,8 +2173,9 @@ const DATABASE_SCHEMA = {
           "primaryKey": "address_id",
           "columns": {
             "student_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "cascade"
             },
             "line1": {
               "type": "string",
@@ -2118,9 +2242,15 @@ const DATABASE_SCHEMA = {
           },
           "relations": {
             "student": {
-              "type": "hasOne",
+              "type": "belongsTo",
               "target": "Student",
-              "foreignKey": "student_id"
+              "foreignKey": "student_id",
+              "onDelete": "cascade"
+            },
+            "contactinfos": {
+              "type": "hasMany",
+              "target": "ContactInfo",
+              "foreignKey": "address_id"
             }
           }
         },
@@ -2128,12 +2258,14 @@ const DATABASE_SCHEMA = {
           "primaryKey": "contact_id",
           "columns": {
             "student_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "cascade"
             },
             "address_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "cascade"
             },
             "email": {
               "type": "string",
@@ -2191,14 +2323,16 @@ const DATABASE_SCHEMA = {
           },
           "relations": {
             "student": {
-              "type": "hasOne",
+              "type": "belongsTo",
               "target": "Student",
-              "foreignKey": "student_id"
+              "foreignKey": "student_id",
+              "onDelete": "cascade"
             },
             "address": {
               "type": "belongsTo",
               "target": "Address",
-              "foreignKey": "address_id"
+              "foreignKey": "address_id",
+              "onDelete": "cascade"
             }
           }
         },
@@ -2206,8 +2340,9 @@ const DATABASE_SCHEMA = {
           "primaryKey": "education_id",
           "columns": {
             "student_id": {
-              "type": "string",
-              "maxLength": 255
+              "type": "foreign_key",
+              "maxLength": 255,
+              "onDelete": "cascade"
             },
             "highest_qualification": {
               "type": "string",
@@ -2262,7 +2397,8 @@ const DATABASE_SCHEMA = {
             "student": {
               "type": "belongsTo",
               "target": "Student",
-              "foreignKey": "student_id"
+              "foreignKey": "student_id",
+              "onDelete": "cascade"
             }
           }
         },
@@ -2397,9 +2533,10 @@ const DATABASE_SCHEMA = {
               "maxLength": 255
             },
             "batch_id": {
-              "type": "string",
+              "type": "foreign_key",
               "required": true,
-              "maxLength": 255
+              "maxLength": 255,
+              "onDelete": "protect"
             },
             "referral_id": {
               "type": "string",

@@ -106,6 +106,54 @@ class AddStudentLeadAction extends BaseAction {
 }
 
 /**
+ * Students Domain: Delete single student
+ */
+class DeleteStudentAction extends BaseAction {
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.student_id) {
+      throw new ActionValidationError("Payload must contain 'student_id'.");
+    }
+  }
+
+  _authorize() {
+    if (!AuthBridge.checkAccess(this._user, "Student")) {
+      throw new ActionAuthorizationError("Access denied: You are not authorized to delete students.");
+    }
+  }
+
+  _execute() {
+    const { student_id, dryRun } = this._params.payload;
+    const isDryRun = dryRun !== false;
+
+    const student = this._db.Student.findById(student_id);
+    if (!student) {
+      throw new SheetDB.EntityNotFoundError("Student", student_id, "Academic");
+    }
+
+    if (isDryRun) {
+      this._db.Student.enforceDeleteConstraints(student_id);
+    } else {
+      try {
+        this._db.Student.remove(student_id);
+      } catch (e) {
+        if (e instanceof SheetDB.IntegrityError || e.name === "IntegrityError") {
+          throw new ActionValidationError(e.message);
+        }
+        throw e;
+      }
+    }
+
+    return {
+      success: true,
+      message: `Successfully deleted Student '${student_id}'.`,
+      student_id: student_id
+    };
+  }
+}
+
+/**
  * Academic Domain: Create CourseType (Segment)
  */
 class CreateCourseTypeAction extends BaseAction {
@@ -687,7 +735,9 @@ class DeleteRecordAction extends BaseAction {
 class DeleteManyRecordsAction extends BaseAction {
   constructor(options) {
     super(options);
-    this._actionName = "data_delete_many";
+    if (this.constructor === DeleteManyRecordsAction) {
+      this._actionName = "data_delete_many";
+    }
   }
 
   _validate() {
@@ -706,8 +756,10 @@ class DeleteManyRecordsAction extends BaseAction {
     if (payload.ids.length > maxLimit) {
       throw new ActionValidationError(`Payload 'ids' array size (${payload.ids.length}) exceeds the maximum limit of ${maxLimit}.`);
     }
-    if (!GLOBAL_CRUD_WHITELIST.has(payload.table)) {
-      throw new ActionValidationError(`Table '${payload.table}' is not eligible for generic CRUD operations. Please use specialized endpoints.`);
+    if (this.constructor === DeleteManyRecordsAction) {
+      if (!GLOBAL_CRUD_WHITELIST.has(payload.table)) {
+        throw new ActionValidationError(`Table '${payload.table}' is not eligible for generic CRUD operations. Please use specialized endpoints.`);
+      }
     }
   }
 
@@ -737,7 +789,7 @@ class DeleteManyRecordsAction extends BaseAction {
       } catch (e) {
         console.warn(`[DeleteManyRecordsAction] Could not load dependent table '${dep.table}': ${e.message}`);
       }
-      
+
       const set = new Set();
       depRows.forEach(row => {
         if (row[dep.fk] !== undefined && row[dep.fk] !== null) {
@@ -760,7 +812,7 @@ class DeleteManyRecordsAction extends BaseAction {
 
     ids.forEach(rawId => {
       const id = String(rawId).trim();
-      
+
       // Check existence
       if (!targetIdsSet.has(id)) {
         skipped.push(id);
@@ -812,7 +864,7 @@ class DeleteManyRecordsAction extends BaseAction {
   _getDependentTables(targetTable) {
     const dependencies = [];
     const schema = DATABASE_SCHEMA;
-    
+
     // Find the target table's category & definition
     let targetTableDef = null;
     for (const cat in schema.categories) {
@@ -821,9 +873,9 @@ class DeleteManyRecordsAction extends BaseAction {
         break;
       }
     }
-    
+
     if (!targetTableDef) return dependencies;
-    
+
     // 1. Scan target table's own hasMany/hasOne relations
     if (targetTableDef.relations) {
       Object.keys(targetTableDef.relations).forEach(relKey => {
@@ -833,7 +885,7 @@ class DeleteManyRecordsAction extends BaseAction {
         }
       });
     }
-    
+
     // 2. Scan all other tables in the schema for belongsTo pointing to targetTable
     for (const cat in schema.categories) {
       const tables = schema.categories[cat].tables;
@@ -853,7 +905,7 @@ class DeleteManyRecordsAction extends BaseAction {
         }
       }
     }
-    
+
     return dependencies;
   }
 }

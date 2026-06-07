@@ -52,6 +52,11 @@
       "type": "hasMany",
       "target": "PackagePerk",
       "foreignKey": "package_id"
+    },
+    "packageitems": {
+      "type": "hasMany",
+      "target": "PackageItem",
+      "foreignKey": "package_id"
     }
   }
 }

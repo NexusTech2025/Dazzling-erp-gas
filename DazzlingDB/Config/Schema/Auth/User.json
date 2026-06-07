@@ -52,5 +52,11 @@
       "required": false
     }
   },
-  "relations": {}
+  "relations": {
+    "sessions": {
+      "type": "hasMany",
+      "target": "Session",
+      "foreignKey": "user_id"
+    }
+  }
 }

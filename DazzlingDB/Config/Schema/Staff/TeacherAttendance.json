@@ -2,9 +2,10 @@
   "primaryKey": "attendance_id",
   "columns": {
     "teacher_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "attendance_date": {
       "type": "date",

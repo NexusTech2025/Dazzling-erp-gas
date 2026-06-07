@@ -40,7 +40,18 @@ const ApiDispatcher = (function () {
       "data_create": CreateRecordAction,
       "data_update": UpdateRecordAction,
       "data_delete": DeleteRecordAction,
+      "student_delete": DeleteStudentAction,
       "data_delete_many": DeleteManyRecordsAction,
+      "auth_delete_many_users": DeleteManyUsersAction,
+      "auth_delete_many_sessions": DeleteManySessionsAction,
+      "academic_delete_many_enrollments": DeleteManyEnrollmentsAction,
+      "academic_delete_many_packages": DeleteManyPackagesAction,
+      "student_delete_many_students": DeleteManyStudentsAction,
+      "finance_delete_many_fee_accounts": DeleteManyStudentFeeAccountsAction,
+      "finance_delete_many_installments": DeleteManyInstallmentsAction,
+      "finance_delete_many_payments": DeleteManyPaymentsAction,
+      "finance_delete_many_adjustments": DeleteManyFeeAdjustmentsAction,
+      "staff_delete_many_teachers": DeleteManyTeachersAction,
       "init_erp": InitErpAction
     };
   }

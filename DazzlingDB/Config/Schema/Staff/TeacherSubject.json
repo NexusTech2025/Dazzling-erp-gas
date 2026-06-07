@@ -2,14 +2,16 @@
   "primaryKey": "teacher_subject_id",
   "columns": {
     "teacher_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "subject_id": {
-      "type": "string",
+      "type": "foreign_key",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "onDelete": "protect"
     },
     "teacher_subject_id": {
       "type": "auto",
