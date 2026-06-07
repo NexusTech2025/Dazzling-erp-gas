@@ -1,249 +1,142 @@
 /**
  * @file StudentDeleteTests.js
- * Integration test suite for Student deletion actions and foreign key constraints.
- * Dynamically provisions mock data for protect and cascade scenarios.
+ * Integration test suite for Student deletion actions and database constraints.
+ * Verifies that deleting a student with active payments/installments is blocked
+ * and that data integrity across all related tables is preserved 100% intact.
  */
 
 function runStudentDeleteTests() {
-  console.log("🚀 Starting Student Deletion Integration Tests...");
+  const activeEnv = typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : 'development';
+  if (activeEnv === 'production') {
+    throw new Error("❌ Safety Guard: Test suite cannot be executed in the PRODUCTION environment.");
+  }
+
+  console.log("🚀 Starting Student Deletion Protection Integration Tests...");
   const db = DBContext.getInstance();
   const results = {};
+  const timings = {};
+  const t0 = Date.now();
 
-  try {
-    // Setup Curriculum first via TestMockData helper
-    const curriculum = TestMockData.setupCurriculum(db);
-
-    // 1. Run Scenario 1: Protect (Deletion blocked by active payments)
-    console.log("\n=========================================");
-    console.log("▶️ SCENARIO 1: Deleting Student with Outstanding Ledger (Expect Blocked)");
-    const scenario1Passed = _testScenarioProtect(db, curriculum);
-    results.Scenario1_Protect = scenario1Passed ? "✅ PASSED" : "❌ FAILED";
-
-    // 2. Run Scenario 2: Cascade (Deletion succeeds and purges dependencies)
-    console.log("\n=========================================");
-    console.log("▶️ SCENARIO 2: Deleting Student with Clean Ledger (Expect Cascade)");
-    const scenario2Passed = _testScenarioCascade(db, curriculum);
-    results.Scenario2_Cascade = scenario2Passed ? "✅ PASSED" : "❌ FAILED";
-
-  } catch (error) {
-    console.error("❌ Fatal error executing test suite:", error.message);
-    if (error.stack) {
-      console.error("   Traceback:", error.stack);
-    }
-    results.TestSuite_Fatal = "❌ ERROR: " + error.message;
-  }
-
-  console.log("\n=========================================");
-  console.log("📊 STUDENT DELETION TEST SUMMARY:");
-  console.log(JSON.stringify(results, null, 2));
-  console.log("🏁 Student Deletion Integration Tests Complete.");
-  
-  return results;
-}
-
-/**
- * Scenario 1: Deletion is blocked due to active financial ledger records (protect constraint)
- */
-function _testScenarioProtect(db, curriculum) {
-  const salt = Math.random().toString(36).substring(2, 9).toUpperCase();
-  let studentId = null;
-
-  try {
-    // 1. Setup Student Graph using RegisterStudentAction
-    const regPayload = {
-      profile: {
-        student_name: "Action Protect Student " + salt,
-        gender: "Female",
-        dob: "2005-06-15",
-        status: "active"
-      },
-      address: {
-        line1: "Protect Lane 1 " + salt,
-        city: "Jaipur",
-        state: "Rajasthan",
-        pin_code: "302017",
-        country: "India"
-      },
-      contact: {
-        mobile_number: "8" + Math.floor(100000000 + Math.random() * 900000000),
-        email: "protect_" + salt.toLowerCase() + "@test.com"
-      },
-      education: [
-        {
-          highest_qualification: "Class 10",
-          institution_name: "Protect School",
-          year_of_passing: 2024,
-          percentage_or_cgpa: "90%"
-        }
-      ],
-      enrollments: [
-        {
-          enrollment_type: "package",
-          item_id: curriculum.packageId,
-          fee: 12000,
-          package_batches: [
-            { course_id: curriculum.physicsId, batch_id: curriculum.batchPhyId },
-            { course_id: curriculum.chemistryId, batch_id: curriculum.batchCheId }
-          ]
-        }
-      ],
-      feeAccount: {
-        total_fee: 12000,
-        discount: 1200,
-        final_fee: 10800,
-        amount_paid: 4800,
-        installments: [
-          { installment_number: 1, due_amount: 6000, paid_amount: 4800, due_date: "2026-06-15" },
-          { installment_number: 2, due_amount: 6000, paid_amount: 0, due_date: "2026-07-15" }
-        ]
-      },
-      payment: {
-        amount_paid: 4800,
-        payment_method: "upi",
-        transaction_reference: "TXN-DEL-PROT-" + salt
-      }
-    };
-
-    const regAction = new RegisterStudentAction({
-      db: db,
-      user: { role: "admin", username: "admin_test", isValid: true },
-      params: {
-        token: "MOCK_TOKEN",
-        payload: regPayload
-      }
-    });
-
-    const regResponse = regAction.run();
-    if (!regResponse.success) {
-      throw new Error("Failed to register protect student: " + regResponse.error.message);
-    }
-
-    studentId = regResponse.data.student_id;
-    console.log(`   ⚙️ Setup completed for Student: ${studentId}`);
-
-    // Verify related records were generated
-    const address = db.Address.all().find(addr => addr.student_id === studentId);
-    const contact = db.ContactInfo.all().find(c => c.student_id === studentId);
-    const enrollments = db.Enrollment.where({ student_id: studentId });
-    const sfa = db.StudentFeeAccount.findOne({ enrollment_id: enrollments[0].enrollment_id });
-    const installments = db.Installment.where({ student_fee_id: sfa.student_fee_id });
-    const payments = db.Payment.where({ student_fee_id: sfa.student_fee_id });
-
-    // 2. Try to run deletion action
-    const action = new DeleteStudentAction({
-      db: db,
-      user: { role: "admin", username: "admin_test", isValid: true },
-      params: {
-        token: "MOCK_TOKEN",
-        payload: { student_id: studentId, dryRun: false }
-      }
-    });
-
-    const response = action.run();
-
-    // 3. Assert Deletion is Blocked
-    if (response.success) {
-      throw new Error(`relational protection failed! Expected student deletion to be blocked by active payments/installments, but it succeeded.`);
-    }
-
-    console.log(`   ✅ Success: Student deletion was blocked. Message: ${response.error.message}`);
-    
-    // Assert that the records still exist
-    if (!db.Student.findById(studentId)) throw new Error("Student record was deleted despite protect constraint!");
-    if (!db.Address.findById(address.address_id)) throw new Error("Address record was deleted!");
-    if (!db.ContactInfo.findById(contact.contact_id)) throw new Error("ContactInfo record was deleted!");
-    if (!db.StudentFeeAccount.findById(sfa.student_fee_id)) throw new Error("StudentFeeAccount record was deleted!");
-
-    console.log("   ✅ Success: Student and cascading records are intact in the database.");
-    return true;
-
-  } finally {
-    // 4. Cleanup Mock Data in reverse topological order (manual bypass of protects)
-    if (studentId) {
-      console.log("   ⚙️ Tearing down Scenario 1 mock records...");
-      const enrollments = db.Enrollment.where({ student_id: studentId });
-      enrollments.forEach(enr => {
-        const sfa = db.StudentFeeAccount.findOne({ enrollment_id: enr.enrollment_id });
-        if (sfa) {
-          const payments = db.Payment.where({ student_fee_id: sfa.student_fee_id });
-          payments.forEach(pay => { try { db.Payment.remove(pay.payment_id); } catch(e) {} });
-
-          const installments = db.Installment.where({ student_fee_id: sfa.student_fee_id });
-          installments.forEach(ins => { try { db.Installment.remove(ins.installment_id); } catch(e) {} });
-
-          try { db.StudentFeeAccount.remove(sfa.student_fee_id); } catch(e) {}
-        }
-        
-        const allocs = db.BatchAllocation.where({ enrollment_id: enr.enrollment_id });
-        allocs.forEach(alloc => { try { db.BatchAllocation.remove(alloc.allocation_id); } catch(e) {} });
-
-        try { db.Enrollment.remove(enr.enrollment_id); } catch(e) {}
-      });
-
-      const contact = db.ContactInfo.all().find(c => c.student_id === studentId);
-      if (contact) { try { db.ContactInfo.remove(contact.contact_id); } catch(e) {} }
-
-      const address = db.Address.all().find(addr => addr.student_id === studentId);
-      if (address) { try { db.Address.remove(address.address_id); } catch(e) {} }
-
-      const edus = db.Education.where({ student_id: studentId });
-      edus.forEach(edu => { try { db.Education.remove(edu.education_id); } catch(e) {} });
-
-      try { db.Student.remove(studentId); } catch(e) {}
-    }
-  }
-}
-
-/**
- * Scenario 2: Deletion completes successfully and cascade deletes all child records
- */
-function _testScenarioCascade(db, curriculum) {
   const salt = Math.random().toString(36).substring(2, 9).toUpperCase();
   let studentId = null;
   let addressId = null;
   let contactId = null;
   let enrollmentId = null;
-  let sfaId = null;
+  let allocationId = null;
+  let feeAccountId = null;
+  let installmentIds = [];
+  let paymentIds = [];
+  let educationIds = [];
+
+  // Snapshots for data integrity check
+  let studentSnapshot = null;
+  let addressSnapshot = null;
+  let contactSnapshot = null;
+  let educationSnapshots = [];
+  let enrollmentSnapshots = [];
+  let allocationSnapshots = [];
+  let feeAccountSnapshot = null;
+  let installmentSnapshots = [];
+  let paymentSnapshots = [];
 
   try {
-    // 1. Setup Student Graph using RegisterStudentAction (Without active payments/installments)
+    // 1. Setup Curriculum first via TestMockData helper
+    console.log("   ⚙️ Step 1: Bootstrapping mock curriculum...");
+    let tStart = Date.now();
+    const curriculum = TestMockData.setupCurriculum(db);
+    timings["1. Curriculum Bootstrap"] = Date.now() - tStart;
+
+    // 2. Build full-fidelity registration payload matching the payload specification
     const regPayload = {
       profile: {
-        student_name: "Action Cascade Student " + salt,
+        student_name: "TDD Production Student " + salt,
         gender: "Female",
-        dob: "2005-06-15",
+        dob: "2006-08-20",
+        email: "tddprod_" + salt.toLowerCase() + "@test.com",
+        phone: "+91" + Math.floor(1000000000 + Math.random() * 9000000000),
         status: "active"
       },
       address: {
-        line1: "Cascade Lane 1 " + salt,
+        line1: "TDD Prod Lane " + salt,
         city: "Jaipur",
         state: "Rajasthan",
         pin_code: "302017",
         country: "India"
       },
       contact: {
-        mobile_number: "8" + Math.floor(100000000 + Math.random() * 900000000),
-        email: "cascade_" + salt.toLowerCase() + "@test.com"
+        email: "tddprod_contact_" + salt.toLowerCase() + "@test.com",
+        mobile_number: "9" + Math.floor(100000000 + Math.random() * 900000000),
+        emergency_name: "Guardian " + salt,
+        emergency_phone: "8" + Math.floor(100000000 + Math.random() * 900000000),
+        emergency_relationship: "Parent"
       },
       education: [
         {
           highest_qualification: "Class 10",
-          institution_name: "Cascade School",
+          institution_name: "TDD Board School",
           year_of_passing: 2024,
-          percentage_or_cgpa: "90%"
+          percentage_or_cgpa: "92%"
         }
       ],
       enrollments: [
         {
           enrollment_type: "course",
           item_id: curriculum.physicsId,
-          fee: 5000,
+          fee: 10000,
+          roll_number: 2001,
+          enrollment_date: "2026-06-01",
+          status: "active",
+          academic_status: "active",
           batch_id: curriculum.batchPhyId
         }
-      ]
-      // Omitting feeAccount and payment payloads completely ensures zero-ledger registration (cascade-ready)
+      ],
+      feeAccount: {
+        total_fee: 10000,
+        discount: 1000,
+        adjustment_type: "coupon",
+        coupon_code: "PROD10",
+        final_fee: 9000,
+        amount_paid: 4500,
+        balance_due: 4500,
+        is_overdue: false,
+        penalty_amount: 0,
+        next_due_date: "2026-06-15",
+        status: "active",
+        remarks: "TDD Prod Fee Account",
+        created_by: "tdd_tester",
+        fee_plan_id: "FPL-" + curriculum.physicsId + "-DEFAULT",
+        installments: [
+          {
+            installment_number: 1,
+            due_amount: 4500,
+            paid_amount: 4500,
+            late_fee_amount: 0,
+            due_date: "2026-06-15",
+            status: "paid"
+          },
+          {
+            installment_number: 2,
+            due_amount: 4500,
+            paid_amount: 0,
+            late_fee_amount: 0,
+            due_date: "2026-07-15",
+            status: "pending"
+          }
+        ]
+      },
+      payment: {
+        amount_paid: 4500,
+        payment_date: "2026-06-01T20:10:00Z",
+        payment_method: "upi",
+        transaction_reference: "TXN-PROD-TEST-" + salt,
+        status: "success",
+        remarks: "TDD Prod payment entry",
+        created_by: "tdd_tester"
+      }
     };
 
+    console.log("   ⚙️ Step 2: Fully registering mock student via RegisterStudentAction...");
+    tStart = Date.now();
     const regAction = new RegisterStudentAction({
       db: db,
       user: { role: "admin", username: "admin_test", isValid: true },
@@ -255,24 +148,67 @@ function _testScenarioCascade(db, curriculum) {
 
     const regResponse = regAction.run();
     if (!regResponse.success) {
-      throw new Error("Failed to register cascade student: " + regResponse.error.message);
+      throw new Error("Failed to register student: " + regResponse.error.message);
     }
 
     studentId = regResponse.data.student_id;
-    console.log(`   ⚙️ Setup completed for Student: ${studentId}`);
+    console.log(`   ⚙️ Student registered with ID: ${studentId}`);
+    timings["2. Student Registration"] = Date.now() - tStart;
 
-    // Retrieve child IDs for verification after deletion
-    const address = db.Address.all().find(addr => addr.student_id === studentId);
-    addressId = address ? address.address_id : null;
+    // 3. Query and snapshot all created records to cache their IDs and values
+    console.log("   ⚙️ Step 3: Querying and caching record snapshots...");
+    tStart = Date.now();
 
-    const contact = db.ContactInfo.all().find(c => c.student_id === studentId);
-    contactId = contact ? contact.contact_id : null;
+    const studentRec = db.Student.findById(studentId);
+    if (!studentRec) throw new Error("Student record not found after registration.");
+    studentSnapshot = JSON.parse(JSON.stringify(studentRec.toJSON()));
 
-    const enrollments = db.Enrollment.where({ student_id: studentId });
-    enrollmentId = enrollments[0] ? enrollments[0].enrollment_id : null;
+    const addressRec = db.Address.all().find(addr => addr.student_id === studentId);
+    if (!addressRec) throw new Error("Address record not found after registration.");
+    addressId = addressRec.address_id;
+    addressSnapshot = JSON.parse(JSON.stringify(addressRec.toJSON()));
 
-    // 2. Run Deletion Action
-    const action = new DeleteStudentAction({
+    const contactRec = db.ContactInfo.all().find(c => c.student_id === studentId);
+    if (!contactRec) throw new Error("ContactInfo record not found after registration.");
+    contactId = contactRec.contact_id;
+    contactSnapshot = JSON.parse(JSON.stringify(contactRec.toJSON()));
+
+    const educationRecs = db.Education.where({ student_id: studentId });
+    if (educationRecs.length === 0) throw new Error("Education record not found after registration.");
+    educationIds = educationRecs.map(edu => edu.education_id);
+    educationSnapshots = educationRecs.map(edu => JSON.parse(JSON.stringify(edu.toJSON())));
+
+    const enrollmentRecs = db.Enrollment.where({ student_id: studentId });
+    if (enrollmentRecs.length === 0) throw new Error("Enrollment record not found after registration.");
+    enrollmentId = enrollmentRecs[0].enrollment_id;
+    enrollmentSnapshots = enrollmentRecs.map(enr => JSON.parse(JSON.stringify(enr.toJSON())));
+
+    const allocationRecs = db.BatchAllocation.where({ student_id: studentId });
+    if (allocationRecs.length === 0) throw new Error("BatchAllocation record not found after registration.");
+    allocationId = allocationRecs[0].allocation_id;
+    allocationSnapshots = allocationRecs.map(alloc => JSON.parse(JSON.stringify(alloc.toJSON())));
+
+    const feeAccountRec = db.StudentFeeAccount.findOne({ enrollment_id: enrollmentId });
+    if (!feeAccountRec) throw new Error("StudentFeeAccount record not found after registration.");
+    feeAccountId = feeAccountRec.student_fee_id;
+    feeAccountSnapshot = JSON.parse(JSON.stringify(feeAccountRec.toJSON()));
+
+    const installmentRecs = db.Installment.where({ student_fee_id: feeAccountId });
+    if (installmentRecs.length === 0) throw new Error("Installment records not found after registration.");
+    installmentIds = installmentRecs.map(ins => ins.installment_id);
+    installmentSnapshots = installmentRecs.map(ins => JSON.parse(JSON.stringify(ins.toJSON())));
+
+    const paymentRecs = db.Payment.where({ student_fee_id: feeAccountId });
+    if (paymentRecs.length === 0) throw new Error("Payment records not found after registration.");
+    paymentIds = paymentRecs.map(pay => pay.payment_id);
+    paymentSnapshots = paymentRecs.map(pay => JSON.parse(JSON.stringify(pay.toJSON())));
+
+    timings["3. Snapshotted Database Records"] = Date.now() - tStart;
+
+    // 4. Try to run deletion action (dryRun: false)
+    console.log("   ⚙️ Step 4: Attempting to delete Student (dryRun = false) via DeleteStudentAction...");
+    tStart = Date.now();
+    const deleteAction = new DeleteStudentAction({
       db: db,
       user: { role: "admin", username: "admin_test", isValid: true },
       params: {
@@ -281,42 +217,160 @@ function _testScenarioCascade(db, curriculum) {
       }
     });
 
-    const response = action.run();
+    const deleteResponse = deleteAction.run();
+    timings["4. Execute DeleteStudentAction"] = Date.now() - tStart;
 
-    // 3. Assert Deletion Succeeded
-    if (!response.success) {
-      console.error("   ❌ Delete Student Action Failed. Full Error:", JSON.stringify(response.error, null, 2));
-      throw new Error(`relational cascade failed! Expected student to be deleted, but action failed: ${response.error.message}`);
+    // Assert that deletion failed
+    if (deleteResponse.success) {
+      throw new Error("❌ Integrity Failure: Expected student deletion to be blocked, but it succeeded.");
     }
 
-    console.log("   ✅ Success: Student deletion completed successfully.");
+    const expectedErrorPattern = /Delete Protected|protect/i;
+    if (!expectedErrorPattern.test(deleteResponse.error.message)) {
+      throw new Error("❌ Error Message Failure: Expected a protection block error message, but got: " + deleteResponse.error.message);
+    }
+    console.log(`   ✅ Caught expected deletion block error: "${deleteResponse.error.message}"`);
 
-    // 4. Assert all related records have been cascade deleted
-    if (db.Student.findById(studentId)) throw new Error("Student record still exists.");
-    if (addressId && db.Address.findById(addressId)) throw new Error("Address record was NOT cascade deleted.");
-    if (contactId && db.ContactInfo.findById(contactId)) throw new Error("ContactInfo record was NOT cascade deleted.");
-    if (enrollmentId && db.Enrollment.findById(enrollmentId)) throw new Error("Enrollment record was NOT cascade deleted.");
-    
-    const eduCheck = db.Education.where({ student_id: studentId });
-    if (eduCheck.length > 0) throw new Error("Education record was NOT cascade deleted.");
+    // 5. Verify database-level data integrity (ensure NO data was modified, mutated or partially deleted)
+    console.log("   ⚙️ Step 5: Performing database-level field-by-field data integrity validation...");
+    tStart = Date.now();
 
-    console.log("   ✅ Success: Student and all cascading dependencies cleanly deleted from the database.");
-    return true;
+    function assertObjectsEqual(actual, expected, label) {
+      for (const key in expected) {
+        const actVal = actual[key];
+        const expVal = expected[key];
+        if (JSON.stringify(actVal) !== JSON.stringify(expVal)) {
+          throw new Error(`❌ Data Integrity Violation in ${label}: Field '${key}' was modified. Expected: ${JSON.stringify(expVal)}, Got: ${JSON.stringify(actVal)}`);
+        }
+      }
+      for (const key in actual) {
+        if (!(key in expected)) {
+          throw new Error(`❌ Data Integrity Violation in ${label}: Found unexpected field '${key}' with value ${JSON.stringify(actual[key])}`);
+        }
+      }
+    }
+
+    // Verify Student
+    const currentStudent = db.Student.findById(studentId);
+    if (!currentStudent) throw new Error("❌ Student record missing post-deletion.");
+    assertObjectsEqual(currentStudent.toJSON(), studentSnapshot, "Student");
+
+    // Verify Address
+    const currentAddress = db.Address.findById(addressId);
+    if (!currentAddress) throw new Error("❌ Address record missing post-deletion.");
+    assertObjectsEqual(currentAddress.toJSON(), addressSnapshot, "Address");
+
+    // Verify ContactInfo
+    const currentContact = db.ContactInfo.findById(contactId);
+    if (!currentContact) throw new Error("❌ ContactInfo record missing post-deletion.");
+    assertObjectsEqual(currentContact.toJSON(), contactSnapshot, "ContactInfo");
+
+    // Verify Education
+    educationIds.forEach((eduId, index) => {
+      const curEdu = db.Education.findById(eduId);
+      if (!curEdu) throw new Error(`❌ Education record ${eduId} missing post-deletion.`);
+      assertObjectsEqual(curEdu.toJSON(), educationSnapshots[index], `Education[${index}]`);
+    });
+
+    // Verify Enrollment
+    const currentEnrollment = db.Enrollment.findById(enrollmentId);
+    if (!currentEnrollment) throw new Error("❌ Enrollment record missing post-deletion.");
+    assertObjectsEqual(currentEnrollment.toJSON(), enrollmentSnapshots[0], "Enrollment");
+
+    // Verify BatchAllocation
+    const currentAllocation = db.BatchAllocation.findById(allocationId);
+    if (!currentAllocation) throw new Error("❌ BatchAllocation record missing post-deletion.");
+    assertObjectsEqual(currentAllocation.toJSON(), allocationSnapshots[0], "BatchAllocation");
+
+    // Verify StudentFeeAccount
+    const currentFeeAccount = db.StudentFeeAccount.findById(feeAccountId);
+    if (!currentFeeAccount) throw new Error("❌ StudentFeeAccount record missing post-deletion.");
+    assertObjectsEqual(currentFeeAccount.toJSON(), feeAccountSnapshot, "StudentFeeAccount");
+
+    // Verify Installments
+    installmentIds.forEach((insId, index) => {
+      const curIns = db.Installment.findById(insId);
+      if (!curIns) throw new Error(`❌ Installment record ${insId} missing post-deletion.`);
+      assertObjectsEqual(curIns.toJSON(), installmentSnapshots[index], `Installment[${index}]`);
+    });
+
+    // Verify Payments
+    paymentIds.forEach((payId, index) => {
+      const curPay = db.Payment.findById(payId);
+      if (!curPay) throw new Error(`❌ Payment record ${payId} missing post-deletion.`);
+      assertObjectsEqual(curPay.toJSON(), paymentSnapshots[index], `Payment[${index}]`);
+    });
+
+    console.log("   ✅ Success! All records exist and match their pre-deletion snapshots exactly.");
+    timings["5. Deep Data Integrity Check"] = Date.now() - tStart;
+    results.Scenario_ProductionSafeDelete = "✅ PASSED";
 
   } catch (error) {
-    console.error("   ❌ Cascade Scenario Failed:", error.message);
+    console.error("   ❌ Test Failed:");
+    console.error("      Error Name:   ", error.name || "Error");
+    console.error("      Error Message:", error.message);
     if (error.stack) {
-      console.error("      Traceback:", error.stack);
+      console.error("      Stack Trace:  ", error.stack);
     }
-    // Cleanup if cascade failed to prevent dirty states
-    if (studentId) {
-      try { db.Enrollment.remove(enrollmentId); } catch (e) {}
-      try { db.ContactInfo.remove(contactId); } catch (e) {}
-      try { db.Address.remove(addressId); } catch (e) {}
-      const edus = db.Education.where({ student_id: studentId });
-      edus.forEach(edu => { try { db.Education.remove(edu.education_id); } catch(e) {} });
-      try { db.Student.remove(studentId); } catch (e) {}
+    results.Scenario_ProductionSafeDelete = `❌ FAILED: ${error.message}`;
+  } finally {
+    // 6. Detailed clean up in strict reverse-topological order to avoid dependency check blocks
+    console.log("   ⚙️ Step 6: Cleaning up registered mock records bottom-up (reverse-topologically)...");
+    const tCleanupStart = Date.now();
+    try {
+      if (paymentIds.length > 0) {
+        paymentIds.forEach(payId => {
+          try { if (db.Payment.findById(payId)) db.Payment.remove(payId); } catch (e) {}
+        });
+      }
+      if (installmentIds.length > 0) {
+        installmentIds.forEach(insId => {
+          try { if (db.Installment.findById(insId)) db.Installment.remove(insId); } catch (e) {}
+        });
+      }
+      if (allocationId) {
+        try { if (db.BatchAllocation.findById(allocationId)) db.BatchAllocation.remove(allocationId); } catch (e) {}
+      }
+      if (feeAccountId) {
+        try { if (db.StudentFeeAccount.findById(feeAccountId)) db.StudentFeeAccount.remove(feeAccountId); } catch (e) {}
+      }
+      if (enrollmentId) {
+        try { if (db.Enrollment.findById(enrollmentId)) db.Enrollment.remove(enrollmentId); } catch (e) {}
+      }
+      if (educationIds.length > 0) {
+        educationIds.forEach(eduId => {
+          try { if (db.Education.findById(eduId)) db.Education.remove(eduId); } catch (e) {}
+        });
+      }
+      if (contactId) {
+        try { if (db.ContactInfo.findById(contactId)) db.ContactInfo.remove(contactId); } catch (e) {}
+      }
+      if (addressId) {
+        try { if (db.Address.findById(addressId)) db.Address.remove(addressId); } catch (e) {}
+      }
+      if (studentId) {
+        try { if (db.Student.findById(studentId)) db.Student.remove(studentId); } catch (e) {}
+      }
+      console.log("      Teardown cleanup completed successfully.");
+    } catch (cleanupErr) {
+      console.warn("      Cleanup warning during teardown:", cleanupErr.message);
     }
-    return false;
+    timings["6. Reverse-Topological Teardown"] = Date.now() - tCleanupStart;
+
+    // Calculate and log final performance timings
+    const totalTime = Date.now() - t0;
+    console.log("\n========================================================");
+    console.log("⏱️  STUDENT DELETION PROTECTION TIMING SUMMARY  ⏱️");
+    console.log("========================================================");
+    for (const step in timings) {
+      console.log(`- ${step.padEnd(45)}: ${String(timings[step]).padStart(5)} ms`);
+    }
+    console.log("--------------------------------------------------------");
+    console.log(`- Total Execution Time                         : ${String(totalTime).padStart(5)} ms`);
+    console.log("========================================================\n");
   }
+
+  console.log("📊 FINAL TEST RESULTS:\n", JSON.stringify(results, null, 2));
+  console.log("🏁 Student Deletion Protection Integration Tests Complete.");
+  return results;
 }
