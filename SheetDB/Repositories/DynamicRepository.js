@@ -8,32 +8,6 @@
  * - Provide a consistent, high-level CRUD interface.
  */
 
-const DELETE_STRATEGIES = {
-  protect: (targetRepo, dep, id, entityName) => {
-    const count = targetRepo.count({ [dep.fk]: id });
-    if (count > 0) {
-      throw new IntegrityError(`Delete Protected: Cannot delete from '${entityName}' because active records in '${dep.table}' refer to it (FK: '${dep.fk}').`);
-    }
-  },
-  cascade: (targetRepo, dep, id) => {
-    const childRecords = targetRepo.where({ [dep.fk]: id });
-    if (childRecords.length > 0) {
-      const childIds = childRecords.map(r => r[targetRepo.gateway.primaryKey]);
-      targetRepo.deleteMany(childIds);
-    }
-  },
-  set_null: (targetRepo, dep, id) => {
-    const childRecords = targetRepo.where({ [dep.fk]: id });
-    if (childRecords.length > 0) {
-      const updates = {};
-      childRecords.forEach(r => {
-        const childId = r[targetRepo.gateway.primaryKey];
-        updates[childId] = { [dep.fk]: null };
-      });
-      targetRepo.updateMany(updates);
-    }
-  }
-};
 
 class DynamicRepository {
   /**
@@ -298,31 +272,102 @@ class DynamicRepository {
    * @param {any} id - The primary key value of the record being deleted.
    */
   enforceDeleteConstraints(id) {
-    let graph = null;
-    if (this.resolver && this.resolver.db && this.resolver.db._config && this.resolver.db._config.dependencyGraph) {
-      graph = this.resolver.db._config.dependencyGraph;
-      console.log("[DynamicRepository] Using configured dependency graph for deletion constraints.");
-    } else if (typeof DEPENDENCY_GRAPH !== 'undefined') {
-      graph = DEPENDENCY_GRAPH;
-    }
-
-    if (!graph) {
-      throw new DependencyGraphError("Dependency graph is not defined. DependencyGraph is required for constraint enforcement.");
-    }
-
-    const dependents = graph[this.entityName] || [];
-    for (const dep of dependents) {
-      const targetRepo = this.resolver.db[dep.table];
-      if (!targetRepo) continue;
-
-      const policy = dep.onDelete || 'protect';
-      const strategy = DELETE_STRATEGIES[policy];
-      if (strategy) {
-        strategy(targetRepo, dep, id, this.entityName);
-      } else {
-        DELETE_STRATEGIES.protect(targetRepo, dep, id, this.entityName);
+    // 1. Resolve StaticGraph (lazy compile and cache on root db instance)
+    const db = this.resolver.db;
+    if (!db._staticGraph) {
+      const StaticGraphBuilder = globalThis.Graph ? globalThis.Graph.StaticGraphBuilder : null;
+      if (StaticGraphBuilder) {
+        db._staticGraph = StaticGraphBuilder.compile(db._schema);
       }
     }
+
+    if (!db._staticGraph) {
+      throw new DependencyGraphError("Static schema graph is not compiled. StaticGraph is required for constraint enforcement.");
+    }
+
+    // 2. Fetch the target parent record
+    const record = this.findById(id);
+    if (!record) {
+      throw new EntityNotFoundError(this.entityName, id);
+    }
+
+    // 3. Build Dynamic Graph from this root record
+    const DynamicGraphBuilder = globalThis.Graph ? globalThis.Graph.DynamicGraphBuilder : null;
+    const DeletionValidationRegistry = globalThis.Graph ? globalThis.Graph.DeletionValidationRegistry : null;
+
+    if (!DynamicGraphBuilder || !DeletionValidationRegistry) {
+      throw new DependencyGraphError("Graph validation components are missing. DynamicGraphBuilder and DeletionValidationRegistry are required.");
+    }
+
+    const queryDelegate = (table, fk, parentId) => {
+      const targetRepo = db[table];
+      return targetRepo ? targetRepo.where({ [fk]: parentId }) : [];
+    };
+
+    const builder = new DynamicGraphBuilder(db._staticGraph, queryDelegate);
+    const dynamicGraph = builder.build(this.entityName, id, record);
+
+    // 4. Dry-Run Validation Phase
+    DeletionValidationRegistry.validate(dynamicGraph, this.entityName, id);
+
+    // 5. Execution Phase (Cascade Deletions & Set-Null Updates)
+    // Identify which nodes are slated for deletion (BFS cascade path)
+    const deleteNodes = [];
+    const deleteNodeKeys = new Set();
+    const queue = [dynamicGraph.getNode(this.entityName, id)];
+    const visited = new Set([`${this.entityName}:${id}`]);
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      deleteNodes.push(current);
+      deleteNodeKeys.add(`${current.entityName}:${current.id}`);
+
+      for (const edge of current.outgoing) {
+        if (edge.onDelete === 'cascade') {
+          const childKey = `${edge.toNode.entityName}:${edge.toNode.id}`;
+          if (!visited.has(childKey)) {
+            visited.add(childKey);
+            queue.push(edge.toNode);
+          }
+        }
+      }
+    }
+
+    // 5a. Execute set_null updates first for affected child edges
+    for (const edge of dynamicGraph.edges) {
+      const parentKey = `${edge.fromNode.entityName}:${edge.fromNode.id}`;
+      if (deleteNodeKeys.has(parentKey) && edge.onDelete === 'set_null') {
+        const targetRepo = db[edge.toNode.entityName];
+        if (targetRepo) {
+          const updates = {};
+          const ModelClass = typeof ModelRegistry !== 'undefined' ? ModelRegistry.getModel(targetRepo.entityName) : null;
+          const schema = ModelClass ? ModelClass.schema : null;
+          const fkField = schema ? schema[edge.foreignKey] : null;
+          const typeField = fkField ? fkField.typeField : null;
+
+          edge.toNode.ids.forEach(childId => {
+            const updatePayload = { [edge.foreignKey]: null };
+            if (typeField) {
+              updatePayload[typeField] = null;
+            }
+            updates[childId] = updatePayload;
+          });
+          targetRepo.updateMany(updates);
+        }
+      }
+    }
+
+    // 5b. Execute cascading deletes in reverse topological order (bottom-up)
+    deleteNodes.reverse().forEach(node => {
+      // Skip the root parent node (the caller remove() will delete it physically in the spreadsheet gateway)
+      if (node.entityName === this.entityName && node.ids.includes(id)) {
+        return;
+      }
+      const targetRepo = db[node.entityName];
+      if (targetRepo) {
+        targetRepo.gateway.deleteMany(node.ids);
+      }
+    });
   }
 
   /**
@@ -357,3 +402,5 @@ class DynamicRepository {
     return rawRows.map(row => this._hydrate(row));
   }
 }
+
+globalThis.DynamicRepository = DynamicRepository;

@@ -22,11 +22,24 @@ const DeletionValidationRegistry = (function() {
     set_null: (edge, deleteNodeKeys, context) => {
       // If we nullify the foreign key, verify the foreign key field is not marked as required
       const sampleRec = edge.toNode.record;
-      const fkField = (sampleRec && sampleRec.constructor && sampleRec.constructor.schema)
-        ? sampleRec.constructor.schema[edge.foreignKey]
+      const schema = (sampleRec && sampleRec.constructor && sampleRec.constructor.schema)
+        ? sampleRec.constructor.schema
         : null;
+      if (!schema) {
+        throw new ValidationError(`Delete Nullify Violation: Cannot validate nullification constraint for '${edge.toNode.entityName}' because schema metadata is missing.`);
+      }
+
+      const fkField = schema[edge.foreignKey];
       if (fkField && fkField.required === true) {
         throw new ValidationError(`Delete Nullify Violation: Cannot set foreign key '${edge.foreignKey}' to null on '${edge.toNode.entityName}' because the field is marked as required.`);
+      }
+
+      // Check if polymorphic typeField discriminator is required
+      if (fkField && fkField.typeField) {
+        const typeFieldConfig = schema[fkField.typeField];
+        if (typeFieldConfig && typeFieldConfig.required === true) {
+          throw new ValidationError(`Delete Nullify Violation: Cannot set polymorphic discriminator '${fkField.typeField}' to null on '${edge.toNode.entityName}' because the field is marked as required.`);
+        }
       }
     },
     do_nothing: (edge, deleteNodeKeys, context) => {
@@ -41,9 +54,15 @@ const DeletionValidationRegistry = (function() {
    * @param {any} rootId - ID of root entity record.
    */
   function validate(graph, rootEntityName, rootId) {
+    if (!graph || typeof graph.getNode !== 'function') {
+      throw new ValidationError("Invalid graph parameter: Graph is null or invalid.");
+    }
+
     const rootKey = `${rootEntityName}:${rootId}`;
     const rootNode = graph.getNode(rootEntityName, rootId);
-    if (!rootNode) return true;
+    if (!rootNode) {
+      throw new ValidationError(`Validation failed: Root record node '${rootKey}' is missing from the validation graph.`);
+    }
 
     // 1. Identify which nodes are actually slated for deletion via cascade paths
     const deleteNodeKeys = new Set();

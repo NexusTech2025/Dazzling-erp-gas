@@ -138,6 +138,7 @@ Object.assign(globalThis, {
   RelationResolutionError: globalThis.RelationResolutionError,
   RelationValidationError: globalThis.RelationValidationError,
   BatchDeleteError: globalThis.BatchDeleteError,
+  DynamicRepository: globalThis.DynamicRepository,
   
   Graph: (globalThis.Graph = {
     StaticNode: globalThis.StaticNode,
