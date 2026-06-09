@@ -52,8 +52,9 @@ const DeletionValidationRegistry = (function() {
    * @param {DynamicGraph} graph - The dynamic graph instance.
    * @param {string} rootEntityName - Name of root entity table.
    * @param {any} rootId - ID of root entity record.
+   * @param {Set<string>} [globalDeleteNodeKeys] - Optional union set of all deletion keys in the batch.
    */
-  function validate(graph, rootEntityName, rootId) {
+  function validate(graph, rootEntityName, rootId, globalDeleteNodeKeys) {
     if (!graph || typeof graph.getNode !== 'function') {
       throw new ValidationError("Invalid graph parameter: Graph is null or invalid.");
     }
@@ -86,6 +87,7 @@ const DeletionValidationRegistry = (function() {
     }
 
     const context = { rootEntityName, rootId };
+    const activeDeleteKeys = globalDeleteNodeKeys || deleteNodeKeys;
 
     // 2. Evaluate all edges where the parent node is scheduled to be deleted
     for (const edge of graph.edges) {
@@ -93,10 +95,10 @@ const DeletionValidationRegistry = (function() {
       if (deleteNodeKeys.has(parentKey)) {
         const strategy = _strategies[edge.onDelete];
         if (strategy) {
-          strategy(edge, deleteNodeKeys, context);
+          strategy(edge, activeDeleteKeys, context);
         } else {
           // Fall back to protect if strategy is unrecognized
-          _strategies.protect(edge, deleteNodeKeys, context);
+          _strategies.protect(edge, activeDeleteKeys, context);
         }
       }
     }

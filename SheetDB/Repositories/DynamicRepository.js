@@ -381,15 +381,410 @@ class DynamicRepository {
   }
 
   /**
+   * Enforces batch relational database constraints (protect, cascade, set_null) on deletion.
+   * Implements the memory-optimized Surgical Graph Rollback strategy.
+   * 
+   * @param {Array<any>} ids - Array of parent record primary keys to delete.
+   * @param {Object} [options] - Configuration options.
+   * @param {boolean} [options.dryRun=true] - If true, only validate without mutating.
+   * @param {boolean} [options.failFast=false] - If true, halt on first validation error.
+   * @returns {Object} Manifest detailing deleted, skipped, and failed IDs.
+   */
+  enforceDeleteConstraintsBatch(ids, options = {}) {
+    const dryRun = options.dryRun !== false; // default to true
+    const failFast = !!options.failFast;
+
+    const manifest = {
+      success: true,
+      dryRun: dryRun,
+      deleted: [],
+      skipped: [],
+      failed: {}
+    };
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return manifest;
+    }
+
+    const db = this.resolver.db;
+    const pkName = this.registry.getPrimaryKey(this.entityName);
+
+    // --- STAGE 1: Deduplication & Pre-existence Check (Soft Filtering) ---
+    const uniqueIds = [...new Set(ids.map(id => String(id).trim()))];
+    
+    // Resolve all active parent keys in O(1) from PrimaryKeyCache
+    const activeParentKeys = db._pkCache.get(this.entityName);
+    
+    const validIds = [];
+    const validRecords = [];
+
+    uniqueIds.forEach(id => {
+      if (activeParentKeys.has(id)) {
+        validIds.push(id);
+        const record = this.findById(id);
+        if (record) {
+          validRecords.push(record);
+        }
+      } else {
+        manifest.skipped.push(id);
+      }
+    });
+
+    if (validIds.length === 0) {
+      return manifest;
+    }
+
+    // Ensure static schema graph is compiled
+    if (!db._staticGraph) {
+      const StaticGraphBuilder = globalThis.Graph ? globalThis.Graph.StaticGraphBuilder : null;
+      if (StaticGraphBuilder) {
+        db._staticGraph = StaticGraphBuilder.compile(db._schema);
+      }
+    }
+    if (!db._staticGraph) {
+      throw new Error("Static schema graph is not compiled. StaticGraph is required for batch constraint enforcement.");
+    }
+
+    // --- STAGE 2: Table Pre-loading & Graph Building ---
+    // Discover the scope of descendant tables in the cascade tree
+    const targetTables = new Set();
+    const discoverDescendants = (tableName) => {
+      const staticNode = db._staticGraph.getNode(tableName);
+      if (staticNode) {
+        staticNode.outgoing.forEach(edge => {
+          const targetTable = edge.toNode.entityName;
+          if (!targetTables.has(targetTable)) {
+            targetTables.add(targetTable);
+            discoverDescendants(targetTable); // Recursively trace
+          }
+        });
+      }
+    };
+    discoverDescendants(this.entityName);
+
+    // Single-Pass pre-loading from Drive (Disk -> RAM)
+    const loadedTables = {};
+    loadedTables[this.entityName] = JSON.parse(JSON.stringify(this.gateway.all())); // cache root parent raw rows
+    targetTables.forEach(tableName => {
+      const targetRepo = db[tableName];
+      if (targetRepo) {
+        loadedTables[tableName] = JSON.parse(JSON.stringify(targetRepo.gateway.all()));
+      }
+    });
+
+    // Custom in-memory query delegate referencing pre-loaded tables
+    const inMemoryQueryDelegate = (table, fk, parentId) => {
+      const allRows = loadedTables[table] || [];
+      const parentIdStr = String(parentId).trim();
+      const filtered = allRows.filter(row => String(row[fk]).trim() === parentIdStr);
+      
+      const ModelClass = typeof ModelRegistry !== 'undefined' ? ModelRegistry.getModel(table) : null;
+      if (!ModelClass) return [];
+      
+      const targetRepo = db[table];
+      return filtered.map(row => new ModelClass(row, {
+        gateway: targetRepo.gateway,
+        registry: targetRepo.registry,
+        resolver: targetRepo.resolver,
+        isNew: false
+      }));
+    };
+
+    // Hydrate separate dynamic graphs for each parent ID
+    const DynamicGraphBuilder = globalThis.Graph ? globalThis.Graph.DynamicGraphBuilder : null;
+    if (!DynamicGraphBuilder) {
+      throw new Error("DynamicGraphBuilder is missing. Graph validation components are required.");
+    }
+
+    const graphs = {};
+    validIds.forEach((id, idx) => {
+      const record = validRecords[idx];
+      const builder = new DynamicGraphBuilder(db._staticGraph, inMemoryQueryDelegate);
+      graphs[id] = builder.build(this.entityName, id, record);
+    });
+
+    // --- STAGE 3: Pre-flight Validation ---
+    // 3a. Global Deletion Key Aggregation (Pre-scan)
+    const globalDeleteNodeKeys = new Set();
+    validIds.forEach(id => {
+      const graph = graphs[id];
+      const rootKey = `${this.entityName}:${id}`;
+      globalDeleteNodeKeys.add(rootKey);
+      
+      const rootNode = graph.getNode(this.entityName, id);
+      if (!rootNode) return;
+
+      const queue = [rootNode];
+      const visited = new Set([rootKey]);
+      while (queue.length > 0) {
+        const current = queue.shift();
+        for (const edge of current.outgoing) {
+          if (edge.onDelete === 'cascade') {
+            const childKey = `${edge.toNode.entityName}:${edge.toNode.id}`;
+            if (!visited.has(childKey)) {
+              visited.add(childKey);
+              globalDeleteNodeKeys.add(childKey);
+              queue.push(edge.toNode);
+            }
+          }
+        }
+      }
+    });
+
+    // 3b. Loop and Validate each graph in RAM
+    const DeletionValidationRegistry = globalThis.Graph ? globalThis.Graph.DeletionValidationRegistry : null;
+    if (!DeletionValidationRegistry) {
+      throw new Error("DeletionValidationRegistry is missing.");
+    }
+
+    const errors = {};
+    validIds.forEach(id => {
+      const graph = graphs[id];
+      try {
+        DeletionValidationRegistry.validate(graph, this.entityName, id, globalDeleteNodeKeys);
+        manifest.deleted.push(id);
+      } catch (err) {
+        errors[id] = err.message;
+        manifest.failed[id] = err.message;
+      }
+    });
+
+    // If dryRun, return manifest without making changes
+    if (dryRun) {
+      manifest.success = Object.keys(manifest.failed).length === 0;
+      return manifest;
+    }
+
+    // If execution mode (dryRun = false) and any error exists:
+    if (Object.keys(manifest.failed).length > 0) {
+      manifest.success = false;
+      if (failFast) {
+        const firstId = Object.keys(manifest.failed)[0];
+        throw new ValidationError(`Batch Delete Failed (Fail-Fast): ID '${firstId}' failed: ${manifest.failed[firstId]}`);
+      } else {
+        throw new ValidationError(`Batch Delete Failed (Aggregated): ${JSON.stringify(manifest.failed)}`);
+      }
+    }
+
+    // --- MUTATION EXECUTION BLOCK ---
+    const touchedTables = new Set();
+    const deleteIdsByTable = {};
+    try {
+      // --- STAGE 4: Aggregating & Executing set_null Updates in Bulk ---
+      const updatesByTable = {};
+      validIds.forEach(id => {
+        const graph = graphs[id];
+        for (const edge of graph.edges) {
+          const parentKey = `${edge.fromNode.entityName}:${edge.fromNode.id}`;
+          if (globalDeleteNodeKeys.has(parentKey) && edge.onDelete === 'set_null') {
+            const targetTable = edge.toNode.entityName;
+            if (!updatesByTable[targetTable]) {
+              updatesByTable[targetTable] = {};
+            }
+            touchedTables.add(targetTable);
+
+            const targetRepo = db[targetTable];
+            const ModelClass = typeof ModelRegistry !== 'undefined' ? ModelRegistry.getModel(targetTable) : null;
+            const schema = ModelClass ? ModelClass.schema : null;
+            const fkField = schema ? schema[edge.foreignKey] : null;
+            const typeField = fkField ? fkField.typeField : null;
+
+            edge.toNode.ids.forEach(childId => {
+              if (!updatesByTable[targetTable][childId]) {
+                updatesByTable[targetTable][childId] = {};
+              }
+              updatesByTable[targetTable][childId][edge.foreignKey] = null;
+              if (typeField) {
+                updatesByTable[targetTable][childId][typeField] = null;
+              }
+            });
+          }
+        }
+      });
+
+      // Execute bulk updates per table
+      Object.entries(updatesByTable).forEach(([tableName, updatesMap]) => {
+        const targetRepo = db[tableName];
+        if (targetRepo && Object.keys(updatesMap).length > 0) {
+          targetRepo.updateMany(updatesMap);
+        }
+      });
+
+      // --- STAGE 5: Aggregating & Executing Cascading Deletions in Bulk (Bottom-Up) ---
+      validIds.forEach(id => {
+        const graph = graphs[id];
+        const rootKey = `${this.entityName}:${id}`;
+        
+        const rootNode = graph.getNode(this.entityName, id);
+        if (!rootNode) return;
+
+        const queue = [rootNode];
+        const visited = new Set([rootKey]);
+        while (queue.length > 0) {
+          const current = queue.shift();
+          
+          if (current.entityName !== this.entityName || !current.ids.includes(id)) {
+            const tbl = current.entityName;
+            if (!deleteIdsByTable[tbl]) {
+              deleteIdsByTable[tbl] = new Set();
+            }
+            touchedTables.add(tbl);
+            current.ids.forEach(cid => deleteIdsByTable[tbl].add(cid));
+          }
+
+          for (const edge of current.outgoing) {
+            if (edge.onDelete === 'cascade') {
+              const childKey = `${edge.toNode.entityName}:${edge.toNode.id}`;
+              if (!visited.has(childKey)) {
+                visited.add(childKey);
+                queue.push(edge.toNode);
+              }
+            }
+          }
+        }
+      });
+
+      // Sort tables in reverse topological order (leaves first)
+      const sortedTables = [];
+      const visitedSort = new Set();
+      const sortHelper = (tableName) => {
+        if (visitedSort.has(tableName)) return;
+        visitedSort.add(tableName);
+        
+        const staticNode = db._staticGraph.getNode(tableName);
+        if (staticNode) {
+          staticNode.outgoing.forEach(edge => {
+            sortHelper(edge.toNode.entityName);
+          });
+        }
+        if (deleteIdsByTable[tableName]) {
+          sortedTables.push(tableName);
+        }
+      };
+      const staticRoot = db._staticGraph.getNode(this.entityName);
+      if (staticRoot) {
+        staticRoot.outgoing.forEach(edge => {
+          sortHelper(edge.toNode.entityName);
+        });
+      }
+
+      // Execute bulk deletes bottom-up
+      sortedTables.forEach(tableName => {
+        const targetRepo = db[tableName];
+        const idsToDelete = [...deleteIdsByTable[tableName]];
+        if (targetRepo && idsToDelete.length > 0) {
+          targetRepo.gateway.deleteMany(idsToDelete);
+        }
+      });
+
+    } catch (error) {
+      // --- STAGE 6: Transactional Recovery & Rollback (Surgical Graph Rollback) ---
+      console.error("[Transaction] Error during batch delete execution. Initiating surgical rollback...", error);
+      
+      try {
+        // Restoring deleted rows topologically (parents first, then children)
+        const sortedRecoveryTables = [];
+        const visitedRecSort = new Set();
+        const sortRecHelper = (tableName) => {
+          if (visitedRecSort.has(tableName)) return;
+          visitedRecSort.add(tableName);
+          if (deleteIdsByTable[tableName]) {
+            sortedRecoveryTables.push(tableName);
+          }
+          const staticNode = db._staticGraph.getNode(tableName);
+          if (staticNode) {
+            staticNode.outgoing.forEach(edge => {
+              sortRecHelper(edge.toNode.entityName);
+            });
+          }
+        };
+        sortRecHelper(this.entityName);
+
+        sortedRecoveryTables.forEach(tableName => {
+          const targetRepo = db[tableName];
+          if (targetRepo && deleteIdsByTable[tableName]) {
+            const idsToRestore = [...deleteIdsByTable[tableName]];
+            const childPkName = targetRepo.gateway.primaryKey;
+            const originalRows = loadedTables[tableName].filter(row => idsToRestore.includes(String(row[childPkName])));
+            if (originalRows.length > 0) {
+              const physicalRows2D = originalRows.map(row => targetRepo.gateway._mapObjectToRow(row));
+              targetRepo.gateway.dataSource.insertRows(targetRepo.gateway.category, tableName, physicalRows2D);
+              db._pkCache.invalidate(tableName);
+            }
+          }
+        });
+
+        // Restoring nullified columns in bulk
+        const restoredUpdatesByTable = {};
+        validIds.forEach(id => {
+          const graph = graphs[id];
+          
+          for (const edge of graph.edges) {
+            const parentKey = `${edge.fromNode.entityName}:${edge.fromNode.id}`;
+            if (globalDeleteNodeKeys.has(parentKey) && edge.onDelete === 'set_null') {
+              const targetTable = edge.toNode.entityName;
+              if (!restoredUpdatesByTable[targetTable]) {
+                restoredUpdatesByTable[targetTable] = {};
+              }
+
+              const targetRepo = db[targetTable];
+              const ModelClass = typeof ModelRegistry !== 'undefined' ? ModelRegistry.getModel(targetTable) : null;
+              const schema = ModelClass ? ModelClass.schema : null;
+              const fkField = schema ? schema[edge.foreignKey] : null;
+              const typeField = fkField ? fkField.typeField : null;
+
+              edge.toNode.ids.forEach(childId => {
+                const originalRow = (loadedTables[targetTable] || []).find(r => String(r[targetRepo.gateway.primaryKey]) === String(childId));
+                if (originalRow) {
+                  if (!restoredUpdatesByTable[targetTable][childId]) {
+                    restoredUpdatesByTable[targetTable][childId] = {};
+                  }
+                  restoredUpdatesByTable[targetTable][childId][edge.foreignKey] = originalRow[edge.foreignKey];
+                  if (typeField) {
+                    restoredUpdatesByTable[targetTable][childId][typeField] = originalRow[typeField];
+                  }
+                }
+              });
+            }
+          }
+        });
+
+        Object.entries(restoredUpdatesByTable).forEach(([tableName, updatesMap]) => {
+          const targetRepo = db[tableName];
+          if (targetRepo && Object.keys(updatesMap).length > 0) {
+            targetRepo.updateMany(updatesMap);
+          }
+        });
+
+      } catch (rollbackError) {
+        console.error("FATAL: Rollback recovery failed. Database is in a partially mutated state.", rollbackError);
+      }
+      
+      throw error;
+    }
+
+    return manifest;
+  }
+
+  /**
    * Deletes multiple records by their primary keys.
    * @param {Array<any>} ids - Array of primary key values to delete.
+   * @param {Object} [options] - Optional configurations.
    * @returns {number} Count of successfully deleted records.
    */
-  deleteMany(ids) {
-    if (ids && Array.isArray(ids)) {
-      ids.forEach(id => this.enforceDeleteConstraints(id));
+  deleteMany(ids, options = {}) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) return 0;
+    
+    // Call batch constraints checker with dryRun: false
+    const batchOptions = { ...options, dryRun: false };
+    const manifest = this.enforceDeleteConstraintsBatch(ids, batchOptions);
+    
+    // Execute parent physical deletions (only for validated deleted IDs)
+    const idsToDelete = manifest.deleted;
+    if (idsToDelete.length > 0) {
+      this.gateway.deleteMany(idsToDelete);
     }
-    return this.gateway.deleteMany(ids);
+    return idsToDelete.length;
   }
 
   /**
