@@ -12,17 +12,20 @@ class BackwardRefRule extends BaseRule {
   }
 
   execute(tableName, schema, allSchemas, context) {
-    for (const [colName, colSchema] of Object.entries(schema.columns)) {
-      if (colSchema.type === 'foreign_key') {
-        const targetTable = colSchema.target;
-        
-        if (!targetTable) continue;
+    if (!schema.relations) return;
 
-        if (colSchema.unidirectional === true) {
+    for (const [relName, relSchema] of Object.entries(schema.relations)) {
+      if (relSchema.type === 'belongsTo') {
+        const targetTable = relSchema.target;
+        const fk = relSchema.foreignKey;
+        
+        if (!targetTable || !fk) continue;
+
+        if (relSchema.unidirectional === true) {
           Logger.logEvent({
             level: 'debug',
             category: 'linter',
-            message: `[BackwardRefRule] [${tableName}.${colName}] marked unidirectional. Skipping symmetry check.`
+            message: `[BackwardRefRule] [${tableName}.relations.${relName}] marked unidirectional. Skipping symmetry check.`
           });
           continue;
         }
@@ -30,7 +33,7 @@ class BackwardRefRule extends BaseRule {
         Logger.logEvent({
           level: 'debug',
           category: 'linter',
-          message: `[BackwardRefRule] Verifying reverse reference from [${targetTable}] back to [${tableName}] via [${colName}]`
+          message: `[BackwardRefRule] Verifying reverse reference from [${targetTable}] back to [${tableName}] via foreignKey [${fk}]`
         });
 
         const targetSchema = allSchemas[targetTable];
@@ -40,7 +43,7 @@ class BackwardRefRule extends BaseRule {
         let hasBackwardRef = false;
         if (targetSchema.relations) {
           for (const rel of Object.values(targetSchema.relations)) {
-            if (rel.target === tableName && rel.foreignKey === colName) {
+            if (rel.target === tableName && rel.foreignKey === fk) {
               if (rel.type === 'hasMany' || rel.type === 'hasOne') {
                 hasBackwardRef = true;
                 break;
@@ -50,7 +53,7 @@ class BackwardRefRule extends BaseRule {
         }
 
         if (!hasBackwardRef) {
-          context.warnings.push(`[${tableName}.${colName}] BackwardRefWarning: Parent table '${targetTable}' does not declare a reverse relationship (hasMany/hasOne) referencing '${tableName}' via foreignKey '${colName}'.`);
+          context.warnings.push(`[${tableName}.relations.${relName}] BackwardRefWarning: Parent table '${targetTable}' does not declare a reverse relationship (hasMany/hasOne) referencing '${tableName}' via foreignKey '${fk}'.`);
         }
       }
     }

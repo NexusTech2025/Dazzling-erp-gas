@@ -2,5 +2,9 @@
     "deployment_id": "AKfycbzKoVnCZ2U9N7mkPZePjYN9S0vGGT9jbLUG-3dkmP1-IoYkhKm4xfh41baGVW9ZI9V8",
     "api_url": "https://script.google.com/macros/s/AKfycbzKoVnCZ2U9N7mkPZePjYN9S0vGGT9jbLUG-3dkmP1-IoYkhKm4xfh41baGVW9ZI9V8/exec",
     "username": "admin_moni",
-    "password": "manish123"
+    "password": "manish123",
+    "apps": {
+        "sheetdb": "E:\\NAST\\Dazzling\\GAS\\SheetDB",
+        "dazzlingdb": "E:\\NAST\\Dazzling\\GAS\\DazzlingDB"
+    }
 }

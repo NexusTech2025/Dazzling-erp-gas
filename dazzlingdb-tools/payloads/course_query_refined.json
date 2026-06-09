@@ -6,6 +6,9 @@
     "batchallocations"
   ],
   "limit": 200,
+  "where": {
+    "student_id": "STU-06J4EGK"
+  },
   "display": {
     "select": [
       "course_id",
@@ -20,7 +23,7 @@
       "order": "desc"
     },
     "filter": {
-      "hasRelations": false
+      "hasRelations": true
     }
   }
 }

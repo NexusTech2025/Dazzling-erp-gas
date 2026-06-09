@@ -10,9 +10,16 @@
     "compile-graph": "node index.js --build",
     "compile-graph:dev": "node index.js --build --env development",
     "compile-graph:prod": "node index.js --build --env production",
+    "audit-schema": "node index.js --audit-docs",
+    "audit-schema:dev": "node index.js --audit-docs --env development",
+    "audit-schema:prod": "node index.js --audit-docs --env production",
+    "fix-fk-types": "node index.js --fix-fk-types",
+    "fix-backward-refs": "node index.js --fix-backward-refs",
+    "help": "node index.js --help",
     "api-login": "node src/client/actions/login.js",
     "api-query": "node src/client/actions/query.js",
-    "clean-courses": "node src/client/actions/clean_courses.js"
+    "clean-courses": "node src/client/actions/clean_courses.js",
+    "push-apps": "node src/client/actions/push_apps_script.js"
   },
   "keywords": [
     "dazzlingdb",

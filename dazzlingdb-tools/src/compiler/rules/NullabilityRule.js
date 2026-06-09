@@ -12,25 +12,33 @@ class NullabilityRule extends BaseRule {
   }
 
   execute(tableName, schema, allSchemas, context) {
-    for (const [colName, colSchema] of Object.entries(schema.columns)) {
-      if (colSchema.type === 'foreign_key') {
-        const onDelete = colSchema.onDelete || 'protect';
+    if (!schema.relations) return;
+
+    for (const [relName, relSchema] of Object.entries(schema.relations)) {
+      if (relSchema.type === 'belongsTo') {
+        const fk = relSchema.foreignKey;
+        if (!fk) continue;
+
+        const colSchema = schema.columns ? schema.columns[fk] : null;
+        if (!colSchema) continue;
+
+        const onDelete = relSchema.onDelete || 'protect';
         
         Logger.logEvent({
           level: 'debug',
           category: 'linter',
-          message: `[NullabilityRule] Checking [${tableName}.${colName}] onDelete policy: [${onDelete}]`
+          message: `[NullabilityRule] Checking [${tableName}.${fk}] onDelete policy: [${onDelete}]`
         });
 
         if (onDelete === 'set_null') {
           // Prevent set_null on PK or Auto fields (TC 14)
-          if (colName === schema.primaryKey || colSchema.type === 'auto') {
-            context.errors.push(`[${tableName}.${colName}] NullabilityError: Cannot set onDelete to 'set_null' on primary key or auto-generated fields.`);
+          if (fk === schema.primaryKey || colSchema.type === 'auto') {
+            context.errors.push(`[${tableName}.${fk}] NullabilityError: Cannot set onDelete to 'set_null' on primary key or auto-generated fields.`);
             continue;
           }
 
           if (colSchema.required === true) {
-            context.errors.push(`[${tableName}.${colName}] NullabilityError: The column onDelete policy is set to 'set_null', but the field is marked as 'required: true'. Required columns cannot be nullified.`);
+            context.errors.push(`[${tableName}.${fk}] NullabilityError: The relation '${relName}' onDelete policy is set to 'set_null', but the foreign key column '${fk}' is marked as 'required: true'. Required columns cannot be nullified.`);
           }
         }
       }

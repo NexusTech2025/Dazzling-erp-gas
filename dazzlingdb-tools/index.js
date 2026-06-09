@@ -9,6 +9,9 @@ const path = require('path');
 const Logger = require('./src/logger/Logger');
 const SchemaLinter = require('./src/compiler/SchemaLinter');
 const GraphBuilder = require('./src/compiler/GraphBuilder');
+const { marked } = require('marked');
+const { auditSchemaDocs } = require('./src/compiler/SchemaDocAuditor');
+const { fixFkTypes, fixBackwardRefs } = require('./src/compiler/SchemaMigrationTools');
 
 // Parse CLI arguments globally for environment switching
 const cliArgs = process.argv.slice(2);
@@ -132,7 +135,7 @@ function loadSchemas() {
  */
 function compileRuntimeSchema(categoryStructure) {
   const compiled = {
-    "version": "2.1.1",
+    "version": "2.2.0",
     "database": "DazzlingDB",
     "categories": {}
   };
@@ -184,10 +187,85 @@ function compileRuntimeSchema(categoryStructure) {
   });
 }
 
+/**
+ * Parses and prints the help markdown file using marked AST.
+ */
+function printHelp() {
+  const helpPath = path.resolve(__dirname, 'help.md');
+  if (!fs.existsSync(helpPath)) {
+    Logger.logEvent({ level: 'error', category: 'general', message: "Help document help.md not found." });
+    return;
+  }
+  
+  const content = fs.readFileSync(helpPath, 'utf8');
+  const tokens = marked.lexer(content);
+
+  tokens.forEach(token => {
+    const rendered = renderHelpToken(token);
+    if (rendered !== null && rendered !== '') {
+      console.log(rendered);
+    }
+  });
+  console.log(); // Final spacing newline
+}
+
+function renderHelpToken(token) {
+  switch (token.type) {
+    case 'heading': {
+      const text = renderInline(token.tokens || []);
+      if (token.depth === 1) {
+        return `\n${Logger.colorize('cyan', `=== ${text} ===`)}`;
+      } else {
+        return `\n${Logger.colorize('magenta', text)}`;
+      }
+    }
+    case 'paragraph': {
+      return renderInline(token.tokens || []);
+    }
+    case 'list': {
+      return token.items.map(item => `  • ${renderInline(item.tokens || [])}`).join('\n');
+    }
+    case 'code': {
+      const indent = '  ';
+      const lines = token.text.split('\n').map(line => {
+        if (line.trim().startsWith('#')) {
+          return indent + Logger.colorize('yellow', line);
+        }
+        return indent + Logger.colorize('green', line);
+      });
+      return `\n${lines.join('\n')}`;
+    }
+    case 'space':
+    default: {
+      return null;
+    }
+  }
+}
+
+function renderInline(tokens) {
+  return tokens.map(t => {
+    switch (t.type) {
+      case 'codespan':
+        return Logger.colorize('green', t.text);
+      case 'strong':
+        return Logger.colorize('cyan', renderInline(t.tokens || []));
+      case 'em':
+        return Logger.colorize('cyan', renderInline(t.tokens || []));
+      case 'text':
+      default:
+        return t.text || t.raw || '';
+    }
+  }).join('');
+}
+
 function main() {
   const args = process.argv.slice(2);
   const lintOnly = args.includes('--lint-only');
   const build = args.includes('--build');
+  const auditDocs = args.includes('--audit-docs');
+  const runFixFkTypes = args.includes('--fix-fk-types');
+  const runFixBackwardRefs = args.includes('--fix-backward-refs');
+  const showHelp = args.includes('--help') || args.includes('-h') || args.includes('help');
 
   // Parse verbosity levels
   let verbosityLevel = 1;
@@ -211,11 +289,26 @@ function main() {
     });
   }
 
-  if (!lintOnly && !build) {
+  if (showHelp) {
+    printHelp();
+    process.exit(0);
+  }
+
+  if (runFixFkTypes) {
+    fixFkTypes(SCHEMA_DIR);
+    process.exit(0);
+  }
+
+  if (runFixBackwardRefs) {
+    fixBackwardRefs(SCHEMA_DIR);
+    process.exit(0);
+  }
+
+  if (!lintOnly && !build && !auditDocs) {
     Logger.logEvent({
       level: 'action',
       category: 'general',
-      message: "Usage: node index.js [--lint-only | --build] [--verbosity <1|2|3> | -vv | -vvv]"
+      message: "Usage: node index.js [--lint-only | --build | --audit-docs | --fix-fk-types | --fix-backward-refs | --help] [--verbosity <1|2|3> | -vv | -vvv]\n   Run 'node index.js --help' to see all options."
     });
     process.exit(0);
   }
@@ -275,6 +368,15 @@ function main() {
       category: 'general',
       message: "DazzlingDB compilation pipeline complete."
     });
+  }
+
+  if (auditDocs) {
+    Logger.logEvent({ level: 'action', category: 'general', message: "Starting DazzlingDB Schema & Documentation Audit..." });
+    const DOCS_DIR = path.resolve(__dirname, '../docs/schema/v2/tables');
+    const success = auditSchemaDocs(SCHEMA_DIR, DOCS_DIR);
+    if (!success) {
+      process.exit(1);
+    }
   }
 }
 

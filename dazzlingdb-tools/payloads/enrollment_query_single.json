@@ -1,0 +1,10 @@
+{
+  "where": {
+    "enrollment_id": "ENR-OI18AVQ"
+  },
+  "include": [
+    "student",
+    "allocations",
+    "studentfeeaccounts"
+  ]
+}
