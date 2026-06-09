@@ -75,7 +75,7 @@ function compile() {
       // Standardize types and copy original columns
       for (const [colName, colConfig] of Object.entries(originalColumns)) {
         mergedColumns[colName] = { ...colConfig };
-        
+
         // If string and no maxLength, add default 255
         if (mergedColumns[colName].type === 'string' && !mergedColumns[colName].maxLength) {
           mergedColumns[colName].maxLength = 255;

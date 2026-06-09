@@ -59,6 +59,7 @@ Every request MUST include an `action` and a `payload`. For protected routes, a 
 | Action Key | Payload Requirements | Description |
 | :--- | :--- | :--- |
 | `student_register` | `{ "payload": { "profile": {...}, "address": {...}, "contact": {...} } }` | **Relational Insert:** Creates student, address, and contact in one transaction. |
+| `student_delete` | `{ "payload": { "student_id": "...", "dryRun": true/false } }` | **Delete Student:** Restricts if active financial history exists, cascades to addresses, contacts, and education records. |
 | `student_delete_many_students` | `{ "payload": { "ids": ["STU1", "STU2"], "dryRun": true/false } }` | **Bulk Delete Students:** Restricts if active enrollments/fees exist, cascades to addresses/contacts/education. |
 
 ### C. Academic & Curriculum
@@ -85,6 +86,7 @@ Every request MUST include an `action` and a `payload`. For protected routes, a 
 | `staff_set_salary_config` | `{ "payload": { "teacher_id": "...", "salary_type": "monthly", "base_amount": 20000 } }` | Define payroll rules. |
 | `staff_add_document` | `{ "payload": { "teacher_id": "...", "document": {...} } }` | Attach file links to staff. |
 | `staff_delete_many_teachers` | `{ "payload": { "ids": ["TCH1", "TCH2"], "dryRun": true/false } }` | **Bulk Delete Teachers:** Restricts if assigned to active batches or payroll transactions exist, cascades to subjects/docs/salary configs. |
+| **Generic CRUD (StaffMember)** | Use generic actions (`data_create`, `data_query`, etc.) with `"table": "StaffMember"`. | Management of non-faculty staff members (admin, receptionist, security, support, etc.). |
 
 ### E. Finance Management
 | Action Key | Payload Requirements | Description |
@@ -93,6 +95,8 @@ Every request MUST include an `action` and a `payload`. For protected routes, a 
 | `finance_delete_many_installments` | `{ "payload": { "ids": ["INS1", "INS2"], "dryRun": true/false } }` | **Bulk Delete Installments:** Restricts if paid/partially paid, cascades recalculation of parent fee account balances. |
 | `finance_delete_many_payments` | `{ "payload": { "ids": ["PAY1", "PAY2"], "dryRun": true/false } }` | **Bulk Delete Payments:** Reverts paid amounts from installment status/balances and parent fee account balances. |
 | `finance_delete_many_adjustments` | `{ "payload": { "ids": ["ADJ1", "ADJ2"], "dryRun": true/false } }` | **Bulk Delete Adjustments:** Reverts adjustment amounts and parent fee account balances. |
+| **Generic CRUD (ExpenseCategory)** | Use generic actions (`data_create`, `data_query`, etc.) with `"table": "ExpenseCategory"`. | Configuration of accounting categories (incoming/outgoing ledger classifications). |
+| **Generic CRUD (MoneyTransaction)** | Use generic actions (`data_create`, `data_query`, etc.) with `"table": "MoneyTransaction"`. | General ledger logging. Supports polymorphic party links to Student, Teacher, or StaffMember. |
 
 ---
 
@@ -773,5 +777,255 @@ If validation fails, unauthorized access is detected, or a database rule is viol
 *   **`error`** *(Object)*: Encloses the error details:
     *   **`type`** *(String)*: The system error class name (e.g., `ActionValidationError`, `ActionAuthorizationError`, `ValidationError`, `EntityNotFoundError`, `ForbiddenError`).
     *   **`message`** *(String)*: A descriptive, human-readable reason for the failure.
+
+---
+
+## 10. Student Deletion REST API (`student_delete`)
+
+This endpoint permanently deletes a student record from the database using its primary ID.
+
+### Key Points
+* **RESTRICT Check (Protect):** Deletion is blocked and throws an `ActionValidationError` if the student has active financial ledger records (payments, installments) or active batch allocations.
+* **CASCADE Delete:** Automatically deletes associated `Address`, `ContactInfo`, and `Education` records recursively.
+* **dryRun Parameter:** Supports a safety checks mode. Set `"dryRun": true` (or omit `"dryRun"`) to run constraint checks in memory without executing physical deletes. Set `"dryRun": false` to perform physical deletes.
+
+### Request Payload Attributes
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `student_id` | `string` | **Yes** | The unique identifier of the target student to be deleted (e.g., `STU-C3NEA67`). |
+| `dryRun` | `boolean` | No | If `true` (default), checks constraints and returns validation status without modifying data. Set to `false` for physical deletion. |
+
+### Request Body (Dry-Run / Physical Delete)
+```json
+{
+  "action": "student_delete",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "student_id": "STU-C3NEA67",
+    "dryRun": false
+  }
+}
+```
+
+### Success Response Body
+When the student has no active financial history and deletion succeeds:
+```json
+{
+  "success": true,
+  "action": "student_delete",
+  "data": {
+    "success": true,
+    "message": "Successfully deleted Student 'STU-C3NEA67'.",
+    "student_id": "STU-C3NEA67"
+  }
+}
+```
+
+### Error Response Body (Blocked Deletion)
+When deletion is blocked due to active financial ledger records (e.g., installments exist on the student fee account):
+```json
+{
+  "success": false,
+  "action": "student_delete",
+  "error": {
+    "type": "ActionValidationError",
+    "message": "Delete Protected: Cannot delete from 'StudentFeeAccount' because active records in 'Installment' refer to it (FK: 'student_fee_id')."
+  }
+}
+```
+
+---
+
+## 11. Expense Category REST API (Generic CRUD Reference)
+
+The `ExpenseCategory` table stores accounting category classifications (e.g., rent, payroll, utilities). It is in the `GLOBAL_CRUD_WHITELIST` and supports standard generic data actions (`data_create`, `data_query`, `data_update`, `data_delete`, `data_delete_many`).
+
+### Expense Category Schema Reference
+
+| Field Name | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `category_id` | `string` | Read-only, Primary Key | Auto-generated ID prefixed with `EXC-` (e.g., `EXC-2B632258`). |
+| `name` | `string` | **Required**, unique, max 255 chars | Display name of the category (e.g., "Office Utilities"). |
+| `type` | `string` | Enum, default: `both` | Choices: `in` (revenue only), `out` (expenses only), `both` (any). |
+| `description` | `string` | Optional, max 255 chars | Details outlining the scope of this category. |
+
+### Relationships and Deletion Policy
+* **`moneytransactions` (hasMany)**: Referencing the `MoneyTransaction` table's `category_id` column.
+* **Deletion Protection (`onDelete: "protect"`)**: Deleting an `ExpenseCategory` row will fail with an `IntegrityError` if any `MoneyTransaction` records are actively referencing it.
+
+### A. Create Expense Category (`data_create`)
+
+**Request Body:**
+```json
+{
+  "action": "data_create",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "table": "ExpenseCategory",
+    "data": {
+      "name": "Office Utilities",
+      "type": "both",
+      "description": "Water, electricity, internet bills"
+    }
+  }
+}
+```
+
+**Response Body (Success):**
+```json
+{
+  "success": true,
+  "action": "data_create",
+  "data": {
+    "message": "Successfully created record in table 'ExpenseCategory' with ID 'EXC-2B632258'.",
+    "id": "EXC-2B632258",
+    "record": {
+      "category_id": "EXC-2B632258",
+      "name": "Office Utilities",
+      "type": "both",
+      "description": "Water, electricity, internet bills"
+    }
+  }
+}
+```
+
+---
+
+## 12. Staff Member REST API (Generic CRUD Reference)
+
+The `StaffMember` table stores profiles of non-faculty organizational staff members. It is in the `GLOBAL_CRUD_WHITELIST` and supports generic actions (`data_create`, `data_query`, `data_update`, `data_delete`, `data_delete_many`).
+
+### Staff Member Schema Reference
+
+| Field Name | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `staff_id` | `string` | Read-only, Primary Key | Auto-generated ID prefixed with `STF-` (e.g., `STF-F6F68672`). |
+| `name` | `string` | **Required**, max 255 chars | The full legal name of the staff member. |
+| `role` | `string` | Enum, default: `other` | Choices: `admin`, `receptionist`, `support`, `security`, `cleaner`, `other`. |
+| `status` | `string` | Enum, default: `active` | Choices: `active`, `inactive`. Inactive staff cannot be selected for new payouts. |
+| `phone` | `string` | Optional, max 50 chars | Contact telephone number. |
+| `email` | `string` | Optional, max 255 chars | Official email address. |
+
+### Relationships and Deletion Policy
+* **`moneytransactions` (hasMany)**: Referencing the polymorphic target `party_id` in `MoneyTransaction`.
+* **Non-Blocking Deletion (`onDelete: "do_nothing"`)**: Deleting a `StaffMember` will succeed and leave any associated child `MoneyTransaction` records intact.
+
+### A. Create Staff Member (`data_create`)
+
+**Request Body:**
+```json
+{
+  "action": "data_create",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "table": "StaffMember",
+    "data": {
+      "name": "Security Guard",
+      "role": "security",
+      "status": "active",
+      "phone": "+91-9999888877",
+      "email": "guard@test.com"
+    }
+  }
+}
+```
+
+**Response Body (Success):**
+```json
+{
+  "success": true,
+  "action": "data_create",
+  "data": {
+    "message": "Successfully created record in table 'StaffMember' with ID 'STF-F6F68672'.",
+    "id": "STF-F6F68672",
+    "record": {
+      "staff_id": "STF-F6F68672",
+      "name": "Security Guard",
+      "role": "security",
+      "status": "active",
+      "phone": "+91-9999888877",
+      "email": "guard@test.com"
+    }
+  }
+}
+```
+
+---
+
+## 13. Money Transaction REST API (Generic CRUD Reference)
+
+The `MoneyTransaction` table is the general ledger register logging all cash flows. It is in the `GLOBAL_CRUD_WHITELIST` and supports generic actions (`data_create`, `data_query`, `data_update`, `data_delete`, `data_delete_many`). It integrates a polymorphic relation linking entries to students, teachers, or staff members.
+
+### Money Transaction Schema Reference
+
+| Field Name | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `transaction_id` | `string` | Read-only, Primary Key | Auto-generated ID prefixed with `MTX-` (e.g., `MTX-7D43EF46`). |
+| `amount` | `number` | **Required**, minimum: `0` | Absolute positive decimal cash flow amount. |
+| `type` | `string` | **Required**, enum | Choices: `in` (revenue inflows), `out` (expense outflows). |
+| `category_id` | `string` | **Required**, Foreign Key | References `ExpenseCategory.category_id`. Inherits protect rule. |
+| `payment_method` | `string` | Enum | Choices: `cash`, `paytm`, `phonepe`, `bank`, `other`. |
+| `payment_reference` | `string` | Optional, max 255 chars | Check numbers, transaction hashes, or bank refs. |
+| `party_type` | `string` | Enum | Choices: `student`, `teacher`, `staff`, `external`. |
+| `party_id` | `string` | Optional, Polymorphic FK | References `student_id` (Student), `teacher_id` (Teacher), or `staff_id` (StaffMember) depending on `party_type`. |
+| `party_name` | `string` | Optional, max 255 chars | Literal name of partner (required for `external` party types). |
+| `transaction_date` | `string` | **Required**, Date | Format: `YYYY-MM-DD`. Supporting backdated entries. |
+| `notes` | `string` | Optional, max 255 chars | Details describing the purpose of transaction. |
+| `remarks` | `string` | Optional, max 255 chars | Internal accounting audit remarks or correction details. |
+| `created_by` | `string` | Optional, max 255 chars | Email/username of the logging user. |
+
+### Relationships and Deletion Policy
+* **`category` (belongsTo)**: References `ExpenseCategory` via `category_id`. Deletion is protected (`onDelete: "protect"`).
+* **`party` (belongsToPolymorphic)**: Resolves dynamically to `Student`, `Teacher`, or `StaffMember` depending on `party_type`. Deletion uses a non-blocking `"onDelete": "do_nothing"` policy, which ensures that deleting parent student, teacher, or staff profiles does not orphan or block ledger history logs.
+
+### A. Log a Transaction (`data_create`)
+
+**Request Body (Polymorphic Staff Payout):**
+```json
+{
+  "action": "data_create",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "table": "MoneyTransaction",
+    "data": {
+      "amount": 1500,
+      "type": "out",
+      "category_id": "EXC-2B632258",
+      "payment_method": "cash",
+      "party_type": "staff",
+      "party_id": "STF-F6F68672",
+      "party_name": "Security Guard",
+      "transaction_date": "2026-06-09",
+      "notes": "Salary payout for May 2026"
+    }
+  }
+}
+```
+
+**Response Body (Success):**
+```json
+{
+  "success": true,
+  "action": "data_create",
+  "data": {
+    "message": "Successfully created record in table 'MoneyTransaction' with ID 'MTX-7D43EF46'.",
+    "id": "MTX-7D43EF46",
+    "record": {
+      "transaction_id": "MTX-7D43EF46",
+      "amount": 1500,
+      "type": "out",
+      "category_id": "EXC-2B632258",
+      "payment_method": "cash",
+      "party_type": "staff",
+      "party_id": "STF-F6F68672",
+      "party_name": "Security Guard",
+      "transaction_date": "2026-06-09",
+      "notes": "Salary payout for May 2026"
+    }
+  }
+}
+
+
 
 

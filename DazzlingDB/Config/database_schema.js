@@ -1,5 +1,5 @@
 const DATABASE_SCHEMA = {
-  "version": "2.1.3",
+  "version": "2.2.0",
   "database": "DazzlingDB",
   "categories": {
     "Academic": {
@@ -1105,6 +1105,76 @@ const DATABASE_SCHEMA = {
     },
     "Finance": {
       "tables": {
+        "ExpenseCategory": {
+          "primaryKey": "category_id",
+          "columns": {
+            "category_id": {
+              "type": "auto",
+              "idPrefix": "EXC",
+              "editable": false,
+              "unique": true,
+              "required": false,
+              "description": "Unique auto-generated identifier for this expense or revenue category.\nPrefixed with EXC and used as the foreign key in financial transaction logs."
+            },
+            "name": {
+              "type": "string",
+              "required": true,
+              "unique": true,
+              "maxLength": 255,
+              "description": "The display name of the financial category (e.g., Rent, Salaries, Marketing).\nMust be unique to prevent duplicates and is used for reporting groups."
+            },
+            "type": {
+              "type": "string",
+              "choices": [
+                "in",
+                "out",
+                "both"
+              ],
+              "default": "both",
+              "maxLength": 50,
+              "description": "Defines if this category is valid for incoming funds (in), outgoing expenses (out), or both (both).\nRestricts category selections in transaction entry forms."
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 255,
+              "description": "Additional details outlining the accounting scope of this category.\nHelps administrators classify transactions consistently during entry."
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "moneytransactions": {
+              "type": "hasMany",
+              "target": "MoneyTransaction",
+              "foreignKey": "category_id",
+              "onDelete": "protect"
+            }
+          }
+        },
         "FeeAdjustment": {
           "primaryKey": "adjustment_id",
           "columns": {
@@ -1336,6 +1406,147 @@ const DATABASE_SCHEMA = {
               "type": "hasMany",
               "target": "Payment",
               "foreignKey": "installment_id"
+            }
+          }
+        },
+        "MoneyTransaction": {
+          "primaryKey": "transaction_id",
+          "columns": {
+            "transaction_id": {
+              "type": "auto",
+              "idPrefix": "MTX",
+              "editable": false,
+              "unique": true,
+              "required": false,
+              "description": "Unique auto-generated identifier for this general ledger entry.\nPrefixed with MTX and acts as the primary key for the consolidated transaction register."
+            },
+            "amount": {
+              "type": "number",
+              "required": true,
+              "min": 0,
+              "description": "The absolute monetary value of this transaction.\nMust be a positive number and represents the physical cash flow amount."
+            },
+            "type": {
+              "type": "string",
+              "choices": [
+                "in",
+                "out"
+              ],
+              "required": true,
+              "maxLength": 50,
+              "description": "The flow direction of the money, either 'in' for revenue inflows or 'out' for expense outflows.\nUsed to calculate net cash balances in reports."
+            },
+            "category_id": {
+              "type": "foreign_key",
+              "required": true,
+              "maxLength": 255,
+              "onDelete": "protect",
+              "description": "Foreign key referencing the ExpenseCategory table.\nGroups the transaction into accounting categories like rent, marketing, or salaries."
+            },
+            "payment_method": {
+              "type": "string",
+              "choices": [
+                "cash",
+                "paytm",
+                "phonepe",
+                "bank",
+                "other"
+              ],
+              "maxLength": 255,
+              "description": "The physical or digital channel used to complete the transaction (cash, paytm, phonepe, bank, or other).\nMatches cash drawer tracking."
+            },
+            "payment_reference": {
+              "type": "string",
+              "maxLength": 255,
+              "description": "Optional reference details such as transaction hash, bank reference, or check numbers.\nCrucial for tracing funds in bank audits."
+            },
+            "party_type": {
+              "type": "string",
+              "choices": [
+                "student",
+                "teacher",
+                "staff",
+                "external"
+              ],
+              "maxLength": 50,
+              "description": "Identifies the database model of the related party (student, teacher, staff, or external).\nGoverns the target registry path for polymorphic lookups."
+            },
+            "party_id": {
+              "type": "foreign_key",
+              "required": false,
+              "maxLength": 255,
+              "onDelete": "do_nothing",
+              "description": "The foreign key targeting the specific party record (STU-XXX, TCH-XXX, STF-XXX).\nKept null for external parties who do not have system profiles."
+            },
+            "party_name": {
+              "type": "string",
+              "maxLength": 255,
+              "description": "The literal name of the transaction partner.\nUsed for external parties (e.g., local vendors) or to cache names for rapid display."
+            },
+            "transaction_date": {
+              "type": "date",
+              "required": true,
+              "description": "The calendar date when the money was physically exchanged.\nSeparate from creation timestamps to support backdated bookkeeping entry."
+            },
+            "notes": {
+              "type": "string",
+              "maxLength": 255,
+              "description": "General descriptive details of the transaction (e.g., 'Weekly grocery expenses', 'Refund for session').\nHelps clarify the purpose of the expense."
+            },
+            "remarks": {
+              "type": "string",
+              "maxLength": 255,
+              "description": "Internal accounting notes or auditor corrections.\nUsed for special payment flags, dispute details, or correction logs."
+            },
+            "created_by": {
+              "type": "string",
+              "maxLength": 255,
+              "description": "The username or email of the system user who logged this transaction.\nEssential for audit trails and tracing accountability."
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "category": {
+              "type": "belongsTo",
+              "target": "ExpenseCategory",
+              "foreignKey": "category_id",
+              "onDelete": "protect"
+            },
+            "party": {
+              "type": "belongsToPolymorphic",
+              "typeField": "party_type",
+              "idField": "party_id",
+              "onDelete": "do_nothing",
+              "mapping": {
+                "student": "Student",
+                "teacher": "Teacher",
+                "staff": "StaffMember"
+              }
             }
           }
         },
@@ -1582,6 +1793,93 @@ const DATABASE_SCHEMA = {
     },
     "Staff": {
       "tables": {
+        "StaffMember": {
+          "primaryKey": "staff_id",
+          "columns": {
+            "staff_id": {
+              "type": "auto",
+              "idPrefix": "STF",
+              "editable": false,
+              "unique": true,
+              "required": false,
+              "description": "Unique auto-generated identifier for the non-faculty staff member.\nPrefixed with STF and used as the polymorphic target ID in money transaction tables."
+            },
+            "name": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255,
+              "description": "The full legal name of the staff member.\nUsed in payroll processing, HR lists, and display references on admin dashboards."
+            },
+            "role": {
+              "type": "string",
+              "choices": [
+                "admin",
+                "receptionist",
+                "support",
+                "security",
+                "cleaner",
+                "other"
+              ],
+              "default": "other",
+              "maxLength": 255,
+              "description": "The designated organizational role of the staff member (e.g. admin, receptionist, security, cleaner).\nHelps define operational boundaries and access permissions."
+            },
+            "status": {
+              "type": "string",
+              "choices": [
+                "active",
+                "inactive"
+              ],
+              "default": "active",
+              "maxLength": 255,
+              "description": "Indicates if the staff member is currently active or inactive.\nInactive staff are hidden from active rosters and cannot be selected for new payouts."
+            },
+            "phone": {
+              "type": "string",
+              "maxLength": 50,
+              "description": "Contact telephone number of the staff member.\nUsed for HR communication and verifying identity details."
+            },
+            "email": {
+              "type": "string",
+              "maxLength": 255,
+              "description": "The official email address of the staff member.\nUsed for sending payment receipts, account notifications, and communication logs."
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "moneytransactions": {
+              "type": "hasMany",
+              "target": "MoneyTransaction",
+              "foreignKey": "party_id",
+              "onDelete": "do_nothing"
+            }
+          }
+        },
         "Teacher": {
           "primaryKey": "teacher_id",
           "columns": {
@@ -1756,6 +2054,12 @@ const DATABASE_SCHEMA = {
               "type": "hasMany",
               "target": "TeacherAttendance",
               "foreignKey": "teacher_id"
+            },
+            "moneytransactions": {
+              "type": "hasMany",
+              "target": "MoneyTransaction",
+              "foreignKey": "party_id",
+              "onDelete": "do_nothing"
             }
           }
         },
@@ -2514,6 +2818,12 @@ const DATABASE_SCHEMA = {
               "type": "hasMany",
               "target": "BatchAllocation",
               "foreignKey": "student_id"
+            },
+            "moneytransactions": {
+              "type": "hasMany",
+              "target": "MoneyTransaction",
+              "foreignKey": "party_id",
+              "onDelete": "do_nothing"
             }
           }
         },

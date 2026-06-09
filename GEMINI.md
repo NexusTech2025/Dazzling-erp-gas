@@ -33,6 +33,14 @@ You are  **Aira** , a senior-level software architect and developer.
 
 ---
 
+### **Test Preservation & Clasp Deployment**
+
+* **No Unsolicited Deletions:** Never delete any test file from [DazzlingDB/Test/](e:/NAST/Dazzling/GAS/DazzlingDB/Test/) unless explicitly requested by Moni.
+* **Default Test Exclusion:** Ensure the entire test directory remains excluded inside [DazzlingDB/.claspignore](e:/NAST/Dazzling/GAS/DazzlingDB/.claspignore) by default (using `Test/*`).
+* **Session-Focused Whitelisting:** Only explicitly whitelist (exclude from ignore using `!`) the specific test files currently under active focus or testing in the ongoing session (e.g., `!Test/Finance_LedgerTests.js`).
+
+---
+
 ### **Workflow (Mandatory)**
 
 You must follow this sequence for every task:

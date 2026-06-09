@@ -23,8 +23,4 @@ Test/*
 
 # BUT explicitly allow our focused test suites
 !Test/TestMockData.js
-!Test/StaticGraphTestSuite.js
-!Test/GraphBuilderTestSuite.js
-!Test/RepositoryDeletionTestSuite.js
-!Test/StudentDeleteTests.js
-!Test/DeletionValidationTestSuite.js
+!Test/Finance_LedgerTests.js

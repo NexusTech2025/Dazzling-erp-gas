@@ -1,0 +1,101 @@
+{
+  "primaryKey": "transaction_id",
+  "columns": {
+    "transaction_id": {
+      "type": "auto",
+      "idPrefix": "MTX",
+      "editable": false,
+      "unique": true,
+      "required": false,
+      "description": "Unique auto-generated identifier for this general ledger entry.\nPrefixed with MTX and acts as the primary key for the consolidated transaction register."
+    },
+    "amount": {
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "description": "The absolute monetary value of this transaction.\nMust be a positive number and represents the physical cash flow amount."
+    },
+    "type": {
+      "type": "string",
+      "choices": ["in", "out"],
+      "required": true,
+      "maxLength": 50,
+      "description": "The flow direction of the money, either 'in' for revenue inflows or 'out' for expense outflows.\nUsed to calculate net cash balances in reports."
+    },
+    "category_id": {
+      "type": "foreign_key",
+      "required": true,
+      "maxLength": 255,
+      "onDelete": "protect",
+      "description": "Foreign key referencing the ExpenseCategory table.\nGroups the transaction into accounting categories like rent, marketing, or salaries."
+    },
+    "payment_method": {
+      "type": "string",
+      "choices": ["cash", "paytm", "phonepe", "bank", "other"],
+      "maxLength": 255,
+      "description": "The physical or digital channel used to complete the transaction (cash, paytm, phonepe, bank, or other).\nMatches cash drawer tracking."
+    },
+    "payment_reference": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Optional reference details such as transaction hash, bank reference, or check numbers.\nCrucial for tracing funds in bank audits."
+    },
+    "party_type": {
+      "type": "string",
+      "choices": ["student", "teacher", "staff", "external"],
+      "maxLength": 50,
+      "description": "Identifies the database model of the related party (student, teacher, staff, or external).\nGoverns the target registry path for polymorphic lookups."
+    },
+    "party_id": {
+      "type": "foreign_key",
+      "required": false,
+      "maxLength": 255,
+      "onDelete": "do_nothing",
+      "description": "The foreign key targeting the specific party record (STU-XXX, TCH-XXX, STF-XXX).\nKept null for external parties who do not have system profiles."
+    },
+    "party_name": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "The literal name of the transaction partner.\nUsed for external parties (e.g., local vendors) or to cache names for rapid display."
+    },
+    "transaction_date": {
+      "type": "date",
+      "required": true,
+      "description": "The calendar date when the money was physically exchanged.\nSeparate from creation timestamps to support backdated bookkeeping entry."
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "General descriptive details of the transaction (e.g., 'Weekly grocery expenses', 'Refund for session').\nHelps clarify the purpose of the expense."
+    },
+    "remarks": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Internal accounting notes or auditor corrections.\nUsed for special payment flags, dispute details, or correction logs."
+    },
+    "created_by": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "The username or email of the system user who logged this transaction.\nEssential for audit trails and tracing accountability."
+    }
+  },
+  "relations": {
+    "category": {
+      "type": "belongsTo",
+      "target": "ExpenseCategory",
+      "foreignKey": "category_id",
+      "onDelete": "protect"
+    },
+    "party": {
+      "type": "belongsToPolymorphic",
+      "typeField": "party_type",
+      "idField": "party_id",
+      "onDelete": "do_nothing",
+      "mapping": {
+        "student": "Student",
+        "teacher": "Teacher",
+        "staff": "StaffMember"
+      }
+    }
+  }
+}

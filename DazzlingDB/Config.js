@@ -84,7 +84,7 @@ const GLOBAL_CRUD_WHITELIST = new Set([
   "CourseType", "Course", "Batch", "BatchAllocation", "PackageItem", "PackagePerk",
   "Address", "ContactInfo", "Education", "StudentLead",
   "TeacherSubject", "TeacherAttendance", "TeacherDocument", "TeacherSalaryConfig", "TeacherPaymentTransaction",
-  "FeePlan"
+  "FeePlan", "ExpenseCategory", "StaffMember", "MoneyTransaction"
 ]);
 
 /**
@@ -116,5 +116,8 @@ const ID_PREFIX_FALLBACK_REGISTRY = {
   TeacherAttendance: "TAT",
   TeacherDocument: "TDO",
   TeacherSalaryConfig: "TSC",
-  TeacherPaymentTransaction: "TPT"
+  TeacherPaymentTransaction: "TPT",
+  ExpenseCategory: "EXC",
+  StaffMember: "STF",
+  MoneyTransaction: "MTX"
 };

@@ -146,6 +146,12 @@
       "type": "hasMany",
       "target": "TeacherAttendance",
       "foreignKey": "teacher_id"
+    },
+    "moneytransactions": {
+      "type": "hasMany",
+      "target": "MoneyTransaction",
+      "foreignKey": "party_id",
+      "onDelete": "do_nothing"
     }
   }
 }

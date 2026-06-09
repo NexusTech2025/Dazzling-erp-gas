@@ -28,6 +28,9 @@ function registerPolymorphicMappings() {
     SheetDB.PolymorphicRegistry.register("course", "Course");
     SheetDB.PolymorphicRegistry.register("package", "Package");
     SheetDB.PolymorphicRegistry.register("subject", "Course");
+    SheetDB.PolymorphicRegistry.register("staff", "StaffMember");
+    SheetDB.PolymorphicRegistry.register("student", "Student");
+    SheetDB.PolymorphicRegistry.register("teacher", "Teacher");
   }
 }
 

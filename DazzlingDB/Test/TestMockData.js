@@ -284,6 +284,36 @@ const TestMockData = {
     created_by: "USR-MOCK-1"
   },
 
+  ExpenseCategory: {
+    category_id: "EXC-MOCK-1",
+    name: "Mock Utilities",
+    type: "both",
+    description: "Mock utility bills like water and electricity"
+  },
+  StaffMember: {
+    staff_id: "STF-MOCK-1",
+    name: "Mock Security Guard",
+    role: "security",
+    status: "active",
+    phone: "9111122222",
+    email: "security@mocktest.com"
+  },
+  MoneyTransaction: {
+    transaction_id: "MTX-MOCK-1",
+    amount: 1000,
+    type: "out",
+    category_id: "EXC-MOCK-1",
+    payment_method: "cash",
+    payment_reference: "REF-CASH-100",
+    party_type: "staff",
+    party_id: "STF-MOCK-1",
+    party_name: "Mock Security Guard",
+    transaction_date: "2026-06-09",
+    notes: "Monthly stipend payment for night shift duties",
+    remarks: "Pending approval",
+    created_by: "mockadmin"
+  },
+
   // =========================================================================
   // Helper Generator Functions (Deep Copy with overrides)
   // =========================================================================

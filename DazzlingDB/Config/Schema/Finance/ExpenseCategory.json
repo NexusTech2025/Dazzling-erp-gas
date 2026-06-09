@@ -1,0 +1,40 @@
+{
+  "primaryKey": "category_id",
+  "columns": {
+    "category_id": {
+      "type": "auto",
+      "idPrefix": "EXC",
+      "editable": false,
+      "unique": true,
+      "required": false,
+      "description": "Unique auto-generated identifier for this expense or revenue category.\nPrefixed with EXC and used as the foreign key in financial transaction logs."
+    },
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 255,
+      "description": "The display name of the financial category (e.g., Rent, Salaries, Marketing).\nMust be unique to prevent duplicates and is used for reporting groups."
+    },
+    "type": {
+      "type": "string",
+      "choices": ["in", "out", "both"],
+      "default": "both",
+      "maxLength": 50,
+      "description": "Defines if this category is valid for incoming funds (in), outgoing expenses (out), or both (both).\nRestricts category selections in transaction entry forms."
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Additional details outlining the accounting scope of this category.\nHelps administrators classify transactions consistently during entry."
+    }
+  },
+  "relations": {
+    "moneytransactions": {
+      "type": "hasMany",
+      "target": "MoneyTransaction",
+      "foreignKey": "category_id",
+      "onDelete": "protect"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "primaryKey": "staff_id",
+  "columns": {
+    "staff_id": {
+      "type": "auto",
+      "idPrefix": "STF",
+      "editable": false,
+      "unique": true,
+      "required": false,
+      "description": "Unique auto-generated identifier for the non-faculty staff member.\nPrefixed with STF and used as the polymorphic target ID in money transaction tables."
+    },
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255,
+      "description": "The full legal name of the staff member.\nUsed in payroll processing, HR lists, and display references on admin dashboards."
+    },
+    "role": {
+      "type": "string",
+      "choices": [
+        "admin",
+        "receptionist",
+        "support",
+        "security",
+        "cleaner",
+        "other"
+      ],
+      "default": "other",
+      "maxLength": 255,
+      "description": "The designated organizational role of the staff member (e.g. admin, receptionist, security, cleaner).\nHelps define operational boundaries and access permissions."
+    },
+    "status": {
+      "type": "string",
+      "choices": ["active", "inactive"],
+      "default": "active",
+      "maxLength": 255,
+      "description": "Indicates if the staff member is currently active or inactive.\nInactive staff are hidden from active rosters and cannot be selected for new payouts."
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 50,
+      "description": "Contact telephone number of the staff member.\nUsed for HR communication and verifying identity details."
+    },
+    "email": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "The official email address of the staff member.\nUsed for sending payment receipts, account notifications, and communication logs."
+    }
+  },
+  "relations": {
+    "moneytransactions": {
+      "type": "hasMany",
+      "target": "MoneyTransaction",
+      "foreignKey": "party_id",
+      "onDelete": "do_nothing"
+    }
+  }
+}

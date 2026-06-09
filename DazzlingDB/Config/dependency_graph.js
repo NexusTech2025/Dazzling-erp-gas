@@ -159,6 +159,13 @@ const DEPENDENCY_GRAPH = {
       "onDelete": "protect"
     }
   ],
+  "ExpenseCategory": [
+    {
+      "table": "MoneyTransaction",
+      "fk": "category_id",
+      "onDelete": "protect"
+    }
+  ],
   "Installment": [
     {
       "table": "Payment",

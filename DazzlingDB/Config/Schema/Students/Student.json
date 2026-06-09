@@ -82,6 +82,12 @@
       "type": "hasMany",
       "target": "BatchAllocation",
       "foreignKey": "student_id"
+    },
+    "moneytransactions": {
+      "type": "hasMany",
+      "target": "MoneyTransaction",
+      "foreignKey": "party_id",
+      "onDelete": "do_nothing"
     }
   }
 }
