@@ -127,13 +127,13 @@ class CustomCallbackRule extends ValidationRule {
     this.handlerName = handlerName;
   }
 
-  validate(value, fieldName) {
+  validate(value, fieldName, context = {}) {
     if (typeof ValidationRegistry === 'undefined') {
       throw new Error("ValidationRegistry is not globally available.");
     }
     
     // validation registry will throw custom error if missing or execution fails
-    const result = ValidationRegistry.execute(this.handlerName, value);
+    const result = ValidationRegistry.execute(this.handlerName, value, context);
     
     if (result !== true && result !== null && result !== undefined) {
       return typeof result === 'string' ? result : `Custom validation handler '${this.handlerName}' failed.`;

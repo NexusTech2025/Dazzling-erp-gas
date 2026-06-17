@@ -93,8 +93,8 @@ class BaseField {
    * @param {*} value - The value to check.
    * @returns {FieldError[]} List of validation failures.
    */
-  validate(value) {
-    return this.pipeline.validate(value);
+  validate(value, context = {}) {
+    return this.pipeline.validate(value, context);
   }
 
   /**
@@ -302,7 +302,7 @@ class ForeignKeyField extends CharField {
   /** @override */
   validate(value, context = {}) {
     // 1. Run standard CharField validation (presence, length)
-    const errors = super.validate(value);
+    const errors = super.validate(value, context);
     if (errors.length > 0) return errors;
 
     // Early exit if value is empty/null (CharField's required check handled this if mandated)

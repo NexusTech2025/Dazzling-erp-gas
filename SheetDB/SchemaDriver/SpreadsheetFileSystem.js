@@ -39,8 +39,7 @@ class SpreadsheetFileSystem {
     this.rootFolderId = rootFolderId;
     this.mimeType = MimeType.GOOGLE_SHEETS;
     
-    // Validate folder exists and user has access during instantiation
-    this._getRootFolder();
+    // Defer root folder validation to lazy load during physical reads/writes
   }
 
   // ==========================================
@@ -149,10 +148,10 @@ class SpreadsheetFileSystem {
     if (queryOptions.nameContains) {
       queryParts.push(`title contains '${this._escapeQuery(queryOptions.nameContains)}'`);
     }
-    if (queryOptions.createdAfter instanceof Date) {
+    if (isDate(queryOptions.createdAfter)) {
       queryParts.push(`createdDate >= '${queryOptions.createdAfter.toISOString()}'`);
     }
-    if (queryOptions.updatedBefore instanceof Date) {
+    if (isDate(queryOptions.updatedBefore)) {
       queryParts.push(`modifiedDate <= '${queryOptions.updatedBefore.toISOString()}'`);
     }
 

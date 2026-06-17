@@ -325,7 +325,7 @@ class BaseModel {
       Object.keys(schema).forEach(key => {
         let val = this[key];
         // Ensure dates are ISO in JSON
-        if (val instanceof Date) val = val.toISOString();
+        if (isDate(val)) val = val.toISOString();
         json[key] = val;
       });
     }

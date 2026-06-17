@@ -34,12 +34,12 @@ class ValidationPipeline {
    * @param {any} value - Value of the field to check.
    * @returns {FieldError[]} List of FieldError objects, empty if valid.
    */
-  validate(value) {
+  validate(value, context = {}) {
     const failures = [];
     
     for (const rule of this.rules) {
       try {
-        const errorMsg = rule.validate(value, this.fieldName);
+        const errorMsg = rule.validate(value, this.fieldName, context);
         if (errorMsg) {
           failures.push(new FieldError(this.fieldName, errorMsg, value));
         }

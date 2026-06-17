@@ -50,14 +50,14 @@ const ValidationRegistry = (function () {
      * @param {any} value - Value to check
      * @returns {any} Result of validator (null/true if success, error message string if failed)
      */
-    execute(name, value) {
+    execute(name, value, context) {
       const handler = registry.get(name);
       if (!handler) {
         throw new ValidatorNotFoundError(name);
       }
 
       try {
-        return handler(value);
+        return handler(value, context);
       } catch (err) {
         throw new ValidatorExecutionError(name, value, err);
       }

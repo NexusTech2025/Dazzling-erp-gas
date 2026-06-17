@@ -74,7 +74,13 @@ class TableGateway {
   where(filters = {}) {
     const all = this.all();
     return all.filter(row => {
-      return Object.entries(filters).every(([key, value]) => row[key] === value);
+      return Object.entries(filters).every(([key, value]) => {
+        const rowVal = row[key];
+        if (isDate(rowVal) && typeof value === 'string') {
+          return rowVal.toISOString().split('T')[0] === value.split('T')[0];
+        }
+        return rowVal === value;
+      });
     });
   }
 
@@ -86,7 +92,13 @@ class TableGateway {
   findOne(filters = {}) {
     const all = this.all();
     return all.find(row => {
-      return Object.entries(filters).every(([key, value]) => row[key] === value);
+      return Object.entries(filters).every(([key, value]) => {
+        const rowVal = row[key];
+        if (isDate(rowVal) && typeof value === 'string') {
+          return rowVal.toISOString().split('T')[0] === value.split('T')[0];
+        }
+        return rowVal === value;
+      });
     }) || null;
   }
 
@@ -317,7 +329,7 @@ class TableGateway {
         case "number":   return Number(value);
         case "boolean":  return Boolean(value);
         case "date":     
-        case "datetime": return value instanceof Date ? value : new Date(value);
+        case "datetime": return isDate(value) ? value : new Date(value);
         case "json":     return typeof value === "string" ? JSON.parse(value) : value;
         default:         return String(value);
       }
