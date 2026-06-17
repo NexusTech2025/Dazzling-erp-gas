@@ -55,6 +55,10 @@ class BaseAction {
       message: error.message || "Internal server error."
     };
 
+    if (error.errorCode) {
+      norm.errorCode = error.errorCode;
+    }
+
     // 1. Map details (Validation / Field-level violations)
     if (error.context && error.context.fields) {
       norm.details = error.context;

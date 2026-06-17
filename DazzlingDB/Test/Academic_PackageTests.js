@@ -26,6 +26,15 @@ function runAcademicPackageTests() {
 
   console.log("\n=========================================");
   results.Scenario5 = executeScenario5_DeleteCascadeAndRollback(db);
+
+  console.log("\n=========================================");
+  results.Scenario6 = executeScenario6_OnDemandAndPresets(db);
+
+  console.log("\n=========================================");
+  results.Scenario7 = executeScenario7_OnDemandRollback(db);
+
+  console.log("\n=========================================");
+  results.Scenario8 = executeScenario8_OnErrorCodes(db);
   
   console.log("=========================================\n");
   console.log("📊 FINAL TEST RESULTS: \n", JSON.stringify(results, null, 2));
@@ -387,6 +396,223 @@ function executeScenario5_DeleteCascadeAndRollback(db) {
 }
 
 /**
+ * SCENARIO 6: Streamlined Quick Package with On-Demand Courses and Auto Perks Preset
+ */
+function executeScenario6_OnDemandAndPresets(db) {
+  console.log("▶️ SCENARIO 6: Streamlined Quick Package with On-Demand Courses and Auto Perks Preset");
+  try {
+    const ctPayload = TestMockData.createMock("CourseType", { segment_name: "Test Segment" });
+    delete ctPayload.segment_id;
+    const courseType = db.CourseType.findOne({ segment_name: "Test Segment" }) || db.CourseType.insert(ctPayload);
+
+    const c1Payload = TestMockData.createMock("Course", {
+      segment_id: courseType.segment_id,
+      name: "On-Demand Existing Physics",
+      language_medium: "English",
+      base_fee: 5000,
+      status: "active"
+    });
+    delete c1Payload.course_id;
+    const course1 = db.Course.insert(c1Payload);
+
+    const payload = {
+      name: "On-Demand Presets Package",
+      description: "Quick package creation test",
+      package_fee: 12000,
+      target_class: "Class 10",
+      status: "active",
+      courses: [
+        { entity_type: "course", entity_id: course1.course_id },
+        {
+          entity_type: "course",
+          on_demand: true,
+          name: "On-Demand Course 1",
+          short_code: "C-ON-DEMAND-1",
+          language_medium: "English",
+          duration_value: 12,
+          duration_unit: "months",
+          base_fee: 7000,
+          segment_id: courseType.segment_id,
+          status: "active"
+        }
+      ]
+    };
+
+    console.log("   ⚙️ Invoking AcademicService.createPackage with mixed courses and auto-preset perks...");
+    const createdPackage = AcademicService.createPackage(payload);
+
+    if (!createdPackage.package_id) throw new Error("Package ID was not auto-generated.");
+    console.log(`   ✅ Success! Created Package record with ID: ${createdPackage.package_id}`);
+
+    const newCourse = db.Course.findOne({ short_code: "C-ON-DEMAND-1" });
+    if (!newCourse) throw new Error("On-demand course 'On-Demand Course 1' was not inserted in Course table.");
+    console.log(`   ✅ Success! Created on-demand course with ID: ${newCourse.course_id}`);
+
+    const items = db.PackageItem.where({ package_id: createdPackage.package_id });
+    if (items.length !== 2) throw new Error(`Expected 2 PackageItems, found ${items.length}`);
+    
+    const linkedIds = items.map(i => i.entity_id);
+    if (!linkedIds.includes(course1.course_id) || !linkedIds.includes(newCourse.course_id)) {
+      throw new Error("PackageItems do not map both existing and on-demand course IDs correctly.");
+    }
+    console.log("   ✅ Success! Linked both courses in PackageItems.");
+
+    const perks = db.PackagePerk.where({ package_id: createdPackage.package_id });
+    if (perks.length !== 5) throw new Error(`Expected 5 auto-populated perks, found ${perks.length}`);
+    console.log("   ✅ Success! Auto-populated 5 Standard Perks based on class target.");
+
+    return "✅ PASSED";
+  } catch (error) {
+    console.error("   ❌ Failed:");
+    console.error("      Error Message:", error.message);
+    return `❌ FAILED: ${error.message}`;
+  }
+}
+
+/**
+ * SCENARIO 7: Transaction Rollback Recovery of On-Demand Course Deletion
+ */
+function executeScenario7_OnDemandRollback(db) {
+  console.log("▶️ SCENARIO 7: On-Demand Course Transaction Rollback Recovery");
+  try {
+    const courseType = db.CourseType.findOne({ segment_name: "Test Segment" });
+    if (!courseType) throw new Error("Test CourseType segment not found.");
+
+    const badPayload = {
+      name: "On-Demand Rollback Package",
+      package_fee: 99999,
+      target_class: "Class 12",
+      courses: [
+        {
+          entity_type: "course",
+          on_demand: true,
+          name: "On-Demand Course 2",
+          short_code: "C-ON-DEMAND-2",
+          language_medium: "English",
+          duration_value: 12,
+          duration_unit: "months",
+          base_fee: 8000,
+          segment_id: courseType.segment_id,
+          status: "active"
+        },
+        { entity_type: "INVALID_POLYMORPHIC_TYPE", entity_id: "CRS-FAIL" }
+      ]
+    };
+
+    console.log("   ⚙️ Invoking AcademicService.createPackage designed to fail...");
+    let caughtExpectedError = false;
+    try {
+      AcademicService.createPackage(badPayload);
+    } catch (e) {
+      caughtExpectedError = true;
+      console.log(`   ✅ Caught expected validation error: ${e.message}`);
+    }
+
+    if (!caughtExpectedError) throw new Error("Package creation did not raise validation error.");
+
+    const rolledBackCourse = db.Course.findOne({ short_code: "C-ON-DEMAND-2" });
+    if (rolledBackCourse) {
+      throw new Error("Rollback failed! The on-demand course was persisted in the Course table.");
+    }
+    console.log("   ✅ Success! Newly created on-demand course rolled back and deleted successfully.");
+
+    const rolledBackPkg = db.Package.findOne({ name: "On-Demand Rollback Package" });
+    if (rolledBackPkg) {
+      throw new Error("Rollback failed! The package was persisted.");
+    }
+    console.log("   ✅ Success! Core package rolled back and deleted successfully.");
+
+    return "✅ PASSED";
+  } catch (error) {
+    console.error("   ❌ Failed:");
+    console.error("      Error Message:", error.message);
+    return `❌ FAILED: ${error.message}`;
+  }
+}
+
+/**
+ * SCENARIO 8: Error Codes Verification in Response Envelope
+ */
+function executeScenario8_OnErrorCodes(db) {
+  console.log("▶️ SCENARIO 8: API Error Codes Mapping Verification");
+  try {
+    const courseType = db.CourseType.findOne({ segment_name: "Test Segment" });
+    if (!courseType) throw new Error("Test CourseType segment not found.");
+
+    const tempCourse = db.Course.insert({
+      segment_id: courseType.segment_id,
+      name: "Temp Duplicate Course",
+      short_code: "C-ON-DEMAND-DUP",
+      language_medium: "English",
+      base_fee: 5000,
+      status: "active"
+    });
+
+    const payload = {
+      name: "On-Demand Error Codes Package",
+      package_fee: 10000,
+      target_class: "Class 9",
+      courses: [
+        {
+          entity_type: "course",
+          on_demand: true,
+          name: "Duplicate Course Name",
+          short_code: "C-ON-DEMAND-DUP",
+          language_medium: "English",
+          base_fee: 5000,
+          segment_id: courseType.segment_id
+        }
+      ]
+    };
+
+    console.log("   ⚙️ Invoking createPackage to verify DUPLICATE_SHORT_CODE errorCode...");
+    let caughtDuplicateError = false;
+    try {
+      AcademicService.createPackage(payload);
+    } catch (e) {
+      caughtDuplicateError = true;
+      if (e.errorCode !== "DUPLICATE_SHORT_CODE") {
+        throw new Error(`Expected errorCode 'DUPLICATE_SHORT_CODE', got '${e.errorCode}'`);
+      }
+      console.log(`   ✅ Success! Verified errorCode '${e.errorCode}': ${e.message}`);
+    }
+
+    if (!caughtDuplicateError) throw new Error("Duplicate short code did not raise error.");
+
+    db.Course.remove(tempCourse.course_id);
+
+    const invalidRefPayload = {
+      name: "Invalid Ref Package",
+      package_fee: 10000,
+      target_class: "Class 9",
+      courses: [
+        { entity_type: "course", entity_id: "CRS-NONEXISTENT" }
+      ]
+    };
+
+    console.log("   ⚙️ Invoking createPackage to verify REFERENCED_COURSE_NOT_FOUND errorCode...");
+    let caughtRefError = false;
+    try {
+      AcademicService.createPackage(invalidRefPayload);
+    } catch (e) {
+      caughtRefError = true;
+      if (e.errorCode !== "REFERENCED_COURSE_NOT_FOUND") {
+        throw new Error(`Expected errorCode 'REFERENCED_COURSE_NOT_FOUND', got '${e.errorCode}'`);
+      }
+      console.log(`   ✅ Success! Verified errorCode '${e.errorCode}': ${e.message}`);
+    }
+
+    if (!caughtRefError) throw new Error("Invalid course reference did not raise error.");
+
+    return "✅ PASSED";
+  } catch (error) {
+    console.error("   ❌ Failed:");
+    console.error("      Error Message:", error.message);
+    return `❌ FAILED: ${error.message}`;
+  }
+}
+
+/**
  * UTILITY: Cleans up any test courses, course types, packages, items, and perks
  */
 function cleanUpTestPackages(db) {
@@ -397,7 +623,11 @@ function cleanUpTestPackages(db) {
       .concat(db.Package.where({ name: "Failed Rollback Attempt" }))
       .concat(db.Package.where({ name: "Failed Rollback Delete Pkg" }))
       .concat(db.Package.where({ name: "Rollback Delete Pkg" }))
-      .concat(db.Package.where({ name: "Temp Package for Delete" }));
+      .concat(db.Package.where({ name: "Temp Package for Delete" }))
+      .concat(db.Package.where({ name: "On-Demand Presets Package" }))
+      .concat(db.Package.where({ name: "On-Demand Rollback Package" }))
+      .concat(db.Package.where({ name: "On-Demand Error Codes Package" }))
+      .concat(db.Package.where({ name: "Invalid Ref Package" }));
 
     testPkgs.forEach(pkg => {
       // Delete child relations

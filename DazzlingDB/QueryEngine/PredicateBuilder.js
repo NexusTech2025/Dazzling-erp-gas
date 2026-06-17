@@ -7,7 +7,7 @@
  * - Supports complex operators (eq, gt, contains, in, etc).
  */
 
-const PredicateBuilder = (function() {
+const PredicateBuilder = (function () {
 
   /**
    * Main entry point for building a predicate function.
@@ -19,13 +19,16 @@ const PredicateBuilder = (function() {
       return () => true; // No filter
     }
 
-    return function(row) {
+    return function (row) {
       // Evaluate all conditions (Defaulting to AND logic)
       return Object.entries(where).every(([field, condition]) => {
         const rowValue = row[field];
 
         // 1. Simple Equality check
         if (typeof condition !== 'object' || condition === null) {
+          if (SheetDB.isDate(rowValue) && typeof condition === 'string') {
+            return rowValue.toISOString().split('T')[0] === condition.split('T')[0];
+          }
           return rowValue === condition;
         }
 
@@ -41,17 +44,25 @@ const PredicateBuilder = (function() {
    * @private
    */
   function _evaluateOperator(op, rowValue, targetValue) {
+    let rVal = rowValue;
+    let tVal = targetValue;
+
+    if (SheetDB.isDate(rowValue) && typeof targetValue === 'string') {
+      rVal = rowValue.toISOString().split('T')[0];
+      tVal = targetValue.split('T')[0];
+    }
+
     switch (op.toLowerCase()) {
-      case "eq":       return rowValue === targetValue;
-      case "neq":      return rowValue !== targetValue;
-      case "gt":       return rowValue > targetValue;
-      case "gte":      return rowValue >= targetValue;
-      case "lt":       return rowValue < targetValue;
-      case "lte":      return rowValue <= targetValue;
-      case "contains": return String(rowValue).toLowerCase().includes(String(targetValue).toLowerCase());
-      case "in":       return Array.isArray(targetValue) && targetValue.includes(rowValue);
-      case "between":  return Array.isArray(targetValue) && rowValue >= targetValue[0] && rowValue <= targetValue[1];
-      default:         return false;
+      case "eq": return rVal === tVal;
+      case "neq": return rVal !== tVal;
+      case "gt": return rVal > tVal;
+      case "gte": return rVal >= tVal;
+      case "lt": return rVal < tVal;
+      case "lte": return rVal <= tVal;
+      case "contains": return String(rVal).toLowerCase().includes(String(tVal).toLowerCase());
+      case "in": return Array.isArray(tVal) && tVal.includes(rVal);
+      case "between": return Array.isArray(tVal) && rVal >= tVal[0] && rVal <= tVal[1];
+      default: return false;
     }
   }
 

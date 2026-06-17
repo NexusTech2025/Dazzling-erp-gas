@@ -120,6 +120,17 @@ const DATABASE_SCHEMA = {
               "type": "hasMany",
               "target": "StudentLead",
               "foreignKey": "batch_id"
+            },
+            "studentattendance": {
+              "type": "hasMany",
+              "target": "StudentAttendance",
+              "foreignKey": "batch_id"
+            },
+            "classtests": {
+              "type": "hasMany",
+              "target": "Test",
+              "foreignKey": "batch_id",
+              "onDelete": "protect"
             }
           }
         },
@@ -787,6 +798,225 @@ const DATABASE_SCHEMA = {
               "type": "belongsTo",
               "target": "Package",
               "foreignKey": "package_id"
+            }
+          }
+        }
+      }
+    },
+    "Attendance": {
+      "tables": {
+        "StudentAttendance": {
+          "primaryKey": "attendance_id",
+          "columns": {
+            "student_id": {
+              "type": "foreign_key",
+              "required": true,
+              "target": "Student",
+              "maxLength": 255,
+              "onDelete": "cascade"
+            },
+            "batch_id": {
+              "type": "foreign_key",
+              "required": true,
+              "target": "Batch",
+              "maxLength": 255,
+              "onDelete": "protect"
+            },
+            "attendance_date": {
+              "type": "date",
+              "required": true
+            },
+            "status": {
+              "type": "string",
+              "required": true,
+              "choices": [
+                "P",
+                "A",
+                "L"
+              ],
+              "maxLength": 10
+            },
+            "entry_time": {
+              "type": "datetime",
+              "required": false
+            },
+            "exit_time": {
+              "type": "datetime",
+              "required": false
+            },
+            "attendance_mode": {
+              "type": "string",
+              "choices": [
+                "Manual",
+                "QR",
+                "Biometric"
+              ],
+              "maxLength": 50,
+              "default": "Manual"
+            },
+            "remarks": {
+              "type": "string",
+              "maxLength": 500,
+              "required": false
+            },
+            "marked_by": {
+              "type": "string",
+              "maxLength": 255,
+              "required": false
+            },
+            "attendance_id": {
+              "type": "auto",
+              "idPrefix": "ATT",
+              "editable": false,
+              "unique": true,
+              "required": false
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "student": {
+              "type": "belongsTo",
+              "target": "Student",
+              "foreignKey": "student_id",
+              "onDelete": "cascade"
+            },
+            "batch": {
+              "type": "belongsTo",
+              "target": "Batch",
+              "foreignKey": "batch_id",
+              "onDelete": "protect"
+            }
+          }
+        },
+        "TeacherAttendance": {
+          "primaryKey": "attendance_id",
+          "columns": {
+            "teacher_id": {
+              "type": "foreign_key",
+              "required": true,
+              "target": "Teacher",
+              "maxLength": 255,
+              "onDelete": "protect"
+            },
+            "batch_id": {
+              "type": "foreign_key",
+              "required": true,
+              "target": "Batch",
+              "maxLength": 255,
+              "onDelete": "protect"
+            },
+            "attendance_date": {
+              "type": "date",
+              "required": true
+            },
+            "status": {
+              "type": "string",
+              "required": true,
+              "choices": [
+                "P",
+                "A",
+                "L"
+              ],
+              "maxLength": 10
+            },
+            "entry_time": {
+              "type": "datetime",
+              "required": false
+            },
+            "exit_time": {
+              "type": "datetime",
+              "required": false
+            },
+            "attendance_mode": {
+              "type": "string",
+              "choices": [
+                "Manual",
+                "QR",
+                "Biometric"
+              ],
+              "maxLength": 50,
+              "default": "Manual"
+            },
+            "remarks": {
+              "type": "string",
+              "maxLength": 500,
+              "required": false
+            },
+            "marked_by": {
+              "type": "string",
+              "maxLength": 255,
+              "required": false
+            },
+            "attendance_id": {
+              "type": "auto",
+              "idPrefix": "TAT",
+              "editable": false,
+              "unique": true,
+              "required": false
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "teacher": {
+              "type": "belongsTo",
+              "target": "Teacher",
+              "foreignKey": "teacher_id"
+            },
+            "batch": {
+              "type": "belongsTo",
+              "target": "Batch",
+              "foreignKey": "batch_id",
+              "onDelete": "protect"
             }
           }
         }
@@ -2063,102 +2293,6 @@ const DATABASE_SCHEMA = {
             }
           }
         },
-        "TeacherAttendance": {
-          "primaryKey": "attendance_id",
-          "columns": {
-            "teacher_id": {
-              "type": "foreign_key",
-              "required": true,
-              "maxLength": 255,
-              "onDelete": "protect"
-            },
-            "attendance_date": {
-              "type": "date",
-              "required": true
-            },
-            "status": {
-              "type": "string",
-              "required": true,
-              "choices": [
-                "present",
-                "absent",
-                "leave",
-                "half_day"
-              ],
-              "maxLength": 255
-            },
-            "check_in_time": {
-              "type": "datetime"
-            },
-            "check_out_time": {
-              "type": "datetime"
-            },
-            "working_hours": {
-              "type": "number"
-            },
-            "is_paid_leave": {
-              "type": "boolean",
-              "default": false
-            },
-            "attendance_source": {
-              "type": "string",
-              "choices": [
-                "manual",
-                "biometric",
-                "system"
-              ],
-              "maxLength": 255
-            },
-            "notes": {
-              "type": "string",
-              "maxLength": 255
-            },
-            "marked_by": {
-              "type": "string",
-              "maxLength": 255
-            },
-            "attendance_id": {
-              "type": "auto",
-              "idPrefix": "TAT",
-              "editable": false,
-              "unique": true,
-              "required": false
-            },
-            "__tx_id": {
-              "type": "string",
-              "system": true,
-              "required": false,
-              "editable": false,
-              "description": "Unique Transaction ID"
-            },
-            "__tx_status": {
-              "type": "string",
-              "choices": [
-                "PENDING",
-                "COMMITTED",
-                "FAILED"
-              ],
-              "default": "PENDING",
-              "system": true,
-              "required": false,
-              "editable": false
-            },
-            "__created_at": {
-              "type": "datetime",
-              "autoNowAdd": true,
-              "system": true,
-              "required": false,
-              "editable": false
-            }
-          },
-          "relations": {
-            "teacher": {
-              "type": "belongsTo",
-              "target": "Teacher",
-              "foreignKey": "teacher_id"
-            }
-          }
-        },
         "TeacherDocument": {
           "primaryKey": "document_id",
           "columns": {
@@ -2824,6 +2958,17 @@ const DATABASE_SCHEMA = {
               "target": "MoneyTransaction",
               "foreignKey": "party_id",
               "onDelete": "do_nothing"
+            },
+            "studentattendance": {
+              "type": "hasMany",
+              "target": "StudentAttendance",
+              "foreignKey": "student_id"
+            },
+            "testmarks": {
+              "type": "hasMany",
+              "target": "TestMarks",
+              "foreignKey": "student_id",
+              "onDelete": "do_nothing"
             }
           }
         },
@@ -2946,6 +3091,299 @@ const DATABASE_SCHEMA = {
               "type": "belongsTo",
               "target": "Batch",
               "foreignKey": "batch_id"
+            }
+          }
+        }
+      }
+    },
+    "Test": {
+      "tables": {
+        "Test": {
+          "primaryKey": "id",
+          "columns": {
+            "title": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255
+            },
+            "batch_id": {
+              "type": "foreign_key",
+              "required": true,
+              "target": "Batch",
+              "maxLength": 255,
+              "onDelete": "protect"
+            },
+            "test_date": {
+              "type": "date",
+              "required": true
+            },
+            "total_marks": {
+              "type": "number",
+              "required": true,
+              "validations": [
+                {
+                  "rule": "custom",
+                  "handler": "validatePositiveTotalMarks"
+                }
+              ]
+            },
+            "passing_marks": {
+              "type": "number",
+              "required": true,
+              "default": 0,
+              "validations": [
+                {
+                  "rule": "custom",
+                  "handler": "validatePassingMarks"
+                }
+              ]
+            },
+            "status": {
+              "type": "string",
+              "required": true,
+              "choices": [
+                "Draft",
+                "Completed",
+                "Published"
+              ],
+              "default": "Draft",
+              "maxLength": 50
+            },
+            "remarks": {
+              "type": "string",
+              "required": false,
+              "maxLength": 1000
+            },
+            "created_at": {
+              "type": "datetime",
+              "autoNowAdd": true
+            },
+            "updated_at": {
+              "type": "datetime",
+              "autoNow": true
+            },
+            "id": {
+              "type": "auto",
+              "idPrefix": "TST",
+              "editable": false,
+              "unique": true,
+              "required": false
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "batch": {
+              "type": "belongsTo",
+              "target": "Batch",
+              "foreignKey": "batch_id",
+              "onDelete": "protect"
+            },
+            "marks": {
+              "type": "hasMany",
+              "target": "TestMarks",
+              "foreignKey": "test_id"
+            },
+            "papers": {
+              "type": "hasMany",
+              "target": "TestPaper",
+              "foreignKey": "test_id"
+            }
+          }
+        },
+        "TestMarks": {
+          "primaryKey": "id",
+          "columns": {
+            "test_id": {
+              "type": "foreign_key",
+              "required": true,
+              "target": "Test",
+              "maxLength": 255,
+              "onDelete": "cascade"
+            },
+            "student_id": {
+              "type": "foreign_key",
+              "required": true,
+              "target": "Student",
+              "maxLength": 255,
+              "onDelete": "cascade",
+              "validations": [
+                {
+                  "rule": "custom",
+                  "handler": "validateStudentAllocation"
+                }
+              ]
+            },
+            "obtained_marks": {
+              "type": "number",
+              "required": false,
+              "validations": [
+                {
+                  "rule": "custom",
+                  "handler": "validateObtainedMarks"
+                }
+              ]
+            },
+            "is_absent": {
+              "type": "boolean",
+              "default": false,
+              "required": true
+            },
+            "remarks": {
+              "type": "string",
+              "required": false,
+              "maxLength": 500
+            },
+            "created_at": {
+              "type": "datetime",
+              "autoNowAdd": true
+            },
+            "updated_at": {
+              "type": "datetime",
+              "autoNow": true
+            },
+            "id": {
+              "type": "auto",
+              "idPrefix": "TMK",
+              "editable": false,
+              "unique": true,
+              "required": false
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "test": {
+              "type": "belongsTo",
+              "target": "Test",
+              "foreignKey": "test_id",
+              "onDelete": "cascade"
+            },
+            "student": {
+              "type": "belongsTo",
+              "target": "Student",
+              "foreignKey": "student_id",
+              "onDelete": "cascade"
+            }
+          }
+        },
+        "TestPaper": {
+          "primaryKey": "id",
+          "columns": {
+            "test_id": {
+              "type": "foreign_key",
+              "required": true,
+              "target": "Test",
+              "maxLength": 255,
+              "onDelete": "cascade"
+            },
+            "title": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255
+            },
+            "paper_file_url": {
+              "type": "string",
+              "required": false,
+              "maxLength": 1000
+            },
+            "answer_key_file_url": {
+              "type": "string",
+              "required": false,
+              "maxLength": 1000
+            },
+            "uploaded_at": {
+              "type": "datetime",
+              "autoNowAdd": true
+            },
+            "id": {
+              "type": "auto",
+              "idPrefix": "TPP",
+              "editable": false,
+              "unique": true,
+              "required": false
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "test": {
+              "type": "belongsTo",
+              "target": "Test",
+              "foreignKey": "test_id",
+              "onDelete": "cascade"
             }
           }
         }

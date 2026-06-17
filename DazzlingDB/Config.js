@@ -83,8 +83,9 @@ const GLOBAL_CRUD_WHITELIST = new Set([
   "Branch", "PromoCode",
   "CourseType", "Course", "Batch", "BatchAllocation", "PackageItem", "PackagePerk",
   "Address", "ContactInfo", "Education", "StudentLead",
-  "TeacherSubject", "TeacherAttendance", "TeacherDocument", "TeacherSalaryConfig", "TeacherPaymentTransaction",
-  "FeePlan", "ExpenseCategory", "StaffMember", "MoneyTransaction"
+  "TeacherSubject", "TeacherAttendance", "StudentAttendance", "TeacherDocument", "TeacherSalaryConfig", "TeacherPaymentTransaction",
+  "FeePlan", "ExpenseCategory", "StaffMember", "MoneyTransaction",
+  "Test", "TestMarks", "TestPaper"
 ]);
 
 /**
@@ -114,10 +115,14 @@ const ID_PREFIX_FALLBACK_REGISTRY = {
   Teacher: "TCH",
   TeacherSubject: "TSB",
   TeacherAttendance: "TAT",
+  StudentAttendance: "ATT",
   TeacherDocument: "TDO",
   TeacherSalaryConfig: "TSC",
   TeacherPaymentTransaction: "TPT",
   ExpenseCategory: "EXC",
   StaffMember: "STF",
-  MoneyTransaction: "MTX"
+  MoneyTransaction: "MTX",
+  Test: "TST",
+  TestMarks: "TMK",
+  TestPaper: "TPP"
 };

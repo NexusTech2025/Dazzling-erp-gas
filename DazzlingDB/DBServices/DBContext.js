@@ -52,7 +52,10 @@ const DBContext = (function() {
      */
     getInstance: function() {
       if (!instance) {
+        console.log("[DBContext] Cache MISS - Initializing fresh database instance (Cold Container).");
         instance = _init();
+      } else {
+        console.log("[DBContext] Cache HIT - Returning existing singleton instance (Warm Container).");
       }
       return instance;
     },

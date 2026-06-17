@@ -1,0 +1,46 @@
+{
+  "primaryKey": "id",
+  "columns": {
+    "test_id": {
+      "type": "foreign_key",
+      "required": true,
+      "target": "Test",
+      "maxLength": 255,
+      "onDelete": "cascade"
+    },
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "paper_file_url": {
+      "type": "string",
+      "required": false,
+      "maxLength": 1000
+    },
+    "answer_key_file_url": {
+      "type": "string",
+      "required": false,
+      "maxLength": 1000
+    },
+    "uploaded_at": {
+      "type": "datetime",
+      "autoNowAdd": true
+    },
+    "id": {
+      "type": "auto",
+      "idPrefix": "TPP",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "test": {
+      "type": "belongsTo",
+      "target": "Test",
+      "foreignKey": "test_id",
+      "onDelete": "cascade"
+    }
+  }
+}

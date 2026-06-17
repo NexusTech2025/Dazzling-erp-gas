@@ -77,6 +77,11 @@ const DEPENDENCY_GRAPH = {
       "onDelete": "cascade"
     },
     {
+      "table": "StudentAttendance",
+      "fk": "student_id",
+      "onDelete": "cascade"
+    },
+    {
       "table": "Address",
       "fk": "student_id",
       "onDelete": "cascade"
@@ -88,6 +93,11 @@ const DEPENDENCY_GRAPH = {
     },
     {
       "table": "Education",
+      "fk": "student_id",
+      "onDelete": "cascade"
+    },
+    {
+      "table": "TestMarks",
       "fk": "student_id",
       "onDelete": "cascade"
     }
@@ -111,7 +121,22 @@ const DEPENDENCY_GRAPH = {
       "onDelete": "protect"
     },
     {
+      "table": "StudentAttendance",
+      "fk": "batch_id",
+      "onDelete": "protect"
+    },
+    {
+      "table": "TeacherAttendance",
+      "fk": "batch_id",
+      "onDelete": "protect"
+    },
+    {
       "table": "StudentLead",
+      "fk": "batch_id",
+      "onDelete": "protect"
+    },
+    {
+      "table": "Test",
       "fk": "batch_id",
       "onDelete": "protect"
     }
@@ -191,6 +216,18 @@ const DEPENDENCY_GRAPH = {
     {
       "table": "ContactInfo",
       "fk": "address_id",
+      "onDelete": "cascade"
+    }
+  ],
+  "Test": [
+    {
+      "table": "TestMarks",
+      "fk": "test_id",
+      "onDelete": "cascade"
+    },
+    {
+      "table": "TestPaper",
+      "fk": "test_id",
       "onDelete": "cascade"
     }
   ]

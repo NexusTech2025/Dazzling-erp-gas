@@ -1,0 +1,91 @@
+{
+  "primaryKey": "id",
+  "columns": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "batch_id": {
+      "type": "foreign_key",
+      "required": true,
+      "target": "Batch",
+      "maxLength": 255,
+      "onDelete": "protect"
+    },
+    "test_date": {
+      "type": "date",
+      "required": true
+    },
+    "total_marks": {
+      "type": "number",
+      "required": true,
+      "validations": [
+        {
+          "rule": "custom",
+          "handler": "validatePositiveTotalMarks"
+        }
+      ]
+    },
+    "passing_marks": {
+      "type": "number",
+      "required": true,
+      "default": 0,
+      "validations": [
+        {
+          "rule": "custom",
+          "handler": "validatePassingMarks"
+        }
+      ]
+    },
+    "status": {
+      "type": "string",
+      "required": true,
+      "choices": [
+        "Draft",
+        "Completed",
+        "Published"
+      ],
+      "default": "Draft",
+      "maxLength": 50
+    },
+    "remarks": {
+      "type": "string",
+      "required": false,
+      "maxLength": 1000
+    },
+    "created_at": {
+      "type": "datetime",
+      "autoNowAdd": true
+    },
+    "updated_at": {
+      "type": "datetime",
+      "autoNow": true
+    },
+    "id": {
+      "type": "auto",
+      "idPrefix": "TST",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "batch": {
+      "type": "belongsTo",
+      "target": "Batch",
+      "foreignKey": "batch_id",
+      "onDelete": "protect"
+    },
+    "marks": {
+      "type": "hasMany",
+      "target": "TestMarks",
+      "foreignKey": "test_id"
+    },
+    "papers": {
+      "type": "hasMany",
+      "target": "TestPaper",
+      "foreignKey": "test_id"
+    }
+  }
+}

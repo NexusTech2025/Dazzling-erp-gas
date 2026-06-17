@@ -14,6 +14,63 @@ function registerDatabaseValidators() {
       validateEmail: function (value) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(String(value)) ? null : "Invalid email address.";
+      },
+      validatePositiveTotalMarks: function(value) {
+        const num = Number(value);
+        return (!isNaN(num) && num > 0) ? null : "total_marks must be a positive number.";
+      },
+      validatePassingMarks: function(value, context) {
+        const totalMarks = context.model.total_marks;
+        const passingMarks = Number(value);
+        if (isNaN(passingMarks) || passingMarks < 0 || passingMarks > totalMarks) {
+          return "passing_marks must be a non-negative number and cannot exceed total_marks.";
+        }
+        return null;
+      },
+      validateObtainedMarks: function(value, context) {
+        const isAbsent = context.model.is_absent === true || context.model.is_absent === "true";
+        if (isAbsent) {
+          return (value === null || value === undefined || value === "") ? null : "obtained_marks must be null when student is absent.";
+        }
+        if (value === undefined || value === null || value === "") {
+          return "obtained_marks is required when present.";
+        }
+        const marks = Number(value);
+        if (isNaN(marks) || marks < 0) {
+          return "obtained_marks must be a non-negative number.";
+        }
+        const totalMarks = context.model.__totalMarks !== undefined ? context.model.__totalMarks : (context.db && context.model.test_id ? context.db.Test.findById(context.model.test_id)?.total_marks : null);
+        if (totalMarks !== null && totalMarks !== undefined && marks > totalMarks) {
+          return `obtained_marks (${marks}) cannot exceed total_marks (${totalMarks}) for student '${context.model.student_id}'.`;
+        }
+        return null;
+      },
+      validateStudentAllocation: function(value, context) {
+        const model = context.model;
+        if (model.__allowedStudents) {
+          if (!model.__allowedStudents.has(value)) {
+            const db = context.db;
+            const test = db ? db.Test.findById(model.test_id) : null;
+            const batchId = test ? test.batch_id : "Unknown";
+            return `Student '${value}' is not allocated to Batch '${batchId}'.`;
+          }
+          return null;
+        }
+        const db = context.db;
+        if (db && model.test_id && value) {
+          const test = db.Test.findById(model.test_id);
+          if (test) {
+            const allocation = db.BatchAllocation.findOne({
+              student_id: value,
+              batch_id: test.batch_id,
+              status: "active"
+            });
+            if (!allocation) {
+              return `Student '${value}' is not allocated to Batch '${test.batch_id}'.`;
+            }
+          }
+        }
+        return null;
       }
     });
   }
@@ -51,6 +108,31 @@ function bootstrapDatabase() {
     if (result.errors && result.errors.length > 0) {
       console.warn(`[App] Provisioning finished with ${result.errors.length} error(s):`);
       result.errors.forEach(err => console.warn(` - ${err}`));
+    }
+
+    // Cleanup orphaned physical worksheets
+    try {
+      console.log("[App] Cleaning up legacy/orphaned physical worksheets...");
+      const schema = DATABASE_SCHEMA;
+      const fs = db.setup.fs;
+      for (const [catName, catData] of Object.entries(schema.categories)) {
+        const fileMeta = fs.findByName(catName);
+        if (fileMeta) {
+          const ss = fs.open(fileMeta.id);
+          const sheets = ss.getSheets();
+          const declaredTables = Object.keys(catData.tables);
+          sheets.forEach(sheet => {
+            const sheetName = sheet.getName();
+            // Do not delete system sheets
+            if (sheetName !== '__meta__' && sheetName !== '__tx_log__' && !declaredTables.includes(sheetName)) {
+              console.log(`[App] Deleting orphaned sheet '${sheetName}' from spreadsheet '${catName}'`);
+              ss.deleteSheet(sheet);
+            }
+          });
+        }
+      }
+    } catch (cleanError) {
+      console.warn("[App] Orphaned worksheet cleanup encountered an error:", cleanError.message || cleanError);
     }
 
     if (result.isChanged) {

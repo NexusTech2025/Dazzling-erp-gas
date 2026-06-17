@@ -20,6 +20,7 @@ class SystemError extends BaseError {
     this.details = options.details || null;
     this.context = options.context || null;
     this.meta = options.meta || null;
+    this.errorCode = options.errorCode || null;
   }
 }
 

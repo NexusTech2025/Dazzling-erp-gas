@@ -88,6 +88,17 @@
       "target": "MoneyTransaction",
       "foreignKey": "party_id",
       "onDelete": "do_nothing"
+    },
+    "studentattendance": {
+      "type": "hasMany",
+      "target": "StudentAttendance",
+      "foreignKey": "student_id"
+    },
+    "testmarks": {
+      "type": "hasMany",
+      "target": "TestMarks",
+      "foreignKey": "student_id",
+      "onDelete": "do_nothing"
     }
   }
 }

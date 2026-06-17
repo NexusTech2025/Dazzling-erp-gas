@@ -1,0 +1,82 @@
+{
+  "primaryKey": "attendance_id",
+  "columns": {
+    "student_id": {
+      "type": "foreign_key",
+      "required": true,
+      "target": "Student",
+      "maxLength": 255,
+      "onDelete": "cascade"
+    },
+    "batch_id": {
+      "type": "foreign_key",
+      "required": true,
+      "target": "Batch",
+      "maxLength": 255,
+      "onDelete": "protect"
+    },
+    "attendance_date": {
+      "type": "date",
+      "required": true
+    },
+    "status": {
+      "type": "string",
+      "required": true,
+      "choices": [
+        "P",
+        "A",
+        "L"
+      ],
+      "maxLength": 10
+    },
+    "entry_time": {
+      "type": "datetime",
+      "required": false
+    },
+    "exit_time": {
+      "type": "datetime",
+      "required": false
+    },
+    "attendance_mode": {
+      "type": "string",
+      "choices": [
+        "Manual",
+        "QR",
+        "Biometric"
+      ],
+      "maxLength": 50,
+      "default": "Manual"
+    },
+    "remarks": {
+      "type": "string",
+      "maxLength": 500,
+      "required": false
+    },
+    "marked_by": {
+      "type": "string",
+      "maxLength": 255,
+      "required": false
+    },
+    "attendance_id": {
+      "type": "auto",
+      "idPrefix": "ATT",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "student": {
+      "type": "belongsTo",
+      "target": "Student",
+      "foreignKey": "student_id",
+      "onDelete": "cascade"
+    },
+    "batch": {
+      "type": "belongsTo",
+      "target": "Batch",
+      "foreignKey": "batch_id",
+      "onDelete": "protect"
+    }
+  }
+}

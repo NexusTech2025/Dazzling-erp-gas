@@ -627,6 +627,100 @@ This endpoint inserts a new package, along with associated perks (`PackagePerk`)
 }
 ```
 
+#### Quick Package (On-Demand Course Creation & Perks Presets)
+
+This endpoint supports a **Quick Package** flow. Instead of pre-creating courses and manually listing perks, you can dynamically create courses on the fly and let the system automatically resolve default perks based on the target class.
+
+**Key Features:**
+1. **On-Demand Course Creation:** Inside the `courses` array, set `"on_demand": true` on a course object. The system will dynamically insert a new course under the resolved segment.
+   * **Segment Resolution:** Provide `segment_id` or `segment_name`. If neither is supplied, the system automatically falls back to the first active `CourseType` in the database. If no active `CourseType` is found, the request fails.
+   * **Uniqueness Safeguard:** If a provided `short_code` already exists, a database constraint error is raised.
+   * **Atomic Rollback:** If any error occurs downstream (such as a validation error on package items), any on-demand courses created during the request are automatically rolled back (physically deleted).
+2. **Auto Perks Presets:** If you omit `perks` or pass an empty array, the system auto-populates perks based on the `target_class` parameter (case-insensitive):
+   * **Senior Perks** (if `target_class` contains `"11"`, `"12"`, or `"senior"`):
+     * "Free Basic Computer Course with new admission"
+     * "Daily Practice Papers (DPP)"
+     * "Regular Assignments and Study Materials"
+     * "Monthly Parent-Teacher Meetings"
+     * "Dedicated Student Monitoring Mobile Application"
+     * "Note: Package Excludes Hindi & English"
+   * **Standard Perks** (for all other classes):
+     * "Daily Practice Papers (DPP)"
+     * "Regular Assignments and Study Materials"
+     * "Monthly Parent-Teacher Meetings"
+     * "Online & Offline learning resources"
+     * "Dedicated Student Monitoring Mobile Application"
+
+**Request Body (Quick Package with On-Demand Course & Perks Preset):**
+```json
+{
+  "action": "academic_create_package",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "name": "Class 10 Advanced Combo",
+    "description": "Dynamic quick package with on-demand course",
+    "target_class": "Class 10",
+    "package_fee": 12000,
+    "status": "active",
+    "courses": [
+      { "entity_type": "course", "entity_id": "CRS-D40D4661" },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "On-Demand Mathematics",
+        "short_code": "CRS-MATH-10",
+        "language_medium": "English",
+        "duration_value": 10,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_name": "Academic",
+        "status": "active"
+      }
+    ]
+  }
+}
+```
+
+**Response Body (Success):**
+```json
+{
+  "success": true,
+  "action": "academic_create_package",
+  "data": {
+    "name": "Class 10 Advanced Combo",
+    "description": "Dynamic quick package with on-demand course",
+    "target_class": "Class 10",
+    "package_fee": 12000,
+    "status": "active",
+    "package_id": "PKG-FE0F7C74",
+    "__tx_id": "TX-12345678",
+    "__tx_status": "COMMITTED"
+  }
+}
+```
+
+#### Structured API Error Codes
+
+If the creation fails, the returned `error` object includes a specific `errorCode` alongside the generic error type and message:
+
+*   **`DUPLICATE_SHORT_CODE`**: Occurs if the `short_code` supplied for an on-demand course already exists.
+*   **`REFERENCED_COURSE_NOT_FOUND`**: Occurs if `entity_id` is missing (without `"on_demand": true`) or if the referenced `entity_id` does not exist.
+*   **`INVALID_ENTITY_TYPE`**: Occurs if `entity_type` is not one of `"course"` or `"subject"`.
+*   **`SEGMENT_RESOLUTION_FAILED` / `SEGMENT_NOT_FOUND`**: Occurs if the `segment_id` or `segment_name` does not resolve to a valid active course segment.
+
+**Response Body (Error - Duplicate Course Short Code):**
+```json
+{
+  "success": false,
+  "action": "academic_create_package",
+  "error": {
+    "type": "ConflictError",
+    "message": "Failed to save Course: Unique constraint violation on column 'short_code' (value 'CRS-MATH-10' already exists).",
+    "errorCode": "DUPLICATE_SHORT_CODE"
+  }
+}
+```
+
 ---
 
 ### B. Update Package (`academic_update_package`)
@@ -1025,6 +1119,527 @@ The `MoneyTransaction` table is the general ledger register logging all cash flo
     }
   }
 }
+
+---
+
+## 14. Attendance API (Student & Teacher)
+
+The **Attendance System** manages daily attendance logs, statuses (Present, Absent, Leave), and mode classifications (Manual, QR, Biometric) for both students and teachers. 
+
+Attendance logs reside in a separate, physical `Attendance` spreadsheet file under worksheets `StudentAttendance` and `TeacherAttendance`. To bypass string parsing inconsistencies and timezone shifting anomalies, the API utilizes a **Structured JSON Time Object** (`{ hour, minute, period }`) at the boundary, which the backend pre-processes and stores as a native `datetime` in the sheet.
+
+---
+
+### A. Student Attendance Actions
+
+#### 1. Mark Student Attendance (`student_mark_attendance`)
+Saves or updates (upserts) a student's daily attendance. The backend verifies the composite key `{ student_id, attendance_date }` to prevent duplicates and update the existing row if it already exists.
+
+**Request Payload:**
+```json
+{
+  "action": "student_mark_attendance",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "student_id": "STU-ATT-4KMAUL",
+    "batch_id": "BAT-ATT-4KMAUL",
+    "attendance_date": "2026-06-10",
+    "status": "P",
+    "entry_time": { "hour": 8, "minute": 1, "period": "AM" },
+    "exit_time": { "hour": 1, "minute": 5, "period": "PM" },
+    "attendance_mode": "Manual",
+    "remarks": "On time arrival",
+    "marked_by": "TCH-MOCK-1"
+  }
+}
+```
+
+**Response Envelope (Success):**
+```json
+{
+  "success": true,
+  "action": "student_mark_attendance",
+  "data": {
+    "attendance_id": "ATT-50B21429",
+    "student_id": "STU-ATT-4KMAUL",
+    "batch_id": "BAT-ATT-4KMAUL",
+    "attendance_date": "2026-06-10",
+    "status": "P",
+    "entry_time": { "hour": 8, "minute": 1, "period": "AM" },
+    "exit_time": { "hour": 1, "minute": 5, "period": "PM" },
+    "attendance_mode": "Manual",
+    "remarks": "On time arrival",
+    "marked_by": "TCH-MOCK-1"
+  }
+}
+```
+
+#### 2. Bulk Mark Student Attendance (`student_mark_attendance_bulk`)
+Performs batch upserts of student attendance for a batch on a specific date.
+
+**Request Payload:**
+```json
+{
+  "action": "student_mark_attendance_bulk",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "batch_id": "BAT-ATT-4KMAUL",
+    "attendance_date": "2026-06-11",
+    "attendance_mode": "Biometric",
+    "marked_by": "TCH-MOCK-1",
+    "records": [
+      {
+        "student_id": "STU-ATT-4KMAUL",
+        "status": "P",
+        "entry_time": { "hour": 8, "minute": 0, "period": "AM" },
+        "exit_time": { "hour": 1, "minute": 0, "period": "PM" }
+      },
+      {
+        "student_id": "STU-ATT-2-4KMAUL",
+        "status": "A",
+        "remarks": "Sick leave"
+      }
+    ]
+  }
+}
+```
+
+**Response Envelope (Success):**
+```json
+{
+  "success": true,
+  "action": "student_mark_attendance_bulk",
+  "data": {
+    "success": true,
+    "processedCount": 2,
+    "records": [
+      {
+        "attendance_id": "ATT-DBFA0DAD",
+        "student_id": "STU-ATT-4KMAUL",
+        "batch_id": "BAT-ATT-4KMAUL",
+        "attendance_date": "2026-06-11",
+        "status": "P",
+        "entry_time": { "hour": 8, "minute": 0, "period": "AM" },
+        "exit_time": { "hour": 1, "minute": 0, "period": "PM" },
+        "attendance_mode": "Biometric",
+        "remarks": null,
+        "marked_by": "TCH-MOCK-1"
+      },
+      {
+        "attendance_id": "ATT-5252457C",
+        "student_id": "STU-ATT-2-4KMAUL",
+        "batch_id": "BAT-ATT-4KMAUL",
+        "attendance_date": "2026-06-11",
+        "status": "A",
+        "entry_time": null,
+        "exit_time": null,
+        "attendance_mode": "Biometric",
+        "remarks": "Sick leave",
+        "marked_by": "TCH-MOCK-1"
+      }
+    ]
+  }
+}
+```
+
+#### 3. Query Student Attendance (`student_query_attendance`)
+Retrieves filtered student attendance logs. Hydrates records with dynamic computed duration values, student names, batch names, and course details.
+
+**Request Payload:**
+```json
+{
+  "action": "student_query_attendance",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "where": {
+      "batch_id": "BAT-ATT-4KMAUL",
+      "attendance_date": "2026-06-11"
+    }
+  }
+}
+```
+
+**Response Envelope (Success):**
+```json
+{
+  "success": true,
+  "action": "student_query_attendance",
+  "data": [
+    {
+      "attendance_id": "ATT-DBFA0DAD",
+      "student_id": "STU-ATT-4KMAUL",
+      "batch_id": "BAT-ATT-4KMAUL",
+      "attendance_date": "2026-06-11",
+      "status": "P",
+      "entry_time": { "hour": 8, "minute": 0, "period": "AM" },
+      "exit_time": { "hour": 1, "minute": 0, "period": "PM" },
+      "attendance_mode": "Biometric",
+      "remarks": null,
+      "marked_by": "TCH-MOCK-1",
+      "duration": 5.0,
+      "student_name": "Learner Attendance",
+      "batch_name": "Att Batch Morning",
+      "course_id": "CRS-ATT-4KMAUL",
+      "course_name": "Attendance 101"
+    },
+    {
+      "attendance_id": "ATT-5252457C",
+      "student_id": "STU-ATT-2-4KMAUL",
+      "batch_id": "BAT-ATT-4KMAUL",
+      "attendance_date": "2026-06-11",
+      "status": "A",
+      "entry_time": null,
+      "exit_time": null,
+      "attendance_mode": "Biometric",
+      "remarks": "Sick leave",
+      "marked_by": "TCH-MOCK-1",
+      "duration": null,
+      "student_name": "Learner 2 Attendance",
+      "batch_name": "Att Batch Morning",
+      "course_id": "CRS-ATT-4KMAUL",
+      "course_name": "Attendance 101"
+    }
+  ]
+}
+```
+
+---
+
+### B. Teacher Attendance Actions
+
+#### 1. Mark Teacher Attendance (`staff_mark_attendance`)
+Saves or updates (upserts) a teacher's daily log per batch. Prevents duplicate rows on same date/teacher/batch.
+
+**Request Payload:**
+```json
+{
+  "action": "staff_mark_attendance",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "teacher_id": "TCH-ATT-4KMAUL",
+    "batch_id": "BAT-ATT-MORN",
+    "attendance_date": "2026-06-10",
+    "status": "P",
+    "entry_time": { "hour": 7, "minute": 45, "period": "AM" },
+    "exit_time": { "hour": 2, "minute": 30, "period": "PM" },
+    "attendance_mode": "Manual",
+    "remarks": "Arrived early"
+  }
+}
+```
+
+**Response Envelope (Success):**
+```json
+{
+  "success": true,
+  "action": "staff_mark_attendance",
+  "data": {
+    "attendance_id": "TAT-BD910F70",
+    "teacher_id": "TCH-ATT-4KMAUL",
+    "batch_id": "BAT-ATT-MORN",
+    "attendance_date": "2026-06-10",
+    "status": "P",
+    "entry_time": { "hour": 7, "minute": 45, "period": "AM" },
+    "exit_time": { "hour": 2, "minute": 30, "period": "PM" },
+    "attendance_mode": "Manual",
+    "remarks": "Arrived early",
+    "marked_by": null
+  }
+}
+```
+
+#### 2. Bulk Mark Teacher Attendance (`staff_mark_attendance_bulk`)
+Performs batch upserts of teacher attendance records for a specific date and batch.
+
+**Request Payload:**
+```json
+{
+  "action": "staff_mark_attendance_bulk",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "attendance_date": "2026-06-11",
+    "attendance_mode": "Biometric",
+    "records": [
+      {
+        "teacher_id": "TCH-ATT-4KMAUL",
+        "batch_id": "BAT-ATT-MORN",
+        "status": "P",
+        "entry_time": { "hour": 7, "minute": 40, "period": "AM" },
+        "exit_time": { "hour": 2, "minute": 45, "period": "PM" }
+      }
+    ]
+  }
+}
+```
+
+**Response Envelope (Success):**
+```json
+{
+  "success": true,
+  "action": "staff_mark_attendance_bulk",
+  "data": {
+    "success": true,
+    "processedCount": 1,
+    "records": [
+      {
+        "attendance_id": "TAT-DFB2EA8B",
+        "teacher_id": "TCH-ATT-4KMAUL",
+        "batch_id": "BAT-ATT-MORN",
+        "attendance_date": "2026-06-11",
+        "status": "P",
+        "entry_time": { "hour": 7, "minute": 40, "period": "AM" },
+        "exit_time": { "hour": 2, "minute": 45, "period": "PM" },
+        "attendance_mode": "Biometric",
+        "remarks": null,
+        "marked_by": null
+      }
+    ]
+  }
+}
+```
+
+#### 3. Query Teacher Attendance (`staff_query_attendance`)
+Retrieves and filters teacher attendance logs. Hydrates records with dynamic calculated durations, teacher names, and batch/course details.
+
+**Request Payload:**
+```json
+{
+  "action": "staff_query_attendance",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "where": {
+      "teacher_id": "TCH-ATT-4KMAUL",
+      "attendance_date": "2026-06-11"
+    }
+  }
+}
+```
+
+**Response Envelope (Success):**
+```json
+{
+  "success": true,
+  "action": "staff_query_attendance",
+  "data": [
+    {
+      "attendance_id": "TAT-DFB2EA8B",
+      "teacher_id": "TCH-ATT-4KMAUL",
+      "batch_id": "BAT-ATT-MORN",
+      "attendance_date": "2026-06-11",
+      "status": "P",
+      "entry_time": { "hour": 7, "minute": 40, "period": "AM" },
+      "exit_time": { "hour": 2, "minute": 45, "period": "PM" },
+      "attendance_mode": "Biometric",
+      "remarks": null,
+      "marked_by": null,
+      "duration": 7.08,
+      "teacher_name": "Instructor Attendance",
+      "batch_name": "Att Batch Morning",
+      "course_id": "CRS-ATT-101",
+      "course_name": "Attendance 101"
+    }
+  ]
+}
+```
+
+---
+
+### C. Generic Deletion & Administrative CRUD
+
+Standard administrative CRUD operations (creation, updates, deletions) are supported on `StudentAttendance` and `TeacherAttendance` tables using generic endpoints.
+
+| Action Key | Payload Requirements | Description |
+| :--- | :--- | :--- |
+| `data_delete` | `{ "payload": { "table": "StudentAttendance", "id": "ATT-..." } }` | Hard delete an attendance record by ID. |
+| `data_delete_many` | `{ "payload": { "table": "StudentAttendance", "ids": ["ATT-...", "ATT-..."] } }` | Hard delete multiple attendance records. |
+
+---
+
+## 15. Class Test API
+
+The **Class Test System** manages schedules, papers, and performance results of classroom tests and examinations. Dynamic calculations are processed on-the-fly to keep spreadsheets lightweight.
+
+### A. Core Action Mappings
+
+#### 1. Create Class Test (`test_create`)
+Schedules a new test for a batch.
+
+**Request Payload:**
+```json
+{
+  "action": "test_create",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "title": "Science Weekly Quiz 01",
+    "batch_id": "BAT-ATT-MORN",
+    "test_date": "2026-06-12",
+    "total_marks": 50,
+    "passing_marks": 20,
+    "remarks": "Covers light and refraction modules"
+  }
+}
+```
+
+**Response Envelope (Success):**
+```json
+{
+  "success": true,
+  "action": "test_create",
+  "data": {
+    "id": "TST-00B21429",
+    "title": "Science Weekly Quiz 01",
+    "batch_id": "BAT-ATT-MORN",
+    "test_date": "2026-06-12",
+    "total_marks": 50,
+    "passing_marks": 20,
+    "status": "Draft",
+    "remarks": "Covers light and refraction modules"
+  }
+}
+```
+
+---
+
+#### 2. Save Test Marks Bulk (`test_save_marks_bulk`)
+Saves or overrides (upserts) student test marks. Validates that the student is active in the batch, bounds checks the score against the test max, and normalizes absent marks to `null`.
+
+**Request Payload:**
+```json
+{
+  "action": "test_save_marks_bulk",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "test_id": "TST-00B21429",
+    "records": [
+      {
+        "student_id": "STU-001",
+        "obtained_marks": 45,
+        "is_absent": false,
+        "remarks": "Excellent score"
+      },
+      {
+        "student_id": "STU-002",
+        "obtained_marks": null,
+        "is_absent": true,
+        "remarks": "Voided: Sick leave"
+      }
+    ]
+  }
+}
+```
+
+**Response Envelope (Success):**
+```json
+{
+  "success": true,
+  "action": "test_save_marks_bulk",
+  "data": {
+    "success": true,
+    "processedCount": 2,
+    "records": [
+      {
+        "id": "TMK-50B21429",
+        "test_id": "TST-00B21429",
+        "student_id": "STU-001",
+        "obtained_marks": 45,
+        "is_absent": false,
+        "remarks": "Excellent score"
+      },
+      {
+        "id": "TMK-5252457C",
+        "test_id": "TST-00B21429",
+        "student_id": "STU-002",
+        "obtained_marks": null,
+        "is_absent": true,
+        "remarks": "Voided: Sick leave"
+      }
+    ]
+  }
+}
+```
+
+---
+
+#### 3. Query Test Performance Report (`test_query_report`)
+Compiles a dynamic report containing hydrated details, student percentages, grades, ranks (using Standard Competition Ranking), and aggregate statistics.
+
+**Request Payload:**
+```json
+{
+  "action": "test_query_report",
+  "token": "YOUR_AUTH_TOKEN",
+  "payload": {
+    "test_id": "TST-00B21429"
+  }
+}
+```
+
+**Response Envelope (Success):**
+```json
+{
+  "success": true,
+  "action": "test_query_report",
+  "data": {
+    "test": {
+      "id": "TST-00B21429",
+      "title": "Science Weekly Quiz 01",
+      "batch_id": "BAT-ATT-MORN",
+      "batch_name": "Att Batch Morning",
+      "course_name": "Attendance 101",
+      "test_date": "2026-06-12",
+      "total_marks": 50,
+      "passing_marks": 20,
+      "status": "Draft",
+      "remarks": "Covers light and refraction modules"
+    },
+    "stats": {
+      "total_students": 2,
+      "present_students": 1,
+      "absent_students": 1,
+      "highest_marks": 45,
+      "lowest_marks": 45,
+      "average_marks": 45,
+      "pass_percentage": 50,
+      "fail_percentage": 0,
+      "absent_percentage": 50,
+      "toppers": [
+        {
+          "student_id": "STU-001",
+          "student_name": "Learner Attendance",
+          "obtained_marks": 45
+        }
+      ]
+    },
+    "records": [
+      {
+        "id": "TMK-50B21429",
+        "test_id": "TST-00B21429",
+        "student_id": "STU-001",
+        "student_name": "Learner Attendance",
+        "obtained_marks": 45,
+        "is_absent": false,
+        "remarks": "Excellent score",
+        "percentage": 90,
+        "grade": "A",
+        "rank": 1
+      },
+      {
+        "id": "TMK-5252457C",
+        "test_id": "TST-00B21429",
+        "student_id": "STU-002",
+        "student_name": "Learner 2 Attendance",
+        "obtained_marks": null,
+        "is_absent": true,
+        "remarks": "Voided: Sick leave",
+        "percentage": null,
+        "grade": "Absent",
+        "rank": "Absent"
+      }
+    ]
+  }
+}
+```
+
 
 
 

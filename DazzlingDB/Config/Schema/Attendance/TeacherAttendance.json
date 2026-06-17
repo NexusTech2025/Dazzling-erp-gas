@@ -4,6 +4,14 @@
     "teacher_id": {
       "type": "foreign_key",
       "required": true,
+      "target": "Teacher",
+      "maxLength": 255,
+      "onDelete": "protect"
+    },
+    "batch_id": {
+      "type": "foreign_key",
+      "required": true,
+      "target": "Batch",
       "maxLength": 255,
       "onDelete": "protect"
     },
@@ -15,42 +23,39 @@
       "type": "string",
       "required": true,
       "choices": [
-        "present",
-        "absent",
-        "leave",
-        "half_day"
+        "P",
+        "A",
+        "L"
       ],
-      "maxLength": 255
+      "maxLength": 10
     },
-    "check_in_time": {
-      "type": "datetime"
+    "entry_time": {
+      "type": "datetime",
+      "required": false
     },
-    "check_out_time": {
-      "type": "datetime"
+    "exit_time": {
+      "type": "datetime",
+      "required": false
     },
-    "working_hours": {
-      "type": "number"
-    },
-    "is_paid_leave": {
-      "type": "boolean",
-      "default": false
-    },
-    "attendance_source": {
+    "attendance_mode": {
       "type": "string",
       "choices": [
-        "manual",
-        "biometric",
-        "system"
+        "Manual",
+        "QR",
+        "Biometric"
       ],
-      "maxLength": 255
+      "maxLength": 50,
+      "default": "Manual"
     },
-    "notes": {
+    "remarks": {
       "type": "string",
-      "maxLength": 255
+      "maxLength": 500,
+      "required": false
     },
     "marked_by": {
       "type": "string",
-      "maxLength": 255
+      "maxLength": 255,
+      "required": false
     },
     "attendance_id": {
       "type": "auto",
@@ -65,6 +70,12 @@
       "type": "belongsTo",
       "target": "Teacher",
       "foreignKey": "teacher_id"
+    },
+    "batch": {
+      "type": "belongsTo",
+      "target": "Batch",
+      "foreignKey": "batch_id",
+      "onDelete": "protect"
     }
   }
 }

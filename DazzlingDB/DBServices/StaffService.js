@@ -211,19 +211,223 @@ const StaffService = {
   /**
    * Marks daily attendance.
    */
+  /**
+   * Marks daily attendance for a teacher (Upsert pattern).
+   */
   markAttendance(payload) {
     const db = DBContext.getInstance();
-    console.log(`[StaffService] Marking attendance for ${payload.teacher_id} on ${payload.attendance_date}`);
+    
+    // 1. Validation and Casing Normalization
+    if (!payload.teacher_id) throw new Error("teacher_id is required.");
+    if (!payload.batch_id) throw new Error("batch_id is required.");
+    if (!payload.attendance_date) throw new Error("attendance_date is required.");
+    if (!payload.status) throw new Error("status is required.");
 
-    if (!db.Teacher.findById(payload.teacher_id)) {
-      throw new SheetDB.EntityNotFoundError("Teacher", payload.teacher_id, "Staff");
+    // Normalize inputs
+    const teacherId = String(payload.teacher_id).trim();
+    const batchId = String(payload.batch_id).trim();
+    const dateStr = String(payload.attendance_date).trim();
+    const status = String(payload.status).trim().toUpperCase();
+    
+    let mode = payload.attendance_mode || "Manual";
+    const cleanMode = String(mode).trim().toUpperCase();
+    if (cleanMode === "QR") mode = "QR";
+    else if (cleanMode === "BIOMETRIC") mode = "Biometric";
+    else mode = "Manual";
+
+    // Verify existence of teacher and batch
+    if (!db.Teacher.findById(teacherId)) {
+      throw new SheetDB.EntityNotFoundError("Teacher", teacherId, "Staff");
+    }
+    if (!db.Batch.findById(batchId)) {
+      throw new SheetDB.EntityNotFoundError("Batch", batchId, "Academic");
     }
 
-    return db.TeacherAttendance.insert({
-      ...payload,
-      attendance_source: payload.attendance_source || "manual",
-      created_at: new Date()
+    let entryDate = null;
+    let exitDate = null;
+
+    if (payload.entry_time) {
+      entryDate = AttendanceUtil.convertJsonToDate(payload.entry_time, dateStr);
+    }
+    if (payload.exit_time) {
+      exitDate = AttendanceUtil.convertJsonToDate(payload.exit_time, dateStr);
+      if (entryDate && exitDate && exitDate < entryDate) {
+        exitDate.setDate(exitDate.getDate() + 1);
+      }
+    }
+
+    const attendanceData = {
+      teacher_id: teacherId,
+      batch_id: batchId,
+      attendance_date: dateStr,
+      status: status,
+      entry_time: entryDate,
+      exit_time: exitDate,
+      attendance_mode: mode,
+      remarks: payload.remarks || null,
+      marked_by: payload.marked_by || null
+    };
+
+    // Check if attendance already exists for this teacher, batch, and date
+    const existing = db.TeacherAttendance.findOne({
+      teacher_id: teacherId,
+      batch_id: batchId,
+      attendance_date: dateStr
     });
+
+    if (existing) {
+      console.log(`[StaffService] Updating existing teacher attendance ID: ${existing.attendance_id} for Batch: ${batchId}`);
+      return db.TeacherAttendance.update(existing.attendance_id, attendanceData);
+    } else {
+      console.log(`[StaffService] Inserting new teacher attendance for Teacher: ${teacherId} Batch: ${batchId}`);
+      return db.TeacherAttendance.insert(attendanceData);
+    }
+  },
+
+  /**
+   * Marks bulk teacher attendance for a specific date (Upsert pattern).
+   */
+  markAttendanceBulk(payload) {
+    const db = DBContext.getInstance();
+
+    if (!payload.attendance_date) throw new Error("attendance_date is required.");
+    if (!payload.records || !Array.isArray(payload.records)) throw new Error("records array is required.");
+
+    const dateStr = String(payload.attendance_date).trim();
+    
+    let defaultMode = payload.attendance_mode || "Manual";
+    const cleanDefaultMode = String(defaultMode).trim().toUpperCase();
+    if (cleanDefaultMode === "QR") defaultMode = "QR";
+    else if (cleanDefaultMode === "BIOMETRIC") defaultMode = "Biometric";
+    else defaultMode = "Manual";
+
+    console.log(`[StaffService] Processing bulk attendance for teachers on ${dateStr}`);
+
+    // Pre-load all existing attendance records for this date to minimize read queries
+    const existingRecords = db.TeacherAttendance.where({
+      attendance_date: dateStr
+    });
+    
+    // Map existing records by teacher_id + batch_id for O(1) lookups
+    const existingMap = {};
+    existingRecords.forEach(rec => {
+      existingMap[`${rec.teacher_id}_${rec.batch_id}`] = rec;
+    });
+
+    const results = [];
+    payload.records.forEach(rec => {
+      if (!rec.teacher_id) throw new Error("Each record in bulk array must contain teacher_id.");
+      if (!rec.batch_id) throw new Error("Each record in bulk array must contain batch_id.");
+      if (!rec.status) throw new Error("Each record in bulk array must contain status.");
+
+      const teacherId = String(rec.teacher_id).trim();
+      const batchId = String(rec.batch_id).trim();
+      const status = String(rec.status).trim().toUpperCase();
+      let mode = rec.attendance_mode || defaultMode;
+      const cleanMode = String(mode).trim().toUpperCase();
+      if (cleanMode === "QR") mode = "QR";
+      else if (cleanMode === "BIOMETRIC") mode = "Biometric";
+      else mode = "Manual";
+
+      // Check teacher and batch existence
+      if (!db.Teacher.findById(teacherId)) {
+        throw new SheetDB.EntityNotFoundError("Teacher", teacherId, "Staff");
+      }
+      if (!db.Batch.findById(batchId)) {
+        throw new SheetDB.EntityNotFoundError("Batch", batchId, "Academic");
+      }
+
+      let entryDate = null;
+      let exitDate = null;
+
+      if (rec.entry_time) {
+        entryDate = AttendanceUtil.convertJsonToDate(rec.entry_time, dateStr);
+      }
+      if (rec.exit_time) {
+        exitDate = AttendanceUtil.convertJsonToDate(rec.exit_time, dateStr);
+        if (entryDate && exitDate && exitDate < entryDate) {
+          exitDate.setDate(exitDate.getDate() + 1);
+        }
+      }
+
+      const attendanceData = {
+        teacher_id: teacherId,
+        batch_id: batchId,
+        attendance_date: dateStr,
+        status: status,
+        entry_time: entryDate,
+        exit_time: exitDate,
+        attendance_mode: mode,
+        remarks: rec.remarks || null,
+        marked_by: payload.marked_by || rec.marked_by || null
+      };
+
+      const existing = existingMap[`${teacherId}_${batchId}`];
+      if (existing) {
+        results.push(db.TeacherAttendance.update(existing.attendance_id, attendanceData));
+      } else {
+        results.push(db.TeacherAttendance.insert(attendanceData));
+      }
+    });
+
+    return {
+      success: true,
+      processedCount: results.length,
+      records: results
+    };
+  },
+
+  /**
+   * Queries teacher attendance records and appends calculated durations and master details.
+   */
+  queryAttendance(payload) {
+    const db = DBContext.getInstance();
+    
+    const targetQuery = {
+      target: "TeacherAttendance",
+      ...payload
+    };
+
+    const results = QueryEngine.execute(targetQuery, db);
+    const records = results.data || [];
+
+    // Hydrate each attendance log with dynamic durations and display names
+    const hydrated = records.map(row => {
+      const record = (typeof row.toJSON === 'function') ? row.toJSON() : row;
+      
+      const rawEntry = record.entry_time;
+      const rawExit = record.exit_time;
+
+      // Calculate dynamic duration
+      record.duration = AttendanceUtil.calculateDuration(rawEntry, rawExit);
+
+      // Convert datetime back to JSON object for API output format
+      record.entry_time = AttendanceUtil.convertDateToJson(rawEntry);
+      record.exit_time = AttendanceUtil.convertDateToJson(rawExit);
+
+      // Resolve teacher master details
+      const teacher = db.Teacher.findById(record.teacher_id);
+      record.teacher_name = teacher ? teacher.full_name : "Unknown Teacher";
+
+      // Resolve batch/course details
+      const batch = db.Batch.findById(record.batch_id);
+      if (batch) {
+        record.batch_name = batch.batch_name;
+        record.course_id = batch.course_id;
+        
+        const course = db.Course.findById(batch.course_id);
+        record.course_name = course ? course.name : "Unknown Course";
+      } else {
+        record.batch_name = "Unknown Batch";
+        record.course_id = null;
+        record.course_name = "Unknown Course";
+      }
+
+      return record;
+    });
+
+    results.data = hydrated;
+    return results;
   },
 
   /**

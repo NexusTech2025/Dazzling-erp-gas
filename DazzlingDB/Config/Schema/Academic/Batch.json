@@ -88,6 +88,17 @@
       "type": "hasMany",
       "target": "StudentLead",
       "foreignKey": "batch_id"
+    },
+    "studentattendance": {
+      "type": "hasMany",
+      "target": "StudentAttendance",
+      "foreignKey": "batch_id"
+    },
+    "classtests": {
+      "type": "hasMany",
+      "target": "Test",
+      "foreignKey": "batch_id",
+      "onDelete": "protect"
     }
   }
 }

@@ -200,13 +200,28 @@ const TestMockData = {
     teacher_id: "TCH-MOCK-1",
     subject_id: "CRS-MOCK-PHY"
   },
+  StudentAttendance: {
+    attendance_id: "ATT-MOCK-1",
+    student_id: "STU-MOCK-1",
+    batch_id: "BAT-MOCK-PHY",
+    attendance_date: "2026-06-10",
+    status: "P",
+    entry_time: "08:00 AM",
+    exit_time: "01:00 PM",
+    attendance_mode: "Manual",
+    remarks: "Mock student present",
+    marked_by: "TCH-MOCK-1"
+  },
   TeacherAttendance: {
     attendance_id: "TAT-MOCK-1",
     teacher_id: "TCH-MOCK-1",
-    attendance_date: "2026-05-29",
-    status: "present",
-    working_hours: 8,
-    is_paid_leave: false
+    attendance_date: "2026-06-10",
+    status: "P",
+    entry_time: "07:45 AM",
+    exit_time: "02:30 PM",
+    attendance_mode: "Manual",
+    remarks: "Mock teacher present",
+    marked_by: "USR-MOCK-1"
   },
   TeacherDocument: {
     document_id: "TDO-MOCK-1",

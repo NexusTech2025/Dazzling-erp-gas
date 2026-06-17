@@ -84,31 +84,132 @@ const AcademicService = {
     const insertedRecords = [{ table: "Package", id: packageId }];
 
     try {
-      // 2. Insert Perks (Let SheetDB validate required/default columns)
-      if (payload.perks && Array.isArray(payload.perks)) {
-        payload.perks.forEach((perk, index) => {
-          const newPerk = db.PackagePerk.insert({
-            package_id: packageId,
-            perk_title: perk.perk_title,
-            perk_description: perk.perk_description || "",
-            icon: perk.icon || "star",
-            display_order: perk.display_order || (index + 1)
-          });
-          insertedRecords.push({ table: "PackagePerk", id: newPerk.perk_id });
-        });
+      // 2. Resolve Perks (Custom array or presets based on target_class)
+      let perksToInsert = payload.perks;
+      if (!perksToInsert || !Array.isArray(perksToInsert) || perksToInsert.length === 0) {
+        const targetClass = String(payload.target_class || "").toLowerCase();
+        if (targetClass.includes("11") || targetClass.includes("12") || targetClass.includes("senior")) {
+          perksToInsert = [
+            { perk_title: "Free Basic Computer Course with new admission", icon: "computer" },
+            { perk_title: "Daily Practice Papers (DPP)", icon: "file_copy" },
+            { perk_title: "Regular Assignments and Study Materials", icon: "book" },
+            { perk_title: "Monthly Parent-Teacher Meetings", icon: "people" },
+            { perk_title: "Dedicated Student Monitoring Mobile Application", icon: "smartphone" },
+            { perk_title: "Note: Package Excludes Hindi & English", icon: "info" }
+          ];
+        } else {
+          perksToInsert = [
+            { perk_title: "Daily Practice Papers (DPP)", icon: "file_copy" },
+            { perk_title: "Regular Assignments and Study Materials", icon: "book" },
+            { perk_title: "Monthly Parent-Teacher Meetings", icon: "people" },
+            { perk_title: "Online & Offline learning resources", icon: "language" },
+            { perk_title: "Dedicated Student Monitoring Mobile Application", icon: "smartphone" }
+          ];
+        }
       }
 
-      // 3. Insert Polymorphic Courses/Subjects (Trimming & Casing Normalization ONLY)
+      perksToInsert.forEach((perk, index) => {
+        const newPerk = db.PackagePerk.insert({
+          package_id: packageId,
+          perk_title: perk.perk_title,
+          perk_description: perk.perk_description || "",
+          icon: perk.icon || "star",
+          display_order: perk.display_order || (index + 1)
+        });
+        insertedRecords.push({ table: "PackagePerk", id: newPerk.perk_id });
+      });
+
+      // 3. Insert Polymorphic Courses/Subjects (Supports On-Demand Course creation and Normalization)
       if (payload.courses && Array.isArray(payload.courses)) {
         payload.courses.forEach(item => {
           const normalizedType = typeof item.entity_type === "string"
             ? item.entity_type.toLowerCase().trim()
             : item.entity_type;
 
+          if (normalizedType !== "course" && normalizedType !== "subject") {
+            const err = new SheetDB.ValidationError(`Validation failed for PackageItem: entity_type '${item.entity_type}' must be one of course, subject.`);
+            err.errorCode = "INVALID_ENTITY_TYPE";
+            throw err;
+          }
+
+          let courseId = item.entity_id;
+
+          if (item.on_demand === true) {
+            let segmentId = item.segment_id;
+            if (!segmentId) {
+              if (item.segment_name) {
+                const ct = db.CourseType.findOne({ segment_name: item.segment_name });
+                if (ct) segmentId = ct.segment_id;
+              }
+              if (!segmentId) {
+                const fallbackSegment = db.CourseType.findOne({ status: "active" }) || db.CourseType.findOne({});
+                if (fallbackSegment) segmentId = fallbackSegment.segment_id;
+              }
+            }
+
+            if (!segmentId) {
+              const err = new SheetDB.ValidationError("Could not resolve segment for on-demand course creation. Please provide a valid 'segment_id' or 'segment_name'.");
+              err.errorCode = "SEGMENT_RESOLUTION_FAILED";
+              throw err;
+            }
+
+            // Verify segment exists
+            const segment = db.CourseType.findById(segmentId);
+            if (!segment) {
+              const err = new SheetDB.EntityNotFoundError("CourseType", segmentId, "Academic");
+              err.errorCode = "SEGMENT_NOT_FOUND";
+              throw err;
+            }
+
+            if (item.short_code) {
+              const existingCourseCode = db.Course.findOne({ short_code: item.short_code });
+              if (existingCourseCode) {
+                const err = new SheetDB.ConflictError(`Failed to save Course: Unique constraint violation on column 'short_code' (value '${item.short_code}' already exists).`);
+                err.errorCode = "DUPLICATE_SHORT_CODE";
+                throw err;
+              }
+            }
+
+            try {
+              const newCourse = db.Course.insert({
+                segment_id: segmentId,
+                entity_type: normalizedType,
+                name: item.name,
+                short_code: item.short_code,
+                language_medium: item.language_medium || "English",
+                duration_value: item.duration_value,
+                duration_unit: item.duration_unit || "months",
+                base_fee: item.base_fee,
+                status: item.status || "active"
+              });
+              courseId = newCourse.course_id;
+              insertedRecords.push({ table: "Course", id: courseId });
+            } catch (courseErr) {
+              if (courseErr.message && courseErr.message.includes("Unique constraint violation")) {
+                courseErr.errorCode = "DUPLICATE_SHORT_CODE";
+              } else if (!courseErr.errorCode) {
+                courseErr.errorCode = "COURSE_VALIDATION_FAILED";
+              }
+              throw courseErr;
+            }
+          } else {
+            if (!courseId) {
+              const err = new SheetDB.ValidationError("Course registration requires either 'entity_id' or 'on_demand: true'.");
+              err.errorCode = "REFERENCED_COURSE_NOT_FOUND";
+              throw err;
+            }
+            const existing = db.Course.findById(courseId);
+            if (!existing) {
+              const err = new SheetDB.ValidationError(`Referenced course ID '${courseId}' does not exist.`);
+              err.errorCode = "REFERENCED_COURSE_NOT_FOUND";
+              throw err;
+            }
+          }
+
           const newItem = db.PackageItem.insert({
             package_id: packageId,
             entity_type: normalizedType,
-            entity_id: item.entity_id
+            entity_id: courseId
           });
           insertedRecords.push({ table: "PackageItem", id: newItem.item_id });
         });

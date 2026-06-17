@@ -1,0 +1,74 @@
+{
+  "primaryKey": "id",
+  "columns": {
+    "test_id": {
+      "type": "foreign_key",
+      "required": true,
+      "target": "Test",
+      "maxLength": 255,
+      "onDelete": "cascade"
+    },
+    "student_id": {
+      "type": "foreign_key",
+      "required": true,
+      "target": "Student",
+      "maxLength": 255,
+      "onDelete": "cascade",
+      "validations": [
+        {
+          "rule": "custom",
+          "handler": "validateStudentAllocation"
+        }
+      ]
+    },
+    "obtained_marks": {
+      "type": "number",
+      "required": false,
+      "validations": [
+        {
+          "rule": "custom",
+          "handler": "validateObtainedMarks"
+        }
+      ]
+    },
+    "is_absent": {
+      "type": "boolean",
+      "default": false,
+      "required": true
+    },
+    "remarks": {
+      "type": "string",
+      "required": false,
+      "maxLength": 500
+    },
+    "created_at": {
+      "type": "datetime",
+      "autoNowAdd": true
+    },
+    "updated_at": {
+      "type": "datetime",
+      "autoNow": true
+    },
+    "id": {
+      "type": "auto",
+      "idPrefix": "TMK",
+      "editable": false,
+      "unique": true,
+      "required": false
+    }
+  },
+  "relations": {
+    "test": {
+      "type": "belongsTo",
+      "target": "Test",
+      "foreignKey": "test_id",
+      "onDelete": "cascade"
+    },
+    "student": {
+      "type": "belongsTo",
+      "target": "Student",
+      "foreignKey": "student_id",
+      "onDelete": "cascade"
+    }
+  }
+}

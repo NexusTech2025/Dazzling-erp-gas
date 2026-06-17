@@ -60,9 +60,9 @@ const StudentService = {
       if (item.enrollment_type === "package") {
         const packageItems = db.PackageItem.where({ package_id: item.item_id });
         const requiredCourseIds = packageItems.map(pi => pi.entity_id);
-        
+
         const providedCourseIds = (item.package_batches || []).map(pb => pb.course_id);
-        
+
         const missingCourses = requiredCourseIds.filter(cid => !providedCourseIds.includes(cid));
         if (missingCourses.length > 0) {
           const courseNames = missingCourses.map(cid => {
@@ -109,7 +109,7 @@ const StudentService = {
 
         // Resolve item metadata if it is a Package
         let metadata = null;
-        
+
         if (isPackage) {
           const packageItems = db.PackageItem.where({ package_id: item.item_id });
           const courseFeesMap = {};
@@ -197,7 +197,7 @@ const StudentService = {
           const calculatedFinalFee = item.fee - calculatedDiscount;
           const calculatedAmountPaid = Math.round((payload.feeAccount.amount_paid || 0) * proportion);
           const balanceDue = calculatedFinalFee - calculatedAmountPaid;
-          
+
           const feeAccountId = this._generateId(this._getTablePrefix("StudentFeeAccount"));
 
           db.StudentFeeAccount.insert({
@@ -327,7 +327,7 @@ const StudentService = {
    */
   processSubjectWithdrawal(studentId, courseId) {
     const db = DBContext.getInstance();
-    
+
     // 1. Locate the batch allocation
     const allocation = db.BatchAllocation.findOne({
       student_id: studentId,
@@ -337,7 +337,7 @@ const StudentService = {
     if (!allocation) {
       throw new Error(`Active batch allocation not found for Student ${studentId} and Course ${courseId}`);
     }
-    
+
     // Check if this allocation belongs to a package enrollment contract
     const enrollment = db.Enrollment.findById(allocation.enrollment_id);
     if (!enrollment) {
@@ -349,7 +349,7 @@ const StudentService = {
 
     const parentEnrollmentId = enrollment.enrollment_id;
 
-    return Database.transaction(function(db) {
+    return Database.transaction(function (db) {
       // 2. Mark allocation as dropped
       db.BatchAllocation.update(allocation.allocation_id, {
         status: "dropped",
@@ -464,8 +464,8 @@ const StudentService = {
    */
   upgradeToPackage(studentId, currentEnrollmentIds, targetPackageId, packageBatches) {
     const db = DBContext.getInstance();
-    
-    return Database.transaction(function(db) {
+
+    return Database.transaction(function (db) {
       // 1. Gather all historical payments from standalone fee accounts and calculate rollover amount
       let totalPaymentsToRollover = 0;
       currentEnrollmentIds.forEach(eid => {
@@ -483,7 +483,7 @@ const StudentService = {
 
       // 2. Insert parent package enrollment
       const pkgEnrollmentId = StudentService._generateId(StudentService._getTablePrefix("Enrollment"));
-      
+
       const pkgDetails = db.Package.findById(targetPackageId);
       if (!pkgDetails) {
         throw new Error(`Package ${targetPackageId} not found.`);
@@ -626,21 +626,21 @@ const StudentService = {
       status: ["active", "suspended"]
     });
     if (!allocation) return { allowed: false, reason: "No active enrollment found." };
-    
+
     if (allocation.status === "suspended") {
       return { allowed: false, reason: "Access suspended due to outstanding dues." };
     }
-    
+
     const enrollment = db.Enrollment.findById(allocation.enrollment_id);
     if (!enrollment) return { allowed: false, reason: "No active enrollment found." };
-    
+
     const feeAccount = db.StudentFeeAccount.findOne({ enrollment_id: enrollment.enrollment_id });
     if (!feeAccount) return { allowed: true };
-    
+
     const gracePeriodDays = 7;
     const overdueLimitDate = new Date();
     overdueLimitDate.setDate(overdueLimitDate.getDate() - gracePeriodDays);
-    
+
     const overdueInstallments = db.Installment.where({
       student_fee_id: feeAccount.student_fee_id,
       status: ["pending", "partially_paid"]
@@ -650,9 +650,9 @@ const StudentService = {
       const dueDate = new Date(ins.due_date);
       return dueDate < overdueLimitDate;
     });
-    
+
     if (isOverdue) {
-      Database.transaction(function(db) {
+      Database.transaction(function (db) {
         db.BatchAllocation.update(allocation.allocation_id, { status: "suspended" });
         const sisterAllocations = db.BatchAllocation.where({
           enrollment_id: allocation.enrollment_id,
@@ -664,8 +664,228 @@ const StudentService = {
       });
       return { allowed: false, reason: "Suspended: Overdue installment payment." };
     }
-    
+
     return { allowed: true };
+  },
+
+  /**
+   * Marks a single student's attendance (Upsert pattern).
+   */
+  markAttendance(payload) {
+    const db = DBContext.getInstance();
+
+    // 1. Validation and Casing Normalization
+    if (!payload.student_id) throw new Error("student_id is required.");
+    if (!payload.batch_id) throw new Error("batch_id is required.");
+    if (!payload.attendance_date) throw new Error("attendance_date is required.");
+    if (!payload.status) throw new Error("status is required.");
+
+    // Normalize inputs
+    const studentId = String(payload.student_id).trim();
+    const batchId = String(payload.batch_id).trim();
+    const dateStr = String(payload.attendance_date).trim();
+    const status = String(payload.status).trim().toUpperCase();
+
+    let mode = payload.attendance_mode || "Manual";
+    const cleanMode = String(mode).trim().toUpperCase();
+    if (cleanMode === "QR") mode = "QR";
+    else if (cleanMode === "BIOMETRIC") mode = "Biometric";
+    else mode = "Manual";
+
+    // Verify existence of parent entities
+    if (!db.Student.findById(studentId)) {
+      throw new SheetDB.EntityNotFoundError("Student", studentId, "Students");
+    }
+    if (!db.Batch.findById(batchId)) {
+      throw new SheetDB.EntityNotFoundError("Batch", batchId, "Academic");
+    }
+
+    let entryDate = null;
+    let exitDate = null;
+
+    if (payload.entry_time) {
+      entryDate = AttendanceUtil.convertJsonToDate(payload.entry_time, dateStr);
+    }
+    if (payload.exit_time) {
+      exitDate = AttendanceUtil.convertJsonToDate(payload.exit_time, dateStr);
+      if (entryDate && exitDate && exitDate < entryDate) {
+        exitDate.setDate(exitDate.getDate() + 1);
+      }
+    }
+
+    const attendanceData = {
+      student_id: studentId,
+      batch_id: batchId,
+      attendance_date: dateStr,
+      status: status,
+      entry_time: entryDate,
+      exit_time: exitDate,
+      attendance_mode: mode,
+      remarks: payload.remarks || null,
+      marked_by: payload.marked_by || null
+    };
+
+    // Check if attendance already exists for this student on this date
+    const existing = db.StudentAttendance.findOne({
+      student_id: studentId,
+      attendance_date: dateStr
+    });
+
+    if (existing) {
+      console.log(`[StudentService] Updating existing student attendance ID: ${existing.attendance_id}`);
+      return db.StudentAttendance.update(existing.attendance_id, attendanceData);
+    } else {
+      console.log(`[StudentService] Inserting new student attendance for Student: ${studentId}`);
+      return db.StudentAttendance.insert(attendanceData);
+    }
+  },
+
+  /**
+   * Marks bulk student attendance for a specific batch and date (Upsert pattern).
+   */
+  markAttendanceBulk(payload) {
+    const db = DBContext.getInstance();
+
+    if (!payload.batch_id) throw new Error("batch_id is required.");
+    if (!payload.attendance_date) throw new Error("attendance_date is required.");
+    if (!payload.records || !Array.isArray(payload.records)) throw new Error("records array is required.");
+
+    const batchId = String(payload.batch_id).trim();
+    const dateStr = String(payload.attendance_date).trim();
+
+    let defaultMode = payload.attendance_mode || "Manual";
+    const cleanDefaultMode = String(defaultMode).trim().toUpperCase();
+    if (cleanDefaultMode === "QR") defaultMode = "QR";
+    else if (cleanDefaultMode === "BIOMETRIC") defaultMode = "Biometric";
+    else defaultMode = "Manual";
+
+    if (!db.Batch.findById(batchId)) {
+      throw new SheetDB.EntityNotFoundError("Batch", batchId, "Academic");
+    }
+
+    console.log(`[StudentService] Processing bulk attendance for batch: ${batchId} on ${dateStr}`);
+
+    // Pre-load all existing attendance records for this batch and date to minimize read queries
+    const existingRecords = db.StudentAttendance.where({
+      batch_id: batchId,
+      attendance_date: dateStr
+    });
+
+    // Map existing records by student_id for O(1) lookups
+    const existingMap = {};
+    existingRecords.forEach(rec => {
+      existingMap[rec.student_id] = rec;
+    });
+
+    const results = [];
+    payload.records.forEach(rec => {
+      if (!rec.student_id) throw new Error("Each record in bulk array must contain student_id.");
+      if (!rec.status) throw new Error("Each record in bulk array must contain status.");
+
+      const studentId = String(rec.student_id).trim();
+      const status = String(rec.status).trim().toUpperCase();
+      let mode = rec.attendance_mode || defaultMode;
+      const cleanMode = String(mode).trim().toUpperCase();
+      if (cleanMode === "QR") mode = "QR";
+      else if (cleanMode === "BIOMETRIC") mode = "Biometric";
+      else mode = "Manual";
+
+      // Check student existence
+      if (!db.Student.findById(studentId)) {
+        throw new SheetDB.EntityNotFoundError("Student", studentId, "Students");
+      }
+
+      let entryDate = null;
+      let exitDate = null;
+
+      if (rec.entry_time) {
+        entryDate = AttendanceUtil.convertJsonToDate(rec.entry_time, dateStr);
+      }
+      if (rec.exit_time) {
+        exitDate = AttendanceUtil.convertJsonToDate(rec.exit_time, dateStr);
+        if (entryDate && exitDate && exitDate < entryDate) {
+          exitDate.setDate(exitDate.getDate() + 1);
+        }
+      }
+
+      const attendanceData = {
+        student_id: studentId,
+        batch_id: batchId,
+        attendance_date: dateStr,
+        status: status,
+        entry_time: entryDate,
+        exit_time: exitDate,
+        attendance_mode: mode,
+        remarks: rec.remarks || null,
+        marked_by: payload.marked_by || rec.marked_by || null
+      };
+
+      const existing = existingMap[studentId];
+      if (existing) {
+        results.push(db.StudentAttendance.update(existing.attendance_id, attendanceData));
+      } else {
+        results.push(db.StudentAttendance.insert(attendanceData));
+      }
+    });
+
+    return {
+      success: true,
+      processedCount: results.length,
+      records: results
+    };
+  },
+
+  /**
+   * Queries student attendance records and appends calculated durations and master info.
+   */
+  queryAttendance(payload) {
+    const db = DBContext.getInstance();
+
+    // Perform standard search/filter logic using QueryEngine (which handles sorting, limits, filters)
+    const targetQuery = {
+      target: "StudentAttendance",
+      ...payload
+    };
+
+    const results = QueryEngine.execute(targetQuery, db);
+    const records = results.data || [];
+
+    // Hydrate each attendance log with dynamic durations and display names
+    const hydrated = records.map(row => {
+      const record = (typeof row.toJSON === 'function') ? row.toJSON() : row;
+      const rawEntry = record.entry_time;
+      const rawExit = record.exit_time;
+
+      // Calculate dynamic duration
+      record.duration = AttendanceUtil.calculateDuration(rawEntry, rawExit);
+
+      // Convert datetime back to JSON object for API output format
+      record.entry_time = AttendanceUtil.convertDateToJson(rawEntry);
+      record.exit_time = AttendanceUtil.convertDateToJson(rawExit);
+
+      // Resolve student master details
+      const student = db.Student.findById(record.student_id);
+      record.student_name = student ? student.student_name : "Unknown Student";
+
+      // Resolve batch/course details
+      const batch = db.Batch.findById(record.batch_id);
+      if (batch) {
+        record.batch_name = batch.batch_name;
+        record.course_id = batch.course_id;
+
+        const course = db.Course.findById(batch.course_id);
+        record.course_name = course ? course.name : "Unknown Course";
+      } else {
+        record.batch_name = "Unknown Batch";
+        record.course_id = null;
+        record.course_name = "Unknown Course";
+      }
+
+      return record;
+    });
+
+    results.data = hydrated;
+    return results;
   }
 };
 

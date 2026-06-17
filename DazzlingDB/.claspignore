@@ -23,4 +23,5 @@ Test/*
 
 # BUT explicitly allow our focused test suites
 !Test/TestMockData.js
-!Test/Finance_LedgerTests.js
+!Test/Academic_PackageTests.js
+!Test/AttendanceSystemTests.js

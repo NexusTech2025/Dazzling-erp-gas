@@ -352,6 +352,46 @@ class StaffMarkAttendanceAction extends BaseAction {
   _execute() { return StaffService.markAttendance(this._params.payload); }
 }
 
+class StaffMarkAttendanceBulkAction extends BaseAction {
+  _validate() { this._requireParam("payload"); }
+  _execute() { return StaffService.markAttendanceBulk(this._params.payload); }
+}
+
+class StaffQueryAttendanceAction extends BaseAction {
+  _validate() { this._requireParam("payload"); }
+  _execute() { return StaffService.queryAttendance(this._params.payload); }
+}
+
+class StudentMarkAttendanceAction extends BaseAction {
+  _validate() { this._requireParam("payload"); }
+  _execute() { return StudentService.markAttendance(this._params.payload); }
+}
+
+class StudentMarkAttendanceBulkAction extends BaseAction {
+  _validate() { this._requireParam("payload"); }
+  _execute() { return StudentService.markAttendanceBulk(this._params.payload); }
+}
+
+class StudentQueryAttendanceAction extends BaseAction {
+  _validate() { this._requireParam("payload"); }
+  _execute() { return StudentService.queryAttendance(this._params.payload); }
+}
+
+class CreateTestAction extends BaseAction {
+  _validate() { this._requireParam("payload"); }
+  _execute() { return TestService.createTest(this._params.payload); }
+}
+
+class SaveTestMarksBulkAction extends BaseAction {
+  _validate() { this._requireParam("payload"); }
+  _execute() { return TestService.saveTestMarksBulk(this._params.payload); }
+}
+
+class QueryTestReportAction extends BaseAction {
+  _validate() { this._requireParam("payload"); }
+  _execute() { return TestService.queryTestReport(this._params.payload); }
+}
+
 class StaffRecordPaymentAction extends BaseAction {
   _validate() { this._requireParam("payload"); }
   _execute() { return StaffService.recordPayment(this._params.payload); }
