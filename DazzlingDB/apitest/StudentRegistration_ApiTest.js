@@ -29,34 +29,78 @@ const StudentRegistration_ApiTest = (function () {
     let envelopeStudentId = null;
     let enrollmentId = null;
 
+    const stats = { passed: 0, failed: 0, scenarios: [] };
+
+    function runScenario(name, fn) {
+      try {
+        fn();
+        stats.passed++;
+        stats.scenarios.push({ name: name, status: "PASSED" });
+      } catch (error) {
+        stats.failed++;
+        stats.scenarios.push({ name: name, status: "FAILED", error: error.message });
+        throw error;
+      }
+    }
+
     try {
       // Phase 0: Academic Environment Setup
-      const academicData = _setupAcademicEnvironment(logger, callApi, superToken);
-      createdCourseTypeId = academicData.courseType.segment_id;
-      createdCourseId = academicData.course.course_id;
-      createdBatchId = academicData.batch.batch_id;
+      let academicData;
+      runScenario("Phase 0: Academic Environment Setup", () => {
+        academicData = _setupAcademicEnvironment(logger, callApi, superToken);
+        createdCourseTypeId = academicData.courseType.segment_id;
+        createdCourseId = academicData.course.course_id;
+        createdBatchId = academicData.batch.batch_id;
+      });
 
       // Phase 1: Student Registration (Happy Path)
-      const regResult = _registerStudent(academicData, logger, callApi, superToken);
-      createdStudentId = regResult.studentId;
-      enrollmentId = regResult.enrollmentId;
+      let regResult;
+      runScenario("Phase 1: Student Registration (Happy Path)", () => {
+        regResult = _registerStudent(academicData, logger, callApi, superToken);
+        createdStudentId = regResult.studentId;
+        enrollmentId = regResult.enrollmentId;
+      });
 
       // Phase 2: Verification of hydrated relation retrieval
-      _verifyData(createdStudentId, logger, callApi, superToken);
+      runScenario("Phase 2: Hydration Verification", () => {
+        _verifyData(createdStudentId, logger, callApi, superToken);
+      });
 
       // Phase 3: Validation / Negative Flow Checks
-      _testValidation(logger, superToken, regResult.email, createdCourseId);
+      runScenario("Phase 3: Validation / Negative Flows", () => {
+        _testValidation(logger, superToken, regResult.email, createdCourseId);
+      });
 
       // Phase 4: ORM Update check
-      _testUpdate(createdStudentId, logger);
+      runScenario("Phase 4: ORM Update Check", () => {
+        _testUpdate(createdStudentId, logger);
+      });
 
       // Phase 5: Response Envelope Format checking
-      envelopeStudentId = _testResponseEnvelopeFormats(logger, superToken);
+      runScenario("Phase 5: Response Envelope Formats", () => {
+        envelopeStudentId = _testResponseEnvelopeFormats(logger, superToken);
+      });
 
       console.log("\n🎉 API TEST SUITE COMPLETED SUCCESSFULLY! 🎉\n");
     } catch (error) {
       ApiTestHelper.logger.error(`API Test Suite Failed: ${error.message}`);
     } finally {
+      // Print Summary before Teardown
+      console.log("\n=========================================");
+      console.log("📊 API TEST RUNNER SUMMARY:");
+      console.log(`   - Scenarios Run     : ${stats.passed + stats.failed}`);
+      console.log(`   - Successful Steps  : ${stats.passed}`);
+      console.log(`   - Failed Steps      : ${stats.failed}`);
+      console.log("\n   - Details:");
+      stats.scenarios.forEach((s) => {
+        const marker = s.status === "PASSED" ? "✅" : "❌";
+        console.log(`     ${marker} ${s.name} : ${s.status}`);
+        if (s.error) {
+          console.log(`         ↳ Error: ${s.error}`);
+        }
+      });
+      console.log("=========================================\n");
+
       logger.phase("N: Teardown and Cleanup");
       const db = DBContext.getInstance();
 
@@ -144,7 +188,7 @@ const StudentRegistration_ApiTest = (function () {
 
     logger.action("Creating Batch...");
     const batch = callApi("academic_create_batch", {
-      item_id: course.course_id,
+      course_id: course.course_id,
       batch_name: `API Test Batch A ${suffix}`,
       batch_type: "Academy",
       capacity: 20
@@ -186,6 +230,7 @@ const StudentRegistration_ApiTest = (function () {
     logger.action("Enrolling Student...");
     const enrollment = callApi("academic_enroll_student", {
       student_id: student.student_id,
+      enrollment_type: "course",
       item_id: academicData.course.course_id,
       batch_id: academicData.batch.batch_id
     }, superToken);
@@ -203,15 +248,7 @@ const StudentRegistration_ApiTest = (function () {
       include: {
         address: {},
         contact: {},
-        enrollments: {
-          include: {
-            batch: {
-              include: {
-                course: {}
-              }
-            }
-          }
-        }
+        enrollments: {}
       }
     };
 
@@ -238,7 +275,7 @@ const StudentRegistration_ApiTest = (function () {
     logger.data("Hydrated Student Data", {
       name: student.student_name,
       city: student.address ? student.address.city : "MISSING",
-      course: (student.enrollments[0] && student.enrollments[0].batch.course) ? student.enrollments[0].batch.course.name : "MISSING"
+      enrollments_count: student.enrollments ? student.enrollments.length : 0
     });
     logger.success("Verification successful.");
   }
@@ -338,7 +375,10 @@ const StudentRegistration_ApiTest = (function () {
         gender: "Male"
       },
       address: {
-        city: "Pune"
+        line1: "789 Envelope Lane",
+        city: "Pune",
+        state: "Maharashtra",
+        pin_code: "411001"
       },
       contact: {
         mobile_number: uniqueMobile

@@ -17,6 +17,7 @@ database_template/**
 
 # Ignore the entire apitest directory
 apitest/**
+NodeTest/**
 
 # Ignore all files in the Test folder by default
 Test/*
@@ -33,8 +34,10 @@ Test/*
 !Test/OnboardTeacherTests.js
 !Test/UpdateTeacherTests.js
 !Test/TestManagementTests.js
+!Test/System_BaseActionErrorMappingTests.js
 
 !apitest/StudentLead_ApiTest.js
 !apitest/ApiTestHelper.js
 !apitest/StudentRegistration_ApiTest.js
+!apitest/Student_RegistrationResponseEnvelopeTests.js
  

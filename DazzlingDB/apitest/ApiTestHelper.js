@@ -47,7 +47,14 @@ const ApiTestHelper = (function() {
     }
 
     if (!response.success) {
-      throw new Error(`[API Error] Action '${action}' failed: ${response.error ? response.error.message : 'Unknown Error'}`);
+      const errMsg = response.error ? response.error.message : 'Unknown Error';
+      const details = response.error ? response.error.details : null;
+      console.error(`   ❌ API Error: ${action} failed`);
+      console.error(`      ↳ Message: ${errMsg}`);
+      if (details) {
+        console.error(`      ↳ Details:`, JSON.stringify(details, null, 2));
+      }
+      throw new Error(`[API Error] Action '${action}' failed: ${errMsg}${details ? ' | Details: ' + JSON.stringify(details) : ''}`);
     }
     return response.data;
   }
