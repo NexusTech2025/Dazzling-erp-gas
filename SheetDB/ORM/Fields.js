@@ -263,7 +263,7 @@ class DateTimeField extends BaseField {
     }
 
     if (!date) return "";
-    return isDate(date) ? date.toISOString() : new Date(date).toISOString();
+    return globalThis.SheetDBDateTime ? globalThis.SheetDBDateTime.toSheetSafeValue(date) : (isDate(date) ? date.toISOString() : new Date(date).toISOString());
   }
 }
 

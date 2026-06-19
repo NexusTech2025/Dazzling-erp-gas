@@ -106,6 +106,7 @@ Object.assign(globalThis, {
   PrimaryKeyCache: globalThis.PrimaryKeyCache,
   ForeignKeyField: globalThis.ForeignKeyField,
   isDate: globalThis.isDate,
+  SheetDBDateTime: globalThis.SheetDBDateTime,
   
   // Relations OOP Classes
   BaseRelation: globalThis.BaseRelation,
