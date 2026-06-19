@@ -4,83 +4,210 @@
  */
 
 /**
- * Abstract base class for all API Actions.
+ * System-Wide Relational Transaction Action Types (CQS Mandate)
+ * @enum {string}
+ */
+const ActionType = {
+  CREATE: 'CREATE',
+  UPDATE: 'UPDATE',
+  DELETE: 'DELETE',
+  QUERY:  'QUERY'
+};
+Object.freeze(ActionType);
+
+/**
+ * Declarative Registry for mapping database and application errors to structured API responses.
+ */
+const ErrorMappingRegistry = {
+  "ActionValidationError": (error) => ({
+    displayCode: "ACTION_VALIDATION_FAILURE",
+    clientMessage: error.message,
+    errorDetails: error.details
+  }),
+  "EntityNotFoundError": (error) => ({
+    displayCode: "ENTITY_NOT_FOUND",
+    clientMessage: error.message,
+    errorDetails: error.details || null
+  }),
+  "ValidationError": (error) => ({
+    displayCode: "VALIDATION_FAILURE",
+    clientMessage: error.message,
+    errorDetails: error.context || null
+  }),
+  "ConflictError": (error) => ({
+    displayCode: "CONFLICT_ERROR",
+    clientMessage: error.message,
+    errorDetails: error.context || null
+  }),
+  "IntegrityError": (error) => ({
+    displayCode: "INTEGRITY_VIOLATION",
+    clientMessage: error.message,
+    errorDetails: error.context || null
+  }),
+  "ForbiddenError": (error) => ({
+    displayCode: "FORBIDDEN_ACCESS",
+    clientMessage: error.message,
+    errorDetails: error.context || null
+  }),
+  "default": (error) => {
+    if (error && error.errorCode) {
+      return {
+        displayCode: error.errorCode,
+        clientMessage: error.message,
+        errorDetails: error.details
+      };
+    }
+    return {
+      displayCode: "UNHANDLED_SERVER_FAULT",
+      clientMessage: "A critical system exception was intercepted during server-side processing.",
+      errorDetails: null
+    };
+  }
+};
+
+/**
+ * Clean Protocol-Driven Base Action Controller
  */
 class BaseAction {
   /**
-   * @param {Object} options
-   * @param {Object} options.db - The active SheetDB instance
-   * @param {Object} options.params - Request parameters
-   * @param {Object} [options.user] - Optional auth context
+   * @param {ActionType} actionType - Strict unified transaction parameter token
    */
-  constructor({ db, params = {}, user = null }) {
-    if (!db) throw new BaseActionError("Database instance is required.");
-    this._db = db;
-    this._params = Object.freeze({ ...params });
-    this._user = user;
+  constructor(actionType) {
+    if (!ActionType[actionType]) {
+      throw new SystemError(`Framework Boot Error: Invalid ActionType context [${actionType}] passed to constructor.`);
+    }
+    this._actionType = actionType;
     this._actionName = this.constructor.name.replace("Action", "").toLowerCase();
   }
 
   /**
-   * Public execution entrypoint.
+   * Execution Lifecycle Template Method
    */
-  run() {
+  run(requestContext) {
+    const startTime = Date.now();
+    
+    // Bind context state metadata
+    requestContext.actionType = this._actionType;
+    requestContext.mutationManifest = [];
+    
+    const correlationId = requestContext.headers?.['X-Correlation-ID'] || Utilities.getUuid();
+    const environment = PropertiesService.getScriptProperties().getProperty('ENV') || 'production';
+
+    // Bind parameters to properties for helper methods compatibility
+    this._params = requestContext.params;
+    this._user = requestContext.user;
+    this._db = requestContext.db;
+
     try {
       this._validate();
       this._authorize();
-      const result = this._execute();
-      return this._successEnvelope(this._format(result));
+      // Execute the concrete sub-class business layer logic
+      const dataPayload = this.handle(requestContext);
+      return this.formatSuccessResponse(dataPayload, startTime, requestContext, environment);
+
     } catch (error) {
-      console.error(`[BaseAction] Error in ${this._actionName}:`, error);
-      return this._errorEnvelope(this._normalizeError(error));
+      this._logInternalException(error, correlationId, requestContext);
+      return this.formatFailureResponse(error, startTime, correlationId, environment, requestContext);
     }
   }
 
+  /**
+   * Concrete subclass validation entrypoint.
+   */
   _validate() { }
+
+  /**
+   * Concrete subclass authorization entrypoint.
+   */
   _authorize() { }
-  _execute() { throw new BaseActionError("_execute() must be implemented."); }
-  _format(result) { return result; }
 
-  _successEnvelope(data) {
-    return { success: true, action: this._actionName, data };
+  /**
+   * Execution delegate. Can be overridden in concrete subclasses.
+   */
+  handle(requestContext) {
+    if (typeof this._execute === 'function') {
+      return this._execute();
+    }
+    throw new BaseActionError("handle() or _execute() must be implemented.");
   }
 
-  _errorEnvelope(error) {
-    return { success: false, action: this._actionName, error };
+  /**
+   * Formats successful executions. Omits mutation metrics entirely on read queries.
+   */
+  formatSuccessResponse(dataPayload, startTime, requestContext, environment) {
+    const contextBlock = { "execution_time_ms": Date.now() - startTime };
+
+    if (requestContext.actionType !== ActionType.QUERY) {
+      const rawManifest = requestContext?.mutationManifest || [];
+      const uniqueMutations = [...new Set(rawManifest)];
+      contextBlock.mutated_records_count = uniqueMutations.length;
+      contextBlock.mutated_records = uniqueMutations;
+
+      if (dataPayload && typeof dataPayload === 'object' && !Array.isArray(dataPayload) && !dataPayload._presentation) {
+        dataPayload._presentation = {
+          display_status: dataPayload.status ? this._mapStatusToHumanString(dataPayload.status) : "Success",
+          toast_message: "Data transaction committed safely to physical files."
+        };
+      }
+    }
+
+    return {
+      "success": true,
+      "data": dataPayload,
+      "context": contextBlock,
+      "meta": { "environment": environment, "version": SYSTEM_VERSION, "timestamp": new Date().toISOString() }
+    };
   }
 
-  _normalizeError(error) {
-    const norm = {
-      type: error.name || "UnknownError",
-      message: error.message || "Internal server error."
+  /**
+   * Standardized Failure Envelope Formatter with error masking shielding parameters
+   */
+  formatFailureResponse(error, startTime, correlationId, environment, requestContext) {
+    let resolved = null;
+
+    if (error) {
+      const name = error.name;
+      if (name && ErrorMappingRegistry[name]) {
+        resolved = ErrorMappingRegistry[name](error);
+      }
+    }
+
+    if (!resolved) {
+      resolved = ErrorMappingRegistry.default(error);
+    }
+
+    const { displayCode, clientMessage, errorDetails } = resolved;
+
+    const failureEnvelope = {
+      "success": false,
+      "error": { "code": displayCode, "message": clientMessage, "details": errorDetails },
+      "context": {
+        "execution_time_ms": Date.now() - startTime,
+        "active_transaction_id": requestContext.txId || "NONE",
+        "transaction_status": requestContext.txRolledBack ? "ROLLED_BACK" : "FAILED"
+      },
+      "meta": { "environment": environment, "version": SYSTEM_VERSION, "timestamp": new Date().toISOString(), "correlation_id": correlationId }
     };
 
-    if (error.errorCode) {
-      norm.errorCode = error.errorCode;
+    if (environment === 'development') {
+      failureEnvelope.meta.diagnostics = { stack_trace: error.stack ? error.stack.split('\n') : ["No trace captured."] };
     }
 
-    // 1. Map details (Validation / Field-level violations)
-    if (error.context && error.context.fields) {
-      norm.details = error.context;
-    } else if (error.details) {
-      norm.details = error.details;
-    }
+    return failureEnvelope;
+  }
 
-    // 2. Map business context (Branch, Session, Role)
-    if (error.businessContext) {
-      norm.context = error.businessContext;
-    } else if (error.context && !error.context.fields) {
-      norm.context = error.context;
-    }
+  _logInternalException(error, correlationId, context) {
+    console.error(`[CRITICAL_FAULT] [CID: ${correlationId}] Details: ${JSON.stringify({
+      error_name: error.name || "Error",
+      message: error.message || "Unknown error",
+      action_type: context.actionType,
+      tables_touched: context.mutationManifest || []
+    })}`);
+  }
 
-    // 3. Map system telemetry (Timestamps, Request IDs)
-    if (error.meta) {
-      norm.meta = error.meta;
-    } else if (error.timestamp) {
-      norm.meta = { timestamp: error.timestamp };
-    }
-
-    return norm;
+  _mapStatusToHumanString(status) {
+    const mappings = { "active": "Fully Enrolled", "dropped": "Withdrawn / Dropped", "upgraded": "Upgraded to Package Plan" };
+    return mappings[String(status).toLowerCase()] || status;
   }
 
   _requireParam(name) {
@@ -91,3 +218,7 @@ class BaseAction {
     return val;
   }
 }
+
+// Bind to global scope for Google Apps Script execution context
+globalThis.ActionType = ActionType;
+globalThis.BaseAction = BaseAction;

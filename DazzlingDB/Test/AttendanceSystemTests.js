@@ -9,6 +9,14 @@ function runAttendanceSystemTests() {
   const db = DBContext.getInstance();
   const suffix = Math.random().toString(36).substring(7).toUpperCase();
 
+  // Initialize mock requestContext
+  const mockContext = {
+    actionType: "CREATE",
+    mutationManifest: [],
+    txId: "TX-TEST-MOCK-ATT",
+    headers: { "X-Correlation-ID": "test-corr-att" }
+  };
+
   // ==========================================
   // 1. Setup Master Mock Entities
   // ==========================================
@@ -133,7 +141,7 @@ function runAttendanceSystemTests() {
       student_id: studentId,
       batch_id: batchId,
       attendance_date: attDate,
-      status: "p", // lowercase normalizes to uppercase P
+      status: "p",
       entry_time: { hour: 8, minute: 1, period: "AM" },
       exit_time: { hour: 1, minute: 5, period: "PM" },
       attendance_mode: "manual",
@@ -141,8 +149,16 @@ function runAttendanceSystemTests() {
       marked_by: "TCH-MOCK-1"
     };
 
-    const record = StudentService.markAttendance(payload);
+    mockContext.mutationManifest = [];
+    mockContext.actionType = "CREATE";
+    const record = StudentService.markAttendance(payload, mockContext);
     console.log(`  ✅ Student attendance marked successfully. ID: ${record.attendance_id}`);
+    console.log(`  Mutated records: ${JSON.stringify(mockContext.mutationManifest)}`);
+    if (mockContext.mutationManifest.includes("StudentAttendance")) {
+      console.log("  ✅ Mutation manifest includes StudentAttendance");
+    } else {
+      console.error("  ❌ Mutation manifest does not include StudentAttendance!");
+    }
 
     // Verify properties
     if (record.status === "P" && record.attendance_mode === "Manual") {
@@ -156,14 +172,16 @@ function runAttendanceSystemTests() {
       student_id: studentId,
       batch_id: batchId,
       attendance_date: attDate,
-      status: "L", // Change status from P to L
+      status: "L",
       entry_time: null,
       exit_time: null,
       attendance_mode: "QR",
       remarks: "Approved leave request"
     };
 
-    const updatedRecord = StudentService.markAttendance(updatePayload);
+    mockContext.mutationManifest = [];
+    mockContext.actionType = "CREATE";
+    const updatedRecord = StudentService.markAttendance(updatePayload, mockContext);
     if (updatedRecord.attendance_id === record.attendance_id && updatedRecord.status === "L") {
       console.log("  ✅ Upsert verification: Successfully updated the existing attendance record instead of creating a duplicate.");
     } else {
@@ -179,7 +197,6 @@ function runAttendanceSystemTests() {
   // ==========================================
   console.log("\n--- [TEST CASE 3] Student Attendance Bulk Upsert ---");
   try {
-    // Let's create a second mock student
     let studentId2 = "STU-ATT-2-" + suffix;
     db.Student.insert({
       student_id: studentId2,
@@ -202,9 +219,18 @@ function runAttendanceSystemTests() {
       ]
     };
 
-    const result = StudentService.markAttendanceBulk(bulkPayload);
+    mockContext.mutationManifest = [];
+    mockContext.actionType = "CREATE";
+    const result = StudentService.markAttendanceBulk(bulkPayload, mockContext);
     if (result.success && result.processedCount === 2) {
       console.log(`  ✅ Bulk attendance processed successfully: ${result.processedCount} records.`);
+      console.log(`  Mutated records: ${JSON.stringify(mockContext.mutationManifest)}`);
+      if (mockContext.mutationManifest.includes("StudentAttendance")) {
+        console.log("  ✅ Mutation manifest includes StudentAttendance");
+      } else {
+        console.error("  ❌ Mutation manifest does not include StudentAttendance!");
+      }
+      
       const r1 = db.StudentAttendance.findOne({ student_id: studentId, attendance_date: "2026-06-11" });
       const r2 = db.StudentAttendance.findOne({ student_id: studentId2, attendance_date: "2026-06-11" });
       if (r1 && r1.status === "P" && r2 && r2.status === "A") {
@@ -267,8 +293,16 @@ function runAttendanceSystemTests() {
       attendance_mode: "Manual",
       remarks: "Arrived early"
     };
-    const tRec = StaffService.markAttendance(tPayload);
+    mockContext.mutationManifest = [];
+    mockContext.actionType = "CREATE";
+    const tRec = StaffService.markAttendance(tPayload, mockContext);
     console.log(`  ✅ Teacher attendance marked successfully. ID: ${tRec.attendance_id}`);
+    console.log(`  Mutated records: ${JSON.stringify(mockContext.mutationManifest)}`);
+    if (mockContext.mutationManifest.includes("TeacherAttendance")) {
+      console.log("  ✅ Mutation manifest includes TeacherAttendance");
+    } else {
+      console.error("  ❌ Mutation manifest does not include TeacherAttendance!");
+    }
 
     // Verify single upsert update
     tPayload.status = "L";
@@ -276,14 +310,16 @@ function runAttendanceSystemTests() {
     tPayload.exit_time = null;
     tPayload.remarks = "Converted to leave";
     
-    const tUpdated = StaffService.markAttendance(tPayload);
+    mockContext.mutationManifest = [];
+    mockContext.actionType = "CREATE";
+    const tUpdated = StaffService.markAttendance(tPayload, mockContext);
     if (tUpdated.attendance_id === tRec.attendance_id && tUpdated.status === "L") {
       console.log("  ✅ Teacher upsert verification: Successfully updated same record.");
     } else {
       throw new Error(`Teacher upsert verification failed: Expected ID ${tRec.attendance_id} and status L, got ID ${tUpdated.attendance_id} and status ${tUpdated.status}`);
     }
 
-    // Verify non-collision for different batch (same teacher, different batch, same date)
+    // Verify non-collision for different batch
     const tPayloadOtherBatch = {
       teacher_id: teacherId,
       batch_id: batchId2,
@@ -294,7 +330,9 @@ function runAttendanceSystemTests() {
       attendance_mode: "Manual",
       remarks: "Teaching second batch"
     };
-    const tRecOtherBatch = StaffService.markAttendance(tPayloadOtherBatch);
+    mockContext.mutationManifest = [];
+    mockContext.actionType = "CREATE";
+    const tRecOtherBatch = StaffService.markAttendance(tPayloadOtherBatch, mockContext);
     if (tRecOtherBatch.attendance_id !== tRec.attendance_id) {
       console.log("  ✅ Teacher multi-batch isolation verification: Separate record created for other batch on same date.");
     } else {
@@ -310,9 +348,17 @@ function runAttendanceSystemTests() {
         { teacher_id: teacherId, batch_id: batchId2, status: "P", entry_time: { hour: 3, minute: 0, period: "PM" }, exit_time: { hour: 5, minute: 0, period: "PM" } }
       ]
     };
-    const tBulkResult = StaffService.markAttendanceBulk(tBulkPayload);
+    mockContext.mutationManifest = [];
+    mockContext.actionType = "CREATE";
+    const tBulkResult = StaffService.markAttendanceBulk(tBulkPayload, mockContext);
     if (tBulkResult.success && tBulkResult.processedCount === 2) {
       console.log("  ✅ Teacher bulk attendance processed for multiple batches.");
+      console.log(`  Mutated records: ${JSON.stringify(mockContext.mutationManifest)}`);
+      if (mockContext.mutationManifest.includes("TeacherAttendance")) {
+        console.log("  ✅ Mutation manifest includes TeacherAttendance");
+      } else {
+        console.error("  ❌ Mutation manifest does not include TeacherAttendance!");
+      }
     } else {
       throw new Error(`Teacher bulk processing failed: processedCount=${tBulkResult.processedCount}`);
     }
@@ -348,14 +394,12 @@ function runAttendanceSystemTests() {
   // ==========================================
   console.log("\n--- [TEST CLEANUP] Purging test records from tables ---");
   try {
-    // Delete attendance records
     const sAtts = db.StudentAttendance.where({ batch_id: batchId });
     sAtts.forEach(r => db.StudentAttendance.remove(r.attendance_id));
     
     const tAtts = db.TeacherAttendance.where({ teacher_id: teacherId });
     tAtts.forEach(r => db.TeacherAttendance.remove(r.attendance_id));
 
-    // Delete masters
     db.Student.remove(studentId);
     const s2 = db.Student.findById("STU-ATT-2-" + suffix);
     if (s2) db.Student.remove(s2.student_id);

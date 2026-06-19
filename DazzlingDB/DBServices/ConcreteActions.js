@@ -7,7 +7,11 @@
  * Health Check Action
  */
 class PingAction extends BaseAction {
-  _execute() {
+  constructor() {
+    super(ActionType.QUERY);
+  }
+
+  handle(requestContext) {
     return {
       status: "Online",
       timestamp: new Date().toISOString(),
@@ -21,12 +25,12 @@ class PingAction extends BaseAction {
  * Student Domain: Comprehensive Registration
  */
 class RegisterStudentAction extends BaseAction {
-  _validate() {
-    this._requireParam("payload");
+  constructor() {
+    super(ActionType.CREATE);
   }
 
-  _execute() {
-    return StudentService.registerStudent(this._params.payload);
+  handle(requestContext) {
+    return StudentService.registerStudent(requestContext.params.payload, requestContext);
   }
 }
 
@@ -34,6 +38,10 @@ class RegisterStudentAction extends BaseAction {
  * Student Domain: Withdraw a subject from package enrollment
  */
 class WithdrawStudentSubjectAction extends BaseAction {
+  constructor() {
+    super(ActionType.DELETE);
+  }
+
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -42,8 +50,9 @@ class WithdrawStudentSubjectAction extends BaseAction {
     }
   }
 
-  _execute() {
-    return StudentService.processSubjectWithdrawal(this._params.payload.student_id, this._params.payload.course_id);
+  handle(requestContext) {
+    const p = requestContext.params.payload;
+    return StudentService.processSubjectWithdrawal(p.student_id, p.course_id, requestContext);
   }
 }
 
@@ -51,6 +60,10 @@ class WithdrawStudentSubjectAction extends BaseAction {
  * Student Domain: Upgrade standalone course enrollments to a package
  */
 class UpgradeStudentPackageAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
+
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -59,9 +72,14 @@ class UpgradeStudentPackageAction extends BaseAction {
     }
   }
 
-  _execute() {
-    const { student_id, current_enrollment_ids, target_package_id, package_batches } = this._params.payload;
-    return StudentService.upgradeToPackage(student_id, current_enrollment_ids, target_package_id, package_batches);
+  handle(requestContext) {
+    const { student_id, current_enrollment_ids, target_package_id, package_batches } = requestContext.params.payload;
+    return StudentService.upgradeToPackage({
+      studentId: student_id,
+      currentEnrollmentIds: current_enrollment_ids,
+      targetPackageId: target_package_id,
+      packageBatches: package_batches
+    }, requestContext);
   }
 }
 
@@ -69,6 +87,10 @@ class UpgradeStudentPackageAction extends BaseAction {
  * Student Domain: Verify class/portal access control
  */
 class VerifyStudentAccessAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
+
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -77,8 +99,13 @@ class VerifyStudentAccessAction extends BaseAction {
     }
   }
 
-  _execute() {
-    return StudentService.verifyAccess(this._params.payload.student_id, this._params.payload.course_id);
+  handle(requestContext) {
+    const p = requestContext.params.payload;
+    const access = StudentService.checkAccessStatus(p.student_id, p.course_id);
+    if (!access.allowed && access.isOverdue) {
+      StudentService.suspendOverdueAccess(p.student_id, p.course_id, requestContext);
+    }
+    return access;
   }
 }
 
@@ -86,6 +113,10 @@ class VerifyStudentAccessAction extends BaseAction {
  * Student Lead Domain: Add a new student lead
  */
 class AddStudentLeadAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
+
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -100,8 +131,8 @@ class AddStudentLeadAction extends BaseAction {
     }
   }
 
-  _execute() {
-    return StudentService.addStudentLead(this._params.payload.leadData);
+  handle(requestContext) {
+    return StudentService.addStudentLead(requestContext.params.payload.leadData, requestContext);
   }
 }
 
@@ -109,6 +140,10 @@ class AddStudentLeadAction extends BaseAction {
  * Students Domain: Delete single student
  */
 class DeleteStudentAction extends BaseAction {
+  constructor() {
+    super(ActionType.DELETE);
+  }
+
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -123,8 +158,8 @@ class DeleteStudentAction extends BaseAction {
     }
   }
 
-  _execute() {
-    const { student_id, dryRun } = this._params.payload;
+  handle(requestContext) {
+    const { student_id, dryRun } = requestContext.params.payload;
     const isDryRun = dryRun !== false;
 
     const student = this._db.Student.findById(student_id);
@@ -137,6 +172,9 @@ class DeleteStudentAction extends BaseAction {
     } else {
       try {
         this._db.Student.remove(student_id);
+        if (requestContext.mutationManifest) {
+          requestContext.mutationManifest.push("Student");
+        }
       } catch (e) {
         if (e instanceof SheetDB.IntegrityError || e.name === "IntegrityError") {
           throw new ActionValidationError(e.message);
@@ -157,11 +195,14 @@ class DeleteStudentAction extends BaseAction {
  * Academic Domain: Create CourseType (Segment)
  */
 class CreateCourseTypeAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() {
     this._requireParam("payload");
   }
-  _execute() {
-    return AcademicService.createCourseType(this._params.payload);
+  handle(requestContext) {
+    return AcademicService.createCourseType(requestContext.params.payload, requestContext);
   }
 }
 
@@ -169,11 +210,14 @@ class CreateCourseTypeAction extends BaseAction {
  * Academic Domain: Create Course (Subject)
  */
 class CreateCourseAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() {
     this._requireParam("payload");
   }
-  _execute() {
-    return AcademicService.createCourse(this._params.payload);
+  handle(requestContext) {
+    return AcademicService.createCourse(requestContext.params.payload, requestContext);
   }
 }
 
@@ -181,11 +225,14 @@ class CreateCourseAction extends BaseAction {
  * Academic Domain: Create Batch
  */
 class CreateBatchAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() {
     this._requireParam("payload");
   }
-  _execute() {
-    return AcademicService.createBatch(this._params.payload);
+  handle(requestContext) {
+    return AcademicService.createBatch(requestContext.params.payload, requestContext);
   }
 }
 
@@ -193,11 +240,14 @@ class CreateBatchAction extends BaseAction {
  * Academic Domain: Bulk Package Creation
  */
 class CreatePackageAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() {
     this._requireParam("payload");
   }
-  _execute() {
-    return AcademicService.createPackage(this._params.payload);
+  handle(requestContext) {
+    return AcademicService.createPackage(requestContext.params.payload, requestContext);
   }
 }
 
@@ -205,6 +255,9 @@ class CreatePackageAction extends BaseAction {
  * Academic Domain: Package Updates with Polymorphic & Casing Support
  */
 class UpdatePackageAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -212,9 +265,8 @@ class UpdatePackageAction extends BaseAction {
       throw new ActionValidationError("Payload must contain 'package_id'.");
     }
   }
-
-  _execute() {
-    return AcademicService.updatePackage(this._params.payload);
+  handle(requestContext) {
+    return AcademicService.updatePackage(requestContext.params.payload, requestContext);
   }
 }
 
@@ -222,6 +274,9 @@ class UpdatePackageAction extends BaseAction {
  * Academic Domain: Specialized Package Deletion Action
  */
 class DeletePackageAction extends BaseAction {
+  constructor() {
+    super(ActionType.DELETE);
+  }
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -229,9 +284,8 @@ class DeletePackageAction extends BaseAction {
       throw new ActionValidationError("Payload must contain 'package_id'.");
     }
   }
-
-  _execute() {
-    return AcademicService.deletePackage(this._params.payload.package_id);
+  handle(requestContext) {
+    return AcademicService.deletePackage(requestContext.params.payload.package_id, requestContext);
   }
 }
 
@@ -239,29 +293,40 @@ class DeletePackageAction extends BaseAction {
  * Academic Domain: Enroll Student
  */
 class EnrollStudentAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() {
     this._requireParam("payload");
   }
-  _execute() {
-    return AcademicService.enrollStudent(this._params.payload);
+  handle(requestContext) {
+    return AcademicService.enrollStudent(requestContext.params.payload, requestContext);
   }
 }
 
 /**
  * 🛠️ CORE DOMAIN ACTIONS
  */
-
 class CreateBranchAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return CoreService.createBranch(this._params.payload); }
+  handle(requestContext) { return CoreService.createBranch(requestContext.params.payload, requestContext); }
 }
 
 class CreatePromoCodeAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return CoreService.createPromoCode(this._params.payload); }
+  handle(requestContext) { return CoreService.createPromoCode(requestContext.params.payload, requestContext); }
 }
 
 class ValidatePromoCodeAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -269,22 +334,27 @@ class ValidatePromoCodeAction extends BaseAction {
       throw new ActionValidationError("payload must contain 'code', 'entity_type', and 'entity_id'.");
     }
   }
-  _execute() {
-    const { code, entity_type, entity_id } = this._params.payload;
-    return CoreService.validatePromoCode(code, entity_type, entity_id);
+  handle(requestContext) {
+    const { code, entity_type, entity_id } = requestContext.params.payload;
+    return CoreService.validatePromoCode(code, entity_type, entity_id, requestContext);
   }
 }
 
 /**
  * 🔐 AUTH DOMAIN ACTIONS
  */
-
 class UserRegisterAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return AuthBridge.registerUser(this._params.payload); }
+  handle(requestContext) { return AuthBridge.registerUser(requestContext.params.payload, requestContext); }
 }
 
 class UserLoginAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -292,43 +362,53 @@ class UserLoginAction extends BaseAction {
       throw new ActionValidationError("payload must contain 'username' and 'password'.");
     }
   }
-  _execute() {
-    const { username, password } = this._params.payload;
-    return AuthBridge.login(username, password, {});
+  handle(requestContext) {
+    const { username, password } = requestContext.params.payload;
+    return AuthBridge.login(username, password, {}, requestContext);
   }
 }
 
 class UserLogoutAction extends BaseAction {
-  _execute() {
-    const token = this._params.token || (this._params.payload && this._params.payload.token);
+  constructor() {
+    super(ActionType.DELETE);
+  }
+  handle(requestContext) {
+    const token = requestContext.params.token || (requestContext.params.payload && requestContext.params.payload.token);
     if (!token) throw new ActionValidationError("token is required.");
-    return AuthBridge.logout(token);
+    return AuthBridge.logout(token, requestContext);
   }
 }
 
 /**
  * 👩‍🏫 STAFF DOMAIN ACTIONS
  */
-
 class StaffOnboardTeacherAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return StaffService.onboardTeacher(this._params.payload); }
+  handle(requestContext) { return StaffService.onboardTeacher(requestContext.params.payload, requestContext); }
 }
 
 class StaffUpdateTeacherAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
   _validate() {
     this._requireParam("payload");
     if (!this._params.payload.teacher_id) {
       throw new ActionValidationError("payload must contain 'teacher_id'.");
     }
   }
-
-  _execute() {
-    return StaffService.updateTeacher(this._params.payload);
+  handle(requestContext) {
+    return StaffService.updateTeacher(requestContext.params.payload, requestContext);
   }
 }
 
 class StaffAssignSubjectsAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -336,68 +416,104 @@ class StaffAssignSubjectsAction extends BaseAction {
       throw new ActionValidationError("payload must contain 'teacher_id' and 'subject_ids'.");
     }
   }
-  _execute() {
-    const { teacher_id, subject_ids } = this._params.payload;
-    return StaffService.assignSubjects(teacher_id, subject_ids);
+  handle(requestContext) {
+    const { teacher_id, subject_ids } = requestContext.params.payload;
+    return StaffService.assignSubjects(teacher_id, subject_ids, requestContext);
   }
 }
 
 class StaffSetSalaryConfigAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return StaffService.setSalaryConfig(this._params.payload); }
+  handle(requestContext) { return StaffService.setSalaryConfig(requestContext.params.payload, requestContext); }
 }
 
 class StaffMarkAttendanceAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return StaffService.markAttendance(this._params.payload); }
+  handle(requestContext) { return StaffService.markAttendance(requestContext.params.payload, requestContext); }
 }
 
 class StaffMarkAttendanceBulkAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return StaffService.markAttendanceBulk(this._params.payload); }
+  handle(requestContext) { return StaffService.markAttendanceBulk(requestContext.params.payload, requestContext); }
 }
 
 class StaffQueryAttendanceAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return StaffService.queryAttendance(this._params.payload); }
+  handle(requestContext) { return StaffService.queryAttendance(requestContext.params.payload, requestContext); }
 }
 
 class StudentMarkAttendanceAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return StudentService.markAttendance(this._params.payload); }
+  handle(requestContext) { return StudentService.markAttendance(requestContext.params.payload, requestContext); }
 }
 
 class StudentMarkAttendanceBulkAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return StudentService.markAttendanceBulk(this._params.payload); }
+  handle(requestContext) { return StudentService.markAttendanceBulk(requestContext.params.payload, requestContext); }
 }
 
 class StudentQueryAttendanceAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return StudentService.queryAttendance(this._params.payload); }
+  handle(requestContext) { return StudentService.queryAttendance(requestContext.params.payload, requestContext); }
 }
 
 class CreateTestAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return TestService.createTest(this._params.payload); }
+  handle(requestContext) { return TestService.createTest(requestContext.params.payload, requestContext); }
 }
 
 class SaveTestMarksBulkAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return TestService.saveTestMarksBulk(this._params.payload); }
+  handle(requestContext) { return TestService.saveTestMarksBulk(requestContext.params.payload, requestContext); }
 }
 
 class QueryTestReportAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return TestService.queryTestReport(this._params.payload); }
+  handle(requestContext) { return TestService.queryTestReport(requestContext.params.payload, requestContext); }
 }
 
 class StaffRecordPaymentAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() { this._requireParam("payload"); }
-  _execute() { return StaffService.recordPayment(this._params.payload); }
+  handle(requestContext) { return StaffService.recordPayment(requestContext.params.payload, requestContext); }
 }
 
 class StaffAddDocumentAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -405,9 +521,9 @@ class StaffAddDocumentAction extends BaseAction {
       throw new ActionValidationError("payload must contain 'teacher_id' and 'document'.");
     }
   }
-  _execute() {
-    const { teacher_id, document } = this._params.payload;
-    return StaffService.addDocument(teacher_id, document);
+  handle(requestContext) {
+    const { teacher_id, document } = requestContext.params.payload;
+    return StaffService.addDocument(teacher_id, document, requestContext);
   }
 }
 
@@ -415,6 +531,9 @@ class StaffAddDocumentAction extends BaseAction {
  * 🔍 ADVANCED QUERY ENGINE ACTION
  */
 class InitErpAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
   _validate() {
     this._requireParam("payload");
     if (!this._params.payload || !Array.isArray(this._params.payload.targets)) {
@@ -422,8 +541,8 @@ class InitErpAction extends BaseAction {
     }
   }
 
-  _execute() {
-    var targets = this._params.payload.targets;
+  handle(requestContext) {
+    var targets = requestContext.params.payload.targets;
     var result = {};
 
     for (var i = 0; i < targets.length; i++) {
@@ -462,6 +581,9 @@ class InitErpAction extends BaseAction {
 }
 
 class QueryAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
   _validate() {
     this._requireParam("payload");
     if (!this._params.payload.target) {
@@ -469,17 +591,19 @@ class QueryAction extends BaseAction {
     }
   }
 
-  _execute() {
-    return QueryEngine.execute(this._params.payload, this._db);
+  handle(requestContext) {
+    return QueryEngine.execute(requestContext.params.payload, this._db);
   }
 }
 
 /**
  * 🛠️ ADMIN CONTROL CENTER (ACC) ACTIONS
  */
-
 class AdminSystemStatusAction extends BaseAction {
-  _execute() {
+  constructor() {
+    super(ActionType.QUERY);
+  }
+  handle(requestContext) {
     return {
       isInitialized: AuthBridge.isSystemInitialized(),
       database: DATABASE_SCHEMA.database,
@@ -490,6 +614,9 @@ class AdminSystemStatusAction extends BaseAction {
 }
 
 class AdminBootstrapAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -509,8 +636,8 @@ class AdminBootstrapAction extends BaseAction {
     }
   }
 
-  _execute() {
-    const { userData } = this._params.payload;
+  handle(requestContext) {
+    const { userData } = requestContext.params.payload;
 
     console.log("[AdminBootstrapAction] Provisioning physical infrastructure...");
     this._db.setup.provision();
@@ -518,43 +645,56 @@ class AdminBootstrapAction extends BaseAction {
     console.log("[AdminBootstrapAction] Registering superadmin...");
     return AuthBridge.registerUser({
       ...userData,
+      user_id: "ADMIN-SUPER",
       role: "admin"
-    });
+    }, requestContext);
   }
 }
 
 class AdminGetSchemaAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
   _authorize() {
     if (!this._user || this._user.role !== "admin") {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
-  _execute() { return DATABASE_SCHEMA; }
+  handle(requestContext) { return DATABASE_SCHEMA; }
 }
 
 class AdminAnalyzeTableAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
   _authorize() {
     if (!this._user || this._user.role !== "admin") {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
-  _execute() {
+  handle(requestContext) {
     return this._db.setup.plan();
   }
 }
 
 class AdminRepairTableAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
   _authorize() {
     if (!this._user || this._user.role !== "admin") {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
-  _execute() {
+  handle(requestContext) {
     return this._db.setup.provision();
   }
 }
 
 class AdminPeekDataAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
   _validate() {
     this._requireParam("payload");
     if (!this._params.payload.table) {
@@ -566,8 +706,8 @@ class AdminPeekDataAction extends BaseAction {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
-  _execute() {
-    const { table } = this._params.payload;
+  handle(requestContext) {
+    const { table } = requestContext.params.payload;
     if (!this._db[table]) throw new ActionValidationError(`Table '${table}' not found.`);
 
     return this._db[table].where({}, { limit: 5 });
@@ -575,23 +715,29 @@ class AdminPeekDataAction extends BaseAction {
 }
 
 class AdminCacheAnalyzeAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
   _authorize() {
     if (!this._user || this._user.role !== "admin") {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
-  _execute() {
+  handle(requestContext) {
     return CacheAnalyzer.getReportData();
   }
 }
 
 class AdminPurgeCacheAction extends BaseAction {
+  constructor() {
+    super(ActionType.DELETE);
+  }
   _authorize() {
     if (!this._user || this._user.role !== "admin") {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
-  _execute() {
+  handle(requestContext) {
     this._db.purge();
     return {
       message: "System caches purged successfully."
@@ -604,10 +750,12 @@ class AdminPurgeCacheAction extends BaseAction {
 // ----------------------------------------------------
 
 class CreateRecordAction extends BaseAction {
-  constructor(options) {
-    super(options);
+  constructor() {
+    super(ActionType.CREATE);
     this._actionName = "data_create";
   }
+
+  get isGenericCrudResult() { return true; }
 
   _validate() {
     this._requireParam("payload");
@@ -630,8 +778,8 @@ class CreateRecordAction extends BaseAction {
     }
   }
 
-  _execute() {
-    const { table, data } = this._params.payload;
+  handle(requestContext) {
+    const { table, data } = requestContext.params.payload;
     const dbGateway = this._db[table];
 
     let tableSchema = null;
@@ -669,18 +817,23 @@ class CreateRecordAction extends BaseAction {
     console.log(`[CreateRecordAction] [User: ${this._user ? this._user.username : 'Guest'}] [Table: ${table}] [ID: ${createdId}] [Status: SUCCESS]`);
 
     return {
-      message: `Successfully created record in table '${table}' with ID '${createdId}'.`,
-      id: createdId,
-      record: newRecord
+      isGenericCrudResult: true,
+      payload: {
+        message: `Successfully created record in table '${table}' with ID '${createdId}'.`,
+        id: createdId,
+        record: newRecord
+      }
     };
   }
 }
 
 class UpdateRecordAction extends BaseAction {
-  constructor(options) {
-    super(options);
+  constructor() {
+    super(ActionType.UPDATE);
     this._actionName = "data_update";
   }
+
+  get isGenericCrudResult() { return true; }
 
   _validate() {
     this._requireParam("payload");
@@ -706,8 +859,8 @@ class UpdateRecordAction extends BaseAction {
     }
   }
 
-  _execute() {
-    const { table, id, data } = this._params.payload;
+  handle(requestContext) {
+    const { table, id, data } = requestContext.params.payload;
 
     const record = this._db[table].findById(id);
     if (!record) {
@@ -719,18 +872,23 @@ class UpdateRecordAction extends BaseAction {
     console.log(`[UpdateRecordAction] [User: ${this._user ? this._user.username : 'Guest'}] [Table: ${table}] [ID: ${id}] [Status: SUCCESS]`);
 
     return {
-      message: `Successfully updated record in table '${table}' with ID '${id}'.`,
-      id: id,
-      record: updatedRecord
+      isGenericCrudResult: true,
+      payload: {
+        message: `Successfully updated record in table '${table}' with ID '${id}'.`,
+        id: id,
+        record: updatedRecord
+      }
     };
   }
 }
 
 class DeleteRecordAction extends BaseAction {
-  constructor(options) {
-    super(options);
+  constructor() {
+    super(ActionType.DELETE);
     this._actionName = "data_delete";
   }
+
+  get isGenericCrudResult() { return true; }
 
   _validate() {
     this._requireParam("payload");
@@ -753,8 +911,8 @@ class DeleteRecordAction extends BaseAction {
     }
   }
 
-  _execute() {
-    const { table, id } = this._params.payload;
+  handle(requestContext) {
+    const { table, id } = requestContext.params.payload;
 
     const record = this._db[table].findById(id);
     if (!record) {
@@ -766,19 +924,22 @@ class DeleteRecordAction extends BaseAction {
     console.log(`[DeleteRecordAction] [User: ${this._user ? this._user.username : 'Guest'}] [Table: ${table}] [ID: ${id}] [Status: SUCCESS]`);
 
     return {
-      message: `Successfully deleted record in table '${table}' with ID '${id}'.`,
-      id: id
+      isGenericCrudResult: true,
+      payload: {
+        message: `Successfully deleted record in table '${table}' with ID '${id}'.`,
+        id: id
+      }
     };
   }
 }
 
 class DeleteManyRecordsAction extends BaseAction {
-  constructor(options) {
-    super(options);
-    if (this.constructor === DeleteManyRecordsAction) {
-      this._actionName = "data_delete_many";
-    }
+  constructor() {
+    super(ActionType.DELETE);
+    this._actionName = "data_delete_many";
   }
+
+  get isGenericCrudResult() { return true; }
 
   _validate() {
     this._requireParam("payload");
@@ -810,16 +971,26 @@ class DeleteManyRecordsAction extends BaseAction {
     }
   }
 
-  _execute() {
-    const { table, ids } = this._params.payload;
-    // Default dryRun to true unless explicitly set to false
-    const dryRun = this._params.payload.dryRun !== false;
+  handle(requestContext) {
+    // If subclass implements its own handle/execute, execute it (for ConcreteActionsX.js subclasses)
+    if (this.constructor !== DeleteManyRecordsAction && typeof this._execute === 'function') {
+      const result = this._execute();
+      if (result && result.isGenericCrudResult) {
+        return result;
+      }
+      return {
+        isGenericCrudResult: true,
+        payload: result
+      };
+    }
+
+    const { table, ids } = requestContext.params.payload;
+    const dryRun = requestContext.params.payload.dryRun !== false;
 
     console.log(`[DeleteManyRecordsAction] Resolving dependencies for table: ${table}. Dry-run: ${dryRun}`);
     const dependencies = this._getDependentTables(table);
     console.log(`[DeleteManyRecordsAction] Found ${dependencies.length} dependent relations: ${JSON.stringify(dependencies)}`);
 
-    // 1. Build foreign key Sets for each dependency
     const dependencySets = dependencies.map(dep => {
       let depRows = [];
       try {
@@ -839,13 +1010,11 @@ class DeleteManyRecordsAction extends BaseAction {
       return { table: dep.table, fk: dep.fk, set };
     });
 
-    // 2. Fetch target table primary keys
     const targetGateway = this._db[table].gateway;
     const targetPk = targetGateway.primaryKey;
     const allTargetRows = this._db[table].all();
     const targetIdsSet = new Set(allTargetRows.map(row => String(row[targetPk] || "").trim()));
 
-    // 3. Evaluate each ID
     const safeToQuery = [];
     const skipped = [];
     const failed = {};
@@ -853,13 +1022,11 @@ class DeleteManyRecordsAction extends BaseAction {
     ids.forEach(rawId => {
       const id = String(rawId).trim();
 
-      // Check existence
       if (!targetIdsSet.has(id)) {
         skipped.push(id);
         return;
       }
 
-      // Check relation constraint
       let violationMsg = null;
       for (let i = 0; i < dependencySets.length; i++) {
         const dep = dependencySets[i];
@@ -886,26 +1053,24 @@ class DeleteManyRecordsAction extends BaseAction {
     }
 
     return {
-      success: true,
-      dryRun: dryRun,
-      deletedCount: deletedCount,
-      manifest: {
-        deleted: safeToQuery,
-        skipped: skipped,
-        failed: failed
+      isGenericCrudResult: true,
+      payload: {
+        success: true,
+        dryRun: dryRun,
+        deletedCount: deletedCount,
+        manifest: {
+          deleted: safeToQuery,
+          skipped: skipped,
+          failed: failed
+        }
       }
     };
   }
 
-  /**
-   * Identifies all downstream referencing tables and their foreign keys.
-   * @private
-   */
   _getDependentTables(targetTable) {
     const dependencies = [];
     const schema = DATABASE_SCHEMA;
 
-    // Find the target table's category & definition
     let targetTableDef = null;
     for (const cat in schema.categories) {
       if (schema.categories[cat].tables[targetTable]) {
@@ -916,7 +1081,6 @@ class DeleteManyRecordsAction extends BaseAction {
 
     if (!targetTableDef) return dependencies;
 
-    // 1. Scan target table's own hasMany/hasOne relations
     if (targetTableDef.relations) {
       Object.keys(targetTableDef.relations).forEach(relKey => {
         const rel = targetTableDef.relations[relKey];
@@ -926,7 +1090,6 @@ class DeleteManyRecordsAction extends BaseAction {
       });
     }
 
-    // 2. Scan all other tables in the schema for belongsTo pointing to targetTable
     for (const cat in schema.categories) {
       const tables = schema.categories[cat].tables;
       for (const tableName in tables) {
@@ -936,7 +1099,6 @@ class DeleteManyRecordsAction extends BaseAction {
           Object.keys(tDef.relations).forEach(relKey => {
             const rel = tDef.relations[relKey];
             if (rel.type === "belongsTo" && rel.target === targetTable) {
-              // Avoid duplicates
               if (!dependencies.some(d => d.table === tableName && d.fk === rel.foreignKey)) {
                 dependencies.push({ table: tableName, fk: rel.foreignKey });
               }
@@ -949,3 +1111,54 @@ class DeleteManyRecordsAction extends BaseAction {
     return dependencies;
   }
 }
+
+// Bind subclasses to global namespace
+globalThis.PingAction = PingAction;
+globalThis.RegisterStudentAction = RegisterStudentAction;
+globalThis.WithdrawStudentSubjectAction = WithdrawStudentSubjectAction;
+globalThis.UpgradeStudentPackageAction = UpgradeStudentPackageAction;
+globalThis.VerifyStudentAccessAction = VerifyStudentAccessAction;
+globalThis.AddStudentLeadAction = AddStudentLeadAction;
+globalThis.DeleteStudentAction = DeleteStudentAction;
+globalThis.CreateCourseTypeAction = CreateCourseTypeAction;
+globalThis.CreateCourseAction = CreateCourseAction;
+globalThis.CreateBatchAction = CreateBatchAction;
+globalThis.CreatePackageAction = CreatePackageAction;
+globalThis.UpdatePackageAction = UpdatePackageAction;
+globalThis.DeletePackageAction = DeletePackageAction;
+globalThis.EnrollStudentAction = EnrollStudentAction;
+globalThis.CreateBranchAction = CreateBranchAction;
+globalThis.CreatePromoCodeAction = CreatePromoCodeAction;
+globalThis.ValidatePromoCodeAction = ValidatePromoCodeAction;
+globalThis.UserRegisterAction = UserRegisterAction;
+globalThis.UserLoginAction = UserLoginAction;
+globalThis.UserLogoutAction = UserLogoutAction;
+globalThis.StaffOnboardTeacherAction = StaffOnboardTeacherAction;
+globalThis.StaffUpdateTeacherAction = StaffUpdateTeacherAction;
+globalThis.StaffAssignSubjectsAction = StaffAssignSubjectsAction;
+globalThis.StaffSetSalaryConfigAction = StaffSetSalaryConfigAction;
+globalThis.StaffMarkAttendanceAction = StaffMarkAttendanceAction;
+globalThis.StaffMarkAttendanceBulkAction = StaffMarkAttendanceBulkAction;
+globalThis.StaffQueryAttendanceAction = StaffQueryAttendanceAction;
+globalThis.StudentMarkAttendanceAction = StudentMarkAttendanceAction;
+globalThis.StudentMarkAttendanceBulkAction = StudentMarkAttendanceBulkAction;
+globalThis.StudentQueryAttendanceAction = StudentQueryAttendanceAction;
+globalThis.CreateTestAction = CreateTestAction;
+globalThis.SaveTestMarksBulkAction = SaveTestMarksBulkAction;
+globalThis.QueryTestReportAction = QueryTestReportAction;
+globalThis.StaffRecordPaymentAction = StaffRecordPaymentAction;
+globalThis.StaffAddDocumentAction = StaffAddDocumentAction;
+globalThis.InitErpAction = InitErpAction;
+globalThis.QueryAction = QueryAction;
+globalThis.AdminSystemStatusAction = AdminSystemStatusAction;
+globalThis.AdminBootstrapAction = AdminBootstrapAction;
+globalThis.AdminGetSchemaAction = AdminGetSchemaAction;
+globalThis.AdminAnalyzeTableAction = AdminAnalyzeTableAction;
+globalThis.AdminRepairTableAction = AdminRepairTableAction;
+globalThis.AdminPeekDataAction = AdminPeekDataAction;
+globalThis.AdminCacheAnalyzeAction = AdminCacheAnalyzeAction;
+globalThis.AdminPurgeCacheAction = AdminPurgeCacheAction;
+globalThis.CreateRecordAction = CreateRecordAction;
+globalThis.UpdateRecordAction = UpdateRecordAction;
+globalThis.DeleteRecordAction = DeleteRecordAction;
+globalThis.DeleteManyRecordsAction = DeleteManyRecordsAction;

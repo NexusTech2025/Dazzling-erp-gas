@@ -348,67 +348,78 @@ const TestMockData = {
     console.log("[TestMockData] Bootstrapping Curriculum Mock data...");
 
     // 1. Branch
-    const branchId = "BRN-TEST-1";
-    if (!db.Branch.findById(branchId)) {
-      db.Branch.insert({ branch_id: branchId, branch_name: "Test Branch", status: "active" });
+    let branch = db.Branch.findOne({ branch_name: "Test Branch" });
+    if (!branch) {
+      branch = db.Branch.insert({ branch_name: "Test Branch", status: "active" });
     }
+    const branchId = branch.branch_id;
 
     // 2. CourseType
-    const courseTypeId = "SEG-TEST-1";
-    if (!db.CourseType.findById(courseTypeId)) {
-      db.CourseType.insert({ segment_id: courseTypeId, segment_name: "Test Academy", status: "active" });
+    let courseType = db.CourseType.findOne({ segment_name: "Test Academy" });
+    if (!courseType) {
+      courseType = db.CourseType.insert({ segment_name: "Test Academy", status: "active" });
     }
+    const courseTypeId = courseType.segment_id;
 
     // 3. Courses (Physics, Chemistry, Math, WebDev)
-    const physicsId = "CRS-TEST-PHY";
-    if (!db.Course.findById(physicsId)) {
-      db.Course.insert({ course_id: physicsId, name: "Test Physics", base_fee: 5000, segment_id: courseTypeId, language_medium: "English", status: "active" });
+    let physics = db.Course.findOne({ name: "Test Physics" });
+    if (!physics) {
+      physics = db.Course.insert({ name: "Test Physics", base_fee: 5000, segment_id: courseTypeId, language_medium: "English", status: "active" });
     }
+    const physicsId = physics.course_id;
     
-    const chemistryId = "CRS-TEST-CHE";
-    if (!db.Course.findById(chemistryId)) {
-      db.Course.insert({ course_id: chemistryId, name: "Test Chemistry", base_fee: 5000, segment_id: courseTypeId, language_medium: "English", status: "active" });
+    let chemistry = db.Course.findOne({ name: "Test Chemistry" });
+    if (!chemistry) {
+      chemistry = db.Course.insert({ name: "Test Chemistry", base_fee: 5000, segment_id: courseTypeId, language_medium: "English", status: "active" });
     }
+    const chemistryId = chemistry.course_id;
 
-    const mathId = "CRS-TEST-MAT";
-    if (!db.Course.findById(mathId)) {
-      db.Course.insert({ course_id: mathId, name: "Test Math", base_fee: 5000, segment_id: courseTypeId, language_medium: "English", status: "active" });
+    let math = db.Course.findOne({ name: "Test Math" });
+    if (!math) {
+      math = db.Course.insert({ name: "Test Math", base_fee: 5000, segment_id: courseTypeId, language_medium: "English", status: "active" });
     }
+    const mathId = math.course_id;
 
-    const webDevId = "CRS-TEST-WD";
-    if (!db.Course.findById(webDevId)) {
-      db.Course.insert({ course_id: webDevId, name: "Web Development", base_fee: 5000, segment_id: courseTypeId, language_medium: "English", status: "active" });
+    let webDev = db.Course.findOne({ name: "Web Development" });
+    if (!webDev) {
+      webDev = db.Course.insert({ name: "Web Development", base_fee: 5000, segment_id: courseTypeId, language_medium: "English", status: "active" });
     }
+    const webDevId = webDev.course_id;
 
     // 4. Batches
-    const batchPhyId = "BAT-TEST-PHY";
-    if (!db.Batch.findById(batchPhyId)) {
-      db.Batch.insert({ batch_id: batchPhyId, batch_name: "Phy morning", course_id: physicsId, capacity: 30, batch_type: "Academy", status: "active" });
+    let batchPhy = db.Batch.findOne({ batch_name: "Phy morning" });
+    if (!batchPhy) {
+      batchPhy = db.Batch.insert({ batch_name: "Phy morning", course_id: physicsId, capacity: 30, batch_type: "Academy", status: "active" });
     }
+    const batchPhyId = batchPhy.batch_id;
 
-    const batchCheId = "BAT-TEST-CHE";
-    if (!db.Batch.findById(batchCheId)) {
-      db.Batch.insert({ batch_id: batchCheId, batch_name: "Che morning", course_id: chemistryId, capacity: 30, batch_type: "Academy", status: "active" });
+    let batchChe = db.Batch.findOne({ batch_name: "Che morning" });
+    if (!batchChe) {
+      batchChe = db.Batch.insert({ batch_name: "Che morning", course_id: chemistryId, capacity: 30, batch_type: "Academy", status: "active" });
     }
+    const batchCheId = batchChe.batch_id;
 
-    const batchWdId = "BAT-TEST-WD";
-    if (!db.Batch.findById(batchWdId)) {
-      db.Batch.insert({ batch_id: batchWdId, batch_name: "WD evening", course_id: webDevId, capacity: 30, batch_type: "Academy", status: "active" });
+    let batchWd = db.Batch.findOne({ batch_name: "WD evening" });
+    if (!batchWd) {
+      batchWd = db.Batch.insert({ batch_name: "WD evening", course_id: webDevId, capacity: 30, batch_type: "Academy", status: "active" });
     }
+    const batchWdId = batchWd.batch_id;
 
     // 5. Package & PackageItems
-    const packageId = "PKG-TEST-SCI";
-    if (!db.Package.findById(packageId)) {
-      db.Package.insert({ package_id: packageId, name: "Test Science Package", package_fee: 12000, status: "active" });
+    let pkg = db.Package.findOne({ name: "Test Science Package" });
+    if (!pkg) {
+      pkg = db.Package.insert({ name: "Test Science Package", package_fee: 12000, status: "active" });
+    }
+    const packageId = pkg.package_id;
+
+    let piPhy = db.PackageItem.findOne({ package_id: packageId, entity_type: "course", entity_id: physicsId });
+    if (!piPhy) {
+      piPhy = db.PackageItem.insert({ package_id: packageId, entity_type: "course", entity_id: physicsId });
     }
 
-    const piPhyId = "PKI-TEST-PHY";
-    if (!db.PackageItem.findOne({ package_id: packageId, entity_type: "course", entity_id: physicsId })) {
-      db.PackageItem.insert({ item_id: piPhyId, package_id: packageId, entity_type: "course", entity_id: physicsId });
-    }
-    const piCheId = "PKI-TEST-CHE";
-    if (!db.PackageItem.findOne({ package_id: packageId, entity_type: "course", entity_id: chemistryId })) {
-      db.PackageItem.insert({ item_id: piCheId, package_id: packageId, entity_type: "course", entity_id: chemistryId });
+    let piChe = db.PackageItem.findOne({ package_id: packageId, entity_type: "course", entity_id: chemistryId });
+    if (!piChe) {
+      piChe = db.PackageItem.insert({ package_id: packageId, entity_type: "course", entity_id: chemistryId });
     }
 
     return {

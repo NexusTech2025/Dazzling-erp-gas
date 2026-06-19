@@ -85,14 +85,24 @@ function executeScenario1_HappyPath(db, validIds) {
       }
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.createBatch with payload:", JSON.stringify(payload));
-    const result = AcademicService.createBatch(payload);
+    const result = AcademicService.createBatch(payload, mockContext);
 
     if (!result.batch_id || !result.batch_id.startsWith("BAT-")) {
       throw new Error(`Batch creation succeeded but returned invalid ID prefix: ${result.batch_id}`);
     }
 
+    if (!mockContext.mutationManifest.includes("Batch")) {
+      throw new Error("Mutation tracking failed: Batch mutation not tracked in manifest.");
+    }
+
     console.log(`   ✅ Success! Created Batch: ${result.batch_name} (ID: ${result.batch_id})`);
+    console.log(`   ✅ Mutation tracking verified: ${JSON.stringify(mockContext.mutationManifest)}`);
     
     // Clean up created batch to avoid database pollution
     db.Batch.remove(result.batch_id);
@@ -117,8 +127,13 @@ function executeScenario2_DefaultsAndFallbacks(db, validIds) {
       batch_type: "Academy"
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.createBatch without optional fields...");
-    const result = AcademicService.createBatch(payload);
+    const result = AcademicService.createBatch(payload, mockContext);
 
     if (result.status !== "active") {
       throw new Error(`Expected status to default to 'active', but got: ${result.status}`);
@@ -127,7 +142,12 @@ function executeScenario2_DefaultsAndFallbacks(db, validIds) {
       throw new Error(`Expected capacity to default to 30, but got: ${result.capacity}`);
     }
 
+    if (!mockContext.mutationManifest.includes("Batch")) {
+      throw new Error("Mutation tracking failed: Batch mutation not tracked in manifest.");
+    }
+
     console.log(`   ✅ Success! Defaults applied correctly. Status: ${result.status}, Capacity: ${result.capacity}`);
+    console.log(`   ✅ Mutation tracking verified: ${JSON.stringify(mockContext.mutationManifest)}`);
     db.Batch.remove(result.batch_id);
     return "✅ PASSED";
   } catch (error) {
@@ -150,8 +170,13 @@ function executeScenario3_MissingCourseIntegrity(db, validIds) {
       batch_type: "Academy"
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.createBatch with missing course ID...");
-    AcademicService.createBatch(payload);
+    AcademicService.createBatch(payload, mockContext);
     
     return "❌ FAILED: Expected EntityNotFoundError for Course, but execution completed without error.";
   } catch (error) {
@@ -179,8 +204,13 @@ function executeScenario4_MissingTeacherIntegrity(db, validIds) {
       batch_type: "Academy"
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.createBatch with missing teacher ID...");
-    AcademicService.createBatch(payload);
+    AcademicService.createBatch(payload, mockContext);
 
     return "❌ FAILED: Expected EntityNotFoundError for Teacher, but execution completed without error.";
   } catch (error) {
@@ -208,8 +238,13 @@ function executeScenario5_MissingBranchIntegrity(db, validIds) {
       batch_type: "Academy"
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.createBatch with missing branch ID...");
-    AcademicService.createBatch(payload);
+    AcademicService.createBatch(payload, mockContext);
 
     return "❌ FAILED: Expected EntityNotFoundError for Branch, but execution completed without error.";
   } catch (error) {
@@ -239,8 +274,13 @@ function executeScenario6_MissingRequiredFields(db) {
       teacher_id: "TCH-248AE945"
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.createBatch omitting required fields...");
-    AcademicService.createBatch(payload);
+    AcademicService.createBatch(payload, mockContext);
 
     passed = false;
     messages.push("Expected ValidationError for missing required fields, but it succeeded.");
@@ -273,8 +313,13 @@ function executeScenario7_InvalidEnumSelection(db, validIds) {
       batch_type: "Online" // Invalid Enum Choice
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.createBatch with invalid batch_type...");
-    AcademicService.createBatch(payload);
+    AcademicService.createBatch(payload, mockContext);
 
     passed = false;
     messages.push("Expected ValidationError due to enum violation, but it succeeded.");
@@ -307,8 +352,13 @@ function executeScenario8_MissingRelationalIdFields(db, validIds) {
       batch_type: "Academy"
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Sub-case 8A: Invoking with course_id omitted...");
-    AcademicService.createBatch(payload);
+    AcademicService.createBatch(payload, mockContext);
 
     passed = false;
     messages.push("Expected EntityNotFoundError due to missing course_id, but it succeeded.");
@@ -329,10 +379,18 @@ function executeScenario8_MissingRelationalIdFields(db, validIds) {
       batch_type: "Academy"
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Sub-case 8B: Invoking with teacher_id and branch_id omitted...");
-    const result = AcademicService.createBatch(payload);
+    const result = AcademicService.createBatch(payload, mockContext);
 
     console.log(`   ✅ Sub-case 8B Passed: Successfully created batch (ID: ${result.batch_id}) omitting optional teacher_id and branch_id.`);
+    if (!mockContext.mutationManifest.includes("Batch")) {
+      throw new Error("Mutation tracking failed: Batch mutation not tracked in manifest.");
+    }
     db.Batch.remove(result.batch_id);
   } catch (error) {
     passed = false;

@@ -143,7 +143,12 @@ function runTestManagementTests() {
       remarks: "Covers light and refraction modules"
     };
 
-    const record = TestService.createTest(payload);
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
+    const record = TestService.createTest(payload, mockContext);
     createdTestId = record.id;
     console.log(`  ✅ Test scheduled successfully. ID: ${createdTestId}`);
 
@@ -153,14 +158,21 @@ function runTestManagementTests() {
       throw new Error(`Attribute verification failed: status=${record.status}, max=${record.total_marks}`);
     }
 
+    if (mockContext.mutationManifest.includes("Test")) {
+      console.log("  ✅ Mutation manifest verified: " + JSON.stringify(mockContext.mutationManifest));
+    } else {
+      throw new Error("Mutation tracking failed for Test creation!");
+    }
+
     // Verify negative boundaries (invalid total_marks)
     try {
+      const mockContextFail1 = { actionType: "CREATE", mutationManifest: [] };
       TestService.createTest({
         title: "Bad Quiz",
         batch_id: batchId,
         test_date: "2026-06-12",
         total_marks: -10
-      });
+      }, mockContextFail1);
       throw new Error("Failure: Allowed negative total marks!");
     } catch (err) {
       if (err.message.includes("Failure: Allowed negative total marks")) {
@@ -171,13 +183,14 @@ function runTestManagementTests() {
 
     // Verify invalid passing marks
     try {
+      const mockContextFail2 = { actionType: "CREATE", mutationManifest: [] };
       TestService.createTest({
         title: "Bad Quiz 2",
         batch_id: batchId,
         test_date: "2026-06-12",
         total_marks: 50,
         passing_marks: 55
-      });
+      }, mockContextFail2);
       throw new Error("Failure: Allowed passing marks greater than total marks!");
     } catch (err) {
       if (err.message.includes("Failure: Allowed passing marks greater than total marks")) {
@@ -207,8 +220,13 @@ function runTestManagementTests() {
       ]
     };
 
+    const mockContextSave = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     // a. Primary Insert Call
-    const res = TestService.saveTestMarksBulk(bulkPayload);
+    const res = TestService.saveTestMarksBulk(bulkPayload, mockContextSave);
     if (res.success && res.processedCount === 2) {
       console.log(`  ✅ Primary bulk marks save successful. Count: ${res.processedCount}`);
       const m1 = db.TestMarks.findOne({ test_id: createdTestId, student_id: studentId1 });
@@ -217,6 +235,12 @@ function runTestManagementTests() {
         console.log("  ✅ Individual scores verified in database sheet.");
       } else {
         throw new Error("Individual marks mismatch in database.");
+      }
+
+      if (mockContextSave.mutationManifest.includes("TestMarks")) {
+        console.log("  ✅ Mutation manifest verified: " + JSON.stringify(mockContextSave.mutationManifest));
+      } else {
+        throw new Error("Mutation tracking failed for TestMarks bulk save!");
       }
     } else {
       throw new Error("Primary bulk marks save failed.");
@@ -231,7 +255,12 @@ function runTestManagementTests() {
       ]
     };
 
-    const resUpdate = TestService.saveTestMarksBulk(updatePayload);
+    const mockContextUpdate = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
+    const resUpdate = TestService.saveTestMarksBulk(updatePayload, mockContextUpdate);
     if (resUpdate.success && resUpdate.processedCount === 2) {
       console.log("  ✅ Secondary upsert update call completed successfully.");
       const rows = db.TestMarks.where({ test_id: createdTestId });
@@ -266,10 +295,11 @@ function runTestManagementTests() {
   try {
     // a. Marks exceeding limit
     try {
+      const mockContext = { actionType: "CREATE", mutationManifest: [] };
       TestService.saveTestMarksBulk({
         test_id: createdTestId,
         records: [{ student_id: studentId1, obtained_marks: 52, is_absent: false }] // 52 > Max 50
-      });
+      }, mockContext);
       throw new Error("Failure: Allowed obtained marks to exceed test max limit.");
     } catch (err) {
       if (err.message.includes("Failure: Allowed obtained marks to exceed")) {
@@ -287,10 +317,11 @@ function runTestManagementTests() {
     });
 
     try {
+      const mockContext = { actionType: "CREATE", mutationManifest: [] };
       TestService.saveTestMarksBulk({
         test_id: createdTestId,
         records: [{ student_id: unallocatedStudentId, obtained_marks: 30, is_absent: false }]
-      });
+      }, mockContext);
       throw new Error("Failure: Allowed marks entry for a student not allocated to the batch.");
     } catch (err) {
       if (err.message.includes("Failure: Allowed marks entry for a student")) {
@@ -342,12 +373,16 @@ function runTestManagementTests() {
     // Student 1: Score 48/50 (Percentage: 96%, Grade: A, Rank: 1)
     // Student 2: Absent (Percentage: null, Grade: Absent, Rank: Absent)
     // Student 3: Score 30/50 (Percentage: 60%, Grade: D, Rank: 2)
+    const mockContextSave = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
     TestService.saveTestMarksBulk({
       test_id: createdTestId,
       records: [
         { student_id: studentId3, obtained_marks: 30, is_absent: false }
       ]
-    });
+    }, mockContextSave);
 
     const report = TestService.queryTestReport({ test_id: createdTestId });
     console.log("  ✅ Report query successfully generated and resolved.");

@@ -110,18 +110,22 @@ const ApiDispatcher = (function () {
       const token = params.token;
       const user = token ? AuthBridge.resolveContext(token) : null;
 
-      // 4. Initialize the Action with automatic DB injection
+      // 4. Initialize the Action
       const ActionClass = registry[actionKey];
       const db = DBContext.getInstance();
 
-      const action = new ActionClass({
+      const action = new ActionClass();
+
+      const requestContext = {
         db: db,
         params: params,
-        user: user
-      });
+        user: user,
+        actionName: actionKey,
+        headers: {}
+      };
 
-      // 3. Execute
-      response = action.run();
+      // 5. Execute via Gateway Interceptor
+      response = _processGatewayAction(action, requestContext);
 
     } catch (error) {
       console.error("[ApiDispatcher] Critical Dispatch Error:", error);
@@ -137,6 +141,38 @@ const ApiDispatcher = (function () {
     // 4. Return as JSON
     return ContentService.createTextOutput(JSON.stringify(response))
       .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  /**
+   * Intercepts generic operations to dynamically deduce the mutation array manifest
+   */
+  function _processGatewayAction(actionInstance, requestContext) {
+    const startTime = Date.now();
+    
+    try {
+      const result = actionInstance.run(requestContext);
+      
+      // Check if the endpoint executed falls under abstract generic CRUD operations
+      if (result && result.isGenericCrudResult) {
+        const affectedTable = requestContext.params.table || requestContext.params.target;
+        
+        // If it's a delete operation, check dryRun
+        const payload = requestContext.params.payload || {};
+        const isDryRun = payload.dryRun === true || (actionInstance.constructor.name.includes("DeleteMany") && payload.dryRun !== false);
+        const computedMutations = (affectedTable && !isDryRun) ? [affectedTable] : [];
+        
+        return actionInstance.formatSuccessResponse(result.payload, startTime, {
+          actionType: requestContext.actionType,
+          mutationManifest: computedMutations
+        }, PropertiesService.getScriptProperties().getProperty('ENV') || 'production');
+      }
+      
+      return result;
+    } catch (globalError) {
+      // Uncaught fallback protection wrapper routing path
+      const fallback = new SystemError(globalError.message, { errorCode: "GATEWAY_DISPATCH_CRASH" });
+      return actionInstance.formatFailureResponse(fallback, startTime, Utilities.getUuid(), "production", requestContext);
+    }
   }
 
   /**

@@ -4,24 +4,34 @@
  */
 
 const AcademicService = {
+  _trackMutation(context, tableName) {
+    if (context && context.mutationManifest && Array.isArray(context.mutationManifest)) {
+      if (!context.mutationManifest.includes(tableName)) {
+        context.mutationManifest.push(tableName);
+      }
+    }
+  },
+
   /**
    * Registers a new curriculum segment (e.g., 'Academic', 'Vocational').
    */
-  createCourseType(payload) {
+  createCourseType(payload, context) {
     const db = DBContext.getInstance();
     console.log(`[AcademicService] Creating CourseType: ${payload.segment_name}`);
-    return db.CourseType.insert(payload);
+    const record = db.CourseType.insert(payload);
+    this._trackMutation(context, "CourseType");
+    return record.toJSON();
   },
 
   /**
    * Creates a new Course/Subject.
    * Ensures the segment_id is valid and exists.
    */
-  createCourse(payload) {
+  createCourse(payload, context) {
     const db = DBContext.getInstance();
 
-    if (!payload.segment_id) {
-      throw new SheetDB.ValidationError("Course creation failed: 'segment_id' is required.");
+    if (!payload.segment_id || typeof payload.segment_id !== "string") {
+      throw new SheetDB.ValidationError("Course creation failed: 'segment_id' must be a non-empty string.");
     }
 
     // Health Check: Ensure CourseType exists
@@ -31,14 +41,16 @@ const AcademicService = {
     }
 
     console.log(`[AcademicService] Creating Course: ${payload.name}`);
-    return db.Course.insert(payload);
+    const record = db.Course.insert(payload);
+    this._trackMutation(context, "Course");
+    return record.toJSON();
   },
 
   /**
    * Creates a new Batch instance.
    * Performs multi-point health checks for Course, Teacher, and Branch.
    */
-  createBatch(payload) {
+  createBatch(payload, context) {
     const db = DBContext.getInstance();
 
     // 1. Verify Course
@@ -57,20 +69,24 @@ const AcademicService = {
     }
 
     console.log(`[AcademicService] Creating Batch: ${payload.batch_name}`);
-    return db.Batch.insert({
+    const record = db.Batch.insert({
       ...payload,
       status: payload.status || "active",
       capacity: payload.capacity || 30
     });
+    this._trackMutation(context, "Batch");
+    return record.toJSON();
   },
 
   /**
    * Orchestrates the creation of a Package with nested courses and perks.
    * Leverages transactional loops and defensive polymorphic normalization.
    */
-  createPackage(payload) {
+  createPackage(payload, context) {
     const db = DBContext.getInstance();
     console.log(`[AcademicService] Orchestrating Bulk Package: ${payload.name}`);
+
+    const tx = new TransactionTracker();
 
     // 1. Insert Core Package
     const coreFields = ["name", "description", "target_class", "board", "month", "package_fee", "discount_percent", "status"];
@@ -81,7 +97,10 @@ const AcademicService = {
     
     const newPackage = db.Package.insert(packageData);
     const packageId = newPackage.package_id;
-    const insertedRecords = [{ table: "Package", id: packageId }];
+    tx.trackInsert(db.Package, packageId);
+    this._trackMutation(context, "Package");
+
+    const self = this;
 
     try {
       // 2. Resolve Perks (Custom array or presets based on target_class)
@@ -116,11 +135,32 @@ const AcademicService = {
           icon: perk.icon || "star",
           display_order: perk.display_order || (index + 1)
         });
-        insertedRecords.push({ table: "PackagePerk", id: newPerk.perk_id });
+        tx.trackInsert(db.PackagePerk, newPerk.perk_id);
+        self._trackMutation(context, "PackagePerk");
       });
 
       // 3. Insert Polymorphic Courses/Subjects (Supports On-Demand Course creation and Normalization)
       if (payload.courses && Array.isArray(payload.courses)) {
+        // Rule-05: Pre-fetch segments and courses to prevent N+1 spreadsheet reads
+        const allSegments = db.CourseType.all();
+        const segmentMap = {};
+        allSegments.forEach(s => {
+          segmentMap[s.segment_id] = s;
+          if (s.segment_name) {
+            segmentMap["name_" + s.segment_name.toLowerCase().trim()] = s;
+          }
+        });
+        const activeSegment = allSegments.find(s => s.status === "active") || allSegments[0];
+
+        const existingCourses = db.Course.all();
+        const courseMap = {};
+        existingCourses.forEach(c => {
+          courseMap[c.course_id] = c;
+          if (c.short_code) {
+            courseMap["code_" + c.short_code.toLowerCase().trim()] = c;
+          }
+        });
+
         payload.courses.forEach(item => {
           const normalizedType = typeof item.entity_type === "string"
             ? item.entity_type.toLowerCase().trim()
@@ -138,12 +178,11 @@ const AcademicService = {
             let segmentId = item.segment_id;
             if (!segmentId) {
               if (item.segment_name) {
-                const ct = db.CourseType.findOne({ segment_name: item.segment_name });
+                const ct = segmentMap["name_" + item.segment_name.toLowerCase().trim()];
                 if (ct) segmentId = ct.segment_id;
               }
-              if (!segmentId) {
-                const fallbackSegment = db.CourseType.findOne({ status: "active" }) || db.CourseType.findOne({});
-                if (fallbackSegment) segmentId = fallbackSegment.segment_id;
+              if (!segmentId && activeSegment) {
+                segmentId = activeSegment.segment_id;
               }
             }
 
@@ -154,7 +193,7 @@ const AcademicService = {
             }
 
             // Verify segment exists
-            const segment = db.CourseType.findById(segmentId);
+            const segment = segmentMap[segmentId];
             if (!segment) {
               const err = new SheetDB.EntityNotFoundError("CourseType", segmentId, "Academic");
               err.errorCode = "SEGMENT_NOT_FOUND";
@@ -162,7 +201,7 @@ const AcademicService = {
             }
 
             if (item.short_code) {
-              const existingCourseCode = db.Course.findOne({ short_code: item.short_code });
+              const existingCourseCode = courseMap["code_" + item.short_code.toLowerCase().trim()];
               if (existingCourseCode) {
                 const err = new SheetDB.ConflictError(`Failed to save Course: Unique constraint violation on column 'short_code' (value '${item.short_code}' already exists).`);
                 err.errorCode = "DUPLICATE_SHORT_CODE";
@@ -183,7 +222,13 @@ const AcademicService = {
                 status: item.status || "active"
               });
               courseId = newCourse.course_id;
-              insertedRecords.push({ table: "Course", id: courseId });
+              tx.trackInsert(db.Course, courseId);
+              self._trackMutation(context, "Course");
+              
+              courseMap[courseId] = newCourse;
+              if (item.short_code) {
+                courseMap["code_" + item.short_code.toLowerCase().trim()] = newCourse;
+              }
             } catch (courseErr) {
               if (courseErr.message && courseErr.message.includes("Unique constraint violation")) {
                 courseErr.errorCode = "DUPLICATE_SHORT_CODE";
@@ -198,7 +243,7 @@ const AcademicService = {
               err.errorCode = "REFERENCED_COURSE_NOT_FOUND";
               throw err;
             }
-            const existing = db.Course.findById(courseId);
+            const existing = courseMap[courseId];
             if (!existing) {
               const err = new SheetDB.ValidationError(`Referenced course ID '${courseId}' does not exist.`);
               err.errorCode = "REFERENCED_COURSE_NOT_FOUND";
@@ -211,18 +256,16 @@ const AcademicService = {
             entity_type: normalizedType,
             entity_id: courseId
           });
-          insertedRecords.push({ table: "PackageItem", id: newItem.item_id });
+          tx.trackInsert(db.PackageItem, newItem.item_id);
+          self._trackMutation(context, "PackageItem");
         });
       }
 
-      return newPackage;
+      return newPackage.toJSON();
 
     } catch (error) {
-      // 🚨 Rollback transaction on creation failure
       console.error(`[AcademicService] Bulk creation failed, rolling back: ${error.message}`);
-      for (let i = insertedRecords.length - 1; i >= 0; i--) {
-        db[insertedRecords[i].table].remove(insertedRecords[i].id);
-      }
+      tx.rollback();
       throw error;
     }
   },
@@ -231,18 +274,19 @@ const AcademicService = {
    * Safe updates of Package records along with their nested courses and perks.
    * Leverages backups and dynamic rollback capabilities via TransactionTracker.
    */
-  updatePackage(payload) {
+  updatePackage(payload, context) {
     const db = DBContext.getInstance();
     const packageId = payload.package_id;
     console.log(`[AcademicService] Updating Package: ${packageId}`);
 
     const existingPackage = db.Package.findById(packageId);
-    if (!existingPackage) throw new Error(`Package with ID '${packageId}' not found.`);
+    if (!existingPackage) throw new SheetDB.EntityNotFoundError("Package", packageId, "Academic");
 
     const tx = new TransactionTracker();
+    const self = this;
 
     try {
-      // A. Update Core Package Attributes (SheetDB automatically validates columns)
+      // A. Update Core Package Attributes
       const coreFields = ["name", "description", "target_class", "board", "month", "package_fee", "discount_percent", "status"];
       const updateData = {};
       coreFields.forEach(f => {
@@ -252,6 +296,7 @@ const AcademicService = {
       const backupPackageState = { ...existingPackage };
       db.Package.update(packageId, updateData);
       tx.trackUpdate(db.Package, packageId, backupPackageState);
+      this._trackMutation(context, "Package");
 
       // B. Update Polymorphic Courses (PackageItem Sync via clean rewrite & normalization)
       if (payload.courses !== undefined) {
@@ -261,7 +306,6 @@ const AcademicService = {
         backupItems.forEach(item => db.PackageItem.remove(item.item_id));
 
         payload.courses.forEach(item => {
-          // Normalize only: let SheetDB validate required/choices constraints
           const normalizedType = typeof item.entity_type === "string"
             ? item.entity_type.toLowerCase().trim()
             : item.entity_type;
@@ -271,6 +315,7 @@ const AcademicService = {
             entity_type: normalizedType,
             entity_id: item.entity_id
           });
+          self._trackMutation(context, "PackageItem");
         });
       }
 
@@ -289,6 +334,7 @@ const AcademicService = {
             icon: perk.icon || "star",
             display_order: perk.display_order || (index + 1)
           });
+          self._trackMutation(context, "PackagePerk");
         });
       }
 
@@ -311,20 +357,21 @@ const AcademicService = {
    * Safe package deletion logic enforcing referential integrity.
    * Cleans up child records (CASCADE) and rolls back on failure.
    */
-  deletePackage(packageId) {
+  deletePackage(packageId, context) {
     const db = DBContext.getInstance();
     console.log(`[AcademicService] Attempting to delete Package: ${packageId}`);
 
     const existingPackage = db.Package.findById(packageId);
-    if (!existingPackage) throw new Error(`Package with ID '${packageId}' not found.`);
+    if (!existingPackage) throw new SheetDB.EntityNotFoundError("Package", packageId, "Academic");
 
     // 1. Referential Integrity Check (RESTRICT)
     const hasEnrollments = db.Enrollment.exists({ enrollment_type: "package", item_id: packageId });
     if (hasEnrollments) {
-      throw new Error(`Cannot delete Package '${packageId}' because it has active student enrollments.`);
+      throw new SheetDB.IntegrityError(`Cannot delete Package '${packageId}' because it has active student enrollments.`);
     }
 
     const tx = new TransactionTracker();
+    const self = this;
 
     try {
       // 2. Fetch all child elements to track for rollback
@@ -335,17 +382,20 @@ const AcademicService = {
       items.forEach(item => {
         db.PackageItem.remove(item.item_id);
         tx.trackDelete(db.PackageItem, item);
+        self._trackMutation(context, "PackageItem");
       });
 
       // 4. Cascade delete PackagePerks
       perks.forEach(perk => {
         db.PackagePerk.remove(perk.perk_id);
         tx.trackDelete(db.PackagePerk, perk);
+        self._trackMutation(context, "PackagePerk");
       });
 
       // 5. Delete core Package record
       db.Package.remove(packageId);
       tx.trackDelete(db.Package, existingPackage);
+      this._trackMutation(context, "Package");
 
       console.log(`[AcademicService] Package '${packageId}' and all related perks/items deleted successfully.`);
       return { success: true, message: `Package '${packageId}' successfully deleted.` };
@@ -366,17 +416,24 @@ const AcademicService = {
   /**
    * Enrolls a student into a specific batch or course.
    */
-  enrollStudent(payload) {
+  enrollStudent(payload, context) {
     const db = DBContext.getInstance();
 
     // Existence checks
-    if (!db.Student.findById(payload.student_id)) throw new Error("Student not found.");
+    if (!db.Student.findById(payload.student_id)) {
+      throw new SheetDB.EntityNotFoundError("Student", payload.student_id, "Academic");
+    }
 
     console.log(`[AcademicService] Enrolling Student ${payload.student_id} into Batch/Item ${payload.course_id}`);
-    return db.Enrollment.insert({
+    const record = db.Enrollment.insert({
       ...payload,
       enrollment_date: payload.enrollment_date || new Date(),
       status: payload.status || "active"
     });
+    this._trackMutation(context, "Enrollment");
+    return record.toJSON();
   }
 };
+
+// Bind to global namespace
+globalThis.AcademicService = AcademicService;

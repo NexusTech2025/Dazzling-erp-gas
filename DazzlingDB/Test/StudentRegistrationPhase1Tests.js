@@ -16,6 +16,14 @@ function run_phase1_tests() {
   const curriculum = TestMockData.setupCurriculum(db);
   const { branchId, courseTypeId, physicsId, chemistryId, mathId, webDevId, batchPhyId, batchCheId, batchWdId, packageId } = curriculum;
 
+  // Initialize a mock requestContext
+  const mockContext = {
+    actionType: "CREATE",
+    mutationManifest: [],
+    txId: "TX-TEST-MOCK-102",
+    headers: { "X-Correlation-ID": "test-corr-id-2" }
+  };
+
   // -------------------------------------------------------------
   // Test Case 1: Strict Batch Verification (Curriculum Enforcement)
   // -------------------------------------------------------------
@@ -39,7 +47,8 @@ function run_phase1_tests() {
   };
 
   try {
-    StudentService.registerStudent(badPayload);
+    mockContext.mutationManifest = [];
+    StudentService.registerStudent(badPayload, mockContext);
     console.error("❌ Test failed: Pre-flight check should have thrown an error for missing Chemistry batch!");
   } catch (err) {
     console.log("✅ Validation successfully caught missing batch: " + err.message);
@@ -93,9 +102,20 @@ function run_phase1_tests() {
     }
   };
 
-  const bob = StudentService.registerStudent(goodPayload);
+  mockContext.mutationManifest = [];
+  mockContext.actionType = "CREATE";
+  const bob = StudentService.registerStudent(goodPayload, mockContext);
   const studentId = bob.student_id;
   console.log("✅ Student registered with ID: " + studentId);
+  console.log("   Mutated records: " + JSON.stringify(mockContext.mutationManifest));
+
+  const expectedMutations = ["Student", "Address", "ContactInfo", "Education", "Enrollment", "FeePlan", "BatchAllocation", "StudentFeeAccount", "Installment", "Payment"];
+  const hasAllExpected = expectedMutations.every(m => mockContext.mutationManifest.includes(m));
+  if (hasAllExpected) {
+    console.log("✅ Mutation manifest matches expected PascalCase schema signatures.");
+  } else {
+    console.error("❌ Mutation manifest mismatch! Got: " + JSON.stringify(mockContext.mutationManifest));
+  }
 
   // Validate enrollments created
   const enrollments = db.Enrollment.where({ student_id: studentId });
@@ -154,9 +174,6 @@ function run_phase1_tests() {
   } else {
     const firstIns = pkgInstallments.find(i => i.installment_number === 1);
     const secondIns = pkgInstallments.find(i => i.installment_number === 2);
-    // Math: Proportion = 12000/17000 = ~0.70588. 
-    // First: due_amount = 8500 * (12000/17000) = 6000. paid_amount = 6800 * (12000/17000) = 4800.
-    // Second: due_amount = 8500 * (12000/17000) = 6000. paid_amount = 0.
     console.log(`Package Installment 1 - Due: ${firstIns.due_amount} (Exp: 6000), Paid: ${firstIns.paid_amount} (Exp: 4800)`);
     console.log(`Package Installment 2 - Due: ${secondIns.due_amount} (Exp: 6000), Paid: ${secondIns.paid_amount} (Exp: 0)`);
     if (firstIns.due_amount !== 6000 || firstIns.paid_amount !== 4800 || secondIns.due_amount !== 6000 || secondIns.paid_amount !== 0) {

@@ -61,10 +61,20 @@ function executeScenario1_SuccessfulEdit(db, validIds) {
       capacity: 30
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Step A: Inserting original batch record...");
-    const batchRecord = AcademicService.createBatch(createPayload);
+    const batchRecord = AcademicService.createBatch(createPayload, mockContext);
     createdBatchId = batchRecord.batch_id;
     console.log(`   ✅ Success! Created Batch ID: ${createdBatchId}`);
+
+    // Verify mutation tracked
+    if (!mockContext.mutationManifest.includes("Batch")) {
+      throw new Error("Mutation tracking failed: Batch mutation not tracked in manifest.");
+    }
 
     // 2. Perform edit/update using db.Batch.update
     const updatePayload = {
@@ -134,8 +144,13 @@ function executeScenario2_ValidationErrorOnEdit(db, validIds) {
       batch_type: "Academy"
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Step A: Inserting original batch record...");
-    const batchRecord = AcademicService.createBatch(createPayload);
+    const batchRecord = AcademicService.createBatch(createPayload, mockContext);
     createdBatchId = batchRecord.batch_id;
     console.log(`   ✅ Success! Created Batch ID: ${createdBatchId}`);
 
@@ -238,7 +253,7 @@ function runAllBatchUpdateTests() {
     }
     const verifyEnd = new Date().getTime();
     timings["Scenario 3: Verifying Updated Values"] = verifyEnd - verifyStart;
-    console.log(`✅ Verified: All 100 course statuses successfully updated to 'inactive' (took ${verifyEnd - verifyStart}ms).`);
+    console.log(`⏱️ Verified: All 100 course statuses successfully updated to 'inactive' (took ${verifyEnd - verifyStart}ms).`);
 
     // 4. Primary Key Protection Test
     console.log("\n--- Scenario 4: Verify Primary Key Protection ---");
@@ -261,7 +276,7 @@ function runAllBatchUpdateTests() {
     }
     const pkEnd = new Date().getTime();
     timings["Scenario 4: Verify Primary Key Protection"] = pkEnd - pkStart;
-    console.log(`✅ Verified: Attempts to mutate primary key field were safely ignored (took ${pkEnd - pkStart}ms).`);
+    console.log(`⏱️ Verified: Attempts to mutate primary key field were safely ignored (took ${pkEnd - pkStart}ms).`);
 
     // 5. Cleanup
     console.log("\n--- Scenario 5: Cleanup Test Data ---");
@@ -294,4 +309,3 @@ function runAllBatchUpdateTests() {
     }
   }
 }
-

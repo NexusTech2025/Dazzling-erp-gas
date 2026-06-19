@@ -77,6 +77,11 @@ function runUpdateTeacherTests() {
   // CASE 1: Full profileData success — mirrors exact fields sent by AddTeacher.jsx
   console.log("\n--- [CASE 1] Full profileData success (all Step-1 fields) ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: mockTeacherId,
       data: {
@@ -97,7 +102,8 @@ function runUpdateTeacherTests() {
         notes:              "Excellent educator",
         address:            "42 Test Street, Testville"
       }
-    });
+    }, mockContext);
+    
     const fetched = db.Teacher.findById(mockTeacherId);
     if (
       fetched.full_name      === `Professor Moni Revised ${suffix}` &&
@@ -109,6 +115,12 @@ function runUpdateTeacherTests() {
     } else {
       console.error("  ❌ Step-1 field mismatch on post-update verification.", JSON.stringify(fetched));
     }
+
+    if (mockContext.mutationManifest.includes("Teacher")) {
+      console.log("  ✅ Mutation manifest verified: " + JSON.stringify(mockContext.mutationManifest));
+    } else {
+      console.error("  ❌ Mutation manifest tracking failed! Got: " + JSON.stringify(mockContext.mutationManifest));
+    }
   } catch (e) {
     console.error("❌ Case 1 unexpected error:", e.message);
   }
@@ -116,6 +128,11 @@ function runUpdateTeacherTests() {
   // CASE 2: Immutable field stripping
   console.log("\n--- [CASE 2] Immutable field stripping ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: mockTeacherId,
       data: {
@@ -125,7 +142,7 @@ function runUpdateTeacherTests() {
         __tx_status:  "FORGED",
         __created_at: new Date()
       }
-    });
+    }, mockContext);
     const fetched = db.Teacher.findById(mockTeacherId);
     if (
       fetched.teacher_id  === mockTeacherId &&
@@ -143,10 +160,15 @@ function runUpdateTeacherTests() {
   // CASE 3: Self-exclusion — own mobile_number must NOT trigger duplicate error
   console.log("\n--- [CASE 3] Self-exclusion: own mobile_number should pass ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: mockTeacherId,
       data: { mobile_number: originalMobile }
-    });
+    }, mockContext);
     console.log("  ✅ Own mobile_number accepted — self-exclusion working correctly.");
   } catch (e) {
     console.error("  ❌ Own mobile_number was incorrectly rejected:", e.message);
@@ -155,10 +177,15 @@ function runUpdateTeacherTests() {
   // CASE 4: Self-exclusion — own email must NOT trigger duplicate error
   console.log("\n--- [CASE 4] Self-exclusion: own email should pass ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: mockTeacherId,
       data: { email: originalEmail }
-    });
+    }, mockContext);
     console.log("  ✅ Own email accepted — self-exclusion working correctly.");
   } catch (e) {
     console.error("  ❌ Own email was incorrectly rejected:", e.message);
@@ -167,10 +194,15 @@ function runUpdateTeacherTests() {
   // CASE 5: Non-existent teacher_id → critical abort, no downstream rules run
   console.log("\n--- [CASE 5] Validation Fail: Non-existent teacher_id (critical abort) ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: "TCH-NON-EXISTENT-XYZ",
       data: { full_name: "Ghost Teacher" }
-    });
+    }, mockContext);
     console.error("  ❌ Should have rejected non-existent ID.");
   } catch (e) {
     if (e instanceof SheetDB.ValidationError) {
@@ -183,10 +215,15 @@ function runUpdateTeacherTests() {
   // CASE 6: Duplicate mobile_number taken by another teacher → reject
   console.log("\n--- [CASE 6] Validation Fail: Duplicate mobile_number (cross-teacher) ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: mockTeacherId,
       data: { mobile_number: otherMobile }
-    });
+    }, mockContext);
     console.error("  ❌ Should have rejected cross-teacher duplicate mobile.");
   } catch (e) {
     if (e instanceof SheetDB.ValidationError) {
@@ -199,10 +236,15 @@ function runUpdateTeacherTests() {
   // CASE 7: Duplicate email taken by another teacher → reject
   console.log("\n--- [CASE 7] Validation Fail: Duplicate email (cross-teacher) ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: mockTeacherId,
       data: { email: otherEmail }
-    });
+    }, mockContext);
     console.error("  ❌ Should have rejected cross-teacher duplicate email.");
   } catch (e) {
     if (e instanceof SheetDB.ValidationError) {
@@ -215,10 +257,15 @@ function runUpdateTeacherTests() {
   // CASE 8: Valid branch_id (BRN-3GVP91T) — FK must resolve and persist
   console.log("\n--- [CASE 8] Valid branch_id FK (BRN-3GVP91T) should persist ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: mockTeacherId,
       data: { branch_id: VALID_BRANCH_ID }
-    });
+    }, mockContext);
     const fetched = db.Teacher.findById(mockTeacherId);
     if (fetched.branch_id === VALID_BRANCH_ID) {
       console.log(`  ✅ branch_id ${VALID_BRANCH_ID} accepted and persisted.`);
@@ -232,10 +279,15 @@ function runUpdateTeacherTests() {
   // CASE 9: Invalid branch_id → FK check must fail
   console.log("\n--- [CASE 9] Validation Fail: Non-existent branch_id ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: mockTeacherId,
       data: { branch_id: INVALID_BRANCH_ID }
-    });
+    }, mockContext);
     console.error("  ❌ Should have rejected invalid branch FK.");
   } catch (e) {
     if (e instanceof SheetDB.ValidationError) {
@@ -248,6 +300,11 @@ function runUpdateTeacherTests() {
   // CASE 10: All nullable optional fields accept null without error
   console.log("\n--- [CASE 10] Nullable optional fields accept null without validation error ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: mockTeacherId,
       data: {
@@ -260,7 +317,7 @@ function runUpdateTeacherTests() {
         notes:              null,
         address:            null
       }
-    });
+    }, mockContext);
     console.log("  ✅ All nullable optional fields accepted as null.");
   } catch (e) {
     console.error("  ❌ Nullable optional fields were incorrectly rejected:", e.message);
@@ -272,7 +329,12 @@ function runUpdateTeacherTests() {
   // CASE 11: staff_assign_subjects — two real seeded courses assigned together
   console.log("\n--- [CASE 11] Relational: staff_assign_subjects with real seeded course IDs ---");
   try {
-    StaffService.assignSubjects(mockTeacherId, [VALID_COURSE_ID_1, VALID_COURSE_ID_2]);
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
+    StaffService.assignSubjects(mockTeacherId, [VALID_COURSE_ID_1, VALID_COURSE_ID_2], mockContext);
     const subjects = db.TeacherSubject.where({ teacher_id: mockTeacherId });
     const hasFirst  = subjects.some(s => s.subject_id === VALID_COURSE_ID_1);
     const hasSecond = subjects.some(s => s.subject_id === VALID_COURSE_ID_2);
@@ -281,6 +343,12 @@ function runUpdateTeacherTests() {
     } else {
       console.error(`  ❌ Subject assignment mismatch. hasFirst=${hasFirst}, hasSecond=${hasSecond}`);
     }
+
+    if (mockContext.mutationManifest.includes("TeacherSubject")) {
+      console.log("  ✅ Mutation manifest verified: " + JSON.stringify(mockContext.mutationManifest));
+    } else {
+      console.error("  ❌ Mutation manifest tracking failed! Got: " + JSON.stringify(mockContext.mutationManifest));
+    }
   } catch (e) {
     console.error("  ❌ staff_assign_subjects failed unexpectedly:", e.message);
   }
@@ -288,8 +356,13 @@ function runUpdateTeacherTests() {
   // CASE 12: staff_assign_subjects — invalid course ID must be skipped gracefully
   console.log("\n--- [CASE 12] Relational: staff_assign_subjects silently skips invalid course ID ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     const before = db.TeacherSubject.where({ teacher_id: mockTeacherId }).length;
-    StaffService.assignSubjects(mockTeacherId, [INVALID_COURSE_ID]);
+    StaffService.assignSubjects(mockTeacherId, [INVALID_COURSE_ID], mockContext);
     const after = db.TeacherSubject.where({ teacher_id: mockTeacherId }).length;
     if (after === before) {
       console.log("  ✅ Invalid course ID was silently skipped — no orphaned row inserted.");
@@ -303,18 +376,29 @@ function runUpdateTeacherTests() {
   // CASE 13: staff_set_salary_config — monthly type
   console.log("\n--- [CASE 13] Relational: staff_set_salary_config (monthly) ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.setSalaryConfig({
       teacher_id:     mockTeacherId,
       salary_type:    "monthly",
       base_amount:    45000,
       effective_from: "2026-05-26"
-    });
+    }, mockContext);
     const configs = db.TeacherSalaryConfig.where({ teacher_id: mockTeacherId });
     const last = configs[configs.length - 1];
     if (last && last.base_amount === 45000 && last.salary_type === "monthly") {
       console.log("  ✅ Salary config (monthly / 45000) created successfully.");
     } else {
       console.error("  ❌ Monthly salary config mismatch.", JSON.stringify(last));
+    }
+
+    if (mockContext.mutationManifest.includes("TeacherSalaryConfig")) {
+      console.log("  ✅ Mutation manifest verified: " + JSON.stringify(mockContext.mutationManifest));
+    } else {
+      console.error("  ❌ Mutation manifest tracking failed! Got: " + JSON.stringify(mockContext.mutationManifest));
     }
   } catch (e) {
     console.error("  ❌ staff_set_salary_config (monthly) failed:", e.message);
@@ -323,12 +407,17 @@ function runUpdateTeacherTests() {
   // CASE 14: staff_set_salary_config — per_class type
   console.log("\n--- [CASE 14] Relational: staff_set_salary_config (per_class) ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.setSalaryConfig({
       teacher_id:     mockTeacherId,
       salary_type:    "per_class",
       base_amount:    500,
       effective_from: "2026-05-26"
-    });
+    }, mockContext);
     const configs = db.TeacherSalaryConfig.where({ teacher_id: mockTeacherId });
     const perClass = configs.find(c => c.salary_type === "per_class");
     if (perClass && perClass.base_amount === 500) {
@@ -343,11 +432,16 @@ function runUpdateTeacherTests() {
   // CASE 15: staff_set_salary_config — non-existent teacher_id must fail
   console.log("\n--- [CASE 15] Relational: staff_set_salary_config rejects unknown teacher_id ---");
   try {
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.setSalaryConfig({
       teacher_id:  "TCH-NON-EXISTENT-XYZ",
       salary_type: "monthly",
       base_amount: 30000
-    });
+    }, mockContext);
     console.error("  ❌ Should have thrown EntityNotFoundError.");
   } catch (e) {
     if (e instanceof SheetDB.EntityNotFoundError || e.name === "EntityNotFoundError") {
@@ -360,16 +454,28 @@ function runUpdateTeacherTests() {
   // CASE 16: Ordering contract — core update must succeed before relational calls
   console.log("\n--- [CASE 16] Ordering: core update must succeed before relational calls ---");
   try {
+    const mockContextUpdate = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.updateTeacher({
       teacher_id: mockTeacherId,
       data: { notes: "Ordering verification note" }
-    });
+    }, mockContextUpdate);
+
+    const mockContextSalary = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     StaffService.setSalaryConfig({
       teacher_id:     mockTeacherId,
       salary_type:    "monthly",
       base_amount:    55000,
       effective_from: new Date().toISOString().split("T")[0]
-    });
+    }, mockContextSalary);
+
     const fetched  = db.Teacher.findById(mockTeacherId);
     const configs  = db.TeacherSalaryConfig.where({ teacher_id: mockTeacherId });
     const lastConf = configs[configs.length - 1];

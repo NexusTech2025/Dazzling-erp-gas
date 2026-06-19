@@ -4,6 +4,13 @@
  */
 
 const StaffService = {
+  _trackMutation(context, tableName) {
+    if (context && context.mutationManifest && Array.isArray(context.mutationManifest)) {
+      if (!context.mutationManifest.includes(tableName)) {
+        context.mutationManifest.push(tableName);
+      }
+    }
+  },
 
   /**
    * HR ONBOARDING
@@ -13,7 +20,7 @@ const StaffService = {
    * Registers a new teacher profile.
    * Optionally creates an Auth User if userData is provided.
    */
-  onboardTeacher(payload) {
+  onboardTeacher(payload, context) {
     const db = DBContext.getInstance();
     console.log(`[StaffService] Initiating onboarding transaction for teacher: ${payload.full_name}`);
 
@@ -76,6 +83,8 @@ const StaffService = {
       });
     }
 
+    const self = this;
+
     try {
       // 2. CORE: INSERT TEACHER RECORD
       // Strip out relation fields to keep clean columns in the Teacher sheet
@@ -93,6 +102,7 @@ const StaffService = {
 
       // Log insertion for potential rollback
       insertedRecords.push({ table: "Teacher", id: teacher.teacher_id });
+      this._trackMutation(context, "Teacher");
 
       // 3. RELATION: CREATE AUTH USER PROFILE
       if (payload.userData) {
@@ -100,8 +110,11 @@ const StaffService = {
           ...payload.userData,
           user_id: teacher.teacher_id, // 1:1 Domain Key Sync
           role: "teacher"
-        });
+        }, context);
         insertedRecords.push({ table: "User", id: registeredUser.user_id });
+        // Note: AuthBridge.registerUser handles its own User table tracking inside AuthBridge, 
+        // but since we are executing it, let's track "User" mutation here just in case.
+        this._trackMutation(context, "User");
       }
 
       // 4. RELATION: INITIAL COMPENSATION RATE
@@ -112,6 +125,7 @@ const StaffService = {
           effective_from: payload.salary_config.effective_from || new Date()
         });
         insertedRecords.push({ table: "TeacherSalaryConfig", id: salaryConfig.salary_config_id });
+        this._trackMutation(context, "TeacherSalaryConfig");
       }
 
       // 5. RELATION: ASSIGN TEACHING SUBJECTS
@@ -122,6 +136,7 @@ const StaffService = {
             subject_id: subId
           });
           insertedRecords.push({ table: "TeacherSubject", id: teacherSubject.teacher_subject_id });
+          self._trackMutation(context, "TeacherSubject");
         }
       }
 
@@ -134,6 +149,7 @@ const StaffService = {
             uploaded_at: new Date()
           });
           insertedRecords.push({ table: "TeacherDocument", id: teacherDoc.document_id });
+          self._trackMutation(context, "TeacherDocument");
         }
       }
 
@@ -162,7 +178,7 @@ const StaffService = {
   /**
    * Links a teacher to multiple subjects/courses.
    */
-  assignSubjects(teacherId, subjectIds = []) {
+  assignSubjects(teacherId, subjectIds = [], context) {
     const db = DBContext.getInstance();
     console.log(`[StaffService] Assigning ${subjectIds.length} subjects to teacher ${teacherId}`);
 
@@ -171,6 +187,7 @@ const StaffService = {
     }
 
     const results = [];
+    const self = this;
     subjectIds.forEach(subId => {
       // Relational Check: Does course exist?
       if (!db.Course.findById(subId)) {
@@ -178,10 +195,12 @@ const StaffService = {
         return;
       }
 
-      results.push(db.TeacherSubject.insert({
+      const rec = db.TeacherSubject.insert({
         teacher_id: teacherId,
         subject_id: subId
-      }));
+      });
+      results.push(rec);
+      self._trackMutation(context, "TeacherSubject");
     });
 
     return results;
@@ -194,7 +213,7 @@ const StaffService = {
   /**
    * Configures the payroll rules for a teacher.
    */
-  setSalaryConfig(payload) {
+  setSalaryConfig(payload, context) {
     const db = DBContext.getInstance();
     console.log(`[StaffService] Setting salary config for teacher: ${payload.teacher_id}`);
 
@@ -202,19 +221,18 @@ const StaffService = {
       throw new SheetDB.EntityNotFoundError("Teacher", payload.teacher_id, "Staff");
     }
 
-    return db.TeacherSalaryConfig.insert({
+    const record = db.TeacherSalaryConfig.insert({
       ...payload,
       effective_from: payload.effective_from || new Date()
     });
+    this._trackMutation(context, "TeacherSalaryConfig");
+    return record;
   },
 
   /**
-   * Marks daily attendance.
-   */
-  /**
    * Marks daily attendance for a teacher (Upsert pattern).
    */
-  markAttendance(payload) {
+  markAttendance(payload, context) {
     const db = DBContext.getInstance();
     
     // 1. Validation and Casing Normalization
@@ -251,8 +269,8 @@ const StaffService = {
     }
     if (payload.exit_time) {
       exitDate = AttendanceUtil.convertJsonToDate(payload.exit_time, dateStr);
-      if (entryDate && exitDate && exitDate < entryDate) {
-        exitDate.setDate(exitDate.getDate() + 1);
+      if (entryDate && exitDate && exitDate.getTime() < entryDate.getTime()) {
+        exitDate.setUTCDate(exitDate.getUTCDate() + 1);
       }
     }
 
@@ -275,19 +293,22 @@ const StaffService = {
       attendance_date: dateStr
     });
 
+    let resultRecord;
     if (existing) {
       console.log(`[StaffService] Updating existing teacher attendance ID: ${existing.attendance_id} for Batch: ${batchId}`);
-      return db.TeacherAttendance.update(existing.attendance_id, attendanceData);
+      resultRecord = db.TeacherAttendance.update(existing.attendance_id, attendanceData);
     } else {
       console.log(`[StaffService] Inserting new teacher attendance for Teacher: ${teacherId} Batch: ${batchId}`);
-      return db.TeacherAttendance.insert(attendanceData);
+      resultRecord = db.TeacherAttendance.insert(attendanceData);
     }
+    this._trackMutation(context, "TeacherAttendance");
+    return resultRecord;
   },
 
   /**
    * Marks bulk teacher attendance for a specific date (Upsert pattern).
    */
-  markAttendanceBulk(payload) {
+  markAttendanceBulk(payload, context) {
     const db = DBContext.getInstance();
 
     if (!payload.attendance_date) throw new Error("attendance_date is required.");
@@ -315,6 +336,7 @@ const StaffService = {
     });
 
     const results = [];
+    const self = this;
     payload.records.forEach(rec => {
       if (!rec.teacher_id) throw new Error("Each record in bulk array must contain teacher_id.");
       if (!rec.batch_id) throw new Error("Each record in bulk array must contain batch_id.");
@@ -345,8 +367,8 @@ const StaffService = {
       }
       if (rec.exit_time) {
         exitDate = AttendanceUtil.convertJsonToDate(rec.exit_time, dateStr);
-        if (entryDate && exitDate && exitDate < entryDate) {
-          exitDate.setDate(exitDate.getDate() + 1);
+        if (entryDate && exitDate && exitDate.getTime() < entryDate.getTime()) {
+          exitDate.setUTCDate(exitDate.getUTCDate() + 1);
         }
       }
 
@@ -368,6 +390,7 @@ const StaffService = {
       } else {
         results.push(db.TeacherAttendance.insert(attendanceData));
       }
+      self._trackMutation(context, "TeacherAttendance");
     });
 
     return {
@@ -433,7 +456,7 @@ const StaffService = {
   /**
    * Records a salary or advance payment.
    */
-  recordPayment(payload) {
+  recordPayment(payload, context) {
     const db = DBContext.getInstance();
     console.log(`[StaffService] Recording ${payload.payment_type} for teacher ${payload.teacher_id}`);
 
@@ -441,11 +464,13 @@ const StaffService = {
       throw new SheetDB.EntityNotFoundError("Teacher", payload.teacher_id, "Staff");
     }
 
-    return db.TeacherPaymentTransaction.insert({
+    const record = db.TeacherPaymentTransaction.insert({
       ...payload,
       transaction_date: payload.transaction_date || new Date(),
       created_at: new Date()
     });
+    this._trackMutation(context, "TeacherPaymentTransaction");
+    return record;
   },
 
   /**
@@ -455,7 +480,7 @@ const StaffService = {
   /**
    * Attaches a document link to a teacher profile.
    */
-  addDocument(teacherId, documentPayload) {
+  addDocument(teacherId, documentPayload, context) {
     const db = DBContext.getInstance();
     console.log(`[StaffService] Adding document for teacher ${teacherId}`);
 
@@ -463,17 +488,19 @@ const StaffService = {
       throw new SheetDB.EntityNotFoundError("Teacher", teacherId, "Staff");
     }
 
-    return db.TeacherDocument.insert({
+    const record = db.TeacherDocument.insert({
       ...documentPayload,
       teacher_id: teacherId,
       uploaded_at: new Date()
     });
+    this._trackMutation(context, "TeacherDocument");
+    return record;
   },
 
   /**
    * Updates an existing teacher profile with validation checks, including subject maps and salary config.
    */
-  updateTeacher(payload) {
+  updateTeacher(payload, context) {
     const db = DBContext.getInstance();
     console.log(`[StaffService] Initiating validation for teacher update: ${payload.teacher_id}`);
 
@@ -494,10 +521,11 @@ const StaffService = {
 
     // 1. Update Core Profile
     const updatedTeacher = db.Teacher.update(ctx.entityId, ctx.payload);
+    this._trackMutation(context, "Teacher");
 
     // 2. Synchronize Subjects (if provided)
     if (subjects !== undefined) {
-      this.updateTeacherSubjects(db, ctx.entityId, subjects);
+      this.updateTeacherSubjects(db, ctx.entityId, subjects, context);
     }
 
     // 3. Synchronize Salary Configuration (if provided)
@@ -505,7 +533,7 @@ const StaffService = {
       this.setSalaryConfig({
         teacher_id: ctx.entityId,
         ...salaryConfig
-      });
+      }, context);
     }
 
     console.log(`[StaffService] Update successful for teacher: ${ctx.entityId}`);
@@ -515,7 +543,7 @@ const StaffService = {
   /**
    * Synchronizes a teacher's subject assignments using fast bulk database operations.
    */
-  updateTeacherSubjects(db, teacherId, subjectIds) {
+  updateTeacherSubjects(db, teacherId, subjectIds, context) {
     if (!teacherId) {
       throw new Error("teacher_id is required for updating subjects.");
     }
@@ -529,6 +557,7 @@ const StaffService = {
         console.warn(`[StaffService] Failed to remove subject mapping ${sub.teacher_subject_id}:`, err.message);
       }
     });
+    this._trackMutation(context, "TeacherSubject");
 
     // 2. Bulk insert new assignments if any subjects are provided
     if (Array.isArray(subjectIds) && subjectIds.length > 0) {
@@ -547,7 +576,11 @@ const StaffService = {
 
       if (recordsToInsert.length > 0) {
         db.TeacherSubject.insertMany(recordsToInsert);
+        this._trackMutation(context, "TeacherSubject");
       }
     }
   }
 };
+
+// Bind to global namespace
+globalThis.StaffService = StaffService;

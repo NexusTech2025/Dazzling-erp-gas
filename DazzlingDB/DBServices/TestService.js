@@ -9,13 +9,22 @@
  */
 
 const TestService = {
+  _trackMutation(context, tableName) {
+    if (context && context.mutationManifest && Array.isArray(context.mutationManifest)) {
+      if (!context.mutationManifest.includes(tableName)) {
+        context.mutationManifest.push(tableName);
+      }
+    }
+  },
+
   /**
    * Schedules a new class test for a specific batch.
    * 
    * @param {Object} payload - Test definition data.
+   * @param {Object} context - Unified request execution lifecycle context
    * @returns {Object} Created Test record.
    */
-  createTest(payload) {
+  createTest(payload, context) {
     const db = DBContext.getInstance();
 
     if (!payload.batch_id) throw new ActionValidationError("batch_id is required.");
@@ -44,16 +53,19 @@ const TestService = {
     };
 
     console.log(`[TestService] Creating new Class Test: ${testData.title}`);
-    return db.Test.insert(testData);
+    const record = db.Test.insert(testData);
+    this._trackMutation(context, "Test");
+    return record;
   },
 
   /**
    * Saves student exam marks in bulk using a high-performance transaction boundary.
    * 
    * @param {Object} payload - Bulk marks dataset.
+   * @param {Object} context - Unified request execution lifecycle context
    * @returns {Object} Bulk processing result.
    */
-  saveTestMarksBulk(payload) {
+  saveTestMarksBulk(payload, context) {
     const db = DBContext.getInstance();
 
     if (!payload.test_id) {
@@ -91,6 +103,7 @@ const TestService = {
 
     const tx = new TransactionTracker();
     const results = [];
+    const self = this;
 
     try {
       payload.records.forEach(rec => {
@@ -139,6 +152,7 @@ const TestService = {
           tx.trackInsert(db.TestMarks, savedRecord.id);
         }
         results.push(savedRecord);
+        self._trackMutation(context, "TestMarks");
       });
 
       return {
@@ -283,7 +297,7 @@ const TestService = {
 
       passPercentage = parseFloat(((passCount / totalCount) * 100).toFixed(2));
       failPercentage = parseFloat(((failCount / totalCount) * 100).toFixed(2));
-
+      
       toppers = presentRecords
         .filter(r => r.obtained_marks === highestMarks)
         .map(r => ({

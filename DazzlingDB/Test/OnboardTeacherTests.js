@@ -67,9 +67,23 @@ function runOnboardTeacherTests() {
     ]
   };
 
+  const mockContextSuccess = {
+    actionType: "CREATE",
+    mutationManifest: []
+  };
+
   try {
-    const teacher = StaffService.onboardTeacher(successPayload);
+    const teacher = StaffService.onboardTeacher(successPayload, mockContextSuccess);
     console.log(`✅ Success Flow: Teacher successfully registered with ID: ${teacher.teacher_id}`);
+
+    // Verify mutation tracking
+    const expected = ["Teacher", "User", "TeacherSalaryConfig", "TeacherSubject", "TeacherDocument"];
+    const verified = expected.every(m => mockContextSuccess.mutationManifest.includes(m));
+    if (verified) {
+      console.log("  ✅ Mutation manifest verified: " + JSON.stringify(mockContextSuccess.mutationManifest));
+    } else {
+      console.error("  ❌ Mutation manifest tracking failed! Got: " + JSON.stringify(mockContextSuccess.mutationManifest));
+    }
 
     // Verify all relational sheets have been physically populated
     const user = db.User.findById(teacher.teacher_id);
@@ -116,8 +130,13 @@ function runOnboardTeacherTests() {
     joining_date: "2026-05-17"
   };
 
+  const mockContextDupMobile = {
+    actionType: "CREATE",
+    mutationManifest: []
+  };
+
   try {
-    StaffService.onboardTeacher(dupMobilePayload);
+    StaffService.onboardTeacher(dupMobilePayload, mockContextDupMobile);
     console.error("❌ Verification failed: onboardTeacher should have rejected duplicate mobile number.");
   } catch (e) {
     if (e instanceof SheetDB.ValidationError) {
@@ -141,8 +160,13 @@ function runOnboardTeacherTests() {
     subjects: ["NON-EXISTENT-COURSE"]
   };
 
+  const mockContextBadSubject = {
+    actionType: "CREATE",
+    mutationManifest: []
+  };
+
   try {
-    StaffService.onboardTeacher(badSubjectPayload);
+    StaffService.onboardTeacher(badSubjectPayload, mockContextBadSubject);
     console.error("❌ Verification failed: onboardTeacher should have rejected invalid subject ID.");
   } catch (e) {
     if (e instanceof SheetDB.ValidationError) {
@@ -182,8 +206,13 @@ function runOnboardTeacherTests() {
     }
   };
 
+  const mockContextRollback = {
+    actionType: "CREATE",
+    mutationManifest: []
+  };
+
   try {
-    StaffService.onboardTeacher(rollbackPayload);
+    StaffService.onboardTeacher(rollbackPayload, mockContextRollback);
     console.error("❌ Verification failed: onboardTeacher should have failed due to pre-taken username.");
   } catch (e) {
     if (e instanceof SheetDB.ValidationError) {
@@ -210,5 +239,5 @@ function runOnboardTeacherTests() {
     }
   }
 
-  console.log("\n🏁 Onboard Teacher Transactional Test Suite Complete.");
+  console.log("\n🏁 Onboard Teacher Transaction Test Suite Complete.");
 }

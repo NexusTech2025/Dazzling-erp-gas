@@ -91,12 +91,25 @@ function executeScenario1_PolymorphicCreation(db) {
       ]
     };
     
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.createPackage with payload...");
-    const createdPackage = AcademicService.createPackage(payload);
+    const createdPackage = AcademicService.createPackage(payload, mockContext);
     
     // Assert Core Table
     if (!createdPackage.package_id) throw new Error("Package ID was not auto-generated.");
     console.log(`   ✅ Success! Created Package record with ID: ${createdPackage.package_id}`);
+
+    // Assert mutation tracking
+    const expected = ["Package", "PackagePerk", "PackageItem"];
+    const verified = expected.every(m => mockContext.mutationManifest.includes(m));
+    if (!verified) {
+      throw new Error(`Mutation tracking failed. Expected mutations: ${JSON.stringify(expected)}. Got: ${JSON.stringify(mockContext.mutationManifest)}`);
+    }
+    console.log("   ✅ Success! Mutation manifest contains Package, PackagePerk, and PackageItem.");
 
     // Assert Nested Items & Normalization Checks
     const items = db.PackageItem.where({ package_id: createdPackage.package_id });
@@ -162,9 +175,22 @@ function executeScenario2_TransactionalUpdate(db) {
       ]
     };
 
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.updatePackage with sync updates...");
-    const result = AcademicService.updatePackage(updatePayload);
+    const result = AcademicService.updatePackage(updatePayload, mockContext);
     if (!result.success) throw new Error("updatePackage did not return success status.");
+
+    // Assert mutation tracking
+    const expected = ["Package", "PackageItem", "PackagePerk"];
+    const verified = expected.every(m => mockContext.mutationManifest.includes(m));
+    if (!verified) {
+      throw new Error(`Mutation tracking failed. Expected mutations: ${JSON.stringify(expected)}. Got: ${JSON.stringify(mockContext.mutationManifest)}`);
+    }
+    console.log("   ✅ Success! Mutation manifest contains Package, PackageItem, and PackagePerk.");
 
     // Assert Core Updated
     const updatedPkg = db.Package.findById(pkg.package_id);
@@ -218,10 +244,15 @@ function executeScenario3_RollbackValidation(db) {
       ]
     };
 
+    const mockContext = {
+      actionType: "UPDATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.updatePackage with invalid input designed to fail...");
     let caughtExpectedError = false;
     try {
-      AcademicService.updatePackage(badPayload);
+      AcademicService.updatePackage(badPayload, mockContext);
     } catch (e) {
       caughtExpectedError = true;
       console.log(`   ✅ Caught expected database write constraint error: ${e.message}`);
@@ -285,10 +316,15 @@ function executeScenario4_DeleteRestrictConstraint(db) {
     };
     enrollment = db.Enrollment.insert(enrollmentPayload);
 
+    const mockContext = {
+      actionType: "DELETE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Attempting to delete package that has active student enrollment...");
     let caughtExpectedError = false;
     try {
-      AcademicService.deletePackage(pkg.package_id);
+      AcademicService.deletePackage(pkg.package_id, mockContext);
     } catch (e) {
       caughtExpectedError = true;
       console.log(`   ✅ Caught expected restrict violation: ${e.message}`);
@@ -324,6 +360,11 @@ function executeScenario5_DeleteCascadeAndRollback(db) {
     if (packages.length === 0) throw new Error("Target test package not found for cascade delete.");
     const pkg = packages[0];
 
+    const mockContextRollback = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     // 1. Verify rollback of deletion using a temporary package
     const rollbackPkg = AcademicService.createPackage({
       name: "Failed Rollback Delete Pkg",
@@ -331,7 +372,7 @@ function executeScenario5_DeleteCascadeAndRollback(db) {
       status: "active",
       perks: [{ perk_title: "Perk to restore" }],
       courses: []
-    });
+    }, mockContextRollback);
 
     // Mock Package.remove to throw an error for rollbackPkg
     const originalRemove = db.Package.remove;
@@ -342,10 +383,15 @@ function executeScenario5_DeleteCascadeAndRollback(db) {
       return originalRemove.call(db.Package, id);
     };
 
+    const mockContextDeleteRollback = {
+      actionType: "DELETE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Attempting package deletion with simulated failure (forcing rollback)...");
     let caughtExpectedError = false;
     try {
-      AcademicService.deletePackage(rollbackPkg.package_id);
+      AcademicService.deletePackage(rollbackPkg.package_id, mockContextDeleteRollback);
     } catch (e) {
       caughtExpectedError = true;
       console.log(`   ✅ Caught expected deletion error: ${e.message}`);
@@ -370,8 +416,22 @@ function executeScenario5_DeleteCascadeAndRollback(db) {
 
     // 2. Perform actual happy-path CASCADE delete on Polymorphic Test Combo - V2
     console.log(`   ⚙️ Deleting package '${pkg.package_id}' (Happy Path Cascade)...`);
-    const deleteResult = AcademicService.deletePackage(pkg.package_id);
+    
+    const mockContextCascadeDelete = {
+      actionType: "DELETE",
+      mutationManifest: []
+    };
+
+    const deleteResult = AcademicService.deletePackage(pkg.package_id, mockContextCascadeDelete);
     if (!deleteResult.success) throw new Error("deletePackage reported failure status.");
+
+    // Assert mutation tracking
+    const expected = ["PackageItem", "PackagePerk", "Package"];
+    const verified = expected.every(m => mockContextCascadeDelete.mutationManifest.includes(m));
+    if (!verified) {
+      throw new Error(`Mutation tracking failed. Expected mutations: ${JSON.stringify(expected)}. Got: ${JSON.stringify(mockContextCascadeDelete.mutationManifest)}`);
+    }
+    console.log("   ✅ Success! Cascade deletion tracked all mutations.");
 
     // Assert Package is gone
     if (db.Package.findById(pkg.package_id)) {
@@ -438,11 +498,24 @@ function executeScenario6_OnDemandAndPresets(db) {
       ]
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.createPackage with mixed courses and auto-preset perks...");
-    const createdPackage = AcademicService.createPackage(payload);
+    const createdPackage = AcademicService.createPackage(payload, mockContext);
 
     if (!createdPackage.package_id) throw new Error("Package ID was not auto-generated.");
     console.log(`   ✅ Success! Created Package record with ID: ${createdPackage.package_id}`);
+
+    // Verify mutations
+    const expected = ["Package", "PackagePerk", "Course", "PackageItem"];
+    const verified = expected.every(m => mockContext.mutationManifest.includes(m));
+    if (!verified) {
+      throw new Error(`Mutation tracking failed. Expected mutations: ${JSON.stringify(expected)}. Got: ${JSON.stringify(mockContext.mutationManifest)}`);
+    }
+    console.log("   ✅ Success! All mutations (Package, PackagePerk, Course, PackageItem) tracked correctly.");
 
     const newCourse = db.Course.findOne({ short_code: "C-ON-DEMAND-1" });
     if (!newCourse) throw new Error("On-demand course 'On-Demand Course 1' was not inserted in Course table.");
@@ -499,10 +572,15 @@ function executeScenario7_OnDemandRollback(db) {
       ]
     };
 
+    const mockContext = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking AcademicService.createPackage designed to fail...");
     let caughtExpectedError = false;
     try {
-      AcademicService.createPackage(badPayload);
+      AcademicService.createPackage(badPayload, mockContext);
     } catch (e) {
       caughtExpectedError = true;
       console.log(`   ✅ Caught expected validation error: ${e.message}`);
@@ -565,10 +643,15 @@ function executeScenario8_OnErrorCodes(db) {
       ]
     };
 
+    const mockContext1 = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking createPackage to verify DUPLICATE_SHORT_CODE errorCode...");
     let caughtDuplicateError = false;
     try {
-      AcademicService.createPackage(payload);
+      AcademicService.createPackage(payload, mockContext1);
     } catch (e) {
       caughtDuplicateError = true;
       if (e.errorCode !== "DUPLICATE_SHORT_CODE") {
@@ -590,10 +673,15 @@ function executeScenario8_OnErrorCodes(db) {
       ]
     };
 
+    const mockContext2 = {
+      actionType: "CREATE",
+      mutationManifest: []
+    };
+
     console.log("   ⚙️ Invoking createPackage to verify REFERENCED_COURSE_NOT_FOUND errorCode...");
     let caughtRefError = false;
     try {
-      AcademicService.createPackage(invalidRefPayload);
+      AcademicService.createPackage(invalidRefPayload, mockContext2);
     } catch (e) {
       caughtRefError = true;
       if (e.errorCode !== "REFERENCED_COURSE_NOT_FOUND") {

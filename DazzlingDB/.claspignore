@@ -22,6 +22,19 @@ apitest/**
 Test/*
 
 # BUT explicitly allow our focused test suites
+!Test/TestHelper.js
 !Test/TestMockData.js
 !Test/Academic_PackageTests.js
 !Test/AttendanceSystemTests.js
+!Test/StudentServiceTests.js
+!Test/AcademicServiceTests.js
+!Test/Academic_BatchTests.js
+!Test/Academic_BatchUpdateTests.js
+!Test/OnboardTeacherTests.js
+!Test/UpdateTeacherTests.js
+!Test/TestManagementTests.js
+
+!apitest/StudentLead_ApiTest.js
+!apitest/ApiTestHelper.js
+!apitest/StudentRegistration_ApiTest.js
+ 

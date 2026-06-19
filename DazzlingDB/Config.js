@@ -64,6 +64,7 @@ function resolveDatabaseEnvironment() {
 const ACTIVE_CONFIG = resolveDatabaseEnvironment();
 const SYSTEM_ENV = ACTIVE_CONFIG.env;
 const DATABASE_ROOT_FOLDER_ID = ACTIVE_CONFIG.rootFolderId;
+const SYSTEM_VERSION = "2.1.2";
 
 // Retain security lockout details
 const SECURITY_LOCKOUT_ATTEMPTS = 5;
