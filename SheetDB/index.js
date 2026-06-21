@@ -128,6 +128,11 @@ Object.assign(globalThis, {
   ConflictError: globalThis.ConflictError,
   IntegrityError: globalThis.IntegrityError,
   ForbiddenError: globalThis.ForbiddenError,
+  SheetDBEngineError: globalThis.SheetDBEngineError,
+  ResourceNotFoundError: globalThis.ResourceNotFoundError,
+  PlatformQuotasExhaustedException: globalThis.PlatformQuotasExhaustedException,
+  MultiStorageCoordinator: globalThis.MultiStorageCoordinator,
+  AdvancedRestDriver: globalThis.AdvancedRestDriver,
   
   // Custom Validation & Relational Errors
   ValidationRegistryError: globalThis.ValidationRegistryError,

@@ -48,7 +48,7 @@ class EntityNotFoundError extends SheetDBError {
 /**
  * Thrown when data validation fails.
  */
-class ValidationError extends SheetDBError {}
+class ValidationError extends SheetDBError { }
 
 /**
  * Thrown when a specific field fails validation or transformation.
@@ -63,17 +63,17 @@ class FieldError extends ValidationError {
 /**
  * Thrown when a unique constraint is violated.
  */
-class ConflictError extends SheetDBError {}
+class ConflictError extends SheetDBError { }
 
 /**
  * Thrown when business logic or referential integrity is violated.
  */
-class IntegrityError extends SheetDBError {}
+class IntegrityError extends SheetDBError { }
 
 /**
  * Thrown when authorization fails.
  */
-class ForbiddenError extends SheetDBError {}
+class ForbiddenError extends SheetDBError { }
 
 /**
  * Thrown when a batch deletion operation fails due to invalid parameters or constraint violations.
@@ -87,7 +87,7 @@ class BatchDeleteError extends SheetDBError {
 /**
  * 🔒 VALIDATION REGISTRY ERRORS
  */
-class ValidationRegistryError extends SheetDBError {}
+class ValidationRegistryError extends SheetDBError { }
 
 class ValidationRegistryLockedError extends ValidationRegistryError {
   constructor(action, handlerName) {
@@ -116,7 +116,7 @@ class ValidatorExecutionError extends ValidationRegistryError {
 /**
  * 🔗 RELATIONSHIP TRAVERSAL & CONSTRAINT ERRORS
  */
-class RelationError extends SheetDBError {}
+class RelationError extends SheetDBError { }
 
 class RelationResolutionError extends RelationError {
   constructor(relationName, entity, reason, details = {}) {
@@ -143,12 +143,27 @@ class RelationValidationError extends RelationError {
 /**
  * Thrown when a system level/critical database error occurs.
  */
-class SystemError extends SheetDBError {}
+class SystemError extends SheetDBError { }
 
 /**
  * Thrown when the required dependency graph is missing or invalid.
  */
-class DependencyGraphError extends SystemError {}
+class DependencyGraphError extends SystemError { }
+
+/**
+ * Foundational framework engine error for storage operations.
+ */
+class SheetDBEngineError extends SheetDBError { }
+
+/**
+ * Thrown when a designated spreadsheetId or whitelisted worksheet title is not found.
+ */
+class ResourceNotFoundError extends SheetDBError { }
+
+/**
+ * Thrown when platform request quotas or rate limits are exhausted.
+ */
+class PlatformQuotasExhaustedException extends SheetDBError { }
 
 // Export to Global Namespace for Library usage
 globalThis.SheetDBError = SheetDBError;
@@ -171,3 +186,6 @@ globalThis.RelationValidationError = RelationValidationError;
 globalThis.BatchDeleteError = BatchDeleteError;
 globalThis.SystemError = SystemError;
 globalThis.DependencyGraphError = DependencyGraphError;
+globalThis.SheetDBEngineError = SheetDBEngineError;
+globalThis.ResourceNotFoundError = ResourceNotFoundError;
+globalThis.PlatformQuotasExhaustedException = PlatformQuotasExhaustedException;
