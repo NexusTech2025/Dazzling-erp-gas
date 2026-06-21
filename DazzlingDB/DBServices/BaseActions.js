@@ -49,6 +49,41 @@ const ErrorMappingRegistry = {
     clientMessage: error.message,
     errorDetails: error.context || null
   }),
+  "ResourceNotFoundError": (error) => ({
+    displayCode: "RESOURCE_NOT_FOUND",
+    clientMessage: error.message,
+    errorDetails: error.context || null
+  }),
+  "PlatformQuotasExhaustedException": (error) => ({
+    displayCode: "PLATFORM_QUOTA_BREACH",
+    clientMessage: error.message,
+    errorDetails: error.context || null
+  }),
+  "SheetDBEngineError": (error) => ({
+    displayCode: "SHEET_DB_ENGINE_FAULT",
+    clientMessage: error.message,
+    errorDetails: error.context || null
+  }),
+  "AuthAuthenticationError": (error) => ({
+    displayCode: "AUTHENTICATION_FAILURE",
+    clientMessage: error.message,
+    errorDetails: error.details || null
+  }),
+  "AuthAccountLockedError": (error) => ({
+    displayCode: "ACCOUNT_LOCKED",
+    clientMessage: error.message,
+    errorDetails: error.details || null
+  }),
+  "ActionAuthorizationError": (error) => ({
+    displayCode: "FORBIDDEN_ACCESS",
+    clientMessage: error.message,
+    errorDetails: error.details || null
+  }),
+  "PackageOrchestrationError": (error) => ({
+    displayCode: "PACKAGE_ORCHESTRATION_FAILURE",
+    clientMessage: error.message,
+    errorDetails: error.details || null
+  }),
   "default": (error) => {
     if (error && error.errorCode) {
       return {
@@ -201,6 +236,7 @@ class BaseAction {
       error_name: error.name || "Error",
       message: error.message || "Unknown error",
       action_type: context.actionType,
+      action_name: this._actionName || "UnknownAction",
       tables_touched: context.mutationManifest || []
     })}`);
   }

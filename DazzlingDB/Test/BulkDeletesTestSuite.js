@@ -78,7 +78,10 @@ const BulkDeletesTestSuite = (function () {
 
     // Seed session for testUserId
     const sessionToken = "SES_TOKEN_USER";
-    try { db.Session.remove(sessionToken); } catch (e) {}
+    const existingSess = db.Session.findOne({ token: sessionToken });
+    if (existingSess) {
+      try { db.Session.remove(existingSess.session_id); } catch (e) {}
+    }
     db.Session.insert({ token: sessionToken, user_id: testUserId });
 
     const currentUser = { user_id: testUserId, role: "user" };
@@ -117,7 +120,7 @@ const BulkDeletesTestSuite = (function () {
     if (!res.success || res.data.deletedCount !== 1) {
       throw new Error("User deletion for cascade test failed.");
     }
-    if (db.Session.findById(sessionToken) !== null) {
+    if (db.Session.findOne({ token: sessionToken }) !== null) {
       throw new Error("Cascade session deletion failed.");
     }
 
@@ -130,18 +133,30 @@ const BulkDeletesTestSuite = (function () {
     const token1 = "SES_S1";
     const token2 = "SES_S2";
 
-    try { db.Session.remove(token1); } catch (e) {}
-    try { db.Session.remove(token2); } catch (e) {}
+    const existing1 = db.Session.findOne({ token: token1 });
+    if (existing1) {
+      try { db.Session.remove(existing1.session_id); } catch (e) {}
+    }
+    const existing2 = db.Session.findOne({ token: token2 });
+    if (existing2) {
+      try { db.Session.remove(existing2.session_id); } catch (e) {}
+    }
 
     db.Session.insert({ token: token1, user_id: "USR-MOCK-1" });
     db.Session.insert({ token: token2, user_id: "USR-MOCK-1" });
 
+    const s1 = db.Session.findOne({ token: token1 });
+    const s2 = db.Session.findOne({ token: token2 });
+    if (!s1 || !s2) {
+      throw new Error("Seeded sessions could not be retrieved.");
+    }
+
     // Success path
-    const res = _runAction(DeleteManySessionsAction, { ids: [token1, token2], dryRun: false });
+    const res = _runAction(DeleteManySessionsAction, { ids: [s1.session_id, s2.session_id], dryRun: false });
     if (!res.success || res.data.deletedCount !== 2) {
       throw new Error("Delete many sessions failed: " + JSON.stringify(res.error));
     }
-    if (db.Session.findById(token1) !== null || db.Session.findById(token2) !== null) {
+    if (db.Session.findOne({ token: token1 }) !== null || db.Session.findOne({ token: token2 }) !== null) {
       throw new Error("Sessions were not physically deleted.");
     }
   }

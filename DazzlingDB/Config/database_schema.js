@@ -1025,7 +1025,7 @@ const DATABASE_SCHEMA = {
     "Auth": {
       "tables": {
         "Session": {
-          "primaryKey": "token",
+          "primaryKey": "session_id",
           "columns": {
             "user_id": {
               "type": "foreign_key",
@@ -1043,6 +1043,12 @@ const DATABASE_SCHEMA = {
               "maxLength": 255
             },
             "token": {
+              "type": "string",
+              "unique": true,
+              "required": true,
+              "maxLength": 255
+            },
+            "session_id": {
               "type": "auto",
               "idPrefix": "SES",
               "editable": false,

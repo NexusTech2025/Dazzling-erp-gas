@@ -93,11 +93,28 @@ const DBContext = (function() {
     }
 
     console.log(`[DBContext] Bootstrapping SheetDB for ${DATABASE_SCHEMA.database}...`);
-    const isDev = activeEnv.toLowerCase() === "development";
+    const isDevOrTest = activeEnv.toLowerCase() === "development" || activeEnv.toLowerCase() === "testing";
     const db = SheetDB.init(rootFolderId, DATABASE_SCHEMA, {
-      allowAutoOverride: isDev,
+      allowAutoOverride: isDevOrTest,
       dependencyGraph: typeof DEPENDENCY_GRAPH !== 'undefined' ? DEPENDENCY_GRAPH : null
     });
+
+    // Seed/warm the spreadsheet name-to-ID cache in PropertiesService
+    if (typeof PropertiesService !== 'undefined') {
+      try {
+        const fileIdsMap = {};
+        const files = db._fs.listAll();
+        files.forEach(f => {
+          if (f.name && f.id) {
+            fileIdsMap[f.name] = f.id;
+          }
+        });
+        PropertiesService.getScriptProperties().setProperty('DB_FILE_IDS', JSON.stringify(fileIdsMap));
+        console.log(`[DBContext] Successfully cached ${Object.keys(fileIdsMap).length} category file ID mappings.`);
+      } catch (err) {
+        console.warn(`[DBContext] Warm-caching database file mappings failed: ${err.message}`);
+      }
+    }
 
     // 2. Lock the ValidationRegistry to prevent runtime tampering
     if (typeof SheetDB !== 'undefined' && typeof SheetDB.ValidationRegistry !== 'undefined') {

@@ -52,7 +52,7 @@ const SessionManager = {
 
     // 2. Fallback to Database (Source of Truth)
     const db = DBContext.getInstance();
-    const session = db.Session.findById(token);
+    const session = db.Session.findOne({ token: token });
 
     if (!session) return null;
 
@@ -80,6 +80,9 @@ const SessionManager = {
 
     // 2. Clear Database
     const db = DBContext.getInstance();
-    db.Session.remove(token);
+    const session = db.Session.findOne({ token: token });
+    if (session) {
+      db.Session.remove(session.session_id);
+    }
   }
 };

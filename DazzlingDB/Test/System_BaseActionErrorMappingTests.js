@@ -65,6 +65,34 @@ function runSystemBaseActionErrorMappingTests() {
   );
 
   console.log("\n=========================================");
+  results.Scenario6_1_AuthAuthenticationError = executeScenario_VerifyError(
+    new AuthAuthenticationError("Invalid username or password."),
+    "AUTHENTICATION_FAILURE",
+    "AuthAuthenticationError (Invalid credentials)"
+  );
+
+  console.log("\n=========================================");
+  results.Scenario6_2_AuthAccountLockedError = executeScenario_VerifyError(
+    new AuthAccountLockedError("Account is suspended."),
+    "ACCOUNT_LOCKED",
+    "AuthAccountLockedError (Suspended user)"
+  );
+
+  console.log("\n=========================================");
+  results.Scenario6_3_ActionAuthorizationError = executeScenario_VerifyError(
+    new ActionAuthorizationError("Insufficient action privileges."),
+    "FORBIDDEN_ACCESS",
+    "ActionAuthorizationError (Action execution blocked)"
+  );
+
+  console.log("\n=========================================");
+  results.Scenario6_4_PackageOrchestrationError = executeScenario_VerifyError(
+    new PackageOrchestrationError("Failed to orchestrate package setup."),
+    "PACKAGE_ORCHESTRATION_FAILURE",
+    "PackageOrchestrationError (Orchestration failure)"
+  );
+
+  console.log("\n=========================================");
   results.Scenario7_GenericError = executeScenario_VerifyError(
     new Error("Any random backend crash."),
     "UNHANDLED_SERVER_FAULT",

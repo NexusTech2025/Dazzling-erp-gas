@@ -29,7 +29,7 @@ You are  **Aira** , a senior-level software architect and developer.
 ### **Database Schema Management**
 
 * **Schema Location:** All database table schemas are located under `DazzlingDB/Config/Schema/` (e.g., `DazzlingDB/Config/Schema/Academic/Enrollment.json`). Always read and modify schemas directly from this directory structure when updating or adding new fields.
-* **Compilation:** After modifying any table schema file under `DazzlingDB/Config/Schema/`, run the schema compiler (`node compile_schema.js` from the workspace root) to synchronize and generate the unified `full_schema.json` and runtime `database_schema.js` files.
+* **Compilation:** After modifying any table schema file under `DazzlingDB/Config/Schema/`, compile the schemas and regenerate the unified runtime configuration files (`database_schema.js` and `dependency_graph.js`) by running `npm run compile-graph:prod` within the `dazzlingdb-tools/` directory.
 
 ---
 
@@ -38,6 +38,7 @@ You are  **Aira** , a senior-level software architect and developer.
 * **No Unsolicited Deletions:** Never delete any test file from [DazzlingDB/Test/](e:/NAST/Dazzling/GAS/DazzlingDB/Test/) unless explicitly requested by Moni.
 * **Default Test Exclusion:** Ensure the entire test directory remains excluded inside [DazzlingDB/.claspignore](e:/NAST/Dazzling/GAS/DazzlingDB/.claspignore) by default (using `Test/*`).
 * **Session-Focused Whitelisting:** Only explicitly whitelist (exclude from ignore using `!`) the specific test files currently under active focus or testing in the ongoing session (e.g., `!Test/Finance_LedgerTests.js`).
+* **Testing Environment Mandate:** All tests (unit, integration, API, diagnostic) must run in the `TESTING` environment. Tests must set up sandboxing via `PropertiesService.getScriptProperties().setProperty('ENV', 'TESTING')` and initialize via `DBContext.getInstance().bootstrapRepositories()`. The environment must be safely reverted to `DEVELOPMENT` in a `finally` block after completion.
 
 ---
 
@@ -102,6 +103,12 @@ You must follow this sequence for every task:
 * Keep responses compact but well-structured
 * Optimize for fast iteration and clarity
 
+> [!IMPORTANT]
+> **Environment Separation:**
+> * **SheetDB** runs as an isolated library.
+> * **DazzlingDB** runs as a separate web application environment.
+
+
 ---
 
 ### **Critical Rule**
@@ -142,10 +149,14 @@ You must **never jump directly into coding** without completing unless Moni aske
 
 # Gemini Added Memories
 - **Plan Preservation (Mandatory)**: Never overwrite `implementation_plan.md` unless it has been approved and fully completed, or explicitly rejected. If you need to write a new implementation plan, you must first archive the old plan by moving/copying it into a properly titled separate plan artifact (e.g., `orphaned_courses_cleanup_plan.md`) before writing the new implementation plan. Both plans must be kept intact.
+- **Aira Implementation Plan Draft Pattern ([Aira Plan Draft Pattern.md](e:/NAST/Dazzling/GAS/.gemini/memory/Aira Plan Draft Pattern.md))**: Defines the strict architectural, infrastructure, and domain rules for drafting technical implementation plans and refactoring proposals. This plan pattern contains rules (N1 to N6 and D1 to D6) governing positional signatures, explicit facts vs. assumptions, GAS execution boundaries, performance regression benchmarks, contract-to-seat model separation, polymorphic discriminators, LIFO rollbacks, and mutation manifest/presentation compliance.
 - **SheetDB High-Performance Batch Deletion Strategy ([sheetdb_batch_delete_strategy.md](e:/NAST/Dazzling/GAS/.gemini/memory/sheetdb_batch_delete_strategy.md))**: Explains the optimized in-memory filtering and bulk-overwrite strategy used by deleteMany/updateMany to minimize Apps Script spreadsheet API roundtrips.
 - **SheetDB ORM Core Architectural Reference ([sheetdb_orm_reference.md](e:/NAST/Dazzling/GAS/.gemini/memory/sheetdb_orm_reference.md))**: Detailed guide to the SheetDB ORM architecture, documenting validation pipelines, Active Record CRUD interfaces, and transaction rollbacks.
-- **DazzlingDB & SheetDB Testing Governance Rules ([testing_governance_rules.md](e:/NAST/Dazzling/GAS/.gemini/memory/testing_governance_rules.md))**: Mandates that all unit, integration, and performance tests reside under the `DazzlingDB/Test/` directory and run using the active database singleton.
+- **DazzlingDB & SheetDB Testing Governance Rules ([testing_governance_rules.md](e:/NAST/Dazzling/GAS/.gemini/memory/testing_governance_rules.md))**: Defines the strict rules for writing and executing tests within the DazzlingDB/Test directory, retrieving the active database singleton via DBContext.getInstance(), satisfying column constraints, and ensuring test runner setup/teardown hygiene.
 - **GAS Cross-Realm Date Check Rule**: Always use the native-safe `isDate()` utility from [Utils.js](e:/NAST/Dazzling/GAS/SheetDB/Utils.js) instead of `instanceof Date` when verifying Date objects to bypass Google Apps Script's cross-realm/library prototype scoping boundaries.
 - **Engineering Change Record Governance ([changelog-recorder skill](e:/NAST/Dazzling/GAS/.agents/skills/changelog-recorder/SKILL.md))**: After every significant session — feature, refactor, schema change, bug fix, or API contract update — produce a `CHANGE_RECORD-CHG-{YYYY}-{MM}-{DD}-{NNN}.md` file using the changelog-recorder skill. Records are written to [docs/changelogs/](e:/NAST/Dazzling/GAS/docs/changelogs/). The canonical template lives at [change-record-template.md](e:/NAST/Dazzling/GAS/.agents/skills/changelog-recorder/references/change-record-template.md). The DazzlingDB/SheetDB Impact section (Schema, ORM, API Contract, Registry, Transaction) must be completed whenever any `DazzlingDB/` or `SheetDB/` path is touched.
+- **Testing Environment Isolation Rule**: All test files in `DazzlingDB/Test/` must run within the sandboxed `TESTING` environment. The environment is initialized via `PropertiesService.getScriptProperties().setProperty('ENV', 'TESTING')` and bootstrapped via `DBContext.getInstance().bootstrapRepositories()`. At cleanup, the environment must be reset to `DEVELOPMENT`.
+- **SheetDB Service Architectural & Execution Rules ([sheetdb_service_rules.md](e:/NAST/Dazzling/GAS/.gemini/memory/sheetdb/sheetdb_service_rules.md))**: Defines the strict runtime constraints and implementation rules (including cross-realm date utilities and synthetic primary key assembly limits) to follow when developing Action business logic or writing tests related to `sheetdb` services.
+
 
 

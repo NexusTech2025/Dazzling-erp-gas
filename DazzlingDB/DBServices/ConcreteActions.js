@@ -1162,3 +1162,132 @@ globalThis.CreateRecordAction = CreateRecordAction;
 globalThis.UpdateRecordAction = UpdateRecordAction;
 globalThis.DeleteRecordAction = DeleteRecordAction;
 globalThis.DeleteManyRecordsAction = DeleteManyRecordsAction;
+
+// ==========================================
+// 📊 ADVANCED SHEET OPERATIONS DOMAIN
+// ==========================================
+
+/**
+ * Action Handler to extract data matrices across spreadsheets.
+ * Inherits from BaseAction.
+ */
+class SheetBatchReadAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
+
+  _validate() {
+    this._requireParam("payload");
+  }
+
+  handle(requestContext) {
+    const db = requestContext.db;
+    const payload = requestContext.params.payload;
+    const options = requestContext.params.options || {};
+    const responseKeyType = String(options.responseKey || "ID").toUpperCase(); // "ID" | "NAME"
+
+    const idToResponseKeyMap = {};
+    const inverseCache = responseKeyType === "NAME" ? this._getInverseCacheMap() : {};
+
+    const resolvedPayload = payload.map(item => {
+      const target = item.spreadsheetId;
+      const resolvedId = this._resolveSpreadsheetId(target, db);
+      
+      if (responseKeyType === "NAME") {
+        const isPhysicalId = /^[a-zA-Z0-9-_]{44}$/.test(target);
+        const name = !isPhysicalId ? target : (inverseCache[resolvedId] || resolvedId);
+        idToResponseKeyMap[resolvedId] = name;
+      } else {
+        idToResponseKeyMap[resolvedId] = resolvedId;
+      }
+
+      return {
+        ...item,
+        spreadsheetId: resolvedId
+      };
+    });
+
+    const orchestrator = new SheetDB.MultiStorageCoordinator();
+    const result = orchestrator.fetchDataMatrix(
+      resolvedPayload,
+      options
+    );
+
+    // Remap output keys from physical IDs to response keys
+    const finalData = {};
+    Object.keys(result.data).forEach(resolvedId => {
+      const finalKey = idToResponseKeyMap[resolvedId] || resolvedId;
+      finalData[finalKey] = result.data[resolvedId];
+    });
+
+    return finalData;
+  }
+
+  /**
+   * Resolves a target string (spreadsheet name or physical ID) to a physical Google Sheet ID
+   * @private
+   */
+  _resolveSpreadsheetId(target, db) {
+    // 1. If it's already a valid 44-character physical spreadsheet ID, return it directly
+    const isPhysicalId = /^[a-zA-Z0-9-_]{44}$/.test(target);
+    if (isPhysicalId) return target;
+
+    // 2. Try looking up in the cache mapping (PropertiesService)
+    let cacheMap = {};
+    if (typeof PropertiesService !== 'undefined') {
+      try {
+        const cached = PropertiesService.getScriptProperties().getProperty('DB_FILE_IDS');
+        if (cached) {
+          cacheMap = JSON.parse(cached);
+          if (cacheMap[target]) {
+            return cacheMap[target]; // Cache Hit (O(1))
+          }
+        }
+      } catch (err) {
+        console.warn(`[SheetBatchReadAction] Failed to parse script properties cache: ${err.message}`);
+      }
+    }
+
+    // 3. Cache Miss: Query the Drive-based file system (slow query fallback)
+    console.log(`[SheetBatchReadAction] Cache miss for category file '${target}'. Fallback to FileSystem search...`);
+    const fileMeta = db._fs.findByName(target);
+    if (!fileMeta) {
+      throw new SheetDB.ResourceNotFoundError(`Target category/spreadsheet file '${target}' was not found in the database directory.`);
+    }
+
+    // 4. Update the properties cache payload
+    cacheMap[target] = fileMeta.id;
+    if (typeof PropertiesService !== 'undefined') {
+      try {
+        PropertiesService.getScriptProperties().setProperty('DB_FILE_IDS', JSON.stringify(cacheMap));
+      } catch (err) {
+        console.warn(`[SheetBatchReadAction] Failed to update script properties cache: ${err.message}`);
+      }
+    }
+
+    return fileMeta.id;
+  }
+
+  /**
+   * Builds an inverse cache map linking physical IDs back to category names
+   * @private
+   */
+  _getInverseCacheMap() {
+    if (typeof PropertiesService === 'undefined') return {};
+    try {
+      const cached = PropertiesService.getScriptProperties().getProperty('DB_FILE_IDS');
+      if (!cached) return {};
+      const cacheMap = JSON.parse(cached);
+      const inverseMap = {};
+      Object.keys(cacheMap).forEach(name => {
+        inverseMap[cacheMap[name]] = name;
+      });
+      return inverseMap;
+    } catch (err) {
+      console.warn(`[SheetBatchReadAction] Failed to read inverse cache map: ${err.message}`);
+      return {};
+    }
+  }
+}
+
+globalThis.SheetBatchReadAction = SheetBatchReadAction;

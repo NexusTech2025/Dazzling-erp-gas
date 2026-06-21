@@ -25,15 +25,18 @@ const AuthBridge = {
     }
 
     const salt = AuthCore.generateSalt();
-    const newUser = db.User.insert({
-      user_id: payload.user_id || Utilities.getUuid(),
+    const insertPayload = {
       ...payload,
       password_salt: salt,
       password_hash: AuthCore.hashPassword(payload.password, salt),
       status: "active",
       role: payload.role || "guest",
       failed_attempts: 0
-    });
+    };
+    if (payload.user_id) {
+      insertPayload.user_id = payload.user_id;
+    }
+    const newUser = db.User.insert(insertPayload);
 
     delete newUser.password_hash;
     delete newUser.password_salt;

@@ -10,6 +10,13 @@
         "libraryId": "1ek-F2mutmrsXcSmVY6twMY2kGfUPtJlb-IFKLEN8wo06gpfTP67AKley",
         "developmentMode": true
       }
+    ],
+    "enabledAdvancedServices": [
+      {
+        "userSymbol": "Sheets",
+        "version": "v4",
+        "serviceId": "sheets"
+      }
     ]
   }
 }

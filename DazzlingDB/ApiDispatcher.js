@@ -83,6 +83,16 @@ const ApiDispatcher = (function () {
   }
 
   /**
+   * Internal: Returns the map of advanced sheet action keys to classes.
+   * Scoped for batch spreadsheet operations.
+   */
+  function _getAdvancedSheetRegistry() {
+    return {
+      "sheet_batch_read": SheetBatchReadAction
+    };
+  }
+
+  /**
    * Main entry point for processing an event.
    * @param {Object} e - GAS event object from doGet or doPost.
    */
@@ -98,12 +108,22 @@ const ApiDispatcher = (function () {
         throw new Error("No 'action' parameter provided.");
       }
 
-      // 2. Determine Registry (Admin vs Standard)
-      const isAdminAction = actionKey.startsWith("admin_");
-      const registry = isAdminAction ? _getAdminRegistry() : _getStandardRegistry();
+      // 2. Determine Registry (Admin vs Advanced vs Standard)
+      let registry;
+      let registryName = "Standard";
+      
+      if (actionKey.startsWith("admin_")) {
+        registry = _getAdminRegistry();
+        registryName = "Admin";
+      } else if (actionKey.startsWith("sheet_")) {
+        registry = _getAdvancedSheetRegistry();
+        registryName = "AdvancedSheet";
+      } else {
+        registry = _getStandardRegistry();
+      }
 
       if (!registry[actionKey]) {
-        throw new Error(`Endpoint '${actionKey}' is not registered in ${isAdminAction ? 'Admin' : 'Standard'} registry.`);
+        throw new Error(`Endpoint '${actionKey}' is not registered in ${registryName} registry.`);
       }
 
       // 3. Resolve User Context

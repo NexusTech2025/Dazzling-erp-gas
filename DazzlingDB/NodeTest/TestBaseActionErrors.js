@@ -118,6 +118,22 @@ try {
   const errForbidden = new ForbiddenError("Insufficient roles.");
   runTest(errForbidden, 'FORBIDDEN_ACCESS', 'ForbiddenError (Authorization failure)');
 
+  // Test Case 6.1: AuthAuthenticationError
+  const errAuthAuth = new AuthAuthenticationError("Invalid username or password.");
+  runTest(errAuthAuth, 'AUTHENTICATION_FAILURE', 'AuthAuthenticationError (Invalid credentials)');
+
+  // Test Case 6.2: AuthAccountLockedError
+  const errAuthLocked = new AuthAccountLockedError("Account is suspended.");
+  runTest(errAuthLocked, 'ACCOUNT_LOCKED', 'AuthAccountLockedError (Suspended user)');
+
+  // Test Case 6.3: ActionAuthorizationError
+  const errActionAuth = new ActionAuthorizationError("Insufficient action privileges.");
+  runTest(errActionAuth, 'FORBIDDEN_ACCESS', 'ActionAuthorizationError (Action execution blocked)');
+
+  // Test Case 6.4: PackageOrchestrationError
+  const errPkgOrch = new PackageOrchestrationError("Failed to orchestrate package setup.");
+  runTest(errPkgOrch, 'PACKAGE_ORCHESTRATION_FAILURE', 'PackageOrchestrationError (Complex orchestration error)');
+
   // Test Case 7: Unhandled Generic Error
   const errGeneric = new Error("Any random backend crash.");
   runTest(errGeneric, 'UNHANDLED_SERVER_FAULT', 'Generic Error (Fallback behavior)');

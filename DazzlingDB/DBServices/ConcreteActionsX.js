@@ -34,7 +34,7 @@ class DeleteManyUsersAction extends DeleteManyRecordsAction {
       const allSessions = this._db.Session.all();
       allSessions.forEach(sess => {
         if (ids.includes(sess.user_id)) {
-          this._db.Session.remove(sess.token);
+          this._db.Session.remove(sess.session_id);
         }
       });
     }
