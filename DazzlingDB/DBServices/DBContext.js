@@ -10,53 +10,63 @@
 const DBContext = (function() {
   let instance = null;
 
+  /**
+   * Idempotently resolves and provisions the testing sandbox Drive folder.
+   * @param {Object} scriptProperties - Google Apps Script ScriptProperties instance.
+   * @returns {string} Target testing folder ID.
+   * @private
+   */
+  function resolveTestingSandboxFolder(scriptProperties) {
+    let testFolderId = scriptProperties.getProperty('TEST_FOLDER_ID');
+    
+    // If cache marker is empty, run an idempotent scan to provision the sandbox directory
+    if (!testFolderId) {
+      let baseRootId = scriptProperties.getProperty('BASE_ROOT_FOLDER_ID');
+      if (!baseRootId) {
+        baseRootId = scriptProperties.getProperty('DEV_DATABASE_ROOT_FOLDER_ID');
+        if (baseRootId) {
+          scriptProperties.setProperty('BASE_ROOT_FOLDER_ID', baseRootId);
+        } else {
+          throw new Error("Framework Error: 'BASE_ROOT_FOLDER_ID' property must be set before initializing testing sandbox.");
+        }
+      }
+      
+      const rootFolder = DriveApp.getFolderById(baseRootId);
+      const searchSandbox = rootFolder.getFoldersByName('DazzlingDB_Testing_Sandbox');
+      
+      let sandboxFolder;
+      if (searchSandbox.hasNext()) {
+        sandboxFolder = searchSandbox.next();
+      } else {
+        sandboxFolder = rootFolder.createFolder('DazzlingDB_Testing_Sandbox');
+        console.log(`[DBContext] Idempotent Provisioning: Created isolated sandbox folder: ${sandboxFolder.getName()}`);
+      }
+      
+      testFolderId = sandboxFolder.getId();
+      scriptProperties.setProperty('TEST_FOLDER_ID', testFolderId);
+    }
+    
+    return testFolderId;
+  }
+
   function getTargetFolderId() {
     if (typeof PropertiesService === 'undefined') {
       return typeof DATABASE_ROOT_FOLDER_ID !== 'undefined' ? DATABASE_ROOT_FOLDER_ID : '';
     }
     const scriptProperties = PropertiesService.getScriptProperties();
-    const env = scriptProperties.getProperty('ENV') || 'DEVELOPMENT';
+    const env = resolveEnvironmentType(scriptProperties.getProperty('ENV'));
     
     // 1. Instantly return standard configured development environments
-    if (env === 'PRODUCTION') {
+    if (env === Environment.PRODUCTION) {
       return scriptProperties.getProperty('PROD_FOLDER_ID') || scriptProperties.getProperty('PROD_DATABASE_ROOT_FOLDER_ID') || DATABASE_ROOT_FOLDER_ID;
     }
-    if (env === 'DEVELOPMENT') {
+    if (env === Environment.DEVELOPMENT) {
       return scriptProperties.getProperty('DEV_FOLDER_ID') || scriptProperties.getProperty('DEV_DATABASE_ROOT_FOLDER_ID') || DATABASE_ROOT_FOLDER_ID;
     }
     
     // 2. ISOLATED TESTING SANDBOX ENVIRONMENT RESOLUTION
-    if (env === 'TESTING') {
-      let testFolderId = scriptProperties.getProperty('TEST_FOLDER_ID');
-      
-      // If cache marker is empty, run an idempotent scan to provision the sandbox directory
-      if (!testFolderId) {
-        let baseRootId = scriptProperties.getProperty('BASE_ROOT_FOLDER_ID');
-        if (!baseRootId) {
-          baseRootId = scriptProperties.getProperty('DEV_DATABASE_ROOT_FOLDER_ID');
-          if (baseRootId) {
-            scriptProperties.setProperty('BASE_ROOT_FOLDER_ID', baseRootId);
-          } else {
-            throw new Error("Framework Error: 'BASE_ROOT_FOLDER_ID' property must be set before initializing testing sandbox.");
-          }
-        }
-        
-        const rootFolder = DriveApp.getFolderById(baseRootId);
-        const searchSandbox = rootFolder.getFoldersByName('DazzlingDB_Testing_Sandbox');
-        
-        let sandboxFolder;
-        if (searchSandbox.hasNext()) {
-          sandboxFolder = searchSandbox.next();
-        } else {
-          sandboxFolder = rootFolder.createFolder('DazzlingDB_Testing_Sandbox');
-          console.log(`[DBContext] Idempotent Provisioning: Created isolated sandbox folder: ${sandboxFolder.getName()}`);
-        }
-        
-        testFolderId = sandboxFolder.getId();
-        scriptProperties.setProperty('TEST_FOLDER_ID', testFolderId);
-      }
-      
-      return testFolderId;
+    if (env === Environment.TESTING) {
+      return resolveTestingSandboxFolder(scriptProperties);
     }
     
     throw new Error(`Environment Resolution Exception: Unrecognized system execution context [${env}]`);
@@ -65,20 +75,27 @@ const DBContext = (function() {
   function _init() {
     const rootFolderId = getTargetFolderId();
     const activeEnv = (typeof PropertiesService !== 'undefined')
-      ? (PropertiesService.getScriptProperties().getProperty('ENV') || 'DEVELOPMENT')
-      : (typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : 'development');
+      ? resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV'))
+      : (typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : Environment.DEVELOPMENT);
     
     // DATABASE_SCHEMA is assumed to be globally available from Config.js
     if (typeof DATABASE_SCHEMA === 'undefined') {
       throw new Error("[DBContext] Fatal: DATABASE_SCHEMA not found. Ensure Config.js is loaded.");
     }
 
-    console.log(`[DBContext] RESOLVED ENVIRONMENT: '${activeEnv.toUpperCase()}'`);
+    console.log(`[DBContext] RESOLVED ENVIRONMENT: '${activeEnv}'`);
     console.log(`[DBContext] TARGET ROOT FOLDER ID: '${rootFolderId}'`);
 
     // 1. Run registrations prior to bootstrapping SheetDB
     if (typeof registerDatabaseValidators === 'function') {
       try {
+        if (typeof SheetDB !== 'undefined' && typeof SheetDB.ValidationRegistry !== 'undefined' && typeof SheetDB.ValidationRegistry.unlock === 'function') {
+          try {
+            SheetDB.ValidationRegistry.unlock();
+          } catch (unlockErr) {
+            // Guarded unlock bypass
+          }
+        }
         registerDatabaseValidators();
       } catch (e) {
         console.log(`[DBContext] Custom validators already registered or locked: ${e.message}`);
@@ -93,7 +110,7 @@ const DBContext = (function() {
     }
 
     console.log(`[DBContext] Bootstrapping SheetDB for ${DATABASE_SCHEMA.database}...`);
-    const isDevOrTest = activeEnv.toLowerCase() === "development" || activeEnv.toLowerCase() === "testing";
+    const isDevOrTest = activeEnv === Environment.DEVELOPMENT || activeEnv === Environment.TESTING;
     const db = SheetDB.init(rootFolderId, DATABASE_SCHEMA, {
       allowAutoOverride: isDevOrTest,
       dependencyGraph: typeof DEPENDENCY_GRAPH !== 'undefined' ? DEPENDENCY_GRAPH : null

@@ -167,20 +167,20 @@ class DeleteStudentAction extends BaseAction {
       throw new SheetDB.EntityNotFoundError("Student", student_id, "Academic");
     }
 
-    if (isDryRun) {
-      this._db.Student.enforceDeleteConstraints(student_id);
-    } else {
-      try {
+    try {
+      if (isDryRun) {
+        this._db.Student.enforceDeleteConstraints(student_id);
+      } else {
         this._db.Student.remove(student_id);
         if (requestContext.mutationManifest) {
           requestContext.mutationManifest.push("Student");
         }
-      } catch (e) {
-        if (e instanceof SheetDB.IntegrityError || e.name === "IntegrityError") {
-          throw new ActionValidationError(e.message);
-        }
-        throw e;
       }
+    } catch (e) {
+      if (e instanceof SheetDB.IntegrityError || e.name === "IntegrityError") {
+        throw new ActionValidationError(e.message, { details: e.context });
+      }
+      throw e;
     }
 
     return {
@@ -1208,7 +1208,7 @@ class SheetBatchReadAction extends BaseAction {
     });
 
     const orchestrator = new SheetDB.MultiStorageCoordinator();
-    const result = orchestrator.fetchDataMatrix(
+    const result = orchestrator.fetchDataRanges(
       resolvedPayload,
       options
     );
@@ -1291,3 +1291,83 @@ class SheetBatchReadAction extends BaseAction {
 }
 
 globalThis.SheetBatchReadAction = SheetBatchReadAction;
+
+/**
+ * Finance Domain: Fetch all transactional accounting data via Advanced Sheet REST API (MVP Phase)
+ */
+class GetAccountingDataAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
+
+  handle(requestContext) {
+    const db = requestContext.db;
+    
+    // Resolve the "Finance" spreadsheet workbook file ID
+    const financeSpreadsheetId = this._resolveSpreadsheetId("Finance", db);
+
+    const manifest = [
+      {
+        spreadsheetId: financeSpreadsheetId,
+        sheets: ["StudentFeeAccount", "Installment", "Payment", "FeeAdjustment"]
+      }
+    ];
+
+    const orchestrator = new SheetDB.MultiStorageCoordinator();
+    const result = orchestrator.fetchDataRanges(manifest, { driverType: "ADVANCED" });
+
+    // Extract raw sheet matrix results mapping
+    const financeData = result.data[financeSpreadsheetId] || {};
+
+    return {
+      studentFeeAccounts: financeData.StudentFeeAccount || [],
+      installments: financeData.Installment || [],
+      payments: financeData.Payment || [],
+      feeAdjustments: financeData.FeeAdjustment || []
+    };
+  }
+
+  /**
+   * Helper to resolve category name to spreadsheet file ID
+   * @private
+   */
+  _resolveSpreadsheetId(target, db) {
+    const isPhysicalId = /^[a-zA-Z0-9-_]{44}$/.test(target);
+    if (isPhysicalId) return target;
+
+    let cacheMap = {};
+    if (typeof PropertiesService !== 'undefined') {
+      try {
+        const cached = PropertiesService.getScriptProperties().getProperty('DB_FILE_IDS');
+        if (cached) {
+          cacheMap = JSON.parse(cached);
+          if (cacheMap[target]) {
+            return cacheMap[target];
+          }
+        }
+      } catch (err) {
+        console.warn(`[GetAccountingDataAction] Failed to parse script properties cache: ${err.message}`);
+      }
+    }
+
+    console.log(`[GetAccountingDataAction] Cache miss for category file '${target}'. Fallback to FileSystem search...`);
+    const fileMeta = db._fs.findByName(target);
+    if (!fileMeta) {
+      throw new SheetDB.ResourceNotFoundError(`Target category/spreadsheet file '${target}' was not found in the database directory.`);
+    }
+
+    cacheMap[target] = fileMeta.id;
+    if (typeof PropertiesService !== 'undefined') {
+      try {
+        PropertiesService.getScriptProperties().setProperty('DB_FILE_IDS', JSON.stringify(cacheMap));
+      } catch (err) {
+        console.warn(`[GetAccountingDataAction] Failed to update script properties cache: ${err.message}`);
+      }
+    }
+
+    return fileMeta.id;
+  }
+}
+
+globalThis.GetAccountingDataAction = GetAccountingDataAction;
+

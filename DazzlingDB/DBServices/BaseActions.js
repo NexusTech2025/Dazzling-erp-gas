@@ -126,7 +126,7 @@ class BaseAction {
     requestContext.mutationManifest = [];
     
     const correlationId = requestContext.headers?.['X-Correlation-ID'] || Utilities.getUuid();
-    const environment = PropertiesService.getScriptProperties().getProperty('ENV') || 'production';
+    const environment = resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV'));
 
     // Bind parameters to properties for helper methods compatibility
     this._params = requestContext.params;
@@ -224,7 +224,7 @@ class BaseAction {
       "meta": { "environment": environment, "version": SYSTEM_VERSION, "timestamp": new Date().toISOString(), "correlation_id": correlationId }
     };
 
-    if (environment === 'development') {
+    if (environment === Environment.DEVELOPMENT) {
       failureEnvelope.meta.diagnostics = { stack_trace: error.stack ? error.stack.split('\n') : ["No trace captured."] };
     }
 

@@ -7,8 +7,8 @@
 
 const BatchDeletionTestSuite = (function () {
   function runAll() {
-    const activeEnv = typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : 'development';
-    if (activeEnv === 'production') {
+    const activeEnv = typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : Environment.DEVELOPMENT;
+    if (resolveEnvironmentType(activeEnv) === Environment.PRODUCTION) {
       throw new Error("❌ Safety Guard: Test suite cannot be executed in the PRODUCTION environment.");
     }
 

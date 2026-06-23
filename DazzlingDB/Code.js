@@ -92,12 +92,42 @@ function registerPolymorphicMappings() {
 }
 
 /**
+ * Configures the active environment and bootstraps the database.
+ * 
+ * @param {Object} [options={}] - Configuration overrides.
+ * @param {string} [options.env] - Target environment ('PRODUCTION', 'DEVELOPMENT', 'TESTING').
+ * @param {string} [options.devFolderId] - Developer folder override.
+ * @param {string} [options.prodFolderId] - Production folder override.
+ * @returns {Object} Provisioning result.
+ */
+function setupDB(options = {}) {
+  console.log(`[App] setupDB invoked with options: ${JSON.stringify(options)}`);
+  
+  // 1. Persist/cache options in local variables and script properties
+  configureScriptProperties(options);
+
+  // 2. Trigger standard bootstrapping
+  return bootstrapDatabase();
+}
+
+// Bind to global scope for GAS runtime
+globalThis.setupDB = setupDB;
+
+/**
  * Bootstraps the database and provisions infrastructure.
  * Run this once to setup the physical spreadsheets.
  */
 function bootstrapDatabase() {
   // Execute the validation registration hook prior to boot
-  registerDatabaseValidators();
+  try {
+    registerDatabaseValidators();
+  } catch (e) {
+    if (e.message && e.message.includes("locked")) {
+      console.warn("[App] Validation registry is already locked. Skipping database validators registration.");
+    } else {
+      throw e;
+    }
+  }
 
   const db = DBContext.getInstance();
 

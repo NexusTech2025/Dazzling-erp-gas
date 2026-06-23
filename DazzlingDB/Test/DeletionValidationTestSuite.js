@@ -6,8 +6,8 @@
 
 const DeletionValidationTestSuite = (function () {
   function runAll() {
-    const activeEnv = typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : 'development';
-    if (activeEnv === 'production') {
+    const activeEnv = typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : Environment.DEVELOPMENT;
+    if (resolveEnvironmentType(activeEnv) === Environment.PRODUCTION) {
       throw new Error("❌ Safety Guard: Test suite cannot be executed in the PRODUCTION environment.");
     }
 
@@ -91,7 +91,14 @@ const DeletionValidationTestSuite = (function () {
       if (!(e instanceof SheetDB.IntegrityError) && e.name !== "IntegrityError") {
         throw new Error(`Expected IntegrityError, but caught: ${e.name} -> ${e.message}`);
       }
-      console.log(`   Expected Exception Caught: ${e.message}`);
+      if (!e.context || !Array.isArray(e.context.violations) || e.context.violations.length === 0) {
+        throw new Error(`Expected e.context.violations to contain violation entries, got context: ${JSON.stringify(e.context)}`);
+      }
+      const v = e.context.violations[0];
+      if (v.table !== "ChildTable" || v.foreignKey !== "parent_id" || !v.ids.includes("child-1")) {
+        throw new Error(`Unexpected violation detail structure: ${JSON.stringify(v)}`);
+      }
+      console.log(`   Expected Exception and Violation Details Caught: ${e.message}`);
     }
   }
 

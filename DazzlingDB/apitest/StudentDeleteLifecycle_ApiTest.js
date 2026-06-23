@@ -13,8 +13,12 @@ const StudentDeleteLifecycle_ApiTest = (function () {
     console.log("\n🧪 STARTING STUDENT DELETE LIFECYCLE API TEST SUITE 🧪");
 
     const initialEnv = typeof PropertiesService !== "undefined"
-      ? PropertiesService.getScriptProperties().getProperty("ENV") || "DEVELOPMENT"
-      : "DEVELOPMENT";
+      ? resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty("ENV"))
+      : Environment.DEVELOPMENT;
+
+    if (initialEnv === Environment.PRODUCTION) {
+      throw new Error("❌ Safety Guard: Test suite cannot be executed in the PRODUCTION environment.");
+    }
 
     // Dynamic credentials suffix to prevent run-to-run collisions
     const suffix = Math.random().toString(36).substring(7).toUpperCase();
@@ -51,7 +55,7 @@ const StudentDeleteLifecycle_ApiTest = (function () {
       runScenario("Phase 0: Sandbox Environment Setup", () => {
         logger.phase("0: Initialize TESTING Environment");
         if (typeof PropertiesService !== "undefined") {
-          PropertiesService.getScriptProperties().setProperty("ENV", "TESTING");
+          PropertiesService.getScriptProperties().setProperty("ENV", Environment.TESTING);
         }
         DBContext.getInstance().bootstrapRepositories();
         logger.success("Environment set to TESTING and repositories bootstrapped.");

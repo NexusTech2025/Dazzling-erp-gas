@@ -14,10 +14,10 @@ const TestHelper = {
     
     // Safety Boundary Interceptor: Prevent data destruction on active development files
     const env = (typeof PropertiesService !== 'undefined')
-      ? PropertiesService.getScriptProperties().getProperty('ENV')
-      : 'DEVELOPMENT';
+      ? resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV'))
+      : Environment.DEVELOPMENT;
       
-    if (env !== 'TESTING') {
+    if (env !== Environment.TESTING) {
       throw new Error(`CRITICAL SECURITY BLOCK: Truncation commands are exclusively locked to TESTING mode. Current ENV: [${env}]`);
     }
 

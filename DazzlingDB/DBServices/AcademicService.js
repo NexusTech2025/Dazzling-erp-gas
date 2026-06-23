@@ -365,9 +365,18 @@ const AcademicService = {
     if (!existingPackage) throw new SheetDB.EntityNotFoundError("Package", packageId, "Academic");
 
     // 1. Referential Integrity Check (RESTRICT)
-    const hasEnrollments = db.Enrollment.exists({ enrollment_type: "package", item_id: packageId });
-    if (hasEnrollments) {
-      throw new SheetDB.IntegrityError(`Cannot delete Package '${packageId}' because it has active student enrollments.`);
+    const enrollments = db.Enrollment.where({ enrollment_type: "package", item_id: packageId });
+    if (enrollments.length > 0) {
+      throw new SheetDB.IntegrityError(`Cannot delete Package '${packageId}' because it has active student enrollments.`, {
+        parentTable: "Package",
+        parentId: packageId,
+        violations: [{
+          table: "Enrollment",
+          foreignKey: "item_id",
+          ids: enrollments.map(e => e.enrollment_id),
+          policy: "protect"
+        }]
+      });
     }
 
     const tx = new TransactionTracker();

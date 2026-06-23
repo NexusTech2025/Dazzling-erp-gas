@@ -59,7 +59,7 @@ function executePolymorphicDriverBenchmark() {
   console.log("================================────────────────────────");
   console.log("EXECUTION RUN: Verifying Advanced REST Single-Call Driver...");
   try {
-    const resAdvanced = orchestrator.fetchDataMatrix(queryManifest, { driverType: "ADVANCED" });
+    const resAdvanced = orchestrator.fetchDataRanges(queryManifest, { driverType: "ADVANCED" });
     console.log(`[PASS] REST Execution Complete.`);
     console.log(`- Strategy Executed : ${resAdvanced.meta.strategyExecuted}`);
     console.log(`- Execution Time    : ${resAdvanced.meta.executionTimeMs}ms`);
@@ -80,7 +80,7 @@ function executePolymorphicDriverBenchmark() {
   console.log("--------------------------------------------------------");
   console.log("EXECUTION RUN: Verifying Standard SpreadsheetApp Fallback Driver...");
   try {
-    const resStandard = orchestrator.fetchDataMatrix(queryManifest, { driverType: "STANDARD" });
+    const resStandard = orchestrator.fetchDataRanges(queryManifest, { driverType: "STANDARD" });
     console.log(`[PASS] Standard Execution Complete.`);
     console.log(`- Strategy Executed : ${resStandard.meta.strategyExecuted}`);
     console.log(`- Execution Time    : ${resStandard.meta.executionTimeMs}ms`);
@@ -100,7 +100,7 @@ function executePolymorphicDriverBenchmark() {
     const invalidManifest = [
       { spreadsheetId: "INVALID_SPREADSHEET_ID_99999" }
     ];
-    orchestrator.fetchDataMatrix(invalidManifest);
+    orchestrator.fetchDataRanges(invalidManifest);
     console.error("[FAIL] Expected ResourceNotFoundError but execution completed without throwing.");
   } catch (err) {
     console.log(`[PASS] Interceptor caught invalid ID error correctly:`);

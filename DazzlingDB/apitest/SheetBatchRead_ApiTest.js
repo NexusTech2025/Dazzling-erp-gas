@@ -12,12 +12,15 @@ const SheetBatchRead_ApiTest = (function () {
 
     console.log("\n🧪 STARTING SHEET BATCH READ API TEST 🧪");
 
-    const initialEnv = PropertiesService.getScriptProperties().getProperty('ENV') || 'DEVELOPMENT';
+    const initialEnv = resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV'));
+    if (initialEnv === Environment.PRODUCTION) {
+      throw new Error("❌ Safety Guard: Test suite cannot be executed in the PRODUCTION environment.");
+    }
     const db = DBContext.getInstance();
 
     try {
       // Standard testing setup and bootstrapping under TESTING sandbox env
-      PropertiesService.getScriptProperties().setProperty('ENV', 'TESTING');
+      PropertiesService.getScriptProperties().setProperty('ENV', Environment.TESTING);
       db.bootstrapRepositories();
 
       // Dynamically resolve target spreadsheet ID using DB FileSystem

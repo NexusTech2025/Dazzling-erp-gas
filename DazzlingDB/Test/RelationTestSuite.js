@@ -11,8 +11,8 @@ const RelationTestSuite = (function () {
 
   function runAll_RelationalTest() {
     // Safety guard to prevent running on production
-    const activeEnv = typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : 'development';
-    if (activeEnv === 'production') {
+    const activeEnv = typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : Environment.DEVELOPMENT;
+    if (resolveEnvironmentType(activeEnv) === Environment.PRODUCTION) {
       throw new Error("❌ Safety Guard: Relational tests cannot be executed in the PRODUCTION environment.");
     }
 

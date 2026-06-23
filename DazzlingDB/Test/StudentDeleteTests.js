@@ -6,16 +6,20 @@
  */
 
 function runStudentDeleteTests() {
-  const activeEnv = typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : 'development';
-  if (activeEnv === 'production') {
+  const initialEnv = resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV'));
+  if (initialEnv === Environment.PRODUCTION) {
     throw new Error("❌ Safety Guard: Test suite cannot be executed in the PRODUCTION environment.");
   }
 
   console.log("🚀 Starting Student Deletion Protection Integration Tests...");
-  const db = DBContext.getInstance();
   const results = {};
   const timings = {};
   const t0 = Date.now();
+
+  // Set testing context sandbox environment
+  PropertiesService.getScriptProperties().setProperty('ENV', Environment.TESTING);
+  DBContext.getInstance().bootstrapRepositories();
+  const db = DBContext.getInstance();
 
   const salt = Math.random().toString(36).substring(2, 9).toUpperCase();
   let studentId = null;
@@ -27,6 +31,9 @@ function runStudentDeleteTests() {
   let installmentIds = [];
   let paymentIds = [];
   let educationIds = [];
+  let testCourseId = null;
+  let testBatchId = null;
+  let testFeePlanId = null;
 
   // Snapshots for data integrity check
   let studentSnapshot = null;
@@ -44,6 +51,37 @@ function runStudentDeleteTests() {
     console.log("   ⚙️ Step 1: Bootstrapping mock curriculum...");
     let tStart = Date.now();
     const curriculum = TestMockData.setupCurriculum(db);
+
+    // Create unique course, batch, and FeePlan for this test run to ensure total database isolation
+    const course = db.Course.insert({
+      name: "TDD Test Subject " + salt,
+      base_fee: 10000,
+      segment_id: curriculum.courseTypeId,
+      language_medium: "English",
+      status: "active"
+    });
+    testCourseId = course.course_id;
+
+    const batch = db.Batch.insert({
+      batch_name: "TDD Test Batch " + salt,
+      course_id: testCourseId,
+      capacity: 30,
+      batch_type: "Academy",
+      status: "active"
+    });
+    testBatchId = batch.batch_id;
+
+    testFeePlanId = "FPL-" + testCourseId + "-DEFAULT";
+    db.FeePlan.insert({
+      fee_plan_id: testFeePlanId,
+      entity_id: testCourseId,
+      entity_type: "course",
+      plan_name: "TDD Default Fee Plan " + salt,
+      total_fee: 10000,
+      discount_allowed: true,
+      installment_allowed: true
+    });
+
     timings["1. Curriculum Bootstrap"] = Date.now() - tStart;
 
     // 2. Build full-fidelity registration payload matching the payload specification
@@ -81,13 +119,13 @@ function runStudentDeleteTests() {
       enrollments: [
         {
           enrollment_type: "course",
-          item_id: curriculum.physicsId,
+          item_id: testCourseId,
           fee: 10000,
           roll_number: 2001,
           enrollment_date: "2026-06-01",
           status: "active",
           academic_status: "active",
-          batch_id: curriculum.batchPhyId
+          batch_id: testBatchId
         }
       ],
       feeAccount: {
@@ -104,7 +142,7 @@ function runStudentDeleteTests() {
         status: "active",
         remarks: "TDD Prod Fee Account",
         created_by: "tdd_tester",
-        fee_plan_id: "FPL-" + curriculum.physicsId + "-DEFAULT",
+        fee_plan_id: testFeePlanId,
         installments: [
           {
             installment_number: 1,
@@ -137,16 +175,16 @@ function runStudentDeleteTests() {
 
     console.log("   ⚙️ Step 2: Fully registering mock student via RegisterStudentAction...");
     tStart = Date.now();
-    const regAction = new RegisterStudentAction({
+    const regContext = {
       db: db,
       user: { role: "admin", username: "admin_test", isValid: true },
       params: {
         token: "MOCK_TOKEN",
         payload: regPayload
       }
-    });
-
-    const regResponse = regAction.run();
+    };
+    const regAction = new RegisterStudentAction();
+    const regResponse = regAction.run(regContext);
     if (!regResponse.success) {
       throw new Error("Failed to register student: " + regResponse.error.message);
     }
@@ -208,16 +246,16 @@ function runStudentDeleteTests() {
     // 4. Try to run deletion action (dryRun: false)
     console.log("   ⚙️ Step 4: Attempting to delete Student (dryRun = false) via DeleteStudentAction...");
     tStart = Date.now();
-    const deleteAction = new DeleteStudentAction({
+    const deleteContext = {
       db: db,
       user: { role: "admin", username: "admin_test", isValid: true },
       params: {
         token: "MOCK_TOKEN",
         payload: { student_id: studentId, dryRun: false }
       }
-    });
-
-    const deleteResponse = deleteAction.run();
+    };
+    const deleteAction = new DeleteStudentAction();
+    const deleteResponse = deleteAction.run(deleteContext);
     timings["4. Execute DeleteStudentAction"] = Date.now() - tStart;
 
     // Assert that deletion failed
@@ -230,6 +268,23 @@ function runStudentDeleteTests() {
       throw new Error("❌ Error Message Failure: Expected a protection block error message, but got: " + deleteResponse.error.message);
     }
     console.log(`   ✅ Caught expected deletion block error: "${deleteResponse.error.message}"`);
+
+    // Verify rich referential constraint violations are aggregated correctly
+    const errDetails = deleteResponse.error.details;
+    if (!errDetails) {
+      throw new Error("❌ Violation Assertion Failure: deleteResponse.error.details is missing.");
+    }
+    if (errDetails.parentTable !== "Student" || errDetails.parentId !== studentId) {
+      throw new Error(`❌ Violation Details Failure: Incorrect parent details: ${JSON.stringify(errDetails)}`);
+    }
+    if (!Array.isArray(errDetails.violations) || errDetails.violations.length === 0) {
+      throw new Error("❌ Violation Array Failure: Expected context.violations to be populated, but it was empty.");
+    }
+    const hasPaymentViolation = errDetails.violations.some(v => v.table === "Payment" && v.policy === "protect");
+    if (!hasPaymentViolation) {
+      throw new Error(`❌ Violation Verification Failure: Expected protect violation from 'Payment' table. Details: ${JSON.stringify(errDetails.violations)}`);
+    }
+    console.log(`   ✅ Verified rich constraint violations successfully: ${JSON.stringify(errDetails.violations)}`);
 
     // 5. Verify database-level data integrity (ensure NO data was modified, mutated or partially deleted)
     console.log("   ⚙️ Step 5: Performing database-level field-by-field data integrity validation...");
@@ -351,6 +406,15 @@ function runStudentDeleteTests() {
       if (studentId) {
         try { if (db.Student.findById(studentId)) db.Student.remove(studentId); } catch (e) {}
       }
+      if (testFeePlanId) {
+        try { if (db.FeePlan.findById(testFeePlanId)) db.FeePlan.remove(testFeePlanId); } catch (e) {}
+      }
+      if (testBatchId) {
+        try { if (db.Batch.findById(testBatchId)) db.Batch.remove(testBatchId); } catch (e) {}
+      }
+      if (testCourseId) {
+        try { if (db.Course.findById(testCourseId)) db.Course.remove(testCourseId); } catch (e) {}
+      }
       console.log("      Teardown cleanup completed successfully.");
     } catch (cleanupErr) {
       console.warn("      Cleanup warning during teardown:", cleanupErr.message);
@@ -368,6 +432,10 @@ function runStudentDeleteTests() {
     console.log("--------------------------------------------------------");
     console.log(`- Total Execution Time                         : ${String(totalTime).padStart(5)} ms`);
     console.log("========================================================\n");
+
+    // Restore environment state
+    PropertiesService.getScriptProperties().setProperty('ENV', initialEnv);
+    console.log(`   [INFO] Restored ENV back to '${initialEnv}'`);
   }
 
   console.log("📊 FINAL TEST RESULTS:\n", JSON.stringify(results, null, 2));

@@ -4,6 +4,34 @@
  */
 
 /**
+ * Global Environment Enum
+ * @enum {string}
+ */
+const Environment = Object.freeze({
+  PRODUCTION: 'PRODUCTION',
+  DEVELOPMENT: 'DEVELOPMENT',
+  TESTING: 'TESTING'
+});
+
+/**
+ * Standardized safe resolver for environment type strings.
+ * @param {string} rawString - Raw property string from script properties or defaults.
+ * @returns {string} One of the Environment enum values.
+ */
+function resolveEnvironmentType(rawString) {
+  if (!rawString) return Environment.DEVELOPMENT;
+  const normalized = String(rawString).trim().toUpperCase();
+  return Environment[normalized] || Environment.DEVELOPMENT;
+}
+
+// Bind to global scope for cross-file accessibility in GAS
+globalThis.Environment = Environment;
+globalThis.resolveEnvironmentType = resolveEnvironmentType;
+
+/** @type {string|null} */
+let LOCAL_OVERRIDE = null;
+
+/**
  * Resolves the database environment configuration.
  * Combines in-code defaults (Option A) with runtime script property caching (Option B).
  * Ensures zero-touch provisioning and hot-swappable environment control.
@@ -13,31 +41,39 @@
 function resolveDatabaseEnvironment() {
   // Option A: Hardcoded Defaults
   const DEFAULTS = {
-    ENV: "development",
+    ENV: Environment.PRODUCTION,
     DEV_DATABASE_ROOT_FOLDER_ID: "1eyTm-n2AUvcVS_Ipus7ApC4b0sCl8Q8I", // Developer Sandbox folder
     PROD_DATABASE_ROOT_FOLDER_ID: "1LzSkVK4kYaGtv-nQX5y69TtuWtjQCWM3"   // Production Live folder
   };
 
+  const DEFAULT_FOLDER_REGISTRY = {
+    [Environment.PRODUCTION]: DEFAULTS.PROD_DATABASE_ROOT_FOLDER_ID,
+    [Environment.DEVELOPMENT]: DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID,
+    [Environment.TESTING]: DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID
+  };
+
   // Safe fallback if running in local compilers / CLI testing where GAS API is unavailable
   if (typeof PropertiesService === 'undefined') {
-    console.log("[Config] Local execution detected. Using in-code defaults (ENV: 'development').");
+    const localEnv = resolveEnvironmentType(LOCAL_OVERRIDE || DEFAULTS.ENV);
+    console.log(`[Config] Local execution detected. Using in-code defaults (ENV: '${localEnv}').`);
     return {
-      env: DEFAULTS.ENV,
-      rootFolderId: DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID
+      env: localEnv,
+      rootFolderId: DEFAULT_FOLDER_REGISTRY[localEnv] || DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID
     };
   }
 
   const scriptProperties = PropertiesService.getScriptProperties();
-  let env = scriptProperties.getProperty("ENV");
+  let rawEnv = scriptProperties.getProperty("ENV");
   let devId = scriptProperties.getProperty("DEV_DATABASE_ROOT_FOLDER_ID");
   let prodId = scriptProperties.getProperty("PROD_DATABASE_ROOT_FOLDER_ID");
 
+  // Normalize active environment type dynamically
+  const env = resolveEnvironmentType(rawEnv);
   const updates = {};
 
-  // Self-provision missing properties from defaults
-  if (!env) {
-    env = DEFAULTS.ENV;
-    updates.ENV = DEFAULTS.ENV;
+  // Self-provision and auto-normalize mismatching properties
+  if (!rawEnv || rawEnv !== env) {
+    updates.ENV = env;
   }
   if (!devId) {
     devId = DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID;
@@ -50,13 +86,68 @@ function resolveDatabaseEnvironment() {
 
   // Bulk save updates to properties to avoid multiple setProperty remote network calls
   if (Object.keys(updates).length > 0) {
-    console.log(`[Config] Script properties are uninitialized. Bulk provisioning defaults: ${JSON.stringify(updates)}`);
+    console.log(`[Config] Syncing and normalizing script properties: ${JSON.stringify(updates)}`);
     scriptProperties.setProperties(updates);
   }
 
-  const rootFolderId = (env === "production") ? prodId : devId;
+  const ACTIVE_FOLDER_REGISTRY = {
+    [Environment.PRODUCTION]: prodId,
+    [Environment.DEVELOPMENT]: devId,
+    [Environment.TESTING]: devId
+  };
+
+  const rootFolderId = ACTIVE_FOLDER_REGISTRY[env] || devId;
   return { env, rootFolderId };
 }
+
+/**
+ * Programmatically configures and normalizes script properties for DazzlingDB.
+ * Updates local cache variables if running outside Google Apps Script environments.
+ * 
+ * @param {Object} [options={}] - Target parameters to write.
+ * @param {string} [options.env] - Target environment (PRODUCTION, DEVELOPMENT, or TESTING).
+ * @param {string} [options.devFolderId] - Developer Sandbox folder ID.
+ * @param {string} [options.prodFolderId] - Production folder ID.
+ * @returns {Object} Updated database environment parameters {env, rootFolderId}.
+ */
+function configureScriptProperties(options = {}) {
+  const targetEnv = options.env || options.ENV;
+  if (targetEnv) {
+    LOCAL_OVERRIDE = targetEnv;
+  }
+  
+  if (typeof PropertiesService === 'undefined') {
+    console.warn("[Config] PropertiesService is unavailable. Local override cache updated.");
+    return resolveDatabaseEnvironment();
+  }
+
+  const scriptProperties = PropertiesService.getScriptProperties();
+  const updates = {};
+
+  if (targetEnv) {
+    updates.ENV = resolveEnvironmentType(targetEnv);
+  }
+  
+  const devFolderId = options.devFolderId || options.DEV_DATABASE_ROOT_FOLDER_ID;
+  if (devFolderId) {
+    updates.DEV_DATABASE_ROOT_FOLDER_ID = devFolderId;
+  }
+  
+  const prodFolderId = options.prodFolderId || options.PROD_DATABASE_ROOT_FOLDER_ID;
+  if (prodFolderId) {
+    updates.PROD_DATABASE_ROOT_FOLDER_ID = prodFolderId;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    console.log(`[Config] Manually configuring script properties: ${JSON.stringify(updates)}`);
+    scriptProperties.setProperties(updates);
+  }
+
+  return resolveDatabaseEnvironment();
+}
+
+// Bind configureScriptProperties to global scope
+globalThis.configureScriptProperties = configureScriptProperties;
 
 // ----------------------------------------------------
 // 🚀 Expose Context-Aware Constants

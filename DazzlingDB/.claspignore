@@ -38,6 +38,7 @@ Test/*
 !Test/OrchestratedStorageDriverTests.js
 !Test/AdvancedSheetActionsTests.js
 !Test/BulkDeletesTestSuite.js
+!Test/StudentDeleteTests.js
 
 !apitest/StudentLead_ApiTest.js
 !apitest/ApiTestHelper.js

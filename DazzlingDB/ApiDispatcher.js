@@ -88,7 +88,8 @@ const ApiDispatcher = (function () {
    */
   function _getAdvancedSheetRegistry() {
     return {
-      "sheet_batch_read": SheetBatchReadAction
+      "sheet_batch_read": SheetBatchReadAction,
+      "sheet_get_accounting_data": GetAccountingDataAction
     };
   }
 
@@ -184,14 +185,14 @@ const ApiDispatcher = (function () {
         return actionInstance.formatSuccessResponse(result.payload, startTime, {
           actionType: requestContext.actionType,
           mutationManifest: computedMutations
-        }, PropertiesService.getScriptProperties().getProperty('ENV') || 'production');
+        }, resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV')));
       }
       
       return result;
     } catch (globalError) {
       // Uncaught fallback protection wrapper routing path
       const fallback = new SystemError(globalError.message, { errorCode: "GATEWAY_DISPATCH_CRASH" });
-      return actionInstance.formatFailureResponse(fallback, startTime, Utilities.getUuid(), "production", requestContext);
+      return actionInstance.formatFailureResponse(fallback, startTime, Utilities.getUuid(), Environment.PRODUCTION, requestContext);
     }
   }
 

@@ -6,11 +6,14 @@
 function runAdvancedSheetActionsTests() {
   console.log("\n🧪 STARTING ADVANCED SHEET ACTIONS API DISPATCH TESTS 🧪\n");
   
-  const initialEnv = PropertiesService.getScriptProperties().getProperty('ENV') || 'DEVELOPMENT';
+  const initialEnv = resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV'));
+  if (initialEnv === Environment.PRODUCTION) {
+    throw new Error("❌ Safety Guard: Test suite cannot be executed in the PRODUCTION environment.");
+  }
   
   try {
     // Standard testing setup and bootstrapping under TESTING sandbox env
-    PropertiesService.getScriptProperties().setProperty('ENV', 'TESTING');
+    PropertiesService.getScriptProperties().setProperty('ENV', Environment.TESTING);
     DBContext.getInstance().bootstrapRepositories();
 
     // Physical spreadsheet IDs mapping
@@ -26,12 +29,14 @@ function runAdvancedSheetActionsTests() {
     };
 
     const spreadsheetIdA = realSheetsMap.Students;
+    const spreadsheetIdB = realSheetsMap.Academic;
     
-    // Manifest configurations: Target A using Category Name instead of physical ID
+    // Manifest configurations: Target A and B using Category Name instead of physical ID
     const mockPostData = {
       action: "sheet_batch_read",
       payload: [
-        { spreadsheetId: "Students", sheets: ["Address"] }
+        { spreadsheetId: "Students", sheets: ["Address"] },
+        { spreadsheetId: "Academic", sheets: ["Batch"] }
       ],
       options: {
         driverType: "ADVANCED"
@@ -59,11 +64,28 @@ function runAdvancedSheetActionsTests() {
     if (!responseJson.data || !responseJson.data[spreadsheetIdA]) {
       throw new Error(`Expected data to contain spreadsheetId key '${spreadsheetIdA}', response was: ${JSON.stringify(responseJson)}`);
     }
+    
+    if (!responseJson.data[spreadsheetIdB] || !responseJson.data[spreadsheetIdB].Batch) {
+      throw new Error(`Expected data to contain spreadsheetId key '${spreadsheetIdB}' with 'Batch' sheet.`);
+    }
 
     console.log(`[PASS] Dispatch completed successfully.`);
     console.log(`- Execution Time      : ${responseJson.context.execution_time_ms}ms`);
     console.log(`- Environment         : ${responseJson.meta.environment}`);
-    console.log(`- Data Mapped Sheets  : ${Object.keys(responseJson.data[spreadsheetIdA]).join(", ")}`);
+    console.log(`- Students Mapped Sheets : ${Object.keys(responseJson.data[spreadsheetIdA]).join(", ")}`);
+    console.log(`- Academic Mapped Sheets : ${Object.keys(responseJson.data[spreadsheetIdB]).join(", ")}`);
+
+    const batches = responseJson.data[spreadsheetIdB].Batch;
+    if (batches.length > 0) {
+      const firstBatch = batches[0];
+      if (firstBatch.capacity !== null && typeof firstBatch.capacity !== 'number') {
+        throw new Error(`Expected capacity to be type-cast to a number, got: ${typeof firstBatch.capacity} (${firstBatch.capacity})`);
+      }
+      console.log(`- Sample Batch record : ${JSON.stringify(firstBatch)}`);
+      console.log(`[PASS] Verified numeric type-casting successfully: capacity is a number.`);
+    } else {
+      console.log(`[INFO] No batch records found to verify type-casting.`);
+    }
     
     console.log("--------------------------------------------------------");
     console.log("EXECUTION RUN: Verifying Invalid Action Routing...");
