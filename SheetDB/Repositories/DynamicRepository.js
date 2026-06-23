@@ -545,7 +545,10 @@ class DynamicRepository {
         manifest.deleted.push(id);
       } catch (err) {
         errors[id] = err.message;
-        manifest.failed[id] = err.message;
+        manifest.failed[id] = {
+          message: err.message,
+          violations: err.context ? err.context.violations : []
+        };
       }
     });
 
@@ -560,9 +563,14 @@ class DynamicRepository {
       manifest.success = false;
       if (failFast) {
         const firstId = Object.keys(manifest.failed)[0];
-        throw new ValidationError(`Batch Delete Failed (Fail-Fast): ID '${firstId}' failed: ${manifest.failed[firstId]}`);
+        const details = manifest.failed[firstId];
+        throw new ValidationError(`Batch Delete Failed (Fail-Fast): ID '${firstId}' failed: ${details.message}`, {
+          failed: manifest.failed
+        });
       } else {
-        throw new ValidationError(`Batch Delete Failed (Aggregated): ${JSON.stringify(manifest.failed)}`);
+        throw new ValidationError(`Batch Delete Failed (Aggregated): Some deletions are blocked.`, {
+          failed: manifest.failed
+        });
       }
     }
 

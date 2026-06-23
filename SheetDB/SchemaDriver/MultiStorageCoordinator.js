@@ -9,6 +9,114 @@
  */
 
 // ==========================================
+// 🛠️ MODULE LEVEL STANDALONE UTILITIES
+// ==========================================
+
+// Global execution-level caching of resolved schemas
+const _schemaCache = {};
+
+/**
+ * Retrieves the compiled field schema for a given table name from the ModelRegistry.
+ * Standalone Utility: Decoupled from class context.
+ * @param {string} tableName - The model/table name (e.g. "Student").
+ * @returns {Object|null} A map of field names to BaseField instances, or null if not registered.
+ */
+function getModelSchema(tableName) {
+  const cleanName = String(tableName).trim();
+  if (_schemaCache[cleanName] !== undefined) {
+    return _schemaCache[cleanName];
+  }
+
+  try {
+    if (typeof ModelRegistry !== 'undefined') {
+      const ModelClass = ModelRegistry.getModel(cleanName);
+      const schema = ModelClass ? (ModelClass.schema || null) : null;
+      _schemaCache[cleanName] = schema;
+      return schema;
+    }
+  } catch (e) {
+    console.log(`[MultiStorageCoordinator Utils] Schema resolution bypass for '${cleanName}': ${e.message}`);
+    _schemaCache[cleanName] = null;
+  }
+  return null;
+}
+
+/**
+ * Normalizes a raw record entry object using a custom strategy mapping callback.
+ * Standalone Utility: Decoupled from class context.
+ * @param {Object} record - The key-value record object representing a database row.
+ * @param {Function} callback - A callback matching signature (key, value) => normalizedValue.
+ * @returns {Object} The newly normalized record entry.
+ */
+function normalizeEntry(record, callback) {
+  const normalized = {};
+  for (const key in record) {
+    normalized[key] = callback(key, record[key]);
+  }
+  return normalized;
+}
+
+/**
+ * Transforms raw 2D sheet rows into an array of normalized objects,
+ * dynamically applying schema-defined type-casting and formula injection protection.
+ * Standalone Utility: Decoupled from class context.
+ * @param {Array<Array<*>>} matrix - Raw 2D array of rows from the sheet (including header row).
+ * @param {string} tableName - The model/table name corresponding to the sheet (e.g. "Student").
+ * @returns {Array<Object>} Normalized array of record objects.
+ */
+function dataRangesToObject(matrix, tableName) {
+  if (!matrix || matrix.length === 0) return [];
+  const headers = matrix[0];
+  const schema = getModelSchema(tableName);
+
+  // Strategy Pattern: Decouple normalization logic into a callback
+  const normalizationCallback = (headerKey, val) => {
+    let sanitizedVal = val;
+    // Formula Injection Shield: Escape arithmetic cell prefixes
+    if (typeof sanitizedVal === 'string' && (sanitizedVal.startsWith('=') || sanitizedVal.startsWith('+') || sanitizedVal.startsWith('-') || sanitizedVal.startsWith('@'))) {
+      sanitizedVal = `'${sanitizedVal}`;
+    }
+    // Apply dynamic field-level casting and normalization
+    if (schema && schema[headerKey]) {
+      return schema[headerKey].fromSheetValue(sanitizedVal);
+    }
+    return sanitizedVal;
+  };
+
+  return matrix.slice(1).map(row => {
+    const rawRecord = {};
+    headers.forEach((header, index) => {
+      if (header) {
+        const headerKey = String(header).trim();
+        // Safe check for short rows (sparse matrix data)
+        const rawValue = (index < row.length) ? row[index] : "";
+        rawRecord[headerKey] = rawValue;
+      }
+    });
+    return normalizeEntry(rawRecord, normalizationCallback);
+  });
+}
+
+/**
+ * Decoupled processing of range response objects mapping sheets to value matrices.
+ * Standalone Utility: Decoupled from class context.
+ * @param {Object} response - The batchGet API response payload.
+ * @param {string[]} ranges - Ranges requested.
+ * @param {Function} matrixProcessor - Injected processing strategy callback.
+ * @returns {Object} Object mapping sheet titles to normalized matrices.
+ */
+function processRanges(response, ranges, matrixProcessor) {
+  const sheetData = {};
+  ranges.forEach((rangeStr, index) => {
+    const sheetTitle = rangeStr.split('!')[0];
+    const valueRange = response.valueRanges[index];
+    const rawMatrix = valueRange.values || [];
+    sheetData[sheetTitle] = matrixProcessor(rawMatrix, sheetTitle);
+  });
+  return sheetData;
+}
+
+// ==========================================
 // 🚀 ORCHESTRATOR & DRIVERS
 // ==========================================
 
@@ -26,14 +134,14 @@ class MultiStorageCoordinator {
   }
 
   /**
-   * Main execution gateway to harvest cell matrices across files
+   * Main execution gateway to harvest cell ranges across files
    * @param {Object[]} manifest - Retrieval specs
    * @param {string} manifest[].spreadsheetId - Target workbook ID string
    * @param {string[]} [manifest[].sheets] - Array whitelist selector
    * @param {Object} [options] - Runtime overrides
    * @return {Object} Unified Success Envelope
    */
-  fetchDataMatrix(manifest, options = {}) {
+  fetchDataRanges(manifest, options = {}) {
     const startTime = Date.now();
     const driverType = options.driverType || this.defaultDriver;
 
@@ -45,7 +153,11 @@ class MultiStorageCoordinator {
 
       // Dynamic polymorphic instantiation via Strategy Factory
       const driver = StorageDriverFactory.getDriver(driverType);
-      const combinedPayload = driver.executeHarvest(normalizedManifest);
+      
+      // Inject processing callback to strategy driver
+      const combinedPayload = driver.fetchSheetData(normalizedManifest, (matrix, tableName) => {
+        return dataRangesToObject(matrix, tableName);
+      });
 
       return {
         success: true,
@@ -86,30 +198,13 @@ class MultiStorageCoordinator {
  * Strategy Driver Abstract Contract
  */
 class BaseStorageDriver {
-  executeHarvest(normalizedManifest) {
-    throw new Error("Strategy abstract interface loop breached: executeHarvest must be explicitly implemented.");
-  }
-
   /**
-   * Single-Pass Memory Row Structuring & Cell Formula Protection (Axiom 3 Compliant)
+   * Abstract interface to harvest raw cell matrices.
+   * @param {Object[]} normalizedManifest - Retrieval specifications.
+   * @param {Function} matrixProcessor - Injected processing strategy callback.
    */
-  _matrixToObjects(matrix) {
-    if (!matrix || matrix.length === 0) return [];
-    const headers = matrix[0];
-    return matrix.slice(1).map(row => {
-      const record = {};
-      headers.forEach((header, index) => {
-        if (header) {
-          let value = row[index];
-          // Formula Injection Shield: Escape arithmetic cell prefixes
-          if (typeof value === 'string' && (value.startsWith('=') || value.startsWith('+') || value.startsWith('-') || value.startsWith('@'))) {
-            value = `'${value}`;
-          }
-          record[header] = value;
-        }
-      });
-      return record;
-    });
+  fetchSheetData(normalizedManifest, matrixProcessor) {
+    throw new Error("Strategy abstract interface loop breached: fetchSheetData must be explicitly implemented.");
   }
 }
 
@@ -117,7 +212,13 @@ class BaseStorageDriver {
  * Concrete Strategy Implementation: Standard SpreadsheetApp Engine
  */
 class StandardAppDriver extends BaseStorageDriver {
-  executeHarvest(normalizedManifest) {
+  /**
+   * Harvests matrix arrays using low-level SpreadsheetApp services.
+   * @param {Object[]} normalizedManifest - Normalized retrieval array.
+   * @param {Function} matrixProcessor - Injected processing strategy callback.
+   * @returns {Object} Harvested matrices.
+   */
+  fetchSheetData(normalizedManifest, matrixProcessor) {
     const fileContextMap = {};
 
     normalizedManifest.forEach(targetFile => {
@@ -139,7 +240,7 @@ class StandardAppDriver extends BaseStorageDriver {
           return;
         }
         const rawValues = sheet.getDataRange().getValues();
-        fileContextMap[ssId][title] = this._matrixToObjects(rawValues);
+        fileContextMap[ssId][title] = matrixProcessor(rawValues, title);
       });
     });
 
@@ -151,7 +252,13 @@ class StandardAppDriver extends BaseStorageDriver {
  * Concrete Strategy Implementation: Advanced Sheets REST Service Tier
  */
 class AdvancedRestDriver extends BaseStorageDriver {
-  executeHarvest(normalizedManifest) {
+  /**
+   * Harvests matrix arrays using Google Sheets REST API.
+   * @param {Object[]} normalizedManifest - Normalized retrieval array.
+   * @param {Function} matrixProcessor - Injected processing strategy callback.
+   * @returns {Object} Harvested matrices.
+   */
+  fetchSheetData(normalizedManifest, matrixProcessor) {
     const fileContextMap = {};
 
     normalizedManifest.forEach(targetFile => {
@@ -171,12 +278,8 @@ class AdvancedRestDriver extends BaseStorageDriver {
       // EXECUTION BOUNDARY WIN: Exactly 1 consolidated REST request block per File ID
       const response = Sheets.Spreadsheets.Values.batchGet(ssId, { ranges: ranges });
 
-      ranges.forEach((rangeStr, index) => {
-        const sheetTitle = rangeStr.split('!')[0];
-        const valueRange = response.valueRanges[index];
-        const rawMatrix = valueRange.values || [];
-        fileContextMap[ssId][sheetTitle] = this._matrixToObjects(rawMatrix);
-      });
+      // Invoke decoupled range mapper standalone utility
+      fileContextMap[ssId] = processRanges(response, ranges, matrixProcessor);
     });
 
     return fileContextMap;
@@ -232,3 +335,4 @@ Object.assign(globalThis, {
   StorageDriverFactory,
   StorageExceptionInterceptor
 });
+
