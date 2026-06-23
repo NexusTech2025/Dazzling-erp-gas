@@ -60,9 +60,10 @@ function loadToken() {
  * @param {string} action - Registered action name (e.g., "user_login")
  * @param {Object} payload - Parameter arguments for the action
  * @param {string} [tokenOverride=null] - Optional auth token override
+ * @param {Object} [options=null] - Optional strategy/action execution options
  * @returns {Promise<Object>} The response data object
  */
-async function callApi(action, payload = {}, tokenOverride = null) {
+async function callApi(action, payload = {}, tokenOverride = null, options = null) {
   const settings = loadSettings();
   const url = settings.api_url;
   
@@ -92,6 +93,10 @@ async function callApi(action, payload = {}, tokenOverride = null) {
     action,
     payload
   };
+  
+  if (options) {
+    requestBody.options = options;
+  }
   
   if (token) {
     requestBody.token = token;

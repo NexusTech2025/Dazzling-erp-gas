@@ -6,9 +6,6 @@
     "enrollments",
     "allocations"
   ],
-  "where": {
-    "student_id": "STU-06J4EGK"
-  },
   "limit": 5,
   "display": {
     "select": [
@@ -21,9 +18,6 @@
     "sort": {
       "by": "student_name",
       "order": "asc"
-    },
-    "filter": {
-      "hasRelations": true
     }
   }
 }

@@ -32,6 +32,7 @@ You can execute these aliases directly from the `dazzlingdb-tools/` folder:
 ### API Client Utilities
 - `npm run api-login`           Login with credentials and cache the session token.
 - `npm run api-query <Table>`   Query DazzlingDB API for a specific table (e.g. `Course`).
+- `npm run api-sheet-query <Payload>` Query DazzlingDB Sheet API using a JSON payload. Use `--output [override_path]` to persist results.
 - `npm run clean-courses`       Audit the database for orphaned courses. Use `--delete` to clean them.
 - `npm run push-apps`           Push local SheetDB and DazzlingDB changes to Google Apps Script.
 

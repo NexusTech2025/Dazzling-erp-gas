@@ -18,6 +18,7 @@
     "help": "node index.js --help",
     "api-login": "node src/client/actions/login.js",
     "api-query": "node src/client/actions/query.js",
+    "api-sheet-query": "node src/client/actions/sheet_query.js",
     "clean-courses": "node src/client/actions/clean_courses.js",
     "push-apps": "node src/client/actions/push_apps_script.js"
   },

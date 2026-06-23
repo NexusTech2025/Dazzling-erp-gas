@@ -1,0 +1,69 @@
+{
+    "request": {
+        "action": "sheet_batch_read",
+        "payload": [
+            {
+                "spreadsheetId": "Students",
+                "sheets": [
+                    "Student",
+                    "Address",
+                    "ContactInfo",
+                    "Education",
+                    "StudentLead"
+                ]
+            },
+            {
+                "spreadsheetId": "Academic",
+                "sheets": [
+                    "Batch",
+                    "BatchAllocation",
+                    "Course",
+                    "CourseType",
+                    "Enrollment",
+                    "Package",
+                    "PackageItem",
+                    "PackagePerk"
+                ]
+            },
+            {
+                "spreadsheetId": "Attendance",
+                "sheets": [
+                    "StudentAttendance",
+                    "TeacherAttendance"
+                ]
+            },
+            {
+                "spreadsheetId": "Staff",
+                "sheets": [
+                    "StaffMember",
+                    "Teacher",
+                    "TeacherDocument",
+                    "TeacherPaymentTransaction",
+                    "TeacherSalaryConfig",
+                    "TeacherSubject"
+                ]
+            },
+            {
+                "spreadsheetId": "Finance",
+                "sheets": [
+                    "ExpenseCategory",
+                    "FeeAdjustment",
+                    "FeePlan",
+                    "Installment",
+                    "MoneyTransaction",
+                    "Payment",
+                    "StudentFeeAccount"
+                ]
+            }
+        ],
+        "options": {
+            "driverType": "ADVANCED",
+            "responseKey": "NAME"
+        }
+    },
+    "config": {
+        "ouptutFormat": "json",
+        "outputPath": "responses/",
+        "outputFilename": "sheet_batch_read.json"
+    }
+}
