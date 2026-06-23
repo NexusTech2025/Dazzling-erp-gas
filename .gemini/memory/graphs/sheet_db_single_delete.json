@@ -1,0 +1,248 @@
+{
+  "graphName": "SheetDB Single Delete Operation Knowledge Graph",
+  "description": "Chronological control flow, data flow, and dependency associations involved in a single-record deletion operation (remove) within SheetDB ORM.",
+  "lastUpdated": "2026-06-08",
+  "nodes": [
+    {
+      "id": "DynamicRepository.remove",
+      "label": "DynamicRepository.remove(id)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js",
+      "description": "The entry point for deleting a single record by primary key. Coordinates relational constraint enforcement (enforceDeleteConstraints) before executing the physical deletion on TableGateway."
+    },
+    {
+      "id": "DynamicRepository.enforceDeleteConstraints",
+      "label": "DynamicRepository.enforceDeleteConstraints(id)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js",
+      "description": "Orchestrates database constraint verification and topological mutations. Builds the dynamic hydrated graph, validates it, updates nullified foreign keys, and bulk-deletes cascading child records bottom-up."
+    },
+    {
+      "id": "StaticGraphBuilder.compile",
+      "label": "StaticGraphBuilder.compile(schema)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/StaticGraph.js",
+      "description": "Compiles raw JSON database schemas into a static directed graph representing table relationship links (belongsTo, hasMany) and onDelete policies."
+    },
+    {
+      "id": "StaticGraph",
+      "label": "StaticGraph",
+      "type": "Class Instance",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/StaticGraph.js",
+      "description": "The static graph in memory holding structural table node definitions and relational edge metadata."
+    },
+    {
+      "id": "DynamicGraphBuilder",
+      "label": "DynamicGraphBuilder",
+      "type": "Class",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/DynamicGraphBuilder.js",
+      "description": "Retrieves active records and recursively traverses relationships starting from the root parent record, hydration-binding sheet records to build a dynamic graph."
+    },
+    {
+      "id": "DynamicGraph",
+      "label": "DynamicGraph",
+      "type": "Class Instance",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/DynamicGraphBuilder.js",
+      "description": "A runtime directed graph containing actual hydrated record nodes (GraphNode) and populated link edges (GraphEdge) representing the live delete cascade boundary."
+    },
+    {
+      "id": "DeletionValidationRegistry.validate",
+      "label": "DeletionValidationRegistry.validate(graph, rootTable, rootId)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/DeletionValidationRegistry.js",
+      "description": "Scans the dynamic deletion graph. Triggers validation strategies for all edges originating from records slated to be deleted."
+    },
+    {
+      "id": "DeletionValidationRegistry.strategies.protect",
+      "label": "protect validation strategy",
+      "type": "Strategy Handler",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/DeletionValidationRegistry.js",
+      "description": "Ensures that if active child rows exist, parent deletion is blocked by throwing an IntegrityError (unless the child is also scheduled for deletion)."
+    },
+    {
+      "id": "DeletionValidationRegistry.strategies.cascade",
+      "label": "cascade validation strategy",
+      "type": "Strategy Handler",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/DeletionValidationRegistry.js",
+      "description": "Verifies that child rows configured for cascade deletes are successfully mapped and present inside the scheduled deletion list."
+    },
+    {
+      "id": "DeletionValidationRegistry.strategies.set_null",
+      "label": "set_null validation strategy",
+      "type": "Strategy Handler",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/DeletionValidationRegistry.js",
+      "description": "Checks the child schema: ensures the foreign key (and any associated polymorphic discriminator typeField) allows null values. Throws ValidationError if required is true."
+    },
+    {
+      "id": "DeletionValidationRegistry.strategies.do_nothing",
+      "label": "do_nothing validation strategy",
+      "type": "Strategy Handler",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/DeletionValidationRegistry.js",
+      "description": "Django-style policy; bypasses validation check constraints entirely, allowing parent deletion unconditionally."
+    },
+    {
+      "id": "ForeignKeyField",
+      "label": "ForeignKeyField",
+      "type": "Class",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/ORM/Fields.js",
+      "description": "Represents relationship key columns. Encapsulates referential integrity assertions during write/save operations by validating key existence in the PrimaryKeyCache."
+    },
+    {
+      "id": "PrimaryKeyCache",
+      "label": "PrimaryKeyCache",
+      "type": "Class",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Registries/PrimaryKeyCache.js",
+      "description": "Performance component caching all active primary key values. Synchronized on insert and remove operations to support O(1) referential validation checks."
+    },
+    {
+      "id": "TableGateway.remove",
+      "label": "TableGateway.remove(id)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/TableGateway/TableGatway.js",
+      "description": "Performs physical deletion of a single sheet row via SheetDataSource and purges the key from PrimaryKeyCache."
+    },
+    {
+      "id": "TableGateway.deleteMany",
+      "label": "TableGateway.deleteMany(ids)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/TableGateway/TableGatway.js",
+      "description": "Performs optimized, bulk spreadsheet row deletion in a single call, synchronizing the PrimaryKeyCache by removing the keys."
+    },
+    {
+      "id": "TableGateway.updateMany",
+      "label": "TableGateway.updateMany(updatesMap)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/TableGateway/TableGatway.js",
+      "description": "Updates multiple record fields in bulk. Used during set_null cascades to nullify foreign key columns."
+    },
+    {
+      "id": "SheetDataSource",
+      "label": "SheetDataSource",
+      "type": "Class",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/DataSource/DataSource.js",
+      "description": "Low-level connection bridge with Google Sheets API. Reads worksheets, performs row insertion/updation, and physically deletes/clears spreadsheet rows."
+    }
+  ],
+  "edges": [
+    {
+      "source": "DynamicRepository.remove",
+      "target": "DynamicRepository.enforceDeleteConstraints",
+      "relation": "calls",
+      "description": "Initiates relational validation and child record processing prior to modifying the root record."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraints",
+      "target": "StaticGraphBuilder.compile",
+      "relation": "queries",
+      "description": "Lazily compiles schema relationship configs if the root database static graph cache is empty."
+    },
+    {
+      "source": "StaticGraphBuilder.compile",
+      "target": "StaticGraph",
+      "relation": "creates",
+      "description": "Compiles raw JSON schema dependencies to produce the cached static graph instance."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraints",
+      "target": "DynamicGraphBuilder",
+      "relation": "instantiates",
+      "description": "Creates a dynamic graph builder, providing the cached static graph and a query delegate to look up children."
+    },
+    {
+      "source": "DynamicGraphBuilder",
+      "target": "SheetDataSource",
+      "relation": "queries",
+      "description": "Recursively reads records from Google Sheets via the repository where delegate to trace all related entities."
+    },
+    {
+      "source": "DynamicGraphBuilder",
+      "target": "DynamicGraph",
+      "relation": "creates",
+      "description": "Builds the runtime dependency graph containing actual record values slated to be deleted."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraints",
+      "target": "DeletionValidationRegistry.validate",
+      "relation": "calls",
+      "description": "Executes dry-run constraint check on the dynamic graph to ensure deletion will not violate relational rules."
+    },
+    {
+      "source": "DeletionValidationRegistry.validate",
+      "target": "DeletionValidationRegistry.strategies.protect",
+      "relation": "dispatches",
+      "description": "Dispatches protect check when the relationship policy is 'protect'."
+    },
+    {
+      "source": "DeletionValidationRegistry.validate",
+      "target": "DeletionValidationRegistry.strategies.cascade",
+      "relation": "dispatches",
+      "description": "Dispatches cascade verification when the relationship policy is 'cascade'."
+    },
+    {
+      "source": "DeletionValidationRegistry.validate",
+      "target": "DeletionValidationRegistry.strategies.set_null",
+      "relation": "dispatches",
+      "description": "Dispatches set_null nullability verification when the relationship policy is 'set_null'."
+    },
+    {
+      "source": "DeletionValidationRegistry.validate",
+      "target": "DeletionValidationRegistry.strategies.do_nothing",
+      "relation": "dispatches",
+      "description": "Bypasses check constraints when the relation configuration policy is 'do_nothing'."
+    },
+    {
+      "source": "DeletionValidationRegistry.strategies.set_null",
+      "target": "ForeignKeyField",
+      "relation": "reads",
+      "description": "Inspects ForeignKeyField configuration properties (required, typeField) in the target schema definition."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraints",
+      "target": "TableGateway.updateMany",
+      "relation": "calls",
+      "description": "Updates all referencing foreign key columns (and polymorphic discriminators) to null in bulk for set_null relations."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraints",
+      "target": "TableGateway.deleteMany",
+      "relation": "calls",
+      "description": "Executes batch deletion of child nodes in reverse-topological (bottom-up) order for cascade relations."
+    },
+    {
+      "source": "DynamicRepository.remove",
+      "target": "TableGateway.remove",
+      "relation": "calls",
+      "description": "Physically removes the root record from the spreadsheet table once validation and child modifications complete."
+    },
+    {
+      "source": "TableGateway.remove",
+      "target": "PrimaryKeyCache",
+      "relation": "synchronizes",
+      "description": "Purges the deleted primary key value from the cache to keep it in sync with sheet cells."
+    },
+    {
+      "source": "TableGateway.deleteMany",
+      "target": "PrimaryKeyCache",
+      "relation": "synchronizes",
+      "description": "Removes all bulk-deleted primary keys from cache in a loop."
+    },
+    {
+      "source": "TableGateway.remove",
+      "target": "SheetDataSource",
+      "relation": "mutates",
+      "description": "Deletes the physical spreadsheet row corresponding to the deleted record ID."
+    },
+    {
+      "source": "TableGateway.deleteMany",
+      "target": "SheetDataSource",
+      "relation": "mutates",
+      "description": "Deletes physical spreadsheet rows in bulk using high-performance batch operations."
+    },
+    {
+      "source": "ForeignKeyField",
+      "target": "PrimaryKeyCache",
+      "relation": "queries",
+      "description": "Performs quick O(1) checks during record save/insert to verify that foreign key identifiers exist in parent tables."
+    }
+  ]
+}

@@ -1,0 +1,203 @@
+{
+  "graphName": "SheetDB Bulk Delete Operation Knowledge Graph",
+  "description": "Chronological control flow, data flow, and dependency associations involved in a bulk deletion operation (deleteMany) within SheetDB ORM.",
+  "lastUpdated": "2026-06-09",
+  "nodes": [
+    {
+      "id": "DynamicRepository.deleteMany",
+      "label": "DynamicRepository.deleteMany(ids, options)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js",
+      "description": "Entry point for deleting multiple records. Deduplicates input IDs, resolves batch constraints, and triggers final physical deletion of parents."
+    },
+    {
+      "id": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "label": "DynamicRepository.enforceDeleteConstraintsBatch(ids, options)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js",
+      "description": "Orchestrates batch validations, updates, and deletes topologically. Implements soft-filtering, pre-loading, global key aggregation, topological bulk execution, and surgical rollback."
+    },
+    {
+      "id": "PrimaryKeyCache.get",
+      "label": "PrimaryKeyCache.get(tableName)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Registries/PrimaryKeyCache.js",
+      "description": "Retrieves the set of active primary keys for the table in O(1) time. Used in Stage 1 to check pre-existence of input parent IDs."
+    },
+    {
+      "id": "loadedTables",
+      "label": "loadedTables",
+      "type": "Data Cache",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js",
+      "description": "In-memory database map holding pre-loaded raw rows from target tables. Bypasses the spreadsheet network latency by reducing reads to exactly 1 query per table."
+    },
+    {
+      "id": "DynamicGraphBuilder.build",
+      "label": "DynamicGraphBuilder.build(table, id, record)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/DynamicGraphBuilder.js",
+      "description": "Hydrates a dynamic graph for an individual record using the pre-loaded tables via an in-memory query delegate callback."
+    },
+    {
+      "id": "globalDeleteNodeKeys",
+      "label": "globalDeleteNodeKeys",
+      "type": "Data Set",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js",
+      "description": "Aggregated union Set containing all slated cascade deletion keys across all individual parent graphs, preventing false-positive protect checks on shared children."
+    },
+    {
+      "id": "DeletionValidationRegistry.validate",
+      "label": "DeletionValidationRegistry.validate(graph, table, id, globalKeys)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Graph/DeletionValidationRegistry.js",
+      "description": "Validates constraints on a graph using registered strategies, matching keys against globalDeleteNodeKeys if provided to support overlapping batch checks."
+    },
+    {
+      "id": "updatesByTable",
+      "label": "updatesByTable",
+      "type": "Data Map",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js",
+      "description": "Aggregated set_null updates mapped by child table. Grouped to perform bulk updates per table in exactly 1 operation."
+    },
+    {
+      "id": "deleteIdsByTable",
+      "label": "deleteIdsByTable",
+      "type": "Data Map",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js",
+      "description": "Aggregated cascade delete IDs mapped by child table. Grouped to perform bulk deletions per table bottom-up."
+    },
+    {
+      "id": "sortedTables",
+      "label": "sortedTables",
+      "type": "Data List",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js",
+      "description": "Descendant tables sorted in reverse topological order (leaves first, parents last) to ensure cascading deletions execute without violating database constraints."
+    },
+    {
+      "id": "TableGateway.updateMany",
+      "label": "TableGateway.updateMany(updatesMap)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/TableGateway/TableGatway.js",
+      "description": "Performs bulk spreadsheet row updates. Invoked in Stage 4 to set child foreign keys (and polymorphic discriminators) to null."
+    },
+    {
+      "id": "TableGateway.deleteMany",
+      "label": "TableGateway.deleteMany(ids)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/TableGateway/TableGatway.js",
+      "description": "Performs bulk spreadsheet row deletions. Invoked in Stage 5 to delete cascading child rows and parent root rows."
+    },
+    {
+      "id": "_rollbackBatchDeletion",
+      "label": "_rollbackBatchDeletion(loadedTables, graphs, parentIds)",
+      "type": "Method (Internal)",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/Repositories/DynamicRepository.js",
+      "description": "Surgical transaction rollback handler. Converts cloned graph backups back to raw rows, executing topological re-insertions (parents first) and update restorations on failure."
+    },
+    {
+      "id": "TableGateway.insertBatch",
+      "label": "TableGateway.insertBatch(dataArray)",
+      "type": "Method",
+      "definedIn": "e:/NAST/Dazzling/GAS/SheetDB/TableGateway/TableGatway.js",
+      "description": "Performs bulk row insertions. Used during rollback (Stage 6) to re-insert deleted rows topologically with original primary keys."
+    }
+  ],
+  "edges": [
+    {
+      "source": "DynamicRepository.deleteMany",
+      "target": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "relation": "calls",
+      "description": "Triggers batch validation and child mutation preprocessing for all parent IDs."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "PrimaryKeyCache.get",
+      "relation": "queries",
+      "description": "Checks pre-existence of input parent IDs in Stage 1 to separate valid IDs from skipped IDs."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "loadedTables",
+      "relation": "populates",
+      "description": "Pre-loads raw rows from target tables in a single read call per table in Stage 2."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "DynamicGraphBuilder.build",
+      "relation": "calls",
+      "description": "Hydrates individual dynamic graphs for valid root records using the loadedTables cache."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "globalDeleteNodeKeys",
+      "relation": "aggregates",
+      "description": "Pre-scans all individual graphs to compile the union set of all slated cascade delete keys in Stage 3a."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "DeletionValidationRegistry.validate",
+      "relation": "calls",
+      "description": "Invokes validation on each dynamic graph in memory, passing globalDeleteNodeKeys as a parameter."
+    },
+    {
+      "source": "DeletionValidationRegistry.validate",
+      "target": "globalDeleteNodeKeys",
+      "relation": "references",
+      "description": "Evaluates protect and cascade checks against globalDeleteNodeKeys to prevent false-positive blocks on shared child records."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "updatesByTable",
+      "relation": "aggregates",
+      "description": "Collects all child records needing nullification into updatesByTable in Stage 4."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "deleteIdsByTable",
+      "relation": "aggregates",
+      "description": "Collects all child record IDs slated for cascading delete into deleteIdsByTable in Stage 5."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "sortedTables",
+      "relation": "generates",
+      "description": "Sorts mutated tables in reverse topological order (leaves first) to prepare for cascade deletions."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "TableGateway.updateMany",
+      "relation": "calls",
+      "description": "Applies Stage 4 bulk set_null updates to child tables in memory/sheets."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "TableGateway.deleteMany",
+      "relation": "calls",
+      "description": "Deletes cascading child rows topologically in Stage 5."
+    },
+    {
+      "source": "DynamicRepository.deleteMany",
+      "target": "TableGateway.deleteMany",
+      "relation": "calls",
+      "description": "Physically deletes the parent root rows at the end of execution."
+    },
+    {
+      "source": "DynamicRepository.enforceDeleteConstraintsBatch",
+      "target": "_rollbackBatchDeletion",
+      "relation": "triggers_on_failure",
+      "description": "Invokes rollback handler to restore sheet data if any update/delete call throws an exception."
+    },
+    {
+      "source": "_rollbackBatchDeletion",
+      "target": "TableGateway.insertBatch",
+      "relation": "calls",
+      "description": "Re-inserts deleted records topologically (parents first) using graph backups."
+    },
+    {
+      "source": "_rollbackBatchDeletion",
+      "target": "TableGateway.updateMany",
+      "relation": "calls",
+      "description": "Restores nullified foreign key relationships to their original pre-deletion values."
+    }
+  ]
+}

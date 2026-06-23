@@ -1,0 +1,156 @@
+# QueryEngine Architecture Overview
+
+The **QueryEngine** in `DazzlingDB` is an advanced query runner for Google Sheets (via a database layer). It is built to run complex JSON Domain Specific Language (DSL) queries against a relational table setup, handling filtering, relational hydration (solving the N+1 query problem), sorting, pagination, and projection.
+
+It is structured as a collection of modular Google Apps Script compatible modules (wrapped in IIFEs) sharing a global runtime scope.
+
+---
+
+## 1. Visual Flow & Logical Architecture
+
+```text
+               +----------------------------------------+
+               |        Incoming Query DSL JSON         |
+               +----------------------------------------+
+                                   |
+                                   v
+               +----------------------------------------+
+               |              QueryEngine               | (Facade / Orchestrator)
+               +----------------------------------------+
+                                   |
+                     1. parse(dsl) |
+                                   v
+               +----------------------------------------+
+               |               DSLParser                | <---> [DATABASE_SCHEMA]
+               +----------------------------------------+
+                                   |
+             2. executePrimary(...)|
+                                   v
+               +----------------------------------------+
+               |              DataFetcher               | <---> [TableGateway / db]
+               +----------------------------------------+
+                     |                          ^
+      build(where)   |                          |
+                     v                          | (filters)
+               +--------------+                 |
+               | PredicateBld |-----------------+
+               +--------------+
+                                   |
+               3. hydrate(...)     |
+                                   v
+               +----------------------------------------+
+               |            RelationHydrator            | (Batch O(N+M) Hydration)
+               +----------------------------------------+
+                                   |
+               4. project(...)     |
+                                   v
+               +----------------------------------------+
+               |            ProjectionEngine            | (Formats output & Dates)
+               +----------------------------------------+
+                                   |
+                                   v
+               +----------------------------------------+
+               |         Final Response Payload         |
+               +----------------------------------------+
+```
+
+---
+
+## 2. Core Components & Responsibilities
+
+The QueryEngine is decomposed into 6 modules:
+
+### 1. **QueryEngine Facade** ([QueryEngine.js](file:///e:/NAST/Dazzling/GAS/DazzlingDB/QueryEngine/QueryEngine.js))
+*   **Role**: Primary entry point and workflow orchestrator.
+*   **Key Method**: `execute(dsl, db)`
+*   **Execution Flow**:
+    1.  Parse and validate input DSL via `DSLParser.parse(dsl)`.
+    2.  Fetch parent dataset using `DataFetcher.executePrimary(query, db)`.
+    3.  If `include` properties are defined, batch-hydrate relationships using `RelationHydrator.hydrate(results, query.include, db)`.
+    4.  Project fields and serialize custom object types via `ProjectionEngine.project(hydratedResults, query.select)`.
+    5.  Wraps results in a standard metadata envelope (`success`, `target`, `count`, `total_count`, `data`).
+
+### 2. **DSL Parser & Validator** ([DSLParser.js](file:///e:/NAST/Dazzling/GAS/DazzlingDB/QueryEngine/DSLParser.js))
+*   **Role**: Input sanitization, structure normalization, and schema validation.
+*   **Key Method**: `parse(query)`
+*   **Validation Rules**:
+    *   Verifies target table exists in global `DATABASE_SCHEMA`.
+    *   Strips sensitive fields (e.g., `password_hash`, `password_salt`, `failed_attempts`) from `select` columns.
+    *   Recursively maps inclusions (`include`), validating relationship definitions and mapping simple array forms (`["rel"]`) into nested object configurations (`{ rel: {} }`).
+    *   Sanitizes sort configuration and enforces sorting orders (`ASC`/`DESC`).
+    *   Enforces a strict system limit of 1000 records on pagination parameters.
+*   **Outputs**: A deeply frozen, read-only validated query configuration.
+
+### 3. **Data Fetcher** ([DataFetcher.js](file:///e:/NAST/Dazzling/GAS/DazzlingDB/QueryEngine/DataFetcher.js))
+*   **Role**: Handles primary table access, filtering, sorting, and pagination.
+*   **Key Method**: `executePrimary(query, db)`
+*   **Internal Actions**:
+    *   Retrieves raw rows via `table.gateway.all()`.
+    *   Enriches rows temporarily with the metadata field `__tableName` (critical for subsequent dynamic hydration).
+    *   Applies filters using the predicate generated by `PredicateBuilder`.
+    *   Performs multi-column comparisons for sorting based on configuration.
+    *   Slices the dataset based on `offset` and `limit`, attaching the `__totalCount` property to the result list.
+
+### 4. **Predicate Builder** ([PredicateBuilder.js](file:///e:/NAST/Dazzling/GAS/DazzlingDB/QueryEngine/PredicateBuilder.js))
+*   **Role**: Converts JSON filters into functional Javascript predicate functions `(row) => boolean`.
+*   **Key Method**: `build(where)`
+*   **Logic Model**: Evaluates conditions with logical `AND` across keys.
+*   **Supported Operators**:
+    *   *Equality / Inequality*: `eq`, `neq`.
+    *   *Relational*: `gt` ($>$), `gte` ($\ge$), `lt` ($<$), `lte` ($\le$).
+    *   *Substrings*: `contains` (case-insensitive conversion and check).
+    *   *Arrays / Ranges*: `in` (presence in array), `between` (range bounds check, inclusive).
+
+### 5. **Relation Hydrator** ([RelationHydrator.js](file:///e:/NAST/Dazzling/GAS/DazzlingDB/QueryEngine/RelationHydrator.js))
+*   **Role**: Resolves O(N) database lookup sprawl (the N+1 query problem) by executing batched relationship fetches.
+*   **Key Method**: `hydrate(rows, includeDSL, db)`
+*   **Algorithm Complexity**: $O(N + M)$ execution complexity where $N$ is parent row count and $M$ is child row count.
+*   **Hydration Pipeline**:
+    1.  Determines table-to-table links using relationship metadata in the schema (`belongsTo`, `hasMany`, `hasOne`).
+    2.  Performs a **Batch Fetch**: Gathers unique parent identifiers, then requests target rows matching `[key] IN [collected_keys]` in a single database roundtrip.
+    3.  Performs a **Map Back**: Populates an in-memory hash map of child records keyed by foreign key/primary key, and connects matching references to parent entities in a single linear pass.
+    4.  **Recursion**: Invokes itself on related records if nested inclusions are specified.
+
+### 6. **Projection Engine** ([ProjectionEngine.js](file:///e:/NAST/Dazzling/GAS/DazzlingDB/QueryEngine/ProjectionEngine.js))
+*   **Role**: Shapes output keys and formats internal runtime types for transfer.
+*   **Key Method**: `project(rows, select)`
+*   **Responsibilities**:
+    *   Limits fields on row structures to the explicit `select` array. If no select array is supplied, defaults to exposing all fields that do not begin with `__` (stripping system metadata).
+    *   Converts Google Apps Script `Date` instances to standard ISO 8601 strings (`toISOString()`).
+    *   Recursively shapes nested relation objects/arrays.
+
+---
+
+## 3. Query DSL Syntax
+
+The Query DSL syntax allows expressing full queries in a single JSON payload. See [Query_DSL_Reference.md](file:///e:/NAST/Dazzling/GAS/DazzlingDB/QueryEngine/Query_DSL_Reference.md) for detailed frontend reference details.
+
+### Payload Structure
+
+```json
+{
+  "action": "data_query",
+  "token": "AUTH_TOKEN",
+  "payload": {
+    "target": "Student",
+    "where": {
+      "status": "active",
+      "age": { "operator": "gte", "value": 18 }
+    },
+    "include": {
+      "address": {},
+      "enrollments": {
+        "include": ["batch"]
+      }
+    },
+    "select": ["id", "full_name", "status"],
+    "sort": [
+      { "field": "full_name", "order": "ASC" }
+    ],
+    "pagination": {
+      "limit": 50,
+      "offset": 0
+    }
+  }
+}
+```

@@ -1,0 +1,248 @@
+{
+    "knowledge_graph": {
+        "system": "SheetDB / DazzlingDB Architectural Framework",
+        "nodes": [
+            {
+                "id": "SpreadsheetFileSystem",
+                "layer": "Core Storage Infrastructure",
+                "responsibilities": [
+                    "Abstracts a Google Drive Folder into a database directory structure",
+                    "Restricts search spaces via Root Folder ID isolation to minimize cross-drive crawling",
+                    "Filters out trashed spreadsheets and isolates by Google GOOGLE_SHEETS MIME type"
+                ],
+                "time_complexity": "O(1) directory discovery",
+                "references": [
+                    "uploaded:sheetdb_core.md"
+                ]
+            },
+            {
+                "id": "SheetDataSource",
+                "layer": "Core Storage Infrastructure",
+                "responsibilities": [
+                    "Handles low-level gas network reads and cell matrix serialization",
+                    "Coordinates critical sections via SpreadsheetApp lock execution structures",
+                    "Executes single-pass clear and bulk array range-overwrites to prevent API round-trip timeouts"
+                ],
+                "time_complexity": "O(1) range updates (after RAM matrix computation)",
+                "references": [
+                    "uploaded:sheetdb_core.md",
+                    "uploaded:GAS- Implementing BatchUpdate & BatchDelete .md"
+                ]
+            },
+            {
+                "id": "TableGateway",
+                "layer": "Data Repositories & Whitelists",
+                "responsibilities": [
+                    "Direct structural proxy for an individual physical sheet within a category file",
+                    "Coordinates surgical row mutations and physical index offsets",
+                    "Maintains request-level sync boundaries for PrimaryKeyCache tracking"
+                ],
+                "time_complexity": "O(1) lookups via PrimaryKeyCache",
+                "references": [
+                    "uploaded:SheetDB/TODO.md",
+                    "uploaded:sheetdb_core.md",
+                    "uploaded:GAS- Implementing BatchUpdate & BatchDelete .md"
+                ]
+            },
+            {
+                "id": "DynamicRepository",
+                "layer": "Data Repositories & Whitelists",
+                "responsibilities": [
+                    "Exposes standard persistence interfaces (all, findById, findOne, where, exists, count)",
+                    "Provides 'Document-to-Relational' orchestration mapping hierarchical JSON into nested structures",
+                    "Routes multi-table saves and sequential mutations into the prioritized BatchBucket buffer"
+                ],
+                "time_complexity": "O(N) mapping, O(1) primary key resolution",
+                "references": [
+                    "uploaded:SheetDB/README.md",
+                    "uploaded:DazzlingDB-Package Deletion & Rollback Integration.md"
+                ]
+            },
+            {
+                "id": "BatchBucket",
+                "layer": "Schema Compilation & Safety Engine",
+                "responsibilities": [
+                    "Acts as a 'Unit of Work' buffer layer coordinating insertion sequence priorities",
+                    "Saves top-level primary records (e.g., Parent) before processing relational children to prevent orphaned rows",
+                    "Acts as the primary execution gatekeeper managing atomic constraint verifications"
+                ],
+                "time_complexity": "O(N) relational grouping",
+                "references": [
+                    "uploaded:SheetDB/README.md",
+                    "uploaded:sheetdb_relations.md"
+                ]
+            },
+            {
+                "id": "ValidationRegistry",
+                "layer": "Schema Compilation & Safety Engine",
+                "responsibilities": [
+                    "Implements field-level atomic evaluation strategies powered by standalone validation filters",
+                    "Performs comprehensive collection sweeps, gathering all failures instead of crashing on rule 1",
+                    "Blocks downstream physical writes unless the targeted payload array is 100% compliant"
+                ],
+                "time_complexity": "O(F * R) fields multiplied by records",
+                "references": [
+                    "uploaded:SheetDB/README.md",
+                    "uploaded:sheetdb_orm.md"
+                ]
+            },
+            {
+                "id": "BaseModel",
+                "layer": "Relational ORM & Graph",
+                "responsibilities": [
+                    "Converts flat sheet rows into highly fluent, hydrated 'Smart Objects'",
+                    "Provides auto-injected relationship navigation gateways (belongsTo, hasOne, hasMany)",
+                    "Handles CSV and formula injection escaping by prepending single quotes to text boundaries"
+                ],
+                "time_complexity": "O(1) element property mutation tracking",
+                "references": [
+                    "uploaded:sheetdb_orm.md",
+                    "uploaded:sheetdb_relations.md"
+                ]
+            },
+            {
+                "id": "RelationHydrator",
+                "layer": "Relational ORM & Graph",
+                "responsibilities": [
+                    "Eliminates the performance-killing N+1 database round-trip read problem",
+                    "Gathers unique foreign join keys and executes single-trip batch queries via 'in' predicate operators",
+                    "Builds transient RAM HashMaps to cleanly map children to matching parents in linear execution speed"
+                ],
+                "time_complexity": "O(P + C) parent rows plus child rows",
+                "references": [
+                    "uploaded:sheetdb_query.md"
+                ]
+            },
+            {
+                "id": "PolymorphicRegistry",
+                "layer": "Relational ORM & Graph",
+                "responsibilities": [
+                    "Maps polymorphic target strings into upper-case repository equivalents dynamically at runtime",
+                    "Enforces belongsToPolymorphic associations using typeField and idField attributes",
+                    "Bypasses raw string-prefix parsing vulnerabilities across split financial ledger configurations"
+                ],
+                "time_complexity": "O(1) reflection mapping",
+                "references": [
+                    "uploaded:Schema Documenter Skill Critique",
+                    "uploaded:Updating Transaction Batch Documentation.md",
+                    "uploaded:sheetdb_relations.md"
+                ]
+            },
+            {
+                "id": "TransactionTracker",
+                "layer": "Schema Compilation & Safety Engine",
+                "responsibilities": [
+                    "Injects unique cross-sheet UUID __tx_id stamps tracking row lifetimes",
+                    "Tracks physical execution states (PENDING, COMMITTED, FAILED) across multiple sheets",
+                    "Triggers reverse-topological Last-In, First-Out (LIFO) rollbacks when network quotas or validation crashes occur"
+                ],
+                "time_complexity": "O(R) database rollback extraction",
+                "references": [
+                    "uploaded:SheetDB/README.md",
+                    "uploaded:Schema Documenter Skill Critique"
+                ]
+            },
+            {
+                "id": "SchemaSetupEngine",
+                "layer": "Schema Compilation & Safety Engine",
+                "responsibilities": [
+                    "Acts as an idempotent structure verifier mapping root-level category metadata objects",
+                    "Provides Row 1 data corruption protection rules blocking execution if rows exist with missing headers",
+                    "Exposes AdminRepairTableAction executing in-place appending or timestamped safe-backups"
+                ],
+                "time_complexity": "O(T * C) tables multiplied by structural column boundaries",
+                "references": [
+                    "uploaded:student_registraton.md",
+                    "uploaded:sheetdb_diagnostics.md"
+                ]
+            },
+            {
+                "id": "ApiDispatcher",
+                "layer": "Unified Application API",
+                "responsibilities": [
+                    "Intercepts GAS doGet and doPost triggers, managing standard response envelopes",
+                    "Injects database context singletons, parameters, and active authentication sessions",
+                    "Isolates the user action registry from high-security admin_ endpoints"
+                ],
+                "time_complexity": "O(1) request routing execution cost",
+                "references": [
+                    "uploaded:sheetdb_actions.md"
+                ]
+            }
+        ],
+        "edges": [
+            {
+                "source": "ApiDispatcher",
+                "target": "DynamicRepository",
+                "relation": "dispatches_to",
+                "description": "Routes parsed API parameters into table-specific repository engines."
+            },
+            {
+                "source": "DynamicRepository",
+                "target": "BaseModel",
+                "relation": "hydrates_into",
+                "description": "Transforms returned database rows into functional Smart Objects mapping defined field attributes."
+            },
+            {
+                "source": "DynamicRepository",
+                "target": "BatchBucket",
+                "relation": "stages_writes_in",
+                "description": "Defers multi-table graph persistence operations to sequence dependencies safely."
+            },
+            {
+                "source": "BaseModel",
+                "target": "RelationHydrator",
+                "relation": "delegates_lazy_loading_to",
+                "description": "Triggers on-demand batch query lookups only when structural relation methods are explicitly invoked."
+            },
+            {
+                "source": "RelationHydrator",
+                "target": "PolymorphicRegistry",
+                "relation": "resolves_targets_via",
+                "description": "Translates poly-type discriminator strings into physical database repository singletons."
+            },
+            {
+                "source": "BatchBucket",
+                "target": "ValidationRegistry",
+                "relation": "enforces_atomic_checks_via",
+                "description": "Verifies payload data rules entirely before letting any modification proceed to physical drivers."
+            },
+            {
+                "source": "BatchBucket",
+                "target": "TransactionTracker",
+                "relation": "registers_lifecycle_with",
+                "description": "Stamps unique transaction IDs onto row contexts to ensure structural isolation boundaries."
+            },
+            {
+                "source": "BatchBucket",
+                "target": "TableGateway",
+                "relation": "commits_to",
+                "description": "Pushes grouped, safe record modifications down to individual targeted spreadsheets."
+            },
+            {
+                "source": "TransactionTracker",
+                "target": "TableGateway",
+                "relation": "triggers_lifo_rollback_on",
+                "description": "Bypasses normal ORM auto-field blocks to surgically remove records or restore pre-transaction state during execution failures."
+            },
+            {
+                "source": "TableGateway",
+                "target": "SheetDataSource",
+                "relation": "coordinates_mutations_via",
+                "description": "Passes 2D arrays down to the low-level data layer driver after tracking current physical cell index offsets."
+            },
+            {
+                "source": "SheetDataSource",
+                "target": "SpreadsheetFileSystem",
+                "relation": "discovers_files_via",
+                "description": "Uses folder isolation mechanics to locate and open target database spreadsheets securely."
+            },
+            {
+                "source": "SchemaSetupEngine",
+                "target": "SpreadsheetFileSystem",
+                "relation": "scans_and_provisions_via",
+                "description": "Validates database structure layout alignment on system startup or administration repair tasks."
+            }
+        ]
+    }
+}
