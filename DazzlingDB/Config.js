@@ -8,7 +8,6 @@
  * @enum {string}
  */
 const Environment = Object.freeze({
-  PRODUCTION: 'PRODUCTION',
   DEVELOPMENT: 'DEVELOPMENT',
   TESTING: 'TESTING'
 });
@@ -21,6 +20,10 @@ const Environment = Object.freeze({
 function resolveEnvironmentType(rawString) {
   if (!rawString) return Environment.DEVELOPMENT;
   const normalized = String(rawString).trim().toUpperCase();
+  if (normalized === 'PRODUCTION') {
+    console.warn("[Config] PRODUCTION environment is locked out on this development branch. Falling back to DEVELOPMENT.");
+    return Environment.DEVELOPMENT;
+  }
   return Environment[normalized] || Environment.DEVELOPMENT;
 }
 
@@ -41,13 +44,11 @@ let LOCAL_OVERRIDE = null;
 function resolveDatabaseEnvironment() {
   // Option A: Hardcoded Defaults
   const DEFAULTS = {
-    ENV: Environment.PRODUCTION,
-    DEV_DATABASE_ROOT_FOLDER_ID: "1eyTm-n2AUvcVS_Ipus7ApC4b0sCl8Q8I", // Developer Sandbox folder
-    PROD_DATABASE_ROOT_FOLDER_ID: "1LzSkVK4kYaGtv-nQX5y69TtuWtjQCWM3"   // Production Live folder
+    ENV: Environment.DEVELOPMENT,
+    DEV_DATABASE_ROOT_FOLDER_ID: "1eyTm-n2AUvcVS_Ipus7ApC4b0sCl8Q8I" // Developer Sandbox folder
   };
 
   const DEFAULT_FOLDER_REGISTRY = {
-    [Environment.PRODUCTION]: DEFAULTS.PROD_DATABASE_ROOT_FOLDER_ID,
     [Environment.DEVELOPMENT]: DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID,
     [Environment.TESTING]: DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID
   };
@@ -65,7 +66,6 @@ function resolveDatabaseEnvironment() {
   const scriptProperties = PropertiesService.getScriptProperties();
   let rawEnv = scriptProperties.getProperty("ENV");
   let devId = scriptProperties.getProperty("DEV_DATABASE_ROOT_FOLDER_ID");
-  let prodId = scriptProperties.getProperty("PROD_DATABASE_ROOT_FOLDER_ID");
 
   // Normalize active environment type dynamically
   const env = resolveEnvironmentType(rawEnv);
@@ -79,10 +79,6 @@ function resolveDatabaseEnvironment() {
     devId = DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID;
     updates.DEV_DATABASE_ROOT_FOLDER_ID = DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID;
   }
-  if (!prodId) {
-    prodId = DEFAULTS.PROD_DATABASE_ROOT_FOLDER_ID;
-    updates.PROD_DATABASE_ROOT_FOLDER_ID = DEFAULTS.PROD_DATABASE_ROOT_FOLDER_ID;
-  }
 
   // Bulk save updates to properties to avoid multiple setProperty remote network calls
   if (Object.keys(updates).length > 0) {
@@ -91,7 +87,6 @@ function resolveDatabaseEnvironment() {
   }
 
   const ACTIVE_FOLDER_REGISTRY = {
-    [Environment.PRODUCTION]: prodId,
     [Environment.DEVELOPMENT]: devId,
     [Environment.TESTING]: devId
   };
@@ -105,9 +100,8 @@ function resolveDatabaseEnvironment() {
  * Updates local cache variables if running outside Google Apps Script environments.
  * 
  * @param {Object} [options={}] - Target parameters to write.
- * @param {string} [options.env] - Target environment (PRODUCTION, DEVELOPMENT, or TESTING).
+ * @param {string} [options.env] - Target environment (DEVELOPMENT or TESTING).
  * @param {string} [options.devFolderId] - Developer Sandbox folder ID.
- * @param {string} [options.prodFolderId] - Production folder ID.
  * @returns {Object} Updated database environment parameters {env, rootFolderId}.
  */
 function configureScriptProperties(options = {}) {
@@ -131,11 +125,6 @@ function configureScriptProperties(options = {}) {
   const devFolderId = options.devFolderId || options.DEV_DATABASE_ROOT_FOLDER_ID;
   if (devFolderId) {
     updates.DEV_DATABASE_ROOT_FOLDER_ID = devFolderId;
-  }
-  
-  const prodFolderId = options.prodFolderId || options.PROD_DATABASE_ROOT_FOLDER_ID;
-  if (prodFolderId) {
-    updates.PROD_DATABASE_ROOT_FOLDER_ID = prodFolderId;
   }
 
   if (Object.keys(updates).length > 0) {

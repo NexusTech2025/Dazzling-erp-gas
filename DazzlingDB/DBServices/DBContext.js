@@ -56,15 +56,10 @@ const DBContext = (function() {
     const scriptProperties = PropertiesService.getScriptProperties();
     const env = resolveEnvironmentType(scriptProperties.getProperty('ENV'));
     
-    // 1. Instantly return standard configured development environments
-    if (env === Environment.PRODUCTION) {
-      return scriptProperties.getProperty('PROD_FOLDER_ID') || scriptProperties.getProperty('PROD_DATABASE_ROOT_FOLDER_ID') || DATABASE_ROOT_FOLDER_ID;
-    }
     if (env === Environment.DEVELOPMENT) {
       return scriptProperties.getProperty('DEV_FOLDER_ID') || scriptProperties.getProperty('DEV_DATABASE_ROOT_FOLDER_ID') || DATABASE_ROOT_FOLDER_ID;
     }
     
-    // 2. ISOLATED TESTING SANDBOX ENVIRONMENT RESOLUTION
     if (env === Environment.TESTING) {
       return resolveTestingSandboxFolder(scriptProperties);
     }

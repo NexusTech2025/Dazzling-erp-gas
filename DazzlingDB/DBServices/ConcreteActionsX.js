@@ -105,44 +105,6 @@ class DeleteManyEnrollmentsAction extends DeleteManyRecordsAction {
   }
 }
 
-/**
- * Academic Domain: Delete many packages
- */
-class DeleteManyPackagesAction extends DeleteManyRecordsAction {
-  _validate() {
-    this._params.payload.table = "Package";
-    super._validate();
-
-    const { ids } = this._params.payload;
-    ids.forEach(id => {
-      // RESTRICT: Block if student enrollment exists
-      const enrollmentExists = this._db.Enrollment.all().some(enr => 
-        enr.enrollment_type === "package" && enr.item_id === id
-      );
-      if (enrollmentExists) {
-        throw new ActionValidationError(`Package '${id}' cannot be deleted because active enrollments reference it.`);
-      }
-    });
-  }
-
-  _execute() {
-    const { ids } = this._params.payload;
-    const dryRun = this._params.payload.dryRun !== false;
-
-    if (!dryRun) {
-      ids.forEach(packageId => {
-        // CASCADE delete Perks and Items
-        const perks = this._db.PackagePerk.all().filter(p => p.package_id === packageId);
-        perks.forEach(p => this._db.PackagePerk.remove(p.perk_id));
-
-        const items = this._db.PackageItem.all().filter(item => item.package_id === packageId);
-        items.forEach(item => this._db.PackageItem.remove(item.item_id));
-      });
-    }
-
-    return super._execute();
-  }
-}
 
 /**
  * Students Domain: Delete many students

@@ -54,12 +54,14 @@ const ApiDispatcher = (function () {
       "auth_delete_many_sessions": DeleteManySessionsAction,
       "academic_delete_many_enrollments": DeleteManyEnrollmentsAction,
       "academic_delete_many_packages": DeleteManyPackagesAction,
+      "academic_delete_many_courses": DeleteManyCoursesAction,
       "student_delete_many_students": DeleteManyStudentsAction,
       "finance_delete_many_fee_accounts": DeleteManyStudentFeeAccountsAction,
       "finance_delete_many_installments": DeleteManyInstallmentsAction,
       "finance_delete_many_payments": DeleteManyPaymentsAction,
       "finance_delete_many_adjustments": DeleteManyFeeAdjustmentsAction,
       "staff_delete_many_teachers": DeleteManyTeachersAction,
+      "academic_delete_many_course_types": DeleteManyCourseTypeAction,
       "init_erp": InitErpAction
     };
   }
@@ -192,7 +194,10 @@ const ApiDispatcher = (function () {
     } catch (globalError) {
       // Uncaught fallback protection wrapper routing path
       const fallback = new SystemError(globalError.message, { errorCode: "GATEWAY_DISPATCH_CRASH" });
-      return actionInstance.formatFailureResponse(fallback, startTime, Utilities.getUuid(), Environment.PRODUCTION, requestContext);
+      const activeEnv = (typeof PropertiesService !== 'undefined')
+        ? resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV'))
+        : Environment.DEVELOPMENT;
+      return actionInstance.formatFailureResponse(fallback, startTime, Utilities.getUuid(), activeEnv, requestContext);
     }
   }
 
