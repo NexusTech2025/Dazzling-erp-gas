@@ -7,7 +7,7 @@
  * - Provides a unified access point for all Domain Services.
  */
 
-const DBContext = (function() {
+const DBContext = (function () {
   let instance = null;
 
   function getTargetFolderId() {
@@ -23,7 +23,7 @@ const DBContext = (function() {
     const activeEnv = (typeof PropertiesService !== 'undefined')
       ? resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV'))
       : (typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : Environment.DEVELOPMENT);
-    
+
     // DATABASE_SCHEMA is assumed to be globally available from Config.js
     if (typeof DATABASE_SCHEMA === 'undefined') {
       throw new Error("[DBContext] Fatal: DATABASE_SCHEMA not found. Ensure Config.js is loaded.");
@@ -88,13 +88,13 @@ const DBContext = (function() {
     }
 
     // Attach getSpreadsheetFileByName helper
-    db.getSpreadsheetFileByName = function(name) {
+    db.getSpreadsheetFileByName = function (name) {
       const fileMeta = db._fs.findByName(name);
       return fileMeta ? db._fs.open(fileMeta.id) : null;
     };
 
     // Attach bootstrapRepositories helper
-    db.bootstrapRepositories = function() {
+    db.bootstrapRepositories = function () {
       console.log("[DBContext] bootstrapRepositories invoked: resetting database instance.");
       instance = _init();
       return instance;
@@ -108,7 +108,7 @@ const DBContext = (function() {
      * Returns the singleton database instance.
      * @returns {Object} The active SheetDB instance.
      */
-    getInstance: function() {
+    getInstance: function () {
       const activeFolderId = getTargetFolderId();
       if (!instance || (instance._fs && instance._fs.rootFolderId !== activeFolderId)) {
         console.log("[DBContext] Cache MISS - Initializing fresh database instance (Cold Container).");
@@ -123,16 +123,16 @@ const DBContext = (function() {
      * Performs a physical health check (Ping) of the database.
      * @returns {Object} Health status report.
      */
-    ping: function() {
+    ping: function () {
       const db = this.getInstance();
       console.log("[DBContext] Executing Health Check...");
-      
+
       // Note: This relies on the library having the ping() method implemented.
       // If not, it will return a basic status.
       if (typeof db.ping === 'function') {
         return db.ping();
       }
-      
+
       return { status: "OK", message: "Database context is active. (Library-level ping pending implementation)" };
     }
   };

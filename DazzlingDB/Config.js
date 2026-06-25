@@ -8,7 +8,6 @@
  * @enum {string}
  */
 const Environment = Object.freeze({
-  PRODUCTION: 'PRODUCTION',
   DEVELOPMENT: 'DEVELOPMENT',
   TESTING: 'TESTING'
 });
@@ -90,7 +89,7 @@ function configureScriptProperties(options = {}) {
   if (targetEnv) {
     LOCAL_OVERRIDE = Environment.PRODUCTION;
   }
-  
+
   if (typeof PropertiesService === 'undefined') {
     console.warn("[Config] PropertiesService is unavailable. Local override cache updated.");
     return resolveDatabaseEnvironment();
@@ -102,7 +101,7 @@ function configureScriptProperties(options = {}) {
   if (targetEnv) {
     updates.ENV = Environment.PRODUCTION;
   }
-  
+
   const prodFolderId = options.prodFolderId || options.PROD_DATABASE_ROOT_FOLDER_ID;
   if (prodFolderId) {
     updates.PROD_DATABASE_ROOT_FOLDER_ID = prodFolderId;
