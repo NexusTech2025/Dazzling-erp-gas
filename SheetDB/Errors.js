@@ -160,10 +160,18 @@ class SheetDBEngineError extends SheetDBError { }
  */
 class ResourceNotFoundError extends SheetDBError { }
 
+class InvalidArgumentError extends SheetDBError { }
+
+/**
+ * Thrown when an advanced REST or storage engine operation fails.
+ */
+class StorageEngineError extends SheetDBError { }
+
 /**
  * Thrown when platform request quotas or rate limits are exhausted.
  */
 class PlatformQuotasExhaustedException extends SheetDBError { }
+
 
 // Export to Global Namespace for Library usage
 globalThis.SheetDBError = SheetDBError;
@@ -189,3 +197,5 @@ globalThis.DependencyGraphError = DependencyGraphError;
 globalThis.SheetDBEngineError = SheetDBEngineError;
 globalThis.ResourceNotFoundError = ResourceNotFoundError;
 globalThis.PlatformQuotasExhaustedException = PlatformQuotasExhaustedException;
+globalThis.InvalidArgumentError = InvalidArgumentError;
+globalThis.StorageEngineError = StorageEngineError;

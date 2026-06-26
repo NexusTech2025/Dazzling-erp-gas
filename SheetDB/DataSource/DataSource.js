@@ -286,6 +286,113 @@ class SheetDataSource {
   }
 
   /**
+   * Surgically purges every data row in all sheets inside a designated spreadsheet,
+   * keeping the Row 1 column definitions/headers completely intact in a single REST call.
+   * @param {string} categoryName - The category/spreadsheet file identification key.
+   * @returns {void}
+   * @throws {InvalidArgumentError} If categoryName is empty or invalid.
+   * @throws {ResourceNotFoundError} If the category file cannot be located on Drive.
+   * @throws {StorageEngineError} If Advanced Sheets REST API operations reject execution.
+   */
+  purgeWorkbookBatch(categoryName) {
+    if (!categoryName) {
+      throw new InvalidArgumentError("[Purge] Cannot execute batch clear on empty category identifier.");
+    }
+
+    return this._withLock(() => {
+      // 1. Locate physical Google Sheet via Storage Coordinator metadata
+      const fileMeta = this.fs.findByName(categoryName);
+      if (!fileMeta) {
+        throw new ResourceNotFoundError(`[Purge] Target Category File '${categoryName}' does not exist.`);
+      }
+      const spreadsheetId = fileMeta.id;
+
+      // 2. Fetch all tab/sheet definitions within this workbook file via Advanced Sheets API
+      let spreadsheetMetadata;
+      try {
+        spreadsheetMetadata = Sheets.Spreadsheets.get(spreadsheetId);
+      } catch (err) {
+        throw new StorageEngineError(`[Purge] Failed to fetch structural metadata for file ID: ${spreadsheetId}. Error: ${err.message}`);
+      }
+
+      const sheets = spreadsheetMetadata.sheets || [];
+      if (sheets.length === 0) return;
+
+      // 3. Compile matching A2:Z data grid ranges to safely bypass Row 1 definitions
+      const ranges = sheets.map(sheet => {
+        const sheetName = sheet.properties.title;
+        return `'${sheetName}'!A2:Z`;
+      });
+
+      const request = {
+        ranges: ranges
+      };
+
+      console.log(`[SheetDataSource] Dispatching unified batchClear on workbook '${categoryName}' for ranges:`, ranges);
+
+      // 4. Single execution transaction block boundary
+      try {
+        Sheets.Spreadsheets.Values.batchClear(request, spreadsheetId);
+      } catch (apiErr) {
+        throw new StorageEngineError(`[Purge] REST API batchClear execution rejected on file [${spreadsheetId}]: ${apiErr.message}`);
+      }
+    });
+  }
+
+  /**
+   * surgically purges specified sheets inside a designated spreadsheet container file,
+   * protecting row 1 headers while filtering out sheets that do not physically exist.
+   * @param {string} categoryName - The category/spreadsheet file identification key.
+   * @param {Array<string>} tables - The table/sheet names to clear.
+   * @returns {void}
+   */
+  purgeTablesBatch(categoryName, tables) {
+    if (!categoryName) {
+      throw new InvalidArgumentError("[Purge] Cannot execute batch clear on empty category identifier.");
+    }
+    if (!Array.isArray(tables) || tables.length === 0) return;
+
+    return this._withLock(() => {
+      // 1. Locate physical Google Sheet via Storage Coordinator metadata
+      const fileMeta = this.fs.findByName(categoryName);
+      if (!fileMeta) {
+        throw new ResourceNotFoundError(`[Purge] Target Category File '${categoryName}' does not exist.`);
+      }
+      const spreadsheetId = fileMeta.id;
+
+      // 2. Pre-flight Physical Worksheet Intersection Check (Mitigates Edge Case 2)
+      let spreadsheetMetadata;
+      try {
+        spreadsheetMetadata = Sheets.Spreadsheets.get(spreadsheetId);
+      } catch (metaErr) {
+        throw new StorageEngineError(`[Purge] Failed to fetch layout shape for workbook [${spreadsheetId}]: ${metaErr.message}`);
+      }
+
+      const physicalSheetTitles = (spreadsheetMetadata.sheets || []).map(s => s.properties.title);
+
+      // 3. Filter requested tables against actual physical worksheets
+      const verifiedTables = tables.filter(tableName => physicalSheetTitles.includes(tableName));
+      
+      if (verifiedTables.length === 0) {
+        console.warn(`[SheetDataSource] Zero intersection found between schema criteria and physical sheets for category '${categoryName}'. Skipping REST call.`);
+        return;
+      }
+
+      // 4. Assemble clean single-quotes ranges to prevent space-parsing drops
+      const ranges = verifiedTables.map(tableName => `'${tableName}'!A2:Z`);
+      const request = { ranges: ranges };
+
+      console.log(`[SheetDataSource] Dispatching unified batchClear on workbook '${categoryName}' for:`, ranges);
+
+      try {
+        Sheets.Spreadsheets.Values.batchClear(request, spreadsheetId);
+      } catch (apiErr) {
+        throw new StorageEngineError(`[Purge] REST API batchClear execution rejected on file [${spreadsheetId}]: ${apiErr.message}`);
+      }
+    });
+  }
+
+  /**
    * Internal wrapper for concurrency safety.
    * @private
    */

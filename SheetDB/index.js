@@ -61,6 +61,123 @@ function init(rootFolderId, schema, config = {}) {
     if (db._pkCache) db._pkCache.clear();
   };
 
+  /**
+   * Complete structural sweep to purge an entire physical spreadsheet file's data payload.
+   * Keeps row 1 headers pristine and synchronizes memory state globally.
+   * @param {string} categoryName - The logical category/spreadsheet file to clear.
+   */
+  db.purgeSpreadSheet = (categoryName) => {
+    if (!categoryName) {
+      throw new InvalidArgumentError("[Purge] Category name is required to execute spreadsheet purge.");
+    }
+    console.log(`[SheetDB] Initiating atomic workbook purge sequence for: ${categoryName}`);
+
+    // 1. Execute advanced low-level REST clear sweep 
+    dataSource.purgeWorkbookBatch(categoryName);
+
+    // 2. Clear request-level O(1) PrimaryKeyCache for affected tables
+    console.log(`[SheetDB] Post-purge cleaning of relational index maps...`);
+    const tableNames = registry.listAllTables();
+    tableNames.forEach(tableName => {
+      const tableCategory = registry.getCategoryForTable(tableName);
+      if (tableCategory === categoryName) {
+        // Evict cached memory indexes to avoid state tracking synchronization issues
+        db._pkCache.invalidate(tableName);
+      }
+    });
+
+    // 3. Flush mutations down to physical sheets & invalidate global metadata cache layers
+    SpreadsheetApp.flush();
+    db.purge(); // Invalidates low-level RAM row snapshots
+    console.log(`[SheetDB] Workbook '${categoryName}' successfully purged and cache records synchronized.`);
+  };
+
+  /**
+   * Advanced precision purge controller. Orchestrates high-performance data clears
+   * across selected workbooks while ensuring table-level exclusion isolation.
+   * @param {Object} options - Configuration arguments.
+   * @returns {Object} Telemetry execution trace log mapping mutated categories, skipped tables, and errors.
+   */
+  db.purgeDatabaseAdvanced = function(options = {}) {
+    const purgeAll = options.purgeAll === true;
+    const selectPurge = Array.isArray(options.selectPurge) ? options.selectPurge : [];
+    
+    // Normalize excludeTables payload type boundaries (Mitigates Edge Case 3)
+    const rawExclusions = options.excludeTables && typeof options.excludeTables === 'object' && !Array.isArray(options.excludeTables) 
+      ? options.excludeTables 
+      : {};
+
+    console.log("[SheetDB] Initializing advanced purge sequencing parameters...");
+
+    // 1. Resolve Target Category Workbook Boundaries (Precedence Processing)
+    let targetCategories = [];
+    if (selectPurge.length > 0) {
+      targetCategories = selectPurge;
+      console.log(`[SheetDB] Priority Route: Targeted execution locked onto workbooks:`, targetCategories);
+    } else if (purgeAll) {
+      const allTables = registry.listAllTables();
+      const uniqueCategories = new Set();
+      allTables.forEach(t => uniqueCategories.add(registry.getCategoryForTable(t)));
+      targetCategories = Array.from(uniqueCategories);
+      console.log(`[SheetDB] Fallback Route: Global database flush authorized across categories:`, targetCategories);
+    } else {
+      console.warn("[SheetDB] Operational Intercept: purgeAll is false and selectPurge is empty. Zero-mutation escape triggered.");
+      return { mutated_categories: [], skipped_tables: [], execution_errors: [] };
+    }
+
+    const telemetryTrace = { mutated_categories: [], skipped_tables: [], execution_errors: [] };
+
+    // 2. Iterate across verified workbook scopes safely using localized catch perimeters
+    targetCategories.forEach(categoryName => {
+      try {
+        const allTables = registry.listAllTables();
+        const tablesInWorkbook = allTables.filter(t => registry.getCategoryForTable(t) === categoryName);
+        
+        if (tablesInWorkbook.length === 0) return;
+
+        const exclusionList = Array.isArray(rawExclusions[categoryName]) ? rawExclusions[categoryName] : [];
+        const purgeManifest = [];
+
+        tablesInWorkbook.forEach(tableName => {
+          if (exclusionList.includes(tableName)) {
+            console.log(`[Purge Isolation] Bypassing target table data write: '${categoryName}.${tableName}'`);
+            telemetryTrace.skipped_tables.push(`${categoryName}.${tableName}`);
+            return;
+          }
+          purgeManifest.push(tableName);
+        });
+
+        // 3. Isolated Delegation Loop execution (Mitigates Edge Case 1)
+        if (purgeManifest.length > 0) {
+          console.log(`[SheetDB] Sending REST API batchClear range for category '${categoryName}' tables:`, purgeManifest);
+          dataSource.purgeTablesBatch(categoryName, purgeManifest);
+
+          // 4. Invalidate structural O(1) row memory indices immediately to prevent pointer mismatch drift
+          purgeManifest.forEach(tableName => {
+            db._pkCache.invalidate(tableName);
+          });
+          
+          telemetryTrace.mutated_categories.push({
+            category: categoryName,
+            purged_tables: purgeManifest
+          });
+        }
+      } catch (categoryError) {
+        console.error(`[SheetDB] Catastrophic processing block encountered on Category '${categoryName}':`, categoryError.message);
+        telemetryTrace.execution_errors.push({
+          category: categoryName,
+          error: categoryError.message
+        });
+      }
+    });
+
+    // 5. Force script flush down to cell endpoints and invalidate local model memory arrays
+    SpreadsheetApp.flush();
+    db.purge();
+
+    return telemetryTrace;
+  };
+
   // 3. Prepare the Relation Resolver & PrimaryKeyCache
   db._pkCache = new PrimaryKeyCache(db);
   db._resolver = new RelationResolver(db, registry);
@@ -133,6 +250,8 @@ Object.assign(globalThis, {
   PlatformQuotasExhaustedException: globalThis.PlatformQuotasExhaustedException,
   MultiStorageCoordinator: globalThis.MultiStorageCoordinator,
   AdvancedRestDriver: globalThis.AdvancedRestDriver,
+  InvalidArgumentError: globalThis.InvalidArgumentError,
+  StorageEngineError: globalThis.StorageEngineError,
   
   // Custom Validation & Relational Errors
   ValidationRegistryError: globalThis.ValidationRegistryError,
