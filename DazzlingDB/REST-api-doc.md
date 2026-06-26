@@ -1056,14 +1056,18 @@ The `MoneyTransaction` table is the general ledger register logging all cash flo
 | Field Name | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
 | `transaction_id` | `string` | Read-only, Primary Key | Auto-generated ID prefixed with `MTX-` (e.g., `MTX-7D43EF46`). |
-| `amount` | `number` | **Required**, minimum: `0` | Absolute positive decimal cash flow amount. |
+| `amount` | `number` | **Required**, minimum: `0.01` | Absolute positive decimal cash flow amount. |
 | `type` | `string` | **Required**, enum | Choices: `in` (revenue inflows), `out` (expense outflows). |
+| `by` | `string` | **Required**, max 255 chars | The internal system handler signatures. If type=='in' means Received By; if type=='out' means Sent By. |
+| `from_to` | `string` | **Required**, max 255 chars | The target counterparty description label. If type=='in' means Received From; if type=='out' means Sent To. |
 | `category_id` | `string` | **Required**, Foreign Key | References `ExpenseCategory.category_id`. Inherits protect rule. |
-| `payment_method` | `string` | Enum | Choices: `cash`, `paytm`, `phonepe`, `bank`, `other`. |
+| `payment_method` | `string` | **Required**, enum | Choices: `cash`, `paytm`, `phonepe`, `bank`, `other`. |
 | `payment_reference` | `string` | Optional, max 255 chars | Check numbers, transaction hashes, or bank refs. |
+| `attachment_drive_id` | `string` | Optional, max 255 chars | Google Drive file reference unique string pointing to scanned receipt/invoice attachments. |
+| `reconciliation_status` | `string` | **Required**, enum | Choices: `unreconciled`, `matched`, `discrepancy`. Default: `unreconciled`. |
 | `party_type` | `string` | Enum | Choices: `student`, `teacher`, `staff`, `external`. |
 | `party_id` | `string` | Optional, Polymorphic FK | References `student_id` (Student), `teacher_id` (Teacher), or `staff_id` (StaffMember) depending on `party_type`. |
-| `party_name` | `string` | Optional, max 255 chars | Literal name of partner (required for `external` party types). |
+| `party_name` | `string` | **Required**, max 255 chars | Literal name of partner (required for `external` party types). |
 | `transaction_date` | `string` | **Required**, Date | Format: `YYYY-MM-DD`. Supporting backdated entries. |
 | `notes` | `string` | Optional, max 255 chars | Details describing the purpose of transaction. |
 | `remarks` | `string` | Optional, max 255 chars | Internal accounting audit remarks or correction details. |
@@ -1085,8 +1089,11 @@ The `MoneyTransaction` table is the general ledger register logging all cash flo
     "data": {
       "amount": 1500,
       "type": "out",
+      "by": "Admin User",
+      "from_to": "Security Guard",
       "category_id": "EXC-2B632258",
       "payment_method": "cash",
+      "reconciliation_status": "unreconciled",
       "party_type": "staff",
       "party_id": "STF-F6F68672",
       "party_name": "Security Guard",
@@ -1109,8 +1116,11 @@ The `MoneyTransaction` table is the general ledger register logging all cash flo
       "transaction_id": "MTX-7D43EF46",
       "amount": 1500,
       "type": "out",
+      "by": "Admin User",
+      "from_to": "Security Guard",
       "category_id": "EXC-2B632258",
       "payment_method": "cash",
+      "reconciliation_status": "unreconciled",
       "party_type": "staff",
       "party_id": "STF-F6F68672",
       "party_name": "Security Guard",

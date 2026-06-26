@@ -16,6 +16,18 @@ const ActionType = {
 Object.freeze(ActionType);
 
 /**
+ * System-Wide User Roles
+ * @enum {string}
+ */
+const Roles = {
+  ADMIN: 'admin',
+  USER: 'user',
+  GUEST: 'guest'
+};
+Object.freeze(Roles);
+globalThis.Roles = Roles;
+
+/**
  * Declarative Registry for mapping database and application errors to structured API responses.
  */
 const ErrorMappingRegistry = {
@@ -61,6 +73,11 @@ const ErrorMappingRegistry = {
   }),
   "SheetDBEngineError": (error) => ({
     displayCode: "SHEET_DB_ENGINE_FAULT",
+    clientMessage: error.message,
+    errorDetails: error.context || null
+  }),
+  "StorageEngineError": (error) => ({
+    displayCode: "STORAGE_ENGINE_FAULT",
     clientMessage: error.message,
     errorDetails: error.context || null
   }),
@@ -154,7 +171,14 @@ class BaseAction {
   /**
    * Concrete subclass authorization entrypoint.
    */
-  _authorize() { }
+  _authorize() {
+    if (this.requiredRole) {
+      const userRole = this._user ? this._user.role : null;
+      if (userRole !== this.requiredRole) {
+        throw new ActionAuthorizationError(`Access denied. Action requires '${this.requiredRole}' role.`);
+      }
+    }
+  }
 
   /**
    * Execution delegate. Can be overridden in concrete subclasses.

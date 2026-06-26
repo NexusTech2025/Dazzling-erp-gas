@@ -372,3 +372,57 @@ class DeleteManyTeachersAction extends DeleteManyRecordsAction {
     return super._execute();
   }
 }
+
+/**
+ * @class PurgeDatabaseAction
+ * @extends BaseAction
+ * Administrative endpoint controlling surgical data resets via JSON payload parameters.
+ */
+class PurgeDatabaseAction extends BaseAction {
+  constructor() {
+    super(ActionType.DELETE);
+    // Intercept and halt unauthorized requests before deep processing
+    this.requiredRole = Roles.ADMIN;
+  }
+
+  /**
+   * Action lifecycle execution hook.
+   * @returns {Object} Structured API delivery wrapper.
+   */
+  _execute() {
+    const payload = this._params.payload || {};
+    const db = this._db;
+
+    // 1. Sanitize input array values gracefully for selectPurge
+    let selectPurge = [];
+    if (payload.selectPurge) {
+      if (Array.isArray(payload.selectPurge)) {
+        selectPurge = payload.selectPurge;
+      } else if (typeof payload.selectPurge === 'string') {
+        selectPurge = payload.selectPurge.split(',').map(s => s.trim());
+      }
+    }
+
+    // 2. Extract configuration arguments
+    const options = {
+      purgeAll: payload.purgeAll === true,
+      selectPurge: selectPurge,
+      excludeTables: payload.excludeTables || {}
+    };
+
+    console.log("[PurgeDatabaseAction] Parameters sanitized. Dispatching to core facade...");
+
+    // 3. Delegate to the core engineering method
+    const telemetry = db.purgeDatabaseAdvanced(options);
+
+    // 4. Return formatted response details
+    return {
+      success: true,
+      executed_at: new Date().toISOString(),
+      trace: telemetry
+    };
+  }
+}
+
+globalThis.PurgeDatabaseAction = PurgeDatabaseAction;
+
