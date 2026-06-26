@@ -28,4 +28,5 @@ Test/*
 !Test/TestMockHelper.js
 
 !Test/DeleteManyEntities.js
- 
+!Test/Infrastructure_PurgeTests.js
+!Test/Finance_LedgerTests.js

@@ -1659,7 +1659,7 @@ const DATABASE_SCHEMA = {
             "amount": {
               "type": "number",
               "required": true,
-              "min": 0,
+              "min": 0.01,
               "description": "The absolute monetary value of this transaction.\nMust be a positive number and represents the physical cash flow amount."
             },
             "type": {
@@ -1672,8 +1672,21 @@ const DATABASE_SCHEMA = {
               "maxLength": 50,
               "description": "The flow direction of the money, either 'in' for revenue inflows or 'out' for expense outflows.\nUsed to calculate net cash balances in reports."
             },
+            "by": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255,
+              "description": "The internal system handler signatures. If type=='in' means Received By; if type=='out' means Sent By."
+            },
+            "from_to": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255,
+              "description": "The target counterparty description label. If type=='in' means Received From; if type=='out' means Sent To."
+            },
             "category_id": {
               "type": "foreign_key",
+              "target": "ExpenseCategory",
               "required": true,
               "maxLength": 255,
               "onDelete": "protect",
@@ -1689,12 +1702,32 @@ const DATABASE_SCHEMA = {
                 "other"
               ],
               "maxLength": 255,
+              "required": true,
               "description": "The physical or digital channel used to complete the transaction (cash, paytm, phonepe, bank, or other).\nMatches cash drawer tracking."
             },
             "payment_reference": {
               "type": "string",
               "maxLength": 255,
+              "required": false,
               "description": "Optional reference details such as transaction hash, bank reference, or check numbers.\nCrucial for tracing funds in bank audits."
+            },
+            "attachment_drive_id": {
+              "type": "string",
+              "maxLength": 255,
+              "required": false,
+              "description": "Clean Google Drive file reference unique string pointing to scanned receipt/invoice attachments."
+            },
+            "reconciliation_status": {
+              "type": "string",
+              "choices": [
+                "unreconciled",
+                "matched",
+                "discrepancy"
+              ],
+              "default": "unreconciled",
+              "required": true,
+              "description": "Audit control check matching physical cash drawers to bank settlement records.",
+              "maxLength": 255
             },
             "party_type": {
               "type": "string",
@@ -1705,6 +1738,7 @@ const DATABASE_SCHEMA = {
                 "external"
               ],
               "maxLength": 50,
+              "required": true,
               "description": "Identifies the database model of the related party (student, teacher, staff, or external).\nGoverns the target registry path for polymorphic lookups."
             },
             "party_id": {
@@ -1717,6 +1751,7 @@ const DATABASE_SCHEMA = {
             "party_name": {
               "type": "string",
               "maxLength": 255,
+              "required": true,
               "description": "The literal name of the transaction partner.\nUsed for external parties (e.g., local vendors) or to cache names for rapid display."
             },
             "transaction_date": {
@@ -1727,16 +1762,19 @@ const DATABASE_SCHEMA = {
             "notes": {
               "type": "string",
               "maxLength": 255,
+              "required": false,
               "description": "General descriptive details of the transaction (e.g., 'Weekly grocery expenses', 'Refund for session').\nHelps clarify the purpose of the expense."
             },
             "remarks": {
               "type": "string",
               "maxLength": 255,
+              "required": false,
               "description": "Internal accounting notes or auditor corrections.\nUsed for special payment flags, dispute details, or correction logs."
             },
             "created_by": {
               "type": "string",
               "maxLength": 255,
+              "required": false,
               "description": "The username or email of the system user who logged this transaction.\nEssential for audit trails and tracing accountability."
             },
             "__tx_id": {

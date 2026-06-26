@@ -8,28 +8,32 @@
  */
 
 function runFinanceLedgerTests() {
-  const activeEnv = typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : Environment.DEVELOPMENT;
-  if (resolveEnvironmentType(activeEnv) === Environment.PRODUCTION) {
-    throw new Error("❌ Safety Guard: Test suite cannot be executed in the PRODUCTION environment.");
-  }
-
-  console.log("🚀 Starting Finance & Staff Domains integration tests...");
+  const originalEnv = PropertiesService.getScriptProperties().getProperty('ENV');
+  console.log(`[Test Runner] Original environment is: ${originalEnv || 'not set'}`);
   
-  const db = DBContext.getInstance();
   const results = {};
   const timings = {};
   const tSuiteStart = Date.now();
-
-  const salt = Math.random().toString(36).substring(2, 9).toUpperCase();
   
-  // Trackers for seeded IDs
+  let db;
   let catId = null;
   let staffId = null;
   let studentId = null;
   let teacherId = null;
   let mtxIds = [];
+  const salt = Math.random().toString(36).substring(2, 9).toUpperCase();
 
   try {
+    console.log("⚙️ Setting script environment to TESTING...");
+    PropertiesService.getScriptProperties().setProperty('ENV', 'TESTING');
+    DBContext.getInstance().bootstrapRepositories();
+    db = DBContext.getInstance();
+    
+    console.log("⚙️ Provisioning testing sandbox sheets...");
+    db.setup.provision();
+
+    console.log("🚀 Starting Finance & Staff Domains sandboxed integration tests...");
+
     console.log("\n=========================================");
     let tStart = Date.now();
     const scenario1Res = executeScenario1_CategoryAndStaffCRUD(db, salt, (cId, sId) => {
@@ -75,10 +79,16 @@ function runFinanceLedgerTests() {
   } catch (err) {
     console.error("❌ Unexpected test runner error:", err.message);
   } finally {
-    console.log("\n=========================================");
-    let tCleanupStart = Date.now();
-    results.Scenario6 = executeScenario6_TeardownCleanup(db, mtxIds, catId, studentId, teacherId, staffId);
-    timings["Scenario 6: Teardown & Cleanup"] = Date.now() - tCleanupStart;
+    if (db) {
+      console.log("\n=========================================");
+      let tCleanupStart = Date.now();
+      results.Scenario6 = executeScenario6_TeardownCleanup(db, mtxIds, catId, studentId, teacherId, staffId);
+      timings["Scenario 6: Teardown & Cleanup"] = Date.now() - tCleanupStart;
+    }
+
+    console.log("⚙️ Reverting script environment back...");
+    PropertiesService.getScriptProperties().setProperty('ENV', originalEnv || 'DEVELOPMENT');
+    DBContext.getInstance().bootstrapRepositories();
 
     // Display formatted timing benchmark table
     const totalTime = Date.now() - tSuiteStart;
@@ -91,11 +101,10 @@ function runFinanceLedgerTests() {
     console.log("--------------------------------------------------------");
     console.log(`- Total Execution Time                         : ${String(totalTime).padStart(5)} ms`);
     console.log("========================================================\n");
+    
+    console.log("📊 FINAL TEST RESULTS: \n", JSON.stringify(results, null, 2));
+    console.log("🏁 Finance & Staff Tests Complete.");
   }
-
-  console.log("📊 FINAL TEST RESULTS: \n", JSON.stringify(results, null, 2));
-  console.log("🏁 Finance & Staff Tests Complete.");
-  return results;
 }
 
 /**
@@ -105,11 +114,11 @@ function executeScenario1_CategoryAndStaffCRUD(db, salt, setSeededIds) {
   console.log("▶️ SCENARIO 1: Category & Staff CRUD (Success Pathway)");
   try {
     // 1. Create Expense Category
-    const catPayload = {
+    const catPayload = TestMockHelper.createExpenseCategoryPayload({
       name: "Office Utilities " + salt,
       type: "both",
       description: "Utility payments including water, internet, power"
-    };
+    });
     console.log("   ⚙️ Inserting ExpenseCategory payload:", JSON.stringify(catPayload));
     const catResult = db.ExpenseCategory.insert(catPayload);
     
@@ -119,13 +128,13 @@ function executeScenario1_CategoryAndStaffCRUD(db, salt, setSeededIds) {
     console.log(`   ✅ Success! Created ExpenseCategory with ID: ${catResult.category_id}`);
 
     // 2. Create Staff Member
-    const staffPayload = {
+    const staffPayload = TestMockHelper.createStaffMemberPayload({
       name: "Security Guard " + salt,
       role: "security",
       status: "active",
       phone: "+91-9999888877",
       email: "guard_" + salt.toLowerCase() + "@test.com"
-    };
+    });
     console.log("   ⚙️ Inserting StaffMember payload:", JSON.stringify(staffPayload));
     const staffResult = db.StaffMember.insert(staffPayload);
 
@@ -161,19 +170,19 @@ function executeScenario2_PolymorphicTransactionCRUD(db, salt, catId, staffId, s
 
   try {
     // 1. Create a student to link polymorphically
-    const studentPayload = {
+    const studentPayload = TestMockHelper.createStudentPayload({
       student_name: "Test Ledger Student " + salt,
       email: "ledg_stu_" + salt.toLowerCase() + "@test.com",
       phone: "+91-9988776655",
       status: "active"
-    };
+    });
     console.log("   ⚙️ Inserting Student payload:", JSON.stringify(studentPayload));
     const studentResult = db.Student.insert(studentPayload);
     studentId = studentResult.student_id;
     console.log(`   ✅ Success! Created Student: ${studentId}`);
 
     // 2. Create a teacher to link polymorphically
-    const teacherPayload = {
+    const teacherPayload = TestMockHelper.createTeacherPayload({
       full_name: "Test Ledger Teacher " + salt,
       email: "ledg_tch_" + salt.toLowerCase() + "@test.com",
       mobile_number: "9876543211",
@@ -181,24 +190,26 @@ function executeScenario2_PolymorphicTransactionCRUD(db, salt, catId, staffId, s
       experience_years: 5,
       teacher_type: "full_time",
       joining_date: "2026-06-09"
-    };
+    });
     console.log("   ⚙️ Inserting Teacher payload:", JSON.stringify(teacherPayload));
     const teacherResult = db.Teacher.insert(teacherPayload);
     teacherId = teacherResult.teacher_id;
     console.log(`   ✅ Success! Created Teacher: ${teacherId}`);
 
     // 3. Create a transaction for Staff
-    const tStaffPayload = {
-      amount: 1500,
-      type: "out",
-      category_id: catId,
-      payment_method: "cash",
-      party_type: "staff",
-      party_id: staffId,
-      party_name: "Security Guard " + salt,
-      transaction_date: "2026-06-09",
-      notes: "Salary payout for May 2026"
-    };
+    const tStaffPayload = TestMockHelper.createMoneyTransactionPayload(
+      1500,
+      "out",
+      catId,
+      "staff",
+      {
+        party_id: staffId,
+        party_name: "Security Guard " + salt,
+        transaction_date: "2026-06-09",
+        notes: "Salary payout for May 2026",
+        payment_method: "cash"
+      }
+    );
     console.log("   ⚙️ Inserting MoneyTransaction for Staff:", JSON.stringify(tStaffPayload));
     const tStaffResult = db.MoneyTransaction.insert(tStaffPayload);
     if (!tStaffResult.transaction_id || !tStaffResult.transaction_id.startsWith("MTX-")) {
@@ -208,50 +219,56 @@ function executeScenario2_PolymorphicTransactionCRUD(db, salt, catId, staffId, s
     console.log(`   ✅ Success! Created Staff Transaction: ${tStaffResult.transaction_id}`);
 
     // 4. Create a transaction for Student
-    const tStudentPayload = {
-      amount: 4500,
-      type: "in",
-      category_id: catId,
-      payment_method: "bank",
-      party_type: "student",
-      party_id: studentId,
-      party_name: "Test Ledger Student " + salt,
-      transaction_date: "2026-06-09",
-      notes: "Admission fee deposit"
-    };
+    const tStudentPayload = TestMockHelper.createMoneyTransactionPayload(
+      4500,
+      "in",
+      catId,
+      "student",
+      {
+        party_id: studentId,
+        party_name: "Test Ledger Student " + salt,
+        transaction_date: "2026-06-09",
+        notes: "Admission fee deposit",
+        payment_method: "bank"
+      }
+    );
     console.log("   ⚙️ Inserting MoneyTransaction for Student:", JSON.stringify(tStudentPayload));
     const tStudentResult = db.MoneyTransaction.insert(tStudentPayload);
     transactionIds.push(tStudentResult.transaction_id);
     console.log(`   ✅ Success! Created Student Transaction: ${tStudentResult.transaction_id}`);
 
     // 5. Create a transaction for Teacher
-    const tTeacherPayload = {
-      amount: 8000,
-      type: "out",
-      category_id: catId,
-      payment_method: "paytm",
-      party_type: "teacher",
-      party_id: teacherId,
-      party_name: "Test Ledger Teacher " + salt,
-      transaction_date: "2026-06-09",
-      notes: "Payout for course material creation"
-    };
+    const tTeacherPayload = TestMockHelper.createMoneyTransactionPayload(
+      8000,
+      "out",
+      catId,
+      "teacher",
+      {
+        party_id: teacherId,
+        party_name: "Test Ledger Teacher " + salt,
+        transaction_date: "2026-06-09",
+        notes: "Payout for course material creation",
+        payment_method: "paytm"
+      }
+    );
     console.log("   ⚙️ Inserting MoneyTransaction for Teacher:", JSON.stringify(tTeacherPayload));
     const tTeacherResult = db.MoneyTransaction.insert(tTeacherPayload);
     transactionIds.push(tTeacherResult.transaction_id);
     console.log(`   ✅ Success! Created Teacher Transaction: ${tTeacherResult.transaction_id}`);
 
     // 6. Create a transaction for External party (no profile record)
-    const tExternalPayload = {
-      amount: 450,
-      type: "out",
-      category_id: catId,
-      payment_method: "other",
-      party_type: "external",
-      party_name: "Office Supplies Vendor",
-      transaction_date: "2026-06-09",
-      notes: "Office supplies bulk buy"
-    };
+    const tExternalPayload = TestMockHelper.createMoneyTransactionPayload(
+      450,
+      "out",
+      catId,
+      "external",
+      {
+        party_name: "Office Supplies Vendor",
+        transaction_date: "2026-06-09",
+        notes: "Office supplies bulk buy",
+        payment_method: "other"
+      }
+    );
     console.log("   ⚙️ Inserting MoneyTransaction for External Party:", JSON.stringify(tExternalPayload));
     const tExternalResult = db.MoneyTransaction.insert(tExternalPayload);
     transactionIds.push(tExternalResult.transaction_id);
@@ -279,12 +296,15 @@ function executeScenario3_ValidationConstraints(db, catId) {
   // Test A: Negative Amount constraint
   try {
     console.log("   ⚙️ Attempting to insert negative amount...");
-    db.MoneyTransaction.insert({
-      amount: -1500, // Invalid
-      type: "out",
-      category_id: catId,
-      transaction_date: "2026-06-09"
-    });
+    db.MoneyTransaction.insert(TestMockHelper.createMoneyTransactionPayload(
+      -1500, // Invalid amount
+      "out",
+      catId,
+      "external",
+      {
+        transaction_date: "2026-06-09"
+      }
+    ));
     passed = false;
     failures.push("Failed to block negative transaction amount.");
   } catch (e) {
@@ -299,12 +319,15 @@ function executeScenario3_ValidationConstraints(db, catId) {
   // Test B: Invalid transaction direction enum choice
   try {
     console.log("   ⚙️ Attempting to insert invalid direction type...");
-    db.MoneyTransaction.insert({
-      amount: 1500,
-      type: "incoming", // Invalid: must be "in" or "out"
-      category_id: catId,
-      transaction_date: "2026-06-09"
-    });
+    db.MoneyTransaction.insert(TestMockHelper.createMoneyTransactionPayload(
+      1500,
+      "incoming", // Invalid: must be "in" or "out"
+      catId,
+      "external",
+      {
+        transaction_date: "2026-06-09"
+      }
+    ));
     passed = false;
     failures.push("Failed to block invalid direction choice.");
   } catch (e) {
@@ -319,12 +342,15 @@ function executeScenario3_ValidationConstraints(db, catId) {
   // Test C: Missing Required Field (transaction_date)
   try {
     console.log("   ⚙️ Attempting to insert transaction with missing transaction_date...");
-    db.MoneyTransaction.insert({
-      amount: 1500,
-      type: "in",
-      category_id: catId
-      // Missing transaction_date
-    });
+    db.MoneyTransaction.insert(TestMockHelper.createMoneyTransactionPayload(
+      1500,
+      "in",
+      catId,
+      "external",
+      {
+        transaction_date: undefined // Simulates missing field
+      }
+    ));
     passed = false;
     failures.push("Failed to block missing transaction_date.");
   } catch (e) {

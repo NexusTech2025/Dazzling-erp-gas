@@ -216,6 +216,110 @@ const TestMockHelper = {
         ]
       }
     };
+  },
+
+  /**
+   * Prepares a randomized Student insertion payload containing profile fields.
+   * @param {Object} [overrides={}] - Column overrides.
+   * @returns {Object} Flat Student profile payload.
+   */
+  createStudentPayload: function(overrides = {}) {
+    const salt = this._getSalt();
+    return {
+      student_name: overrides.student_name || "Student " + salt,
+      email: overrides.email || "student_" + salt.toLowerCase() + "@test.com",
+      phone: overrides.phone || this._getPhone(),
+      status: overrides.status || "active",
+      ...overrides
+    };
+  },
+
+  /**
+   * Prepares a randomized Teacher insertion payload.
+   * @param {Object} [overrides={}] - Column overrides.
+   * @returns {Object} Validated Teacher payload.
+   */
+  createTeacherPayload: function(overrides = {}) {
+    const salt = this._getSalt();
+    return {
+      full_name: overrides.full_name || "Teacher " + salt,
+      email: overrides.email || "teacher_" + salt.toLowerCase() + "@test.com",
+      mobile_number: overrides.mobile_number || this._getPhone(),
+      status: overrides.status || "active",
+      experience_years: overrides.experience_years || 5,
+      teacher_type: overrides.teacher_type || "full_time",
+      joining_date: overrides.joining_date || "2026-06-09",
+      ...overrides
+    };
+  },
+
+  /**
+   * Prepares a randomized StaffMember insertion payload.
+   * @param {Object} [overrides={}] - Column overrides.
+   * @returns {Object} Validated StaffMember payload.
+   */
+  createStaffMemberPayload: function(overrides = {}) {
+    const salt = this._getSalt();
+    return {
+      name: overrides.name || "Staff " + salt,
+      role: overrides.role || "security",
+      status: overrides.status || "active",
+      phone: overrides.phone || this._getPhone(),
+      email: overrides.email || "staff_" + salt.toLowerCase() + "@test.com",
+      ...overrides
+    };
+  },
+
+  /**
+   * Prepares a randomized ExpenseCategory insertion payload.
+   * @param {Object} [overrides={}] - Column overrides.
+   * @returns {Object} Validated ExpenseCategory payload.
+   */
+  createExpenseCategoryPayload: function(overrides = {}) {
+    const salt = this._getSalt();
+    return {
+      name: overrides.name || "Category " + salt,
+      type: overrides.type || "both",
+      description: overrides.description || "Utility description " + salt,
+      ...overrides
+    };
+  },
+
+  /**
+   * Prepares a randomized MoneyTransaction insertion payload satisfying all schema validations.
+   * @param {number} amount - Absolute financial magnitude.
+   * @param {string} type - Flow direction ("in" | "out").
+   * @param {string} categoryId - Foreign key to ExpenseCategory.
+   * @param {string} partyType - Polymorphic discriminator type ("student" | "teacher" | "staff" | "external").
+   * @param {Object} [overrides={}] - Additional column overrides.
+   * @returns {Object} Validated MoneyTransaction payload.
+   */
+  createMoneyTransactionPayload: function(amount, type, categoryId, partyType, overrides = {}) {
+    if (amount === undefined || !type || !categoryId || !partyType) {
+      throw new Error("amount, type, categoryId, and partyType are required to create a MoneyTransaction payload.");
+    }
+    const salt = this._getSalt();
+    const payload = {
+      amount: amount,
+      type: type,
+      category_id: categoryId,
+      party_type: partyType,
+      by: overrides.hasOwnProperty("by") ? overrides.by : (type === "in" ? "Recv By " + salt : "Sent By " + salt),
+      from_to: overrides.hasOwnProperty("from_to") ? overrides.from_to : (type === "in" ? "From " + salt : "To " + salt),
+      payment_method: overrides.hasOwnProperty("payment_method") ? overrides.payment_method : "cash",
+      party_name: overrides.hasOwnProperty("party_name") ? overrides.party_name : "Party " + salt,
+      transaction_date: overrides.hasOwnProperty("transaction_date") ? overrides.transaction_date : "2026-06-26",
+      reconciliation_status: overrides.hasOwnProperty("reconciliation_status") ? overrides.reconciliation_status : "unreconciled",
+      ...overrides
+    };
+
+    // Clean up fields set to undefined via overrides to test missing-field validations
+    for (const key in payload) {
+      if (payload[key] === undefined) {
+        delete payload[key];
+      }
+    }
+    return payload;
   }
 };
 
