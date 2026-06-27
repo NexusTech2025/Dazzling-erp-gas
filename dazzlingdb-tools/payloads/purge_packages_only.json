@@ -1,0 +1,15 @@
+{
+  "purgeAll": false,
+  "selectPurge": [
+    "Academic"
+  ],
+  "excludeTables": {
+    "Academic": [
+      "Batch",
+      "BatchAllocation",
+      "Course",
+      "CourseType",
+      "Enrollment"
+    ]
+  }
+}

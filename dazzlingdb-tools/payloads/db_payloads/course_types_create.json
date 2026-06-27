@@ -1,0 +1,20 @@
+[
+  {
+    "segment_name": "Academic",
+    "entity_label": "Academic",
+    "description": "Academic Segment Type",
+    "status": "active"
+  },
+  {
+    "segment_name": "Course",
+    "entity_label": "Course",
+    "description": "Course Segment Type",
+    "status": "active"
+  },
+  {
+    "segment_name": "Subject",
+    "entity_label": "Subject",
+    "description": "Subject Segment Type",
+    "status": "active"
+  }
+]

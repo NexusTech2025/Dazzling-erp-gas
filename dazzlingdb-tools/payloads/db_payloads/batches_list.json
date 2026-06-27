@@ -1,0 +1,2690 @@
+[
+  {
+    "batch_name": "Class 11 Physics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 11 Chemistry",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 11 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 11 Biology",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 11 Physics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 11 Chemistry",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 11 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 11 Biology",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 12 Physics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 12 Chemistry",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 12 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 12 Biology",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 12 Physics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 12 Chemistry",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 12 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 12 Biology",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 3 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 3 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 3 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 3 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 3 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 3 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 3 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 3 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 3 विज्ञान",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 3 गणित",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 3 सामाजिक अध्ययन",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 3 अंग्रेजी",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 4 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 4 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 4 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 4 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 4 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 4 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 4 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 4 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 4 विज्ञान",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 4 गणित",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 4 सामाजिक अध्ययन",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 4 अंग्रेजी",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 5 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 5 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 5 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 5 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 5 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 5 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 5 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 5 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 5 विज्ञान",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 5 गणित",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 5 सामाजिक अध्ययन",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 5 अंग्रेजी",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 6 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 6 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 6 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 6 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 6 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 6 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 6 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 6 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 6 विज्ञान",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 6 गणित",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 6 सामाजिक अध्ययन",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 6 अंग्रेजी",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 7 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 7 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 7 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 7 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 7 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 7 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 7 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 7 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 7 विज्ञान",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 7 गणित",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 7 सामाजिक अध्ययन",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 7 अंग्रेजी",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 8 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 8 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 8 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 8 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 8 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 8 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 8 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 8 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 8 विज्ञान",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 8 गणित",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 8 सामाजिक अध्ययन",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 8 अंग्रेजी",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 9 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 9 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 9 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 9 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 9 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 9 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 9 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 9 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 9 विज्ञान",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 9 गणित",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 9 सामाजिक अध्ययन",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 9 अंग्रेजी",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 10 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 10 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 10 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 10 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 10 Science",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 10 Mathematics",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 10 Social Studies",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "Class 10 English",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 10 विज्ञान",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 10 गणित",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 10 सामाजिक अध्ययन",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  },
+  {
+    "batch_name": "कक्षा 10 अंग्रेजी",
+    "batch_type": "Academy",
+    "course_id": "<course_id>",
+    "branch_id": "<branch_id>",
+    "teacher_id": "<teacher_id>",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "max_seats": 30,
+    "status": "upcoming",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Main Hall"
+    }
+  }
+]

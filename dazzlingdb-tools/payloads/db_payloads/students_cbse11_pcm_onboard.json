@@ -1,0 +1,607 @@
+[
+  {
+    "profile": {
+      "student_name": "Aarav Mehta",
+      "email": "aarav.mehta@gmail.com",
+      "phone": "+919876543210",
+      "gender": "Male",
+      "dob": "2010-04-12",
+      "mother_name": "Meera Mehta",
+      "father_name": "Rajesh Mehta",
+      "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261101.png",
+      "status": "active"
+    },
+    "address": {
+      "line1": "Plot No. 45, Sector 3",
+      "line2": "Jagatpura",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "pin_code": "302017",
+      "country": "India"
+    },
+    "contact": {
+      "email": "aarav.mehta@gmail.com",
+      "mobile_number": "9876543210",
+      "emergency_name": "Rajesh Mehta",
+      "emergency_phone": "+91990000000",
+      "emergency_relationship": "Father"
+    },
+    "education": [
+      {
+        "highest_qualification": "Class 10",
+        "institution_name": "St. Xavier School",
+        "year_of_passing": 2026,
+        "percentage_or_cgpa": "92.4%"
+      }
+    ],
+    "enrollments": [
+      {
+        "enrollment_type": "package",
+        "item_id": "PKG-8E7F42CE",
+        "fee": 110000,
+        "roll_number": 20261101,
+        "enrollment_date": "2026-06-26",
+        "status": "active",
+        "academic_status": "active",
+        "package_batches": [
+          {
+            "course_id": "CRS-FB15A55B",
+            "batch_id": "BAT-0A4F4A04"
+          },
+          {
+            "course_id": "CRS-8FD279B7",
+            "batch_id": "BAT-835CB97A"
+          },
+          {
+            "course_id": "CRS-79E92F19",
+            "batch_id": "BAT-C9DAD00B"
+          },
+          {
+            "course_id": "CRS-140B5888",
+            "batch_id": "BAT-07A5CC72"
+          }
+        ]
+      }
+    ],
+    "feeAccount": {
+      "total_fee": 110000,
+      "discount": 0,
+      "final_fee": 110000,
+      "amount_paid": 27500,
+      "balance_due": 82500,
+      "is_overdue": false,
+      "penalty_amount": 0,
+      "next_due_date": "2026-08-01",
+      "status": "active",
+      "remarks": "Onboarded via PCM Class 11 Package",
+      "created_by": "admin_moni",
+      "installments": [
+        {
+          "installment_number": 1,
+          "due_amount": 27500,
+          "paid_amount": 27500,
+          "late_fee_amount": 0,
+          "due_date": "2026-07-01",
+          "status": "paid"
+        },
+        {
+          "installment_number": 2,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-08-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 3,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-09-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 4,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-10-01",
+          "status": "pending"
+        }
+      ]
+    },
+    "payment": {
+      "amount_paid": 27500,
+      "payment_date": "2026-06-26T01:00:00Z",
+      "payment_method": "upi",
+      "transaction_reference": "TXN-ONB-PCM-20261101",
+      "status": "success",
+      "remarks": "First installment payment on registration",
+      "created_by": "admin_moni"
+    }
+  },
+  {
+    "profile": {
+      "student_name": "Ishaan Sharma",
+      "email": "ishaan.sharma@gmail.com",
+      "phone": "+919812345678",
+      "gender": "Male",
+      "dob": "2010-09-18",
+      "mother_name": "Sunita Sharma",
+      "father_name": "Alok Sharma",
+      "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261102.png",
+      "status": "active"
+    },
+    "address": {
+      "line1": "Plot No. 49, Sector 3",
+      "line2": "Jagatpura",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "pin_code": "302018",
+      "country": "India"
+    },
+    "contact": {
+      "email": "ishaan.sharma@gmail.com",
+      "mobile_number": "9812345678",
+      "emergency_name": "Alok Sharma",
+      "emergency_phone": "+91990000001",
+      "emergency_relationship": "Father"
+    },
+    "education": [
+      {
+        "highest_qualification": "Class 10",
+        "institution_name": "St. Xavier School",
+        "year_of_passing": 2026,
+        "percentage_or_cgpa": "92.4%"
+      }
+    ],
+    "enrollments": [
+      {
+        "enrollment_type": "package",
+        "item_id": "PKG-8E7F42CE",
+        "fee": 110000,
+        "roll_number": 20261102,
+        "enrollment_date": "2026-06-26",
+        "status": "active",
+        "academic_status": "active",
+        "package_batches": [
+          {
+            "course_id": "CRS-FB15A55B",
+            "batch_id": "BAT-0A4F4A04"
+          },
+          {
+            "course_id": "CRS-8FD279B7",
+            "batch_id": "BAT-835CB97A"
+          },
+          {
+            "course_id": "CRS-79E92F19",
+            "batch_id": "BAT-C9DAD00B"
+          },
+          {
+            "course_id": "CRS-140B5888",
+            "batch_id": "BAT-07A5CC72"
+          }
+        ]
+      }
+    ],
+    "feeAccount": {
+      "total_fee": 110000,
+      "discount": 0,
+      "final_fee": 110000,
+      "amount_paid": 27500,
+      "balance_due": 82500,
+      "is_overdue": false,
+      "penalty_amount": 0,
+      "next_due_date": "2026-08-01",
+      "status": "active",
+      "remarks": "Onboarded via PCM Class 11 Package",
+      "created_by": "admin_moni",
+      "installments": [
+        {
+          "installment_number": 1,
+          "due_amount": 27500,
+          "paid_amount": 27500,
+          "late_fee_amount": 0,
+          "due_date": "2026-07-01",
+          "status": "paid"
+        },
+        {
+          "installment_number": 2,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-08-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 3,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-09-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 4,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-10-01",
+          "status": "pending"
+        }
+      ]
+    },
+    "payment": {
+      "amount_paid": 27500,
+      "payment_date": "2026-06-26T01:00:00Z",
+      "payment_method": "upi",
+      "transaction_reference": "TXN-ONB-PCM-20261102",
+      "status": "success",
+      "remarks": "First installment payment on registration",
+      "created_by": "admin_moni"
+    }
+  },
+  {
+    "profile": {
+      "student_name": "Ananya Patel",
+      "email": "ananya.patel@gmail.com",
+      "phone": "+919765432109",
+      "gender": "Female",
+      "dob": "2010-11-22",
+      "mother_name": "Kiran Patel",
+      "father_name": "Dinesh Patel",
+      "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261103.png",
+      "status": "active"
+    },
+    "address": {
+      "line1": "Plot No. 53, Sector 3",
+      "line2": "Jagatpura",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "pin_code": "302019",
+      "country": "India"
+    },
+    "contact": {
+      "email": "ananya.patel@gmail.com",
+      "mobile_number": "9765432109",
+      "emergency_name": "Dinesh Patel",
+      "emergency_phone": "+91990000002",
+      "emergency_relationship": "Father"
+    },
+    "education": [
+      {
+        "highest_qualification": "Class 10",
+        "institution_name": "St. Xavier School",
+        "year_of_passing": 2026,
+        "percentage_or_cgpa": "92.4%"
+      }
+    ],
+    "enrollments": [
+      {
+        "enrollment_type": "package",
+        "item_id": "PKG-8E7F42CE",
+        "fee": 110000,
+        "roll_number": 20261103,
+        "enrollment_date": "2026-06-26",
+        "status": "active",
+        "academic_status": "active",
+        "package_batches": [
+          {
+            "course_id": "CRS-FB15A55B",
+            "batch_id": "BAT-0A4F4A04"
+          },
+          {
+            "course_id": "CRS-8FD279B7",
+            "batch_id": "BAT-835CB97A"
+          },
+          {
+            "course_id": "CRS-79E92F19",
+            "batch_id": "BAT-C9DAD00B"
+          },
+          {
+            "course_id": "CRS-140B5888",
+            "batch_id": "BAT-07A5CC72"
+          }
+        ]
+      }
+    ],
+    "feeAccount": {
+      "total_fee": 110000,
+      "discount": 0,
+      "final_fee": 110000,
+      "amount_paid": 27500,
+      "balance_due": 82500,
+      "is_overdue": false,
+      "penalty_amount": 0,
+      "next_due_date": "2026-08-01",
+      "status": "active",
+      "remarks": "Onboarded via PCM Class 11 Package",
+      "created_by": "admin_moni",
+      "installments": [
+        {
+          "installment_number": 1,
+          "due_amount": 27500,
+          "paid_amount": 27500,
+          "late_fee_amount": 0,
+          "due_date": "2026-07-01",
+          "status": "paid"
+        },
+        {
+          "installment_number": 2,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-08-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 3,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-09-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 4,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-10-01",
+          "status": "pending"
+        }
+      ]
+    },
+    "payment": {
+      "amount_paid": 27500,
+      "payment_date": "2026-06-26T01:00:00Z",
+      "payment_method": "upi",
+      "transaction_reference": "TXN-ONB-PCM-20261103",
+      "status": "success",
+      "remarks": "First installment payment on registration",
+      "created_by": "admin_moni"
+    }
+  },
+  {
+    "profile": {
+      "student_name": "Kabir Verma",
+      "email": "kabir.verma@gmail.com",
+      "phone": "+919988776655",
+      "gender": "Male",
+      "dob": "2010-01-30",
+      "mother_name": "Rekha Verma",
+      "father_name": "Suresh Verma",
+      "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261104.png",
+      "status": "active"
+    },
+    "address": {
+      "line1": "Plot No. 57, Sector 3",
+      "line2": "Jagatpura",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "pin_code": "302020",
+      "country": "India"
+    },
+    "contact": {
+      "email": "kabir.verma@gmail.com",
+      "mobile_number": "9988776655",
+      "emergency_name": "Suresh Verma",
+      "emergency_phone": "+91990000003",
+      "emergency_relationship": "Father"
+    },
+    "education": [
+      {
+        "highest_qualification": "Class 10",
+        "institution_name": "St. Xavier School",
+        "year_of_passing": 2026,
+        "percentage_or_cgpa": "92.4%"
+      }
+    ],
+    "enrollments": [
+      {
+        "enrollment_type": "package",
+        "item_id": "PKG-8E7F42CE",
+        "fee": 110000,
+        "roll_number": 20261104,
+        "enrollment_date": "2026-06-26",
+        "status": "active",
+        "academic_status": "active",
+        "package_batches": [
+          {
+            "course_id": "CRS-FB15A55B",
+            "batch_id": "BAT-0A4F4A04"
+          },
+          {
+            "course_id": "CRS-8FD279B7",
+            "batch_id": "BAT-835CB97A"
+          },
+          {
+            "course_id": "CRS-79E92F19",
+            "batch_id": "BAT-C9DAD00B"
+          },
+          {
+            "course_id": "CRS-140B5888",
+            "batch_id": "BAT-07A5CC72"
+          }
+        ]
+      }
+    ],
+    "feeAccount": {
+      "total_fee": 110000,
+      "discount": 0,
+      "final_fee": 110000,
+      "amount_paid": 27500,
+      "balance_due": 82500,
+      "is_overdue": false,
+      "penalty_amount": 0,
+      "next_due_date": "2026-08-01",
+      "status": "active",
+      "remarks": "Onboarded via PCM Class 11 Package",
+      "created_by": "admin_moni",
+      "installments": [
+        {
+          "installment_number": 1,
+          "due_amount": 27500,
+          "paid_amount": 27500,
+          "late_fee_amount": 0,
+          "due_date": "2026-07-01",
+          "status": "paid"
+        },
+        {
+          "installment_number": 2,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-08-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 3,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-09-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 4,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-10-01",
+          "status": "pending"
+        }
+      ]
+    },
+    "payment": {
+      "amount_paid": 27500,
+      "payment_date": "2026-06-26T01:00:00Z",
+      "payment_method": "upi",
+      "transaction_reference": "TXN-ONB-PCM-20261104",
+      "status": "success",
+      "remarks": "First installment payment on registration",
+      "created_by": "admin_moni"
+    }
+  },
+  {
+    "profile": {
+      "student_name": "Diya Iyer",
+      "email": "diya.iyer@gmail.com",
+      "phone": "+919654321987",
+      "gender": "Female",
+      "dob": "2010-07-05",
+      "mother_name": "Lakshmi Iyer",
+      "father_name": "Venkatesh Iyer",
+      "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261105.png",
+      "status": "active"
+    },
+    "address": {
+      "line1": "Plot No. 61, Sector 3",
+      "line2": "Jagatpura",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "pin_code": "302021",
+      "country": "India"
+    },
+    "contact": {
+      "email": "diya.iyer@gmail.com",
+      "mobile_number": "9654321987",
+      "emergency_name": "Venkatesh Iyer",
+      "emergency_phone": "+91990000004",
+      "emergency_relationship": "Father"
+    },
+    "education": [
+      {
+        "highest_qualification": "Class 10",
+        "institution_name": "St. Xavier School",
+        "year_of_passing": 2026,
+        "percentage_or_cgpa": "92.4%"
+      }
+    ],
+    "enrollments": [
+      {
+        "enrollment_type": "package",
+        "item_id": "PKG-8E7F42CE",
+        "fee": 110000,
+        "roll_number": 20261105,
+        "enrollment_date": "2026-06-26",
+        "status": "active",
+        "academic_status": "active",
+        "package_batches": [
+          {
+            "course_id": "CRS-FB15A55B",
+            "batch_id": "BAT-0A4F4A04"
+          },
+          {
+            "course_id": "CRS-8FD279B7",
+            "batch_id": "BAT-835CB97A"
+          },
+          {
+            "course_id": "CRS-79E92F19",
+            "batch_id": "BAT-C9DAD00B"
+          },
+          {
+            "course_id": "CRS-140B5888",
+            "batch_id": "BAT-07A5CC72"
+          }
+        ]
+      }
+    ],
+    "feeAccount": {
+      "total_fee": 110000,
+      "discount": 0,
+      "final_fee": 110000,
+      "amount_paid": 27500,
+      "balance_due": 82500,
+      "is_overdue": false,
+      "penalty_amount": 0,
+      "next_due_date": "2026-08-01",
+      "status": "active",
+      "remarks": "Onboarded via PCM Class 11 Package",
+      "created_by": "admin_moni",
+      "installments": [
+        {
+          "installment_number": 1,
+          "due_amount": 27500,
+          "paid_amount": 27500,
+          "late_fee_amount": 0,
+          "due_date": "2026-07-01",
+          "status": "paid"
+        },
+        {
+          "installment_number": 2,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-08-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 3,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-09-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 4,
+          "due_amount": 27500,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-10-01",
+          "status": "pending"
+        }
+      ]
+    },
+    "payment": {
+      "amount_paid": 27500,
+      "payment_date": "2026-06-26T01:00:00Z",
+      "payment_method": "upi",
+      "transaction_reference": "TXN-ONB-PCM-20261105",
+      "status": "success",
+      "remarks": "First installment payment on registration",
+      "created_by": "admin_moni"
+    }
+  }
+]

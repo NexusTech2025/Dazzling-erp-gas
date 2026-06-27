@@ -1,0 +1,786 @@
+[
+    {
+        "package_name": "Class 11 Science Bundle (CBSE)",
+        "package_code": "PKG-11CBSE-SCI",
+        "class": "11",
+        "board": "CBSE",
+        "language_medium": "English",
+        "base_fee": 110000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "PHY11CBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "CHM11CBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT11CBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "BIO11CBSE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 11 Science Bundle (RBSE - English Medium)",
+        "package_code": "PKG-11RBSE-SCI-E",
+        "class": "11",
+        "board": "RBSE",
+        "language_medium": "English",
+        "base_fee": 85000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "PHY11RBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "CHM11RBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT11RBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "BIO11RBSE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 12 Science Bundle (CBSE)",
+        "package_code": "PKG-12CBSE-SCI",
+        "class": "12",
+        "board": "CBSE",
+        "language_medium": "English",
+        "base_fee": 120000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "PHY12CBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "CHM12CBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT12CBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "BIO12CBSE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 12 Science Bundle (RBSE - English Medium)",
+        "package_code": "PKG-12RBSE-SCI-E",
+        "class": "12",
+        "board": "RBSE",
+        "language_medium": "English",
+        "base_fee": 95000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "PHY12RBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "CHM12RBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT12RBSE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "BIO12RBSE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 3 Core Bundle (CBSE)",
+        "package_code": "PKG-03CBSE-CORE",
+        "class": "3",
+        "board": "CBSE",
+        "language_medium": "English",
+        "base_fee": 52000,
+        "default_installment_count": 3,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI03CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT03CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST03CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG03CBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 3 Core Bundle (RBSE - English Medium)",
+        "package_code": "PKG-03RBSE-CORE-E",
+        "class": "3",
+        "board": "RBSE",
+        "language_medium": "English",
+        "base_fee": 42000,
+        "default_installment_count": 3,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI03RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT03RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST03RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG03RBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "कक्षा 3 कोर बंडल (RBSE - हिंदी माध्यम)",
+        "package_code": "PKG-03RBSE-CORE-H",
+        "class": "3",
+        "board": "RBSE",
+        "language_medium": "Hindi",
+        "base_fee": 38000,
+        "default_installment_count": 3,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI03RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT03RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST03RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG03RBSEH"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 4 Core Bundle (CBSE)",
+        "package_code": "PKG-04CBSE-CORE",
+        "class": "4",
+        "board": "CBSE",
+        "language_medium": "English",
+        "base_fee": 56000,
+        "default_installment_count": 3,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI04CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT04CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST04CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG04CBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 4 Core Bundle (RBSE - English Medium)",
+        "package_code": "PKG-04RBSE-CORE-E",
+        "class": "4",
+        "board": "RBSE",
+        "language_medium": "English",
+        "base_fee": 46000,
+        "default_installment_count": 3,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI04RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT04RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST04RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG04RBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "कक्षा 4 कोर बंडल (RBSE - हिंदी माध्यम)",
+        "package_code": "PKG-04RBSE-CORE-H",
+        "class": "4",
+        "board": "RBSE",
+        "language_medium": "Hindi",
+        "base_fee": 42000,
+        "default_installment_count": 3,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI04RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT04RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST04RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG04RBSEH"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 5 Core Bundle (CBSE)",
+        "package_code": "PKG-05CBSE-CORE",
+        "class": "5",
+        "board": "CBSE",
+        "language_medium": "English",
+        "base_fee": 60000,
+        "default_installment_count": 3,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI05CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT05CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST05CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG05CBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 5 Core Bundle (RBSE - English Medium)",
+        "package_code": "PKG-05RBSE-CORE-E",
+        "class": "5",
+        "board": "RBSE",
+        "language_medium": "English",
+        "base_fee": 50000,
+        "default_installment_count": 3,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI05RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT05RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST05RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG05RBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "कक्षा 5 कोर बंडल (RBSE - हिंदी माध्यम)",
+        "package_code": "PKG-05RBSE-CORE-H",
+        "class": "5",
+        "board": "RBSE",
+        "language_medium": "Hindi",
+        "base_fee": 46000,
+        "default_installment_count": 3,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI05RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT05RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST05RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG05RBSEH"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 6 Secondary Bundle (CBSE)",
+        "package_code": "PKG-06CBSE-CORE",
+        "class": "6",
+        "board": "CBSE",
+        "language_medium": "English",
+        "base_fee": 68000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI06CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT06CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST06CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG06CBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 6 Secondary Bundle (RBSE - English Medium)",
+        "package_code": "PKG-06RBSE-CORE-E",
+        "class": "6",
+        "board": "RBSE",
+        "language_medium": "English",
+        "base_fee": 56000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI06RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT06RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST06RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG06RBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "कक्षा 6 माध्यमिक बंडल (RBSE - हिंदी माध्यम)",
+        "package_code": "PKG-06RBSE-CORE-H",
+        "class": "6",
+        "board": "RBSE",
+        "language_medium": "Hindi",
+        "base_fee": 52000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI06RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT06RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST06RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG06RBSEH"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 7 Secondary Bundle (CBSE)",
+        "package_code": "PKG-07CBSE-CORE",
+        "class": "7",
+        "board": "CBSE",
+        "language_medium": "English",
+        "base_fee": 74000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI07CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT07CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST07CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG07CBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 7 Secondary Bundle (RBSE - English Medium)",
+        "package_code": "PKG-07RBSE-CORE-E",
+        "class": "7",
+        "board": "RBSE",
+        "language_medium": "English",
+        "base_fee": 62000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI07RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT07RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST07RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG07RBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "कक्षा 7 माध्यमिक बंडल (RBSE - हिंदी माध्यम)",
+        "package_code": "PKG-07RBSE-CORE-H",
+        "class": "7",
+        "board": "RBSE",
+        "language_medium": "Hindi",
+        "base_fee": 58000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI07RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT07RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST07RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG07RBSEH"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 8 Secondary Bundle (CBSE)",
+        "package_code": "PKG-08CBSE-CORE",
+        "class": "8",
+        "board": "CBSE",
+        "language_medium": "English",
+        "base_fee": 80000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI08CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT08CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST08CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG08CBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 8 Secondary Bundle (RBSE - English Medium)",
+        "package_code": "PKG-08RBSE-CORE-E",
+        "class": "8",
+        "board": "RBSE",
+        "language_medium": "English",
+        "base_fee": 66000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI08RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT08RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST08RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG08RBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "कक्षा 8 माध्यमिक बंडल (RBSE - हिंदी माध्यम)",
+        "package_code": "PKG-08RBSE-CORE-H",
+        "class": "8",
+        "board": "RBSE",
+        "language_medium": "Hindi",
+        "base_fee": 62000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI08RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT08RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST08RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG08RBSEH"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 9 Higher Bundle (CBSE)",
+        "package_code": "PKG-09CBSE-CORE",
+        "class": "9",
+        "board": "CBSE",
+        "language_medium": "English",
+        "base_fee": 88000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI09CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT09CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST09CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG09CBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 9 Higher Bundle (RBSE - English Medium)",
+        "package_code": "PKG-09RBSE-CORE-E",
+        "class": "9",
+        "board": "RBSE",
+        "language_medium": "English",
+        "base_fee": 72000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI09RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT09RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST09RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG09RBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "कक्षा 9 उच्च माध्यमिक बंडल (RBSE - हिंदी माध्यम)",
+        "package_code": "PKG-09RBSE-CORE-H",
+        "class": "9",
+        "board": "RBSE",
+        "language_medium": "Hindi",
+        "base_fee": 68000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI09RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT09RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST09RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG09RBSEH"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 10 Board Prep Bundle (CBSE)",
+        "package_code": "PKG-10CBSE-CORE",
+        "class": "10",
+        "board": "CBSE",
+        "language_medium": "English",
+        "base_fee": 96000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI10CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT10CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST10CBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG10CBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "Class 10 Board Prep Bundle (RBSE - English Medium)",
+        "package_code": "PKG-10RBSE-CORE-E",
+        "class": "10",
+        "board": "RBSE",
+        "language_medium": "English",
+        "base_fee": 78000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI10RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT10RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST10RBSEE"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG10RBSEE"
+            }
+        ]
+    },
+    {
+        "package_name": "कक्षा 10 बोर्ड परीक्षा बंडल (RBSE - हिंदी माध्यम)",
+        "package_code": "PKG-10RBSE-CORE-H",
+        "class": "10",
+        "board": "RBSE",
+        "language_medium": "Hindi",
+        "base_fee": 72000,
+        "default_installment_count": 4,
+        "status": "active",
+        "items": [
+            {
+                "item_type": "subject",
+                "item_short_code": "SCI10RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "MAT10RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "SST10RBSEH"
+            },
+            {
+                "item_type": "subject",
+                "item_short_code": "ENG10RBSEH"
+            }
+        ]
+    }
+]

@@ -1,0 +1,98 @@
+[
+  {
+    "batch_name": "Class 11 Physics CBSE (A)",
+    "batch_type": "Academy",
+    "course_id": "CRS-FB15A55B",
+    "branch_id": "BRN-D592FDDC",
+    "teacher_id": "TCH-083C6858",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "capacity": 30,
+    "status": "active",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room_number": "Room 101"
+    }
+  },
+  {
+    "batch_name": "Class 11 Chemistry CBSE (A)",
+    "batch_type": "Academy",
+    "course_id": "CRS-8FD279B7",
+    "branch_id": "BRN-D592FDDC",
+    "teacher_id": "TCH-84ECD49D",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "capacity": 30,
+    "status": "active",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "11:15",
+      "end_time": "13:15",
+      "room_number": "Room 101"
+    }
+  },
+  {
+    "batch_name": "Class 11 Mathematics CBSE (A)",
+    "batch_type": "Academy",
+    "course_id": "CRS-79E92F19",
+    "branch_id": "BRN-D592FDDC",
+    "teacher_id": "TCH-EF263ECD",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "capacity": 30,
+    "status": "active",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "14:00",
+      "end_time": "16:00",
+      "room_number": "Room 102"
+    }
+  },
+  {
+    "batch_name": "Class 11 Biology CBSE (A)",
+    "batch_type": "Academy",
+    "course_id": "CRS-140B5888",
+    "branch_id": "BRN-D592FDDC",
+    "teacher_id": "TCH-92584198",
+    "start_date": "01-07-2026",
+    "end_date": "31-12-2026",
+    "capacity": 30,
+    "status": "active",
+    "schedule": {
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "start_time": "14:00",
+      "end_time": "16:00",
+      "room_number": "Room 103"
+    }
+  }
+]

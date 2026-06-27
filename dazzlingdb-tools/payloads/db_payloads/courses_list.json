@@ -1,0 +1,1906 @@
+[
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 11 Physics (CBSE)",
+        "short_code": "PHY11CBSE",
+        "language_medium": "English",
+        "description": "Complete Class 11th Physics for CBSE Board. Covers Kinematics, Laws of Motion, and Thermodynamics with clear conceptual clarity and regular numerical practice sheets as per the latest NCERT pattern.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 30000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "11",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 11 Chemistry (CBSE)",
+        "short_code": "CHM11CBSE",
+        "language_medium": "English",
+        "description": "Full syllabus coverage of 11th Chemistry. Detailed sessions on Organic, Inorganic, and Physical Chemistry including numerical tracking and comprehensive lab-concept integrations designed for scoring high in school exams.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 30000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "11",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 11 Mathematics (CBSE)",
+        "short_code": "MAT11CBSE",
+        "language_medium": "English",
+        "description": "Comprehensive 11th Maths batch covering Sets, Relations, Functions, Trigonometry, and Calculus basics. Includes step-by-step problem-solving methods and weekly mock tests aligned with the board framework.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 32000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "11",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 11 Biology (CBSE)",
+        "short_code": "BIO11CBSE",
+        "language_medium": "English",
+        "description": "Detailed 11th Biology program covering Plant Physiology, Human Anatomy, and Cell Structure. Complete focus on systematic diagrams, structural terminology, and NCERT-based core theory.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 32000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "11",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 11 Physics (RBSE)",
+        "short_code": "PHY11RBSE",
+        "language_medium": "English",
+        "description": "Class 11th Physics designed explicitly for Rajasthan Board English Medium students. Complete emphasis on formula derivations, textbook questions, and regional board paper patterns to build a rock-solid foundation.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 24000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "11",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 11 Chemistry (RBSE)",
+        "short_code": "CHM11RBSE",
+        "language_medium": "English",
+        "description": "Full course framework for RBSE Class 11 Chemistry. Simplified conceptual tracking of chemical bonding, states of matter, and periodic properties along with dedicated doubt-clearing sessions tailored for local school requirements.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 24000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "11",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 11 Mathematics (RBSE)",
+        "short_code": "MAT11RBSE",
+        "language_medium": "English",
+        "description": "Strategic RBSE Class 11 Math training module. Covers coordinate geometry, algebra, and statistics using simple daily practice problems to maximize speed and clarity for state board assessments.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 26000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "11",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 11 Biology (RBSE)",
+        "short_code": "BIO11RBSE",
+        "language_medium": "English",
+        "description": "Structured RBSE English Medium Biology course. Master complex plant and animal taxonomy, definitions, and high-scoring diagram representations mapped exactly to the official Rajasthan Board guidelines.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 26000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "11",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 12 Physics (CBSE)",
+        "short_code": "PHY12CBSE",
+        "language_medium": "English",
+        "description": "High-impact Class 12th Board Physics. Complete mastery over Electrostatics, Magnetism, Optics, and Modern Physics. Integrates extensive CBSE sample paper drill downs and systematic derivation reviews for targeted centum scores.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 34000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "12",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 12 Chemistry (CBSE)",
+        "short_code": "CHM12CBSE",
+        "language_medium": "English",
+        "description": "Rigorous Class 12 Chemistry preparation. Complete focus on detailed Organic mechanisms, name reactions, complex Physical calculations, and Inorganic coordination compounds aligned with ongoing board testing protocols.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 34000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "12",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 12 Mathematics (CBSE)",
+        "short_code": "MAT12CBSE",
+        "language_medium": "English",
+        "description": "Advanced Class 12 Mathematics. Intensive training covering Calculus, Vectors, 3D Geometry, and Matrices. Includes intensive error-analysis sessions and complete execution strategies for the final board examinations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 36000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "12",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 12 Biology (CBSE)",
+        "short_code": "BIO12CBSE",
+        "language_medium": "English",
+        "description": "Premium Class 12 Biology board course. Full tracking of Genetics, Evolution, Biotechnology, and Human Reproduction. Focuses heavily on precise technical definitions, answer-writing formats, and mock marking evaluations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 36000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "12",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 12 Physics (RBSE)",
+        "short_code": "PHY12RBSE",
+        "language_medium": "English",
+        "description": "Targeted Class 12 Physics for Rajasthan Board English Medium. Deep dive into local board textbook problems, critical definitions, and previous years' papers to help Jaipur students secure maximum scores in final board exams.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 26000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "12",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 12 Chemistry (RBSE)",
+        "short_code": "CHM12RBSE",
+        "language_medium": "English",
+        "description": "Full RBSE Class 12 Chemistry curriculum tracking. Provides logical conceptual explanation of solid state, electrochemistry, and bio-molecules with targeted note frameworks optimized for the Ajmer board paper patterns.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 26000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "12",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 12 Mathematics (RBSE)",
+        "short_code": "MAT12RBSE",
+        "language_medium": "English",
+        "description": "Structured RBSE Class 12 Mathematics curriculum. Step-by-step resolution of integration, differential equations, and probability with routine evaluation matrices built to elevate score efficiency for local schools.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 28000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "12",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 12 Biology (RBSE)",
+        "short_code": "BIO12RBSE",
+        "language_medium": "English",
+        "description": "Comprehensive 12th Biology batch for Rajasthan Board English Medium. High-clarity coverage of ecology, genetics, and plant breeding backed by focused diagram practice and structured revision tests for local students.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 28000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "12",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 3 Science (CBSE)",
+        "short_code": "SCI03CBSEE",
+        "language_medium": "English",
+        "description": "Interactive Class 3 Science workbook for CBSE. Covering basics of living things, plants, and the human body with simple illustrations tailored for young learners in Jaipur schools.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 15000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 3 Mathematics (CBSE)",
+        "short_code": "MAT03CBSEE",
+        "language_medium": "English",
+        "description": "Fun and foundational math program for Class 3 CBSE. Emphasizing mental math, basic arithmetic operations, and simple geometry worksheets following the local NCERT syllabus layout.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 15000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 3 Social Studies (CBSE)",
+        "short_code": "SST03CBSEE",
+        "language_medium": "English",
+        "description": "Introduction to family, community, and basic geography concepts for Class 3 CBSE students, utilizing localized contexts and friendly language explanations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 14000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 3 English (CBSE)",
+        "short_code": "ENG03CBSEE",
+        "language_medium": "English",
+        "description": "Elementary grammar, active vocabulary building, and reading comprehension exercises tailored for Class 3 CBSE students across Jaipur coaching formats.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 14000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 3 Science (RBSE - English Medium)",
+        "short_code": "SCI03RBSEE",
+        "language_medium": "English",
+        "description": "Class 3 Science aligned with Rajasthan Board directives for English medium schools. Covers environment and basic plant biology with regular evaluation metrics.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 12000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 3 Mathematics (RBSE - English Medium)",
+        "short_code": "MAT03RBSEE",
+        "language_medium": "English",
+        "description": "Rajasthan Board Class 3 Mathematics module in English. Structural approach to number systems, local unit conversions, and conceptual tables tracking.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 12000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 3 Social Studies (RBSE - English Medium)",
+        "short_code": "SST03RBSEE",
+        "language_medium": "English",
+        "description": "Basic environmental and local community studies mapped directly to the RBSE primary board criteria for English medium batches.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 11000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 3 English (RBSE)",
+        "short_code": "ENG03RBSEE",
+        "language_medium": "English",
+        "description": "Foundational English lessons covering textbook chapters, letter formatting, and elementary vocabulary for RBSE board preparation.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 11000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 3 विज्ञान (RBSE - हिंदी माध्यम)",
+        "short_code": "SCI03RBSEH",
+        "language_medium": "Hindi",
+        "description": "राजस्थान बोर्ड कक्षा 3 के लिए हिंदी माध्यम में विज्ञान पाठ्यक्रम। हमारे आस-पास के वातावरण, जीव-जंतुओं और पेड़-पौधों की सरल और रोचक समझ।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 11000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 3 गणित (RBSE - हिंदी माध्यम)",
+        "short_code": "MAT03RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 3 राजस्थान बोर्ड गणित कोर्स। संख्याओं की समझ, जोड़-घटाव, गुणा और स्थानीय माप-तौल की सरल जयपुर कोचिंग पद्धति से पढ़ाई।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 11000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 3 सामाजिक अध्ययन (RBSE - हिंदी माध्यम)",
+        "short_code": "SST03RBSEH",
+        "language_medium": "Hindi",
+        "description": "राजस्थान बोर्ड नियमों के अनुसार कक्षा 3 पर्यावरण एवं सामाजिक अध्ययन। हमारे समाज, त्योहारों और परिवेश की बुनियादी जानकारी।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 10000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 3 अंग्रेजी (RBSE - हिंदी माध्यम)",
+        "short_code": "ENG03RBSEH",
+        "language_medium": "Hindi",
+        "description": "हिंदी माध्यम के विद्यार्थियों के लिए कक्षा 3 अंग्रेजी कोर्स। बेसिक ग्रामर, वर्ड मीनिंग और बुक रीडिंग का व्यवस्थित अभ्यास।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 10000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "3",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 4 Science (CBSE)",
+        "short_code": "SCI04CBSEE",
+        "language_medium": "English",
+        "description": "Class 4 Science CBSE roadmap. Exploring ecosystem systems, digestion processes, and matter tracking using easy interactive methodologies.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 16000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 4 Mathematics (CBSE)",
+        "short_code": "MAT04CBSEE",
+        "language_medium": "English",
+        "description": "Comprehensive CBSE Grade 4 Math program covering multi-digit operations, basic fractions, and data visualization tools.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 16000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 4 Social Studies (CBSE)",
+        "short_code": "SST04CBSEE",
+        "language_medium": "English",
+        "description": "SST module for Class 4 CBSE. Mapping Indian landforms, historical landmarks, and natural resources through clear explanations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 15000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 4 English (CBSE)",
+        "short_code": "ENG04CBSEE",
+        "language_medium": "English",
+        "description": "Nurturing intermediate language expression, sentence structure syntax, and paragraph writing skills for Class 4 CBSE format.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 15000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 4 Science (RBSE - English Medium)",
+        "short_code": "SCI04RBSEE",
+        "language_medium": "English",
+        "description": "RBSE Class 4 Science in English medium. Step-by-step introduction to physical and environment components following Ajmer directives.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 13000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 4 Mathematics (RBSE - English Medium)",
+        "short_code": "MAT04RBSEE",
+        "language_medium": "English",
+        "description": "Structured RBSE Class 4 Math program. Emphasizes foundational multiplication matrices and standard geometric representations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 13000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 4 Social Studies (RBSE - English Medium)",
+        "short_code": "SST04RBSEE",
+        "language_medium": "English",
+        "description": "Rajasthan geography and historical elements formatted for primary Class 4 English medium students tracking board targets.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 12000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 4 English (RBSE)",
+        "short_code": "ENG04RBSEE",
+        "language_medium": "English",
+        "description": "Structured grammar parts of speech and sentence tracking modules compiled for Class 4 Rajasthan Board execution pipelines.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 12000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 4 विज्ञान (RBSE - हिंदी माध्यम)",
+        "short_code": "SCI04RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 4 राजस्थान बोर्ड विज्ञान। हमारे प्राकृतिक स्रोत, मौसम चक्र और पेड़-पौधों के विभिन्न भागों का सरल हिंदी में अध्ययन।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 12000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 4 गणित (RBSE - हिंदी माध्यम)",
+        "short_code": "MAT04RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 4 राजस्थान बोर्ड गणित। बड़ी संख्याओं का गुणा-भाग, भिन्न की शुरुआती समझ और दैनिक जीवन में गणितीय अनुप्रयोग।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 12000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 4 सामाजिक अध्ययन (RBSE - हिंदी माध्यम)",
+        "short_code": "SST04RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 4 सामाजिक अध्ययन एवं पर्यावरण। राजस्थान के प्रमुख ऐतिहासिक स्थल, किले और हमारी लोक संस्कृति की रोचक जानकारी।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 11000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 4 अंग्रेजी (RBSE - हिंदी माध्यम)",
+        "short_code": "ENG04RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 4 अंग्रेजी पाठ्यक्रम। हिंदी माध्यम के अनुसार सरल अनुवाद तकनीक, महत्वपूर्ण क्रियाएं और वाक्यों का शुद्ध लेखन।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 11000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "4",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 5 Science (CBSE)",
+        "short_code": "SCI05CBSEE",
+        "language_medium": "English",
+        "description": "Class 5 Science CBSE pipeline. Tracking animal adaptations, fuel resources, and structural properties of matter with clean digital maps.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 18000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 5 Mathematics (CBSE)",
+        "short_code": "MAT05CBSEE",
+        "language_medium": "English",
+        "description": "Primary-to-middle math mapping for Class 5 CBSE. Focus areas: decimals, spatial volume tracking, and advanced fractional metrics.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 18000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 5 Social Studies (CBSE)",
+        "short_code": "SST05CBSEE",
+        "language_medium": "English",
+        "description": "Class 5 CBSE SST framework covering global mapping axes, freedom struggle markers, and civic management operations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 17000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 5 English (CBSE)",
+        "short_code": "ENG05CBSEE",
+        "language_medium": "English",
+        "description": "Comprehensive composition layouts, formal letter parsing, and reading strategies targeting excellence in CBSE class exams.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 17000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 5 Science (RBSE - English Medium)",
+        "short_code": "SCI05RBSEE",
+        "language_medium": "English",
+        "description": "RBSE English medium Grade 5 Science board preparation loop. Focuses on ecosystem conservation and regional resource properties.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 14000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 5 Mathematics (RBSE - English Medium)",
+        "short_code": "MAT05RBSEE",
+        "language_medium": "English",
+        "description": "Rajasthan Board Class 5 Math tracking. Comprehensive coverage of unitary logic systems and geometric definitions in plain English.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 14000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 5 Social Studies (RBSE - English Medium)",
+        "short_code": "SST05RBSEE",
+        "language_medium": "English",
+        "description": "Social orientation tracking covering domestic monuments, community governance records, and historical maps under RBSE schema rules.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 13000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 5 English (RBSE)",
+        "short_code": "ENG05RBSEE",
+        "language_medium": "English",
+        "description": "Grammar transformation frameworks and creative description blueprints designed to support student targets inside Ajmer evaluations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 13000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 5 विज्ञान (RBSE - हिंदी माध्यम)",
+        "short_code": "SCI05RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 5 राजस्थान बोर्ड विज्ञान। जल के स्रोत, जैविक विविधता और कृषि पद्धतियों की हिंदी माध्यम में संपूर्ण पाठ्यपुस्तक कवरेज।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 13000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 5 गणित (RBSE - हिंदी माध्यम)",
+        "short_code": "MAT05RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 5 राजस्थान बोर्ड गणित। बोर्ड परीक्षा विशेष तैयारी: दशमलव प्रणाली, धारिता और ज्यामितीय कोणों का सरलतम जयपुर अध्यापन।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 13000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 5 सामाजिक अध्ययन (RBSE - हिंदी माध्यम)",
+        "short_code": "SST05RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 5 पर्यावरण एवं सामाजिक अध्ययन। भारतीय संविधान की बुनियादी बातें, गौरवशाली इतिहास और हमारा नागरिक जीवन।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 12000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 5 अंग्रेजी (RBSE - हिंदी माध्यम)",
+        "short_code": "ENG05RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 5 राजस्थान बोर्ड अंग्रेजी। बोर्ड परीक्षा पैटर्न पर आधारित टेंस, निबंध लेखन और अनसीन पैसेज की सघन तैयारी।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 12000,
+        "default_installment_count": 3,
+        "metadata": {
+            "class": "5",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 6 Science (CBSE)",
+        "short_code": "SCI06CBSEE",
+        "language_medium": "English",
+        "description": "Middle school transition batch for Class 6 Science CBSE. Core topics: Component tracking of food, structural body movements, and electric loops.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 20000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 6 Mathematics (CBSE)",
+        "short_code": "MAT06CBSEE",
+        "language_medium": "English",
+        "description": "Class 6 CBSE Math. Introduction to systemic algebra matrices, integers logic, data operations, and fractional calculations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 20000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 6 Social Studies (CBSE)",
+        "short_code": "SST06CBSEE",
+        "language_medium": "English",
+        "description": "Comprehensive integration of early civilization markers, solar systems mapping, and rural administrative systems for Class 6 CBSE.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 18000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 6 English (CBSE)",
+        "short_code": "ENG06CBSEE",
+        "language_medium": "English",
+        "description": "Intermediate language analysis, voice modulations text tracking, active narrative structural drills, and systematic vocabulary.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 18000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 6 Science (RBSE - English Medium)",
+        "short_code": "SCI06RBSEE",
+        "language_medium": "English",
+        "description": "RBSE Class 6 Science program in English. Covers foundational separation procedures for substances and physical changes tracking.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 16000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 6 Mathematics (RBSE - English Medium)",
+        "short_code": "MAT06RBSEE",
+        "language_medium": "English",
+        "description": "Rajasthan Board Grade 6 Math program. Explores structural ratios, line metrics, and basic equation mapping in clean English.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 16000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 6 Social Studies (RBSE - English Medium)",
+        "short_code": "SST06RBSEE",
+        "language_medium": "English",
+        "description": "RBSE Grade 6 history map analysis and democratic organization systems tailored for local English medium batches.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 15000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 6 English (RBSE)",
+        "short_code": "ENG06RBSEE",
+        "language_medium": "English",
+        "description": "Integrated parsing of grammar tenses and structural description rules designed for Rajasthan board requirements.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 15000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 6 विज्ञान (RBSE - हिंदी माध्यम)",
+        "short_code": "SCI06RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 6 राजस्थान बोर्ड विज्ञान। भोजन के घटक, तंतु से वस्त्र तक और पदार्थों के पृथक्करण की सरल हिंदी व्याख्या एवं नोट्स।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 15000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 6 गणित (RBSE - हिंदी माध्यम)",
+        "short_code": "MAT06RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 6 राजस्थान बोर्ड गणित। अपनी संख्याओं की जान-पहचान, पूर्ण संख्याएं और पूर्णांकों की आधारभूत संकल्पना।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 15000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 6 सामाजिक अध्ययन (RBSE - हिंदी माध्यम)",
+        "short_code": "SST06RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 6 सामाजिक विज्ञान। इतिहास के स्रोत, ग्लोब और मानचित्र की समझ तथा स्थानीय स्वायत्त शासन (पंचायती राज)।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 14000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 6 अंग्रेजी (RBSE - हिंदी माध्यम)",
+        "short_code": "ENG06RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 6 अंग्रेजी कोर्स। हिंदी से अंग्रेजी अनुवाद, पार्ट्स ऑफ़ स्पीच और टेक्स्टबुक की कहानियों का व्यवस्थित अध्ययन।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 14000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "6",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 7 Science (CBSE)",
+        "short_code": "SCI07CBSEE",
+        "language_medium": "English",
+        "description": "Advanced Class 7 Science CBSE. Detailed modules covering plants nutrition tracking, acid-base neutralizations, and heat transmission logic.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 22000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 7 Mathematics (CBSE)",
+        "short_code": "MAT07CBSEE",
+        "language_medium": "English",
+        "description": "Analytical math program for Class 7 CBSE. Tracks dynamic rational calculations, simple expressions algebraic logic, and spatial triangle congruence models.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 22000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 7 Social Studies (CBSE)",
+        "short_code": "SST07CBSEE",
+        "language_medium": "English",
+        "description": "Class 7 CBSE SST framework. Covers medieval historical shifts, structural weather ecosystems, and state constitutional machinery operations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 20000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 7 English (CBSE)",
+        "short_code": "ENG07CBSEE",
+        "language_medium": "English",
+        "description": "Advanced phrase mapping, clause structuring syntax, and systematic summary analysis designed for middle school CBSE benchmarks.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 20000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 7 Science (RBSE - English Medium)",
+        "short_code": "SCI07RBSEE",
+        "language_medium": "English",
+        "description": "RBSE Grade 7 Science module in English. Explores systematic respiration systems in living entities and weather forecasting criteria.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 17000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 7 Mathematics (RBSE - English Medium)",
+        "short_code": "MAT07RBSEE",
+        "language_medium": "English",
+        "description": "Rajasthan Board Class 7 Math training in English. Comprehensive review of geometric configurations and analytical ratio calculations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 17000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 7 Social Studies (RBSE - English Medium)",
+        "short_code": "SST07RBSEE",
+        "language_medium": "English",
+        "description": "RBSE Class 7 history tracking and constitutional machinery guidelines compiled for English medium students in local coaching hubs.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 16000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 7 English (RBSE)",
+        "short_code": "ENG07RBSEE",
+        "language_medium": "English",
+        "description": "Structured active-passive transformations and writing templates prepared explicitly for Class 7 Rajasthan board guidelines.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 16000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 7 विज्ञान (RBSE - हिंदी माध्यम)",
+        "short_code": "SCI07RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 7 राजस्थान बोर्ड विज्ञान। पादपों में पोषण, ऊष्मा, अम्ल, क्षारक और लवण के रासायनिक सिद्धांतों की गहन और सरल समझ।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 16000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 7 गणित (RBSE - हिंदी माध्यम)",
+        "short_code": "MAT07RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 7 राजस्थान बोर्ड गणित। भिन्न एवं दशमलव, आंकड़ों का प्रबंधन और सरल समीकरणों को हल करने की जयपुर स्तरीय विशेष कक्षाएं।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 16000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 7 सामाजिक अध्ययन (RBSE - हिंदी माध्यम)",
+        "short_code": "SST07RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 7 सामाजिक विज्ञान। दिल्ली के सुल्तान, मुगल साम्राज्य, हमारे पर्यावरण के कारक और समानता के संवैधानिक अधिकार।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 15000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 7 अंग्रेजी (RBSE - हिंदी माध्यम)",
+        "short_code": "ENG07RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 7 अंग्रेजी। हिंदी मीडियम के छात्रों के लिए एडवांस्ड ग्रामर, वाक्य संरचना सुधार और स्टोरी/लेटर राइटिंग की सघन प्रैक्टिस।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 15000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "7",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 8 Science (CBSE)",
+        "short_code": "SCI08CBSEE",
+        "language_medium": "English",
+        "description": "Foundation tracking program for Class 8 Science CBSE. Prepares students for senior sections through micro-organism studies, friction laws, and force dynamics.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 24000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 8 Mathematics (CBSE)",
+        "short_code": "MAT08CBSEE",
+        "language_medium": "English",
+        "description": "Rigorous CBSE Grade 8 math setup. Covers rational numbers group structures, linear equations, complex quadrilaterals mapping, and exponent rules.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 24000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 8 Social Studies (CBSE)",
+        "short_code": "SST08CBSEE",
+        "language_medium": "English",
+        "description": "Class 8 CBSE SST module exploring modern history, mineral resource mapping grids, and deep judicial system operations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 22000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 8 English (CBSE)",
+        "short_code": "ENG08CBSEE",
+        "language_medium": "English",
+        "description": "Advanced composition layout models, direct-indirect speech tracking, and comprehension drills built for Class 8 tracking benchmarks.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 22000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 8 Science (RBSE - English Medium)",
+        "short_code": "SCI08RBSEE",
+        "language_medium": "English",
+        "description": "RBSE Board Class 8 Science program in English. Focuses heavily on crop management configurations and metal-nonmetal chemical behaviors.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 18000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 8 Mathematics (RBSE - English Medium)",
+        "short_code": "MAT08RBSEE",
+        "language_medium": "English",
+        "description": "Rajasthan Board Class 8 Math in English. Covering systemic factorization matrices and practical geometry mapping models.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 18000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 8 Social Studies (RBSE - English Medium)",
+        "short_code": "SST08RBSEE",
+        "language_medium": "English",
+        "description": "Nationalized history patterns and agrarian geography mapped explicitly for Class 8 RBSE English medium batches in Jaipur.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 17000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 8 English (RBSE)",
+        "short_code": "ENG08RBSEE",
+        "language_medium": "English",
+        "description": "Formal report drafts and clause organization tools aligned with the ongoing Ajmer board evaluation matrices.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 17000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 8 विज्ञान (RBSE - हिंदी माध्यम)",
+        "short_code": "SCI08RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 8 राजस्थान बोर्ड विज्ञान। बोर्ड परीक्षा विशेष: फसल उत्पादन, सूक्ष्मजीव, धातु और अधातु तथा घर्षण के नियमों की संपूर्ण तैयारी।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 17000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 8 गणित (RBSE - हिंदी माध्यम)",
+        "short_code": "MAT08RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 8 राजस्थान बोर्ड गणित। परिमेय संख्याएं, एक चर वाले रैखिक समीकरण और चतुर्भुजों को समझने के लिए बोर्ड विशेष जयपुर टेस्ट सीरीज।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 17000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 8 सामाजिक अध्ययन (RBSE - हिंदी माध्यम)",
+        "short_code": "SST08RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 8 सामाजिक विज्ञान। आधुनिक भारत का इतिहास, संसाधन एवं विकास तथा भारतीय संविधान व कानून की बुनियादी समझ।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 16000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 8 अंग्रेजी (RBSE - हिंदी माध्यम)",
+        "short_code": "ENG08RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 8 अंग्रेजी बोर्ड कोर्स। हिंदी माध्यम के छात्रों के लिए उत्कृष्ट स्कोरिंग पैटर्न: नरेशन, पैराग्राफ और बोर्ड मॉडल पेपर्स हल।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 16000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "8",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 9 Science (CBSE)",
+        "short_code": "SCI09CBSEE",
+        "language_medium": "English",
+        "description": "High-tier Class 9 Science CBSE curriculum. Introduces structured physics vectors (Motion, Gravitation), cell biochemistry, and molecular chemical formulas.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 26000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 9 Mathematics (CBSE)",
+        "short_code": "MAT09CBSEE",
+        "language_medium": "English",
+        "description": "Class 9 CBSE Math program. Core areas include polynomial theorems, coordinate spaces tracking, Euclidean validation proofs, and surface measurements.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 26000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 9 Social Studies (CBSE)",
+        "short_code": "SST09CBSEE",
+        "language_medium": "English",
+        "description": "Analytical CBSE Class 9 SST training. Explores French and Russian revolutions, global climate vectors, and constitutional architecture profiles.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 24000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 9 English (CBSE)",
+        "short_code": "ENG09CBSEE",
+        "language_medium": "English",
+        "description": "Advanced textbook annotation, complex grammar configurations, descriptive essay modules, and vocabulary tracking for CBSE scoring.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 24000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 9 Science (RBSE - English Medium)",
+        "short_code": "SCI09RBSEE",
+        "language_medium": "English",
+        "description": "Class 9 Science mapped for Rajasthan Board English medium institutes. Detailed numerical review of motion formulas and chemical definitions.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 20000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 9 Mathematics (RBSE - English Medium)",
+        "short_code": "MAT09RBSEE",
+        "language_medium": "English",
+        "description": "Rajasthan Board Grade 9 Math framework in English. Deep focus on numbering logic systems and planar geometry theorems.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 20000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 9 Social Studies (RBSE - English Medium)",
+        "short_code": "SST09RBSEE",
+        "language_medium": "English",
+        "description": "RBSE Grade 9 SST framework covering localized drainage maps, regional history blocks, and basic economic parameters in English.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 19000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 9 English (RBSE)",
+        "short_code": "ENG09RBSEE",
+        "language_medium": "English",
+        "description": "Integrated composition syntax and secondary language mechanics designed strictly for Rajasthan Board final examinations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 19000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 9 विज्ञान (RBSE - हिंदी माध्यम)",
+        "short_code": "SCI09RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 9 राजस्थान बोर्ड विज्ञान। हमारे आस-पास के पदार्थ, कोशिका संरचना, गति और बल के समीकरणों के विस्तृत हिंदी नोट्स और संख्यात्मक प्रश्न।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 19000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 9 गणित (RBSE - हिंदी माध्यम)",
+        "short_code": "MAT09RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 9 राजस्थान बोर्ड गणित। संख्या पद्धति, बहुपद, निर्देशांक ज्यामिति और यूक्लिड की ज्यामिति के प्रमेयों की संपूर्ण हिंदी माध्यम व्याख्या।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 19000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 9 सामाजिक अध्ययन (RBSE - हिंदी माध्यम)",
+        "short_code": "SST09RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 9 सामाजिक विज्ञान। फ्रांसीसी क्रांति, भारत का भौतिक स्वरूप, जलवायु तंत्र और लोकतांत्रिक राजनीति की सरल जयपुर शैली में पढ़ाई।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 18000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 9 अंग्रेजी (RBSE - हिंदी माध्यम)",
+        "short_code": "ENG09RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 9 अंग्रेजी। हिंदी माध्यम के अनुसार एडवांस्ड वाक्य अनुवाद, सिंटैक्स सुधार, कंपोजिशन और पाठ्यपुस्तकों के प्रश्नों का सघन अभ्यास।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 18000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "9",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 10 Science (CBSE)",
+        "short_code": "SCI10CBSEE",
+        "language_medium": "English",
+        "description": "Premium Class 10 Board Science CBSE. Complete coverage of Chemical Reactions, Carbon compounds, Electricity equations, Light optics, and Life processes with targeted sample paper drills.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 28000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 10 Mathematics (CBSE)",
+        "short_code": "MAT10CBSEE",
+        "language_medium": "English",
+        "description": "Rigorous Class 10 Maths CBSE board program. Master Quadratic equations, Trigonometry metrics, Arithmetic Progressions, and Circle theorems with systematic error tracking tests.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 28000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 10 Social Studies (CBSE)",
+        "short_code": "SST10CBSEE",
+        "language_medium": "English",
+        "description": "Class 10 CBSE Board SST program. Deep tracking of Nationalism in India, manufacturing grids, democratic workflows, and global monetary frameworks.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 26000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 10 English (CBSE)",
+        "short_code": "ENG10CBSEE",
+        "language_medium": "English",
+        "description": "Class 10 CBSE Board English. Focused training on advanced comprehension analytics, formal business communication drafts, and marking schema optimizations.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 26000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "CBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 10 Science (RBSE - English Medium)",
+        "short_code": "SCI10RBSEE",
+        "language_medium": "English",
+        "description": "Targeted Class 10 Board Science for Rajasthan Board English medium. Focused review of chemical equations and light optics mapped to the Ajmer board blueprint.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 22000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 10 Mathematics (RBSE - English Medium)",
+        "short_code": "MAT10RBSEE",
+        "language_medium": "English",
+        "description": "Class 10 Rajasthan Board Math curriculum in English medium. High-clarity coverage of coordinate statistics and trigonometric identities for local boards.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 22000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 10 Social Studies (RBSE - English Medium)",
+        "short_code": "SST10RBSEE",
+        "language_medium": "English",
+        "description": "Strategic RBSE Class 10 Board SST review covering local mineral layouts, global history lines, and constitutional models in English text.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 21000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "Class 10 English (RBSE)",
+        "short_code": "ENG10RBSEE",
+        "language_medium": "English",
+        "description": "Advanced secondary grammar optimizations and official letter blueprints compiled strictly to align with Rajasthan board testing parameters.",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 21000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 10 विज्ञान (RBSE - हिंदी माध्यम)",
+        "short_code": "SCI10RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 10 राजस्थान बोर्ड विज्ञान (बोर्ड विशेष)। रासायनिक अभिक्रियाएं, प्रकाश का परावर्तन व अपवर्तन, विद्युत धारा और मानव तंत्र की हिंदी माध्यम में संपूर्ण तैयारी।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 21000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 10 गणित (RBSE - हिंदी माध्यम)",
+        "short_code": "MAT10RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 10 राजस्थान बोर्ड गणित (बोर्ड विशेष)। त्रिकोणमिति, द्विघात समीकरण, समांतर श्रेढ़ियाँ और सांख्यिकी के प्रश्नों का जयपुर स्तरीय गहन अभ्यास और मॉडल पेपर।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 21000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 10 सामाजिक अध्ययन (RBSE - हिंदी माध्यम)",
+        "short_code": "SST10RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 10 सामाजिक विज्ञान (बोर्ड विशेष)। भारत और समकालीन विश्व (इतिहास), संसाधन, जल प्रबंधन, लोकतान्त्रिक राजनीति और बोर्ड मार्किंग स्कीम के अनुसार उत्तर लेखन।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 20000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "RBSE"
+        },
+        "status": "active"
+    },
+    {
+        "segment_id": "SEG-62C3601D",
+        "entity_type": "subject",
+        "name": "कक्षा 10 अंग्रेजी (RBSE - हिंदी माध्यम)",
+        "short_code": "ENG10RBSEH",
+        "language_medium": "Hindi",
+        "description": "कक्षा 10 राजस्थान बोर्ड अंग्रेजी। हिंदी माध्यम के विद्यार्थियों के लिए बोर्ड परीक्षा में 100% अंक लाने हेतु विशेष ग्रामर क्रैश कोर्स, निबंध और लेटर राइटिंग अभ्यास।",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 20000,
+        "default_installment_count": 4,
+        "metadata": {
+            "class": "10",
+            "board": "RBSE"
+        },
+        "status": "active"
+    }
+]

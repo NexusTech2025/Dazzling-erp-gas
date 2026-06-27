@@ -1,0 +1,338 @@
+{
+    "PHY11CBSE": {
+        "batch_name": "Class 11 Physics"
+    },
+    "CHM11CBSE": {
+        "batch_name": "Class 11 Chemistry"
+    },
+    "MAT11CBSE": {
+        "batch_name": "Class 11 Mathematics"
+    },
+    "BIO11CBSE": {
+        "batch_name": "Class 11 Biology"
+    },
+    "PHY11RBSE": {
+        "batch_name": "Class 11 Physics"
+    },
+    "CHM11RBSE": {
+        "batch_name": "Class 11 Chemistry"
+    },
+    "MAT11RBSE": {
+        "batch_name": "Class 11 Mathematics"
+    },
+    "BIO11RBSE": {
+        "batch_name": "Class 11 Biology"
+    },
+    "PHY12CBSE": {
+        "batch_name": "Class 12 Physics"
+    },
+    "CHM12CBSE": {
+        "batch_name": "Class 12 Chemistry"
+    },
+    "MAT12CBSE": {
+        "batch_name": "Class 12 Mathematics"
+    },
+    "BIO12CBSE": {
+        "batch_name": "Class 12 Biology"
+    },
+    "PHY12RBSE": {
+        "batch_name": "Class 12 Physics"
+    },
+    "CHM12RBSE": {
+        "batch_name": "Class 12 Chemistry"
+    },
+    "MAT12RBSE": {
+        "batch_name": "Class 12 Mathematics"
+    },
+    "BIO12RBSE": {
+        "batch_name": "Class 12 Biology"
+    },
+    "SCI03CBSEE": {
+        "batch_name": "Class 3 Science"
+    },
+    "MAT03CBSEE": {
+        "batch_name": "Class 3 Mathematics"
+    },
+    "SST03CBSEE": {
+        "batch_name": "Class 3 Social Studies"
+    },
+    "ENG03CBSEE": {
+        "batch_name": "Class 3 English"
+    },
+    "SCI03RBSEE": {
+        "batch_name": "Class 3 Science"
+    },
+    "MAT03RBSEE": {
+        "batch_name": "Class 3 Mathematics"
+    },
+    "SST03RBSEE": {
+        "batch_name": "Class 3 Social Studies"
+    },
+    "ENG03RBSEE": {
+        "batch_name": "Class 3 English"
+    },
+    "SCI03RBSEH": {
+        "batch_name": "कक्षा 3 विज्ञान"
+    },
+    "MAT03RBSEH": {
+        "batch_name": "कक्षा 3 गणित"
+    },
+    "SST03RBSEH": {
+        "batch_name": "कक्षा 3 सामाजिक अध्ययन"
+    },
+    "ENG03RBSEH": {
+        "batch_name": "कक्षा 3 अंग्रेजी"
+    },
+    "SCI04CBSEE": {
+        "batch_name": "Class 4 Science"
+    },
+    "MAT04CBSEE": {
+        "batch_name": "Class 4 Mathematics"
+    },
+    "SST04CBSEE": {
+        "batch_name": "Class 4 Social Studies"
+    },
+    "ENG04CBSEE": {
+        "batch_name": "Class 4 English"
+    },
+    "SCI04RBSEE": {
+        "batch_name": "Class 4 Science"
+    },
+    "MAT04RBSEE": {
+        "batch_name": "Class 4 Mathematics"
+    },
+    "SST04RBSEE": {
+        "batch_name": "Class 4 Social Studies"
+    },
+    "ENG04RBSEE": {
+        "batch_name": "Class 4 English"
+    },
+    "SCI04RBSEH": {
+        "batch_name": "कक्षा 4 विज्ञान"
+    },
+    "MAT04RBSEH": {
+        "batch_name": "कक्षा 4 गणित"
+    },
+    "SST04RBSEH": {
+        "batch_name": "कक्षा 4 सामाजिक अध्ययन"
+    },
+    "ENG04RBSEH": {
+        "batch_name": "कक्षा 4 अंग्रेजी"
+    },
+    "SCI05CBSEE": {
+        "batch_name": "Class 5 Science"
+    },
+    "MAT05CBSEE": {
+        "batch_name": "Class 5 Mathematics"
+    },
+    "SST05CBSEE": {
+        "batch_name": "Class 5 Social Studies"
+    },
+    "ENG05CBSEE": {
+        "batch_name": "Class 5 English"
+    },
+    "SCI05RBSEE": {
+        "batch_name": "Class 5 Science"
+    },
+    "MAT05RBSEE": {
+        "batch_name": "Class 5 Mathematics"
+    },
+    "SST05RBSEE": {
+        "batch_name": "Class 5 Social Studies"
+    },
+    "ENG05RBSEE": {
+        "batch_name": "Class 5 English"
+    },
+    "SCI05RBSEH": {
+        "batch_name": "कक्षा 5 विज्ञान"
+    },
+    "MAT05RBSEH": {
+        "batch_name": "कक्षा 5 गणित"
+    },
+    "SST05RBSEH": {
+        "batch_name": "कक्षा 5 सामाजिक अध्ययन"
+    },
+    "ENG05RBSEH": {
+        "batch_name": "कक्षा 5 अंग्रेजी"
+    },
+    "SCI06CBSEE": {
+        "batch_name": "Class 6 Science"
+    },
+    "MAT06CBSEE": {
+        "batch_name": "Class 6 Mathematics"
+    },
+    "SST06CBSEE": {
+        "batch_name": "Class 6 Social Studies"
+    },
+    "ENG06CBSEE": {
+        "batch_name": "Class 6 English"
+    },
+    "SCI06RBSEE": {
+        "batch_name": "Class 6 Science"
+    },
+    "MAT06RBSEE": {
+        "batch_name": "Class 6 Mathematics"
+    },
+    "SST06RBSEE": {
+        "batch_name": "Class 6 Social Studies"
+    },
+    "ENG06RBSEE": {
+        "batch_name": "Class 6 English"
+    },
+    "SCI06RBSEH": {
+        "batch_name": "कक्षा 6 विज्ञान"
+    },
+    "MAT06RBSEH": {
+        "batch_name": "कक्षा 6 गणित"
+    },
+    "SST06RBSEH": {
+        "batch_name": "कक्षा 6 सामाजिक अध्ययन"
+    },
+    "ENG06RBSEH": {
+        "batch_name": "कक्षा 6 अंग्रेजी"
+    },
+    "SCI07CBSEE": {
+        "batch_name": "Class 7 Science"
+    },
+    "MAT07CBSEE": {
+        "batch_name": "Class 7 Mathematics"
+    },
+    "SST07CBSEE": {
+        "batch_name": "Class 7 Social Studies"
+    },
+    "ENG07CBSEE": {
+        "batch_name": "Class 7 English"
+    },
+    "SCI07RBSEE": {
+        "batch_name": "Class 7 Science"
+    },
+    "MAT07RBSEE": {
+        "batch_name": "Class 7 Mathematics"
+    },
+    "SST07RBSEE": {
+        "batch_name": "Class 7 Social Studies"
+    },
+    "ENG07RBSEE": {
+        "batch_name": "Class 7 English"
+    },
+    "SCI07RBSEH": {
+        "batch_name": "कक्षा 7 विज्ञान"
+    },
+    "MAT07RBSEH": {
+        "batch_name": "कक्षा 7 गणित"
+    },
+    "SST07RBSEH": {
+        "batch_name": "कक्षा 7 सामाजिक अध्ययन"
+    },
+    "ENG07RBSEH": {
+        "batch_name": "कक्षा 7 अंग्रेजी"
+    },
+    "SCI08CBSEE": {
+        "batch_name": "Class 8 Science"
+    },
+    "MAT08CBSEE": {
+        "batch_name": "Class 8 Mathematics"
+    },
+    "SST08CBSEE": {
+        "batch_name": "Class 8 Social Studies"
+    },
+    "ENG08CBSEE": {
+        "batch_name": "Class 8 English"
+    },
+    "SCI08RBSEE": {
+        "batch_name": "Class 8 Science"
+    },
+    "MAT08RBSEE": {
+        "batch_name": "Class 8 Mathematics"
+    },
+    "SST08RBSEE": {
+        "batch_name": "Class 8 Social Studies"
+    },
+    "ENG08RBSEE": {
+        "batch_name": "Class 8 English"
+    },
+    "SCI08RBSEH": {
+        "batch_name": "कक्षा 8 विज्ञान"
+    },
+    "MAT08RBSEH": {
+        "batch_name": "कक्षा 8 गणित"
+    },
+    "SST08RBSEH": {
+        "batch_name": "कक्षा 8 सामाजिक अध्ययन"
+    },
+    "ENG08RBSEH": {
+        "batch_name": "कक्षा 8 अंग्रेजी"
+    },
+    "SCI09CBSEE": {
+        "batch_name": "Class 9 Science"
+    },
+    "MAT09CBSEE": {
+        "batch_name": "Class 9 Mathematics"
+    },
+    "SST09CBSEE": {
+        "batch_name": "Class 9 Social Studies"
+    },
+    "ENG09CBSEE": {
+        "batch_name": "Class 9 English"
+    },
+    "SCI09RBSEE": {
+        "batch_name": "Class 9 Science"
+    },
+    "MAT09RBSEE": {
+        "batch_name": "Class 9 Mathematics"
+    },
+    "SST09RBSEE": {
+        "batch_name": "Class 9 Social Studies"
+    },
+    "ENG09RBSEE": {
+        "batch_name": "Class 9 English"
+    },
+    "SCI09RBSEH": {
+        "batch_name": "कक्षा 9 विज्ञान"
+    },
+    "MAT09RBSEH": {
+        "batch_name": "कक्षा 9 गणित"
+    },
+    "SST09RBSEH": {
+        "batch_name": "कक्षा 9 सामाजिक अध्ययन"
+    },
+    "ENG09RBSEH": {
+        "batch_name": "कक्षा 9 अंग्रेजी"
+    },
+    "SCI10CBSEE": {
+        "batch_name": "Class 10 Science"
+    },
+    "MAT10CBSEE": {
+        "batch_name": "Class 10 Mathematics"
+    },
+    "SST10CBSEE": {
+        "batch_name": "Class 10 Social Studies"
+    },
+    "ENG10CBSEE": {
+        "batch_name": "Class 10 English"
+    },
+    "SCI10RBSEE": {
+        "batch_name": "Class 10 Science"
+    },
+    "MAT10RBSEE": {
+        "batch_name": "Class 10 Mathematics"
+    },
+    "SST10RBSEE": {
+        "batch_name": "Class 10 Social Studies"
+    },
+    "ENG10RBSEE": {
+        "batch_name": "Class 10 English"
+    },
+    "SCI10RBSEH": {
+        "batch_name": "कक्षा 10 विज्ञान"
+    },
+    "MAT10RBSEH": {
+        "batch_name": "कक्षा 10 गणित"
+    },
+    "SST10RBSEH": {
+        "batch_name": "कक्षा 10 सामाजिक अध्ययन"
+    },
+    "ENG10RBSEH": {
+        "batch_name": "कक्षा 10 अंग्रेजी"
+    }
+}
