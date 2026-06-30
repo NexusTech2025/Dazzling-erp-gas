@@ -1,0 +1,13 @@
+{
+    "include": [
+        "batches"
+    ],
+    "display": {
+        "select": [
+            "teacher_id",
+            "full_name",
+            "gender",
+            "specialization"
+        ]
+    }
+}

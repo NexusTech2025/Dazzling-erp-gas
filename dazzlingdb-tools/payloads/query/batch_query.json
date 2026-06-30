@@ -1,0 +1,15 @@
+{
+    "include": [
+        "Teacher"
+    ],
+    "display": {
+        "select": [
+            "batch_id",
+            "batch_name",
+            "teacher_id",
+            "full_name",
+            "start_date",
+            "end_date"
+        ]
+    }
+}

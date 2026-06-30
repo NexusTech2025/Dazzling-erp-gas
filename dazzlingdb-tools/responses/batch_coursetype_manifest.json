@@ -1,0 +1,69 @@
+{
+  "executionMetadata": {
+    "tableContext": "CourseType",
+    "actionContext": "academic_create_course_type",
+    "timestamp": "2026-06-25T18:32:06.509Z",
+    "totalProcessed": 3,
+    "successCount": 3,
+    "failureCount": 0,
+    "wallTimeMs": 24569,
+    "averageLatencyMs": 8189.7
+  },
+  "successManifest": [
+    {
+      "inputPayloadIndex": 0,
+      "resolvedId": "SEG-40C4B9E6",
+      "recordSnapshot": {
+        "segment_name": "Academic",
+        "entity_label": "Academic",
+        "description": "Academic Segment Type",
+        "status": "active",
+        "segment_id": "SEG-40C4B9E6",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-06-25T13:01:48.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 1,
+      "resolvedId": "SEG-53CD6891",
+      "recordSnapshot": {
+        "segment_name": "Course",
+        "entity_label": "Course",
+        "description": "Course Segment Type",
+        "status": "active",
+        "segment_id": "SEG-53CD6891",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-06-25T13:01:57.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 2,
+      "resolvedId": "SEG-6B07F8DC",
+      "recordSnapshot": {
+        "segment_name": "Subject",
+        "entity_label": "Subject",
+        "description": "Subject Segment Type",
+        "status": "active",
+        "segment_id": "SEG-6B07F8DC",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-06-25T13:02:06.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    }
+  ],
+  "failureManifest": {}
+}

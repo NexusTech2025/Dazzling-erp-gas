@@ -1,0 +1,31 @@
+{
+  "executionMetadata": {
+    "tableContext": "Course",
+    "actionContext": "academic_create_course",
+    "timestamp": "2026-06-25T12:09:55.637Z",
+    "totalProcessed": 2,
+    "successCount": 0,
+    "failureCount": 2,
+    "wallTimeMs": 11746,
+    "averageLatencyMs": 5873
+  },
+  "successManifest": [],
+  "failureManifest": {
+    "0": {
+      "message": "undefined: Course creation failed: 'segment_id' must be a non-empty string.",
+      "attemptedData": {
+        "course_name": "CLI Batch Test A",
+        "base_fee": 500,
+        "status": "active"
+      }
+    },
+    "1": {
+      "message": "undefined: Course creation failed: 'segment_id' must be a non-empty string.",
+      "attemptedData": {
+        "course_name": "CLI Batch Test B",
+        "base_fee": 700,
+        "status": "active"
+      }
+    }
+  }
+}

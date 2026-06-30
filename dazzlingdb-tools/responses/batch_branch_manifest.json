@@ -1,0 +1,41 @@
+{
+  "executionMetadata": {
+    "tableContext": "Branch",
+    "actionContext": "core_create_branch",
+    "timestamp": "2026-06-25T18:02:10.431Z",
+    "totalProcessed": 2,
+    "successCount": 2,
+    "failureCount": 0,
+    "wallTimeMs": 16713,
+    "averageLatencyMs": 8356.5
+  },
+  "successManifest": [
+    {
+      "inputPayloadIndex": 0,
+      "resolvedId": "BRN-D592FDDC",
+      "recordSnapshot": {
+        "branch_name": "Main Branch",
+        "location": "9 Jagat Vihar, Near PNB Bank, Jagatpura, Jaipur, Rajasthan - 302017",
+        "status": "active",
+        "branch_id": "BRN-D592FDDC",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-06-25T12:32:03.000Z"
+      }
+    },
+    {
+      "inputPayloadIndex": 1,
+      "resolvedId": "BRN-439BAC4E",
+      "recordSnapshot": {
+        "branch_name": "Home Branch",
+        "location": "21 Mahesh Colony, Near SBI Bank, Jagatpura, Jaipur, Rajasthan - 302017",
+        "status": "active",
+        "branch_id": "BRN-439BAC4E",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-06-25T12:32:10.000Z"
+      }
+    }
+  ],
+  "failureManifest": {}
+}

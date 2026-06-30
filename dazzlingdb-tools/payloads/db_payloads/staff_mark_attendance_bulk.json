@@ -1,0 +1,58 @@
+{
+    "attendance_date": "2026-06-27",
+    "attendance_mode": "Manual",
+    "records": [
+        {
+            "teacher_id": "TCH-EF263ECD",
+            "batch_id": "BAT-C9DAD00B",
+            "status": "P",
+            "entry_time": {
+                "hour": 2,
+                "minute": 0,
+                "period": "PM"
+            },
+            "exit_time": {
+                "hour": 4,
+                "minute": 0,
+                "period": "PM"
+            }
+        },
+        {
+            "teacher_id": "TCH-92584198",
+            "batch_id": "BAT-07A5CC72",
+            "status": "P",
+            "entry_time": {
+                "hour": 2,
+                "minute": 0,
+                "period": "PM"
+            },
+            "exit_time": {
+                "hour": 4,
+                "minute": 0,
+                "period": "PM"
+            }
+        },
+        {
+            "teacher_id": "TCH-84ECD49D",
+            "batch_id": "BAT-835CB97A",
+            "status": "P",
+            "entry_time": {
+                "hour": 11,
+                "minute": 15,
+                "period": "AM"
+            },
+            "exit_time": {
+                "hour": 1,
+                "minute": 15,
+                "period": "PM"
+            }
+        },
+        {
+            "teacher_id": "TCH-083C6858",
+            "batch_id": "BAT-0A4F4A04",
+            "status": "A",
+            "entry_time": null,
+            "exit_time": null
+        }
+    ]
+}

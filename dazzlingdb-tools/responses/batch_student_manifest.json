@@ -1,0 +1,130 @@
+{
+  "executionMetadata": {
+    "tableContext": "Student",
+    "actionContext": "student_register",
+    "timestamp": "2026-06-25T20:19:13.910Z",
+    "totalProcessed": 5,
+    "successCount": 5,
+    "failureCount": 0,
+    "wallTimeMs": 119633,
+    "averageLatencyMs": 23926.6
+  },
+  "successManifest": [
+    {
+      "inputPayloadIndex": 0,
+      "resolvedId": "STU-F120AE5D",
+      "recordSnapshot": {
+        "student_name": "Aarav Mehta",
+        "email": "aarav.mehta@gmail.com",
+        "phone": "'+919876543210",
+        "gender": "Male",
+        "dob": "2010-04-11T18:30:00.000Z",
+        "mother_name": "Meera Mehta",
+        "father_name": "Rajesh Mehta",
+        "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261101.png",
+        "status": "active",
+        "student_id": "STU-F120AE5D",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-06-25T14:47:22.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 1,
+      "resolvedId": "STU-CFF573D5",
+      "recordSnapshot": {
+        "student_name": "Ishaan Sharma",
+        "email": "ishaan.sharma@gmail.com",
+        "phone": "'+919812345678",
+        "gender": "Male",
+        "dob": "2010-09-17T18:30:00.000Z",
+        "mother_name": "Sunita Sharma",
+        "father_name": "Alok Sharma",
+        "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261102.png",
+        "status": "active",
+        "student_id": "STU-CFF573D5",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-06-25T14:47:40.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 2,
+      "resolvedId": "STU-D5AAEF7D",
+      "recordSnapshot": {
+        "student_name": "Ananya Patel",
+        "email": "ananya.patel@gmail.com",
+        "phone": "'+919765432109",
+        "gender": "Female",
+        "dob": "2010-11-21T18:30:00.000Z",
+        "mother_name": "Kiran Patel",
+        "father_name": "Dinesh Patel",
+        "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261103.png",
+        "status": "active",
+        "student_id": "STU-D5AAEF7D",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-06-25T14:48:06.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 3,
+      "resolvedId": "STU-0667DFFF",
+      "recordSnapshot": {
+        "student_name": "Kabir Verma",
+        "email": "kabir.verma@gmail.com",
+        "phone": "'+919988776655",
+        "gender": "Male",
+        "dob": "2010-01-29T18:30:00.000Z",
+        "mother_name": "Rekha Verma",
+        "father_name": "Suresh Verma",
+        "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261104.png",
+        "status": "active",
+        "student_id": "STU-0667DFFF",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-06-25T14:48:33.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 4,
+      "resolvedId": "STU-AFDC2802",
+      "recordSnapshot": {
+        "student_name": "Diya Iyer",
+        "email": "diya.iyer@gmail.com",
+        "phone": "'+919654321987",
+        "gender": "Female",
+        "dob": "2010-07-04T18:30:00.000Z",
+        "mother_name": "Lakshmi Iyer",
+        "father_name": "Venkatesh Iyer",
+        "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261105.png",
+        "status": "active",
+        "student_id": "STU-AFDC2802",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-06-25T14:48:57.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    }
+  ],
+  "failureManifest": {}
+}
