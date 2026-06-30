@@ -199,7 +199,7 @@ class BooleanField extends BaseField {
   fromSheetValue(value) {
     if (value === "" || value === null || value === undefined) return this._getDefaultValue() || false;
     if (typeof value === 'boolean') return value;
-    
+
     const str = String(value).toLowerCase();
     return ["true", "1", "yes", "y"].includes(str);
   }
@@ -234,7 +234,7 @@ class JSONField extends BaseField {
   }
 }
 
-/**
+/** 
  * Forces deterministic ISO strings for time-series data.
  */
 class DateTimeField extends BaseField {
@@ -256,7 +256,7 @@ class DateTimeField extends BaseField {
   /** @override */
   toSheetValue(value) {
     let date = value;
-    
+
     // Auto-generation logic
     if (this.autoNow || (this.autoNowAdd && !value)) {
       date = new Date();

@@ -31,7 +31,7 @@ class BaseModel {
     Object.keys(schema).forEach(fieldName => {
       const field = schema[fieldName];
       const rawValue = data[fieldName];
-      
+
       // Transform raw sheet value to JS type (or use default)
       this[fieldName] = field.fromSheetValue(rawValue);
     });
@@ -47,7 +47,7 @@ class BaseModel {
     this._gateway = context.gateway;
     this._registry = context.registry;
     this._resolver = context.resolver;
-    
+
     // Static metadata from ModelRegistry
     this._entityName = this.constructor.tableName;
     this._primaryKey = this._registry ? this._registry.getPrimaryKey(this._entityName) : "id";
@@ -65,7 +65,7 @@ class BaseModel {
   _injectRelations() {
     const registry = this._resolver.registry;
     const relations = registry.getRelations(this._entityName);
-    
+
     Object.keys(relations).forEach(relationName => {
       // Don't overwrite data properties (unless they are null/empty)
       if (this[relationName] !== undefined && this[relationName] !== null && this[relationName] !== "") return;
@@ -162,10 +162,10 @@ class BaseModel {
     try {
       const rawSaved = this._gateway.insert(rowData);
       Object.assign(this, rawSaved); // Populate generated ID and created_at
-      
+
       // State Transition: Once safely in the DB, it is no longer new.
-      this._isNew = false; 
-      
+      this._isNew = false;
+
       console.log(`[BaseModel] Successfully inserted new ${this.constructor.name} (ID: ${this[this._primaryKey]}).`);
       return this;
     } catch (e) {
@@ -185,12 +185,12 @@ class BaseModel {
       console.error(`[BaseModel] ${errorMsg}`);
       throw new Error(errorMsg);
     }
-    
+
     console.log(`[BaseModel] Attempting update for ${this.constructor.name} (ID: ${id})...`);
     try {
       const rawUpdated = this._gateway.update(id, rowData);
       Object.assign(this, rawUpdated); // Refresh with any sheet-level changes
-      
+
       console.log(`[BaseModel] Successfully updated ${this.constructor.name} (ID: ${id}).`);
       return this;
     } catch (e) {
@@ -248,17 +248,17 @@ class BaseModel {
   _validateRelational() {
     const errors = [];
     const entity = this.getEntityType();
-    
+
     if (!this._gateway || !this._gateway.registry) return errors;
-    
+
     const relations = this._gateway.registry.getRelations(entity);
     const db = this._gateway.db;
-    
+
     if (!db || !db._pkCache) {
       console.warn(`[BaseModel:${entity}] PrimaryKeyCache is not initialized. Skipping relational validation.`);
       return errors;
     }
-    
+
     const resolver = db._resolver;
     if (!resolver) {
       console.warn(`[BaseModel:${entity}] RelationResolver is not initialized. Skipping relational validation.`);
@@ -326,6 +326,9 @@ class BaseModel {
         let val = this[key];
         // Ensure dates are ISO in JSON
         if (isDate(val)) val = val.toISOString();
+        // NOte: here i need to change the date serialization from iso string to local string or the
+        // we can transform whole date object in json object that contains 
+        // {year, month, date, hours, minutes, seconds, milliseconds, timezone as well if required}
         json[key] = val;
       });
     }

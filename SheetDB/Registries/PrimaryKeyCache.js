@@ -31,7 +31,7 @@ class PrimaryKeyCache {
     console.log(`[PrimaryKeyCache] Cache Miss: Compiling active keys for table '${tableName}'...`);
     const repo = this.db[tableName];
     if (!repo) {
-      throw new Error(`[PrimaryKeyCache] Repository for table '${tableName}' not found in database facade.`);
+      throw new ValidationError(`[PrimaryKeyCache] Repository for table '${tableName}' not found in database facade.`);
     }
 
     const pkName = this.db._registry.getPrimaryKey(tableName);
