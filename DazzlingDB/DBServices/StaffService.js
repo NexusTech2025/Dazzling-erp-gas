@@ -211,22 +211,144 @@ const StaffService = {
    */
 
   /**
-   * Configures the payroll rules for a teacher.
+   * Configures the payroll rules for a teacher or staff member.
+   * Enforces the FSM invariant: Max 1 active contract configuration per entity.
    */
   setSalaryConfig(payload, context) {
     const db = DBContext.getInstance();
-    console.log(`[StaffService] Setting salary config for teacher: ${payload.teacher_id}`);
+    const entityType = payload.entity_type || "Teacher";
+    const entityId = payload.entity_id || payload.teacher_id;
 
-    if (!db.Teacher.findById(payload.teacher_id)) {
-      throw new SheetDB.EntityNotFoundError("Teacher", payload.teacher_id, "Staff");
+    if (!entityId) {
+      throw new SheetDB.ValidationError("entity_id or teacher_id is required.");
     }
 
-    const record = db.TeacherSalaryConfig.insert({
-      ...payload,
-      effective_from: payload.effective_from || new Date()
-    });
+    console.log(`[StaffService] Setting salary config for ${entityType}: ${entityId}`);
+
+    // Verify parent entity existence
+    if (entityType === "Teacher") {
+      if (!db.Teacher.findById(entityId)) {
+        throw new SheetDB.EntityNotFoundError("Teacher", entityId, "Staff");
+      }
+    } else if (entityType === "StaffMember") {
+      if (!db.StaffMember.findById(entityId)) {
+        throw new SheetDB.EntityNotFoundError("StaffMember", entityId, "Staff");
+      }
+    } else {
+      throw new SheetDB.ValidationError(`Unsupported entity_type: ${entityType}`);
+    }
+
+    // Invariant Check: Max 1 active row per entity.
+    if (payload.contract_status === "active") {
+      const activeConfigs = db.TeacherSalaryConfig.where({ entity_id: entityId, entity_type: entityType, contract_status: "active" });
+      activeConfigs.forEach(conf => {
+        db.TeacherSalaryConfig.update(conf.salary_config_id, { contract_status: "expired" });
+      });
+    }
+
+    const insertPayload = {
+      entity_type: entityType,
+      entity_id: entityId,
+      salary_config_type: payload.salary_config_type,
+      effective_from: payload.effective_from || new Date(),
+      effective_to: payload.effective_to || null,
+      rate_type: payload.rate_type,
+      base_value: Number(payload.base_value),
+      total_contract_value: payload.total_contract_value || null,
+      scope_type: payload.scope_type,
+      scope_id: payload.scope_id || null,
+      remark: payload.remark || null,
+      notes: payload.notes || null,
+      contract_status: payload.contract_status || "drafted",
+      settlement_state: payload.settlement_state || "unsettled"
+    };
+
+    const record = db.TeacherSalaryConfig.insert(insertPayload);
     this._trackMutation(context, "TeacherSalaryConfig");
     return record;
+  },
+
+  /**
+   * Retrieves all salary configurations for an entity.
+   */
+  getSalaryConfigs(entityId, entityType, context) {
+    const db = DBContext.getInstance();
+    // Default fallback to Teacher
+    const resolvedType = entityType || "Teacher";
+    if (resolvedType === "Teacher") {
+      if (!db.Teacher.findById(entityId)) {
+        throw new SheetDB.EntityNotFoundError("Teacher", entityId, "Staff");
+      }
+    } else if (resolvedType === "StaffMember") {
+      if (!db.StaffMember.findById(entityId)) {
+        throw new SheetDB.EntityNotFoundError("StaffMember", entityId, "Staff");
+      }
+    }
+    return db.TeacherSalaryConfig.where({ entity_id: entityId, entity_type: resolvedType });
+  },
+
+  /**
+   * Retrieves a specific salary configuration block, verifying ownership.
+   */
+  getSalaryConfig(entityId, entityType, salaryConfigId, context) {
+    const db = DBContext.getInstance();
+    const config = db.TeacherSalaryConfig.findById(salaryConfigId);
+    if (!config) {
+      throw new SheetDB.EntityNotFoundError("TeacherSalaryConfig", salaryConfigId, "Staff");
+    }
+    const resolvedType = entityType || "Teacher";
+    if (config.entity_id !== entityId || config.entity_type !== resolvedType) {
+      throw new SheetDB.ValidationError(`Cross-entity query blocked: config '${salaryConfigId}' does not belong to ${resolvedType} '${entityId}'.`);
+    }
+    return config;
+  },
+
+  /**
+   * Updates an existing salary configuration block, enforcing the FSM active invariant.
+   */
+  updateSalaryConfig(entityId, entityType, salaryConfigId, updateData, context) {
+    const db = DBContext.getInstance();
+    const config = db.TeacherSalaryConfig.findById(salaryConfigId);
+    if (!config) {
+      throw new SheetDB.EntityNotFoundError("TeacherSalaryConfig", salaryConfigId, "Staff");
+    }
+    const resolvedType = entityType || "Teacher";
+    if (config.entity_id !== entityId || config.entity_type !== resolvedType) {
+      throw new SheetDB.ValidationError(`Cross-entity mutation blocked: config '${salaryConfigId}' does not belong to ${resolvedType} '${entityId}'.`);
+    }
+
+    // Enforce active invariant if changing status to "active"
+    if (updateData.contract_status === "active") {
+      const existingActive = db.TeacherSalaryConfig.where({ entity_id: entityId, entity_type: resolvedType, contract_status: "active" });
+      existingActive.forEach(conf => {
+        if (conf.salary_config_id !== salaryConfigId) {
+          db.TeacherSalaryConfig.update(conf.salary_config_id, { contract_status: "expired" });
+        }
+      });
+    }
+
+    const updatedRecord = db.TeacherSalaryConfig.update(salaryConfigId, updateData);
+    this._trackMutation(context, "TeacherSalaryConfig");
+    return updatedRecord;
+  },
+
+  /**
+   * Removes an existing salary configuration block.
+   */
+  deleteSalaryConfig(entityId, entityType, salaryConfigId, context) {
+    const db = DBContext.getInstance();
+    const config = db.TeacherSalaryConfig.findById(salaryConfigId);
+    if (!config) {
+      throw new SheetDB.EntityNotFoundError("TeacherSalaryConfig", salaryConfigId, "Staff");
+    }
+    const resolvedType = entityType || "Teacher";
+    if (config.entity_id !== entityId || config.entity_type !== resolvedType) {
+      throw new SheetDB.ValidationError(`Cross-entity deletion blocked: config '${salaryConfigId}' does not belong to ${resolvedType} '${entityId}'.`);
+    }
+
+    db.TeacherSalaryConfig.remove(salaryConfigId);
+    this._trackMutation(context, "TeacherSalaryConfig");
+    return true;
   },
 
   /**

@@ -50,6 +50,10 @@
                 <option value="staff_onboard_teacher">staff_onboard_teacher</option>
                 <option value="staff_assign_subjects">staff_assign_subjects</option>
                 <option value="staff_set_salary_config">staff_set_salary_config</option>
+                <option value="staff_get_salary_configs">staff_get_salary_configs</option>
+                <option value="staff_get_salary_config">staff_get_salary_config</option>
+                <option value="staff_update_salary_config">staff_update_salary_config</option>
+                <option value="staff_delete_salary_config">staff_delete_salary_config</option>
                 <option value="staff_mark_attendance">staff_mark_attendance</option>
                 <option value="staff_record_payment">staff_record_payment</option>
                 <option value="staff_add_document">staff_add_document</option>
@@ -193,9 +197,38 @@
     "staff_set_salary_config": {
       "payload": {
         "teacher_id": "TCH-2026-001",
-        "salary_type": "monthly",
-        "base_amount": 45000,
+        "salary_config_type": "recurring_monthly",
+        "rate_type": "monthly",
+        "base_value": 45000,
+        "scope_type": "global",
         "effective_from": "2026-06-01"
+      }
+    },
+    "staff_get_salary_configs": {
+      "payload": {
+        "teacher_id": "TCH-2026-001"
+      }
+    },
+    "staff_get_salary_config": {
+      "payload": {
+        "teacher_id": "TCH-2026-001",
+        "salary_config_id": "TSC-001"
+      }
+    },
+    "staff_update_salary_config": {
+      "payload": {
+        "teacher_id": "TCH-2026-001",
+        "salary_config_id": "TSC-001",
+        "data": {
+          "base_value": 50000,
+          "remark": "Annual inflation bump"
+        }
+      }
+    },
+    "staff_delete_salary_config": {
+      "payload": {
+        "teacher_id": "TCH-2026-001",
+        "salary_config_id": "TSC-001"
       }
     },
     "staff_mark_attendance": {

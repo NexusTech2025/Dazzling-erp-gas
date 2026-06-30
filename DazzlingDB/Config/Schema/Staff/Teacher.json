@@ -125,7 +125,7 @@
     "teachersalaryconfig": {
       "type": "hasMany",
       "target": "TeacherSalaryConfig",
-      "foreignKey": "teacher_id"
+      "foreignKey": "entity_id"
     },
     "teacherdocument": {
       "type": "hasMany",

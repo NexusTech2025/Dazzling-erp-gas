@@ -43,11 +43,6 @@ const DEPENDENCY_GRAPH = {
       "onDelete": "protect"
     },
     {
-      "table": "TeacherSalaryConfig",
-      "fk": "teacher_id",
-      "onDelete": "protect"
-    },
-    {
       "table": "TeacherSubject",
       "fk": "teacher_id",
       "onDelete": "protect"

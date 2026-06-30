@@ -2151,6 +2151,11 @@ const DATABASE_SCHEMA = {
               "target": "MoneyTransaction",
               "foreignKey": "party_id",
               "onDelete": "do_nothing"
+            },
+            "teachersalaryconfigs": {
+              "type": "hasMany",
+              "target": "TeacherSalaryConfig",
+              "foreignKey": "entity_id"
             }
           }
         },
@@ -2307,7 +2312,7 @@ const DATABASE_SCHEMA = {
             "teachersalaryconfig": {
               "type": "hasMany",
               "target": "TeacherSalaryConfig",
-              "foreignKey": "teacher_id"
+              "foreignKey": "entity_id"
             },
             "teacherdocument": {
               "type": "hasMany",
@@ -2515,35 +2520,125 @@ const DATABASE_SCHEMA = {
         "TeacherSalaryConfig": {
           "primaryKey": "salary_config_id",
           "columns": {
-            "teacher_id": {
-              "type": "foreign_key",
-              "required": true,
-              "maxLength": 255,
-              "onDelete": "protect"
-            },
-            "salary_type": {
-              "type": "string",
-              "required": true,
-              "choices": [
-                "monthly",
-                "per_class"
-              ],
-              "maxLength": 255
-            },
-            "base_amount": {
-              "type": "number",
-              "required": true
-            },
-            "effective_from": {
-              "type": "date",
-              "required": true
-            },
             "salary_config_id": {
               "type": "auto",
               "idPrefix": "TSC",
               "editable": false,
               "unique": true,
-              "required": false
+              "required": false,
+              "description": "The unique, auto-generated platform identifier for a teacher's salary configuration block.\nPrefixed automatically with 'TSC', it serves as a non-editable primary key to preserve transactional traceability.\nIt is heavily targeted by downstream payroll settlement logs to group and calculate individual transaction lines."
+            },
+            "entity_type": {
+              "type": "string",
+              "required": true,
+              "choices": [
+                "Teacher",
+                "StaffMember"
+              ],
+              "maxLength": 255,
+              "description": "The polymorphic type discriminator identifying the class model of the salary recipient (Teacher or StaffMember)."
+            },
+            "entity_id": {
+              "type": "foreign_key",
+              "required": true,
+              "onDelete": "protect",
+              "description": "The polymorphic entity identifier pointing to the target recipient's primary key (Teacher or StaffMember)."
+            },
+            "salary_config_type": {
+              "type": "string",
+              "required": true,
+              "choices": [
+                "recurring_monthly",
+                "fixed_duration_pool"
+              ],
+              "maxLength": 255,
+              "description": "Defines the macro financial and budgetary behavior of the contract for the management team.\n'recurring_monthly' treats payouts as ongoing operational expenses, drawing dynamically from regular monthly liquidity.\n'fixed_duration_pool' designates a fixed capital cap up front, isolating total project costs for executive budget forecasting."
+            },
+            "effective_from": {
+              "type": "date",
+              "required": true,
+              "description": "The explicit calendar date marking the active commencement window for this compensation strategy.\nUsed by the payroll loop to verify if a configuration entry is timeline-eligible for current-month payout execution.\nEnables non-destructive backward salary auditing and chronological contract revision tracking without overwriting rows."
+            },
+            "effective_to": {
+              "type": "date",
+              "required": false,
+              "description": "The explicit expiration or termination date of the specific contractual salary window configuration.\nWhen populated, the automated calculation engine automatically ignores this entry the moment the processing date passes.\nA null value represents a standard ongoing, indefinite agreement that remains active until manually modified or retired."
+            },
+            "rate_type": {
+              "type": "string",
+              "required": true,
+              "choices": [
+                "monthly",
+                "yearly",
+                "revenue_percentage"
+              ],
+              "maxLength": 255,
+              "description": "Dictates the distinct mathematical strategy used by the automated payroll payroll engine to compute line payouts.\nMaps directly to system calculation functions: absolute flat calculation, annualized fraction splits, or variable percentage shares.\nActs as a structural gateway, redefining how the accompanying 'base_value' coefficient must be evaluated at runtime."
+            },
+            "base_value": {
+              "type": "number",
+              "required": true,
+              "description": "The core numerical multiplier or flat payment value parsed directly by the payroll resolution script.\nInterpreted as a pure flat currency amount when paired with 'monthly' or 'yearly' strategic rate settings.\nFunctions as a floating percentage coefficient (e.g., 25.0 for 25.0%) when evaluating dynamic 'revenue_percentage' entries."
+            },
+            "total_contract_value": {
+              "type": "number",
+              "required": false,
+              "description": "The absolute macro financial commitment assigned to the entire valid duration of this contract timeline.\nPrimarily used for fixed-term milestones or short-term project-based hires to track organizational liability boundaries.\nLeft empty or null for rolling, open-ended employment contracts where total payouts depend on runtime longevity."
+            },
+            "scope_type": {
+              "type": "string",
+              "required": true,
+              "choices": [
+                "global",
+                "batch_group",
+                "single_batch"
+              ],
+              "maxLength": 255,
+              "description": "Determines the structural operational boundary and target application scope of this compensation rule.\n'global' covers all unassigned activities, while 'single_batch' limits rules exclusively to one operational class target.\n'batch_group' signals to the processing engine that complex, multi-batch configurations must be parsed downstream."
+            },
+            "scope_id": {
+              "type": "string",
+              "required": false,
+              "maxLength": 255,
+              "description": "Holds a singular string target ID matching a specific Batch table record when scope is localized.\nWhen 'scope_type' matches 'batch_group', it stores an in-memory stringified JSON object mapping batch IDs to weight splits.\nExample structure: '{\"BTC-101\":60,\"BTC-102\":40}', which allows the engine to distribute fixed base payouts proportionally without extra table rows."
+            },
+            "remark": {
+              "type": "string",
+              "required": false,
+              "maxLength": 255,
+              "description": "A short, structured textual label or title defining the core purpose of this specific salary configuration block.\nServes as a clean summary tag (e.g., 'Summer Crash Course Supplement') easily read on HR administrative data grids.\nAllows managers to scan, group, and filter through multiple active contracts assigned to a single teacher profile."
+            },
+            "notes": {
+              "type": "string",
+              "required": false,
+              "maxLength": 1000,
+              "description": "An extensive, unstructured text box reserved for logging detailed operational context or unique contract terms.\nUsed to document the rationale behind specific asymmetric batch splits, custom raises, or manual auditing overrides.\nProvides vital legal and context tracking for external auditors evaluating organizational expense ledgers over time."
+            },
+            "contract_status": {
+              "type": "string",
+              "required": true,
+              "default": "drafted",
+              "choices": [
+                "drafted",
+                "active",
+                "expired",
+                "terminated",
+                "voided"
+              ],
+              "description": "Temporal and operational lifecycle status tracking validity for expected payment generation.",
+              "maxLength": 255
+            },
+            "settlement_state": {
+              "type": "string",
+              "required": true,
+              "default": "unsettled",
+              "choices": [
+                "unsettled",
+                "settled",
+                "arrears_due"
+              ],
+              "description": "Financial execution ledger state tracking reconciled actual payment obligations.",
+              "maxLength": 255
             },
             "__tx_id": {
               "type": "string",
@@ -2573,10 +2668,14 @@ const DATABASE_SCHEMA = {
             }
           },
           "relations": {
-            "teacher": {
-              "type": "belongsTo",
-              "target": "Teacher",
-              "foreignKey": "teacher_id"
+            "entity": {
+              "type": "belongsToPolymorphic",
+              "typeField": "entity_type",
+              "idField": "entity_id",
+              "mapping": {
+                "Teacher": "Teacher",
+                "StaffMember": "StaffMember"
+              }
             },
             "teacherpaymenttransactions": {
               "type": "hasMany",
