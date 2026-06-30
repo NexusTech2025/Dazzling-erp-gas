@@ -1,0 +1,562 @@
+{
+  "metadata": {
+    "title": "DazzlingDB: StaffService Domain Knowledge Graph",
+    "description": "System architecture, service contracts, data mutations, and relational workflows representing Human Resources and Payroll modules.",
+    "version": "3.0.0",
+    "compiler": "SheetDB Relational Graph Engine",
+    "last_updated": "2026-06-29"
+  },
+  "nodes": [
+    {
+      "id": "StaffService",
+      "type": "DomainService",
+      "category": "ServiceLayer",
+      "properties": {
+        "namespace": "globalThis.StaffService",
+        "file_path": "DazzlingDB/DBServices/StaffService.js",
+        "responsibilities": [
+          "Teacher onboarding and credential tracking",
+          "Compensation rules configuration and versioning",
+          "Surgical and bulk teacher attendance logging",
+          "Payroll, salary distributions, and transaction records",
+          "Relational synchronization of subjects and verification documents"
+        ]
+      }
+    },
+    {
+      "id": "Teacher",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "properties": {
+        "primary_key": "teacher_id",
+        "prefix": "TCH",
+        "file": "Teacher.json",
+        "required_fields": ["full_name", "mobile_number", "experience_years", "teacher_type", "joining_date"],
+        "uniqueness_guards": ["mobile_number", "email"]
+      }
+    },
+    {
+      "id": "TeacherSalaryConfig",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "properties": {
+        "primary_key": "salary_config_id",
+        "prefix": "TSC",
+        "file": "TeacherSalaryConfig.json",
+        "rate_type_choices": ["monthly", "yearly", "revenue_percentage"],
+        "scope_type_choices": ["global", "batch_group", "single_batch"]
+      }
+    },
+    {
+      "id": "TeacherPaymentTransaction",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "properties": {
+        "primary_key": "transaction_id",
+        "prefix": "TPT",
+        "file": "TeacherPaymentTransaction.json",
+        "payment_type_choices": ["salary", "advance", "bonus", "deduction"],
+        "payment_mode_choices": ["cash", "bank_transfer", "upi", "cheque"]
+      }
+    },
+    {
+      "id": "TeacherSubject",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "properties": {
+        "primary_key": "teacher_subject_id",
+        "prefix": "TSB",
+        "file": "TeacherSubject.json",
+        "joins": ["Teacher", "Course"]
+      }
+    },
+    {
+      "id": "TeacherDocument",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "properties": {
+        "primary_key": "document_id",
+        "prefix": "TDO",
+        "file": "TeacherDocument.json",
+        "document_type_choices": ["id_proof", "resume", "other"]
+      }
+    },
+    {
+      "id": "TeacherAttendance",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "properties": {
+        "primary_key": "attendance_id",
+        "prefix": "ATT",
+        "file": "TeacherAttendance.json",
+        "status_choices": ["PRESENT", "ABSENT", "LATE", "LEAVE"],
+        "modes": ["Manual", "QR", "Biometric"]
+      }
+    },
+    {
+      "id": "User",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "properties": {
+        "primary_key": "user_id",
+        "prefix": "USR",
+        "relationship": "1:1 with Teacher via identity key synchronization"
+      }
+    },
+    {
+      "id": "Course",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "properties": {
+        "primary_key": "course_id",
+        "prefix": "CRS",
+        "alias": "Subject"
+      }
+    },
+    {
+      "id": "Batch",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "properties": {
+        "primary_key": "batch_id",
+        "prefix": "BTC"
+      }
+    },
+    {
+      "id": "MoneyTransaction",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "properties": {
+        "primary_key": "transaction_id",
+        "prefix": "MTR",
+        "relation_type": "Polymorphic hasMany via party_id discriminator"
+      }
+    },
+    {
+      "id": "onboardTeacher",
+      "type": "ServiceMethod",
+      "category": "TransactionOrchestrator",
+      "properties": {
+        "parameters": ["payload", "context"],
+        "atomicity": "Rollback-Guaranteed LIFO Reverse Eviction Sequence",
+        "checks": [
+          "Pre-flight mobile_number uniqueness",
+          "Pre-flight email uniqueness",
+          "Pre-flight username uniqueness inside User authentication registry",
+          "Relational validity of academic subjects"
+        ]
+      }
+    },
+    {
+      "id": "updateTeacher",
+      "type": "ServiceMethod",
+      "category": "StateModifier",
+      "properties": {
+        "parameters": ["payload", "context"],
+        "validators": ["TeacherUpdateRules"],
+        "sub_workflows": [
+          "updateTeacherSubjects (Surgical alignment)",
+          "setSalaryConfig (Historical append or update)"
+        ]
+      }
+    },
+    {
+      "id": "assignSubjects",
+      "type": "ServiceMethod",
+      "category": "RelationModifier",
+      "properties": {
+        "parameters": ["teacherId", "subjectIds", "context"],
+        "integrity_check": "Avoids orphaned associations; filters out non-existent Courses"
+      }
+    },
+    {
+      "id": "setSalaryConfig",
+      "type": "ServiceMethod",
+      "category": "RelationModifier",
+      "properties": {
+        "parameters": ["payload", "context"],
+        "integrity_check": "Verifies active parent Teacher ID"
+      }
+    },
+    {
+      "id": "markAttendance",
+      "type": "ServiceMethod",
+      "category": "StateModifier",
+      "properties": {
+        "parameters": ["payload", "context"],
+        "pattern": "Single-row Upsert",
+        "validations": [
+          "Mandatory fields check",
+          "Time boundary cross-check (Entry < Exit)",
+          "Timezone-safe string translation via AttendanceUtil"
+        ]
+      }
+    },
+    {
+      "id": "markAttendanceBulk",
+      "type": "ServiceMethod",
+      "category": "InMemoryBatchOperation",
+      "properties": {
+        "parameters": ["payload", "context"],
+        "pattern": "O(1) Optimized Cache Map",
+        "optimization": "Pre-loads daily attendance rows into memory, eliminating N+1 physical row scans."
+      }
+    },
+    {
+      "id": "queryAttendance",
+      "type": "ServiceMethod",
+      "category": "QueryProcessor",
+      "properties": {
+        "parameters": ["payload"],
+        "hydration_targets": [
+          "Teacher (resolves teacher_name)",
+          "Batch (resolves batch_name & course_id)",
+          "Course (resolves course_name)"
+        ],
+        "computations": ["Dynamic shift duration calculations"]
+      }
+    },
+    {
+      "id": "recordPayment",
+      "type": "ServiceMethod",
+      "category": "FinancialWriter",
+      "properties": {
+        "parameters": ["payload", "context"],
+        "concurrency_protection": "Wraps spreadsheet range execution inside Script Locks"
+      }
+    },
+    {
+      "id": "addDocument",
+      "type": "ServiceMethod",
+      "category": "RelationModifier",
+      "properties": {
+        "parameters": ["teacherId", "documentPayload", "context"],
+        "metadata": "Appends uploaded_at server timestamp"
+      }
+    },
+    {
+      "id": "updateTeacherSubjects",
+      "type": "ServiceMethod",
+      "category": "InMemoryBatchOperation",
+      "properties": {
+        "parameters": ["db", "teacherId", "subjectIds", "context"],
+        "flow": "Bulk-delete existing assignments -> insertMany new whitelisted subjects"
+      }
+    },
+    {
+      "id": "AuthBridge",
+      "type": "InfrastructureSystem",
+      "category": "SecurityGateway",
+      "properties": {
+        "method": "registerUser()",
+        "role_assignment": "teacher"
+      }
+    },
+    {
+      "id": "QueryEngine",
+      "type": "InfrastructureSystem",
+      "category": "DSLParser",
+      "properties": {
+        "method": "execute()",
+        "dsl_specification": "Chapter 5 DSL Specification"
+      }
+    },
+    {
+      "id": "ValidationEngine",
+      "type": "InfrastructureSystem",
+      "category": "SchemaLinter",
+      "properties": {
+        "method": "run()",
+        "contexts": ["ValidationContext", "TeacherUpdateRules"]
+      }
+    },
+    {
+      "id": "AttendanceUtil",
+      "type": "Utility",
+      "category": "TemporalHelper",
+      "properties": {
+        "methods": [
+          "convertJsonToDate()",
+          "convertDateToJson()",
+          "calculateDuration()"
+        ],
+        "timezone_mitigation": "Protects against Google Apps Script container offset drift"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "StaffService",
+      "target": "onboardTeacher",
+      "relation": "exposes"
+    },
+    {
+      "source": "StaffService",
+      "target": "updateTeacher",
+      "relation": "exposes"
+    },
+    {
+      "source": "StaffService",
+      "target": "assignSubjects",
+      "relation": "exposes"
+    },
+    {
+      "source": "StaffService",
+      "target": "setSalaryConfig",
+      "relation": "exposes"
+    },
+    {
+      "source": "StaffService",
+      "target": "markAttendance",
+      "relation": "exposes"
+    },
+    {
+      "source": "StaffService",
+      "target": "markAttendanceBulk",
+      "relation": "exposes"
+    },
+    {
+      "source": "StaffService",
+      "target": "queryAttendance",
+      "relation": "exposes"
+    },
+    {
+      "source": "StaffService",
+      "target": "recordPayment",
+      "relation": "exposes"
+    },
+    {
+      "source": "StaffService",
+      "target": "addDocument",
+      "relation": "exposes"
+    },
+    {
+      "source": "StaffService",
+      "target": "updateTeacherSubjects",
+      "relation": "encapsulates"
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "Teacher",
+      "relation": "inserts_into",
+      "properties": {
+        "on_failure": "Triggers immediate LIFO rollback eviction"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "AuthBridge",
+      "relation": "invokes"
+    },
+    {
+      "source": "AuthBridge",
+      "target": "User",
+      "relation": "creates_row"
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "TeacherSalaryConfig",
+      "relation": "inserts_into",
+      "properties": {
+        "fallback_date": "defaults to execution date if effective_from is missing"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "TeacherSubject",
+      "relation": "inserts_into"
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "TeacherDocument",
+      "relation": "inserts_into"
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "Course",
+      "relation": "reads_and_validates_existence"
+    },
+    {
+      "source": "updateTeacher",
+      "target": "ValidationEngine",
+      "relation": "invokes_pre_flight"
+    },
+    {
+      "source": "updateTeacher",
+      "target": "Teacher",
+      "relation": "updates_row"
+    },
+    {
+      "source": "updateTeacher",
+      "target": "updateTeacherSubjects",
+      "relation": "delegates"
+    },
+    {
+      "source": "updateTeacher",
+      "target": "setSalaryConfig",
+      "relation": "delegates"
+    },
+    {
+      "source": "updateTeacherSubjects",
+      "target": "TeacherSubject",
+      "relation": "batch_rebuilds",
+      "properties": {
+        "sequence": ["1. bulk delete current mappings", "2. insertMany new allocations"]
+      }
+    },
+    {
+      "source": "assignSubjects",
+      "target": "Teacher",
+      "relation": "validates_parent_id"
+    },
+    {
+      "source": "assignSubjects",
+      "target": "Course",
+      "relation": "validates_target_id"
+    },
+    {
+      "source": "assignSubjects",
+      "target": "TeacherSubject",
+      "relation": "inserts_row"
+    },
+    {
+      "source": "setSalaryConfig",
+      "target": "Teacher",
+      "relation": "validates_parent_id"
+    },
+    {
+      "source": "setSalaryConfig",
+      "target": "TeacherSalaryConfig",
+      "relation": "inserts_row"
+    },
+    {
+      "source": "addDocument",
+      "target": "Teacher",
+      "relation": "validates_parent_id"
+    },
+    {
+      "source": "addDocument",
+      "target": "TeacherDocument",
+      "relation": "inserts_row"
+    },
+    {
+      "source": "recordPayment",
+      "target": "Teacher",
+      "relation": "validates_parent_id"
+    },
+    {
+      "source": "recordPayment",
+      "target": "TeacherPaymentTransaction",
+      "relation": "inserts_row"
+    },
+    {
+      "source": "markAttendance",
+      "target": "Teacher",
+      "relation": "validates_parent_id"
+    },
+    {
+      "source": "markAttendance",
+      "target": "Batch",
+      "relation": "validates_target_id"
+    },
+    {
+      "source": "markAttendance",
+      "target": "AttendanceUtil",
+      "relation": "invokes_time_normalizer"
+    },
+    {
+      "source": "markAttendance",
+      "target": "TeacherAttendance",
+      "relation": "upsert_row",
+      "properties": {
+        "lookup_indices": ["teacher_id", "batch_id", "attendance_date"]
+      }
+    },
+    {
+      "source": "markAttendanceBulk",
+      "target": "Teacher",
+      "relation": "validates_all_parent_ids"
+    },
+    {
+      "source": "markAttendanceBulk",
+      "target": "Batch",
+      "relation": "validates_all_target_ids"
+    },
+    {
+      "source": "markAttendanceBulk",
+      "target": "TeacherAttendance",
+      "relation": "in_memory_upsert_batch",
+      "properties": {
+        "performance_profile": "O(1) lookup map prevents linear scanning loops"
+      }
+    },
+    {
+      "source": "queryAttendance",
+      "target": "QueryEngine",
+      "relation": "invokes_dsl_execution"
+    },
+    {
+      "source": "queryAttendance",
+      "target": "TeacherAttendance",
+      "relation": "reads_raw_records"
+    },
+    {
+      "source": "queryAttendance",
+      "target": "Teacher",
+      "relation": "hydrates_teacher_name"
+    },
+    {
+      "source": "queryAttendance",
+      "target": "Batch",
+      "relation": "hydrates_batch_name"
+    },
+    {
+      "source": "queryAttendance",
+      "target": "Course",
+      "relation": "hydrates_course_name"
+    },
+    {
+      "source": "queryAttendance",
+      "target": "AttendanceUtil",
+      "relation": "calculates_dynamic_durations"
+    },
+    {
+      "source": "Teacher",
+      "target": "TeacherSalaryConfig",
+      "relation": "hasMany"
+    },
+    {
+      "source": "Teacher",
+      "target": "TeacherPaymentTransaction",
+      "relation": "hasMany"
+    },
+    {
+      "source": "Teacher",
+      "target": "TeacherSubject",
+      "relation": "hasMany"
+    },
+    {
+      "source": "Teacher",
+      "target": "TeacherDocument",
+      "relation": "hasMany"
+    },
+    {
+      "source": "Teacher",
+      "target": "TeacherAttendance",
+      "relation": "hasMany"
+    },
+    {
+      "source": "Teacher",
+      "target": "MoneyTransaction",
+      "relation": "hasManyPolymorphic",
+      "properties": {
+        "foreignKey": "party_id"
+      }
+    },
+    {
+      "source": "TeacherSalaryConfig",
+      "target": "TeacherPaymentTransaction",
+      "relation": "hasMany"
+    }
+  ]
+}

@@ -9,7 +9,7 @@ The following block defines the technical guidelines governing code blocks, posi
 ---
 
 # AIRA SYSTEM DESIGN DECREE: INFRASTRUCTURE & PLATFORM RULES (NON-DOMAIN)
-
+`
 When proposing a structural code update, you must adhere to these six strict technical constraints.
 
 ---
