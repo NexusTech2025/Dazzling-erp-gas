@@ -56,9 +56,11 @@ function runOnboardTeacherTests() {
       password: "StrongSecurePassword123!"
     },
     salary_config: {
-      salary_type: "monthly",
-      base_amount: 85000,
-      effective_from: "2026-05-17"
+      salary_config_type: "recurring_monthly",
+      effective_from: "2026-05-17",
+      rate_type: "monthly",
+      base_value: 85000.00,
+      scope_type: "global"
     },
     subjects: [courseId],
     documents: [
@@ -94,7 +96,7 @@ function runOnboardTeacherTests() {
     }
 
     const salaryConfigs = db.TeacherSalaryConfig.where({ teacher_id: teacher.teacher_id });
-    if (salaryConfigs.length > 0 && salaryConfigs[0].base_amount === 85000) {
+    if (salaryConfigs.length > 0 && salaryConfigs[0].base_value === 85000) {
       console.log("  ✅ Relational Check: TeacherSalaryConfig successfully registered.");
     } else {
       console.error("  ❌ Relational Check: TeacherSalaryConfig verification failed.");

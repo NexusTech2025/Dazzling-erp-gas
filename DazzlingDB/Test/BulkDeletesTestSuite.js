@@ -476,7 +476,7 @@ const BulkDeletesTestSuite = (function () {
     db.Teacher.insert({ teacher_id: tchId, full_name: "Teacher deletion test" });
     db.TeacherSubject.insert({ teacher_subject_id: tSubId, teacher_id: tchId, subject_id: "CRS-TEST-PHY" });
     db.TeacherDocument.insert({ document_id: tDocId, teacher_id: tchId, document_type: "id_proof" });
-    db.TeacherSalaryConfig.insert({ salary_config_id: tConfId, teacher_id: tchId, salary_type: "monthly", base_amount: 50000 });
+    db.TeacherSalaryConfig.insert({ salary_config_id: tConfId, teacher_id: tchId, salary_config_type: "recurring_monthly", rate_type: "monthly", base_value: 50000, scope_type: "global", effective_from: new Date() });
 
     // Case A: Restrict if assigned to active batch
     db.Batch.insert({ batch_id: batchId, teacher_id: tchId, status: "active", course_id: "CRS-TEST-PHY" });

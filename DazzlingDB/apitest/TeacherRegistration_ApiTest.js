@@ -118,8 +118,10 @@ const TeacherRegistration_ApiTest = (function() {
         email: uniqueEmail
       },
       salary_config: {
-        salary_type: "monthly",
-        base_amount: 45000,
+        salary_config_type: "recurring_monthly",
+        rate_type: "monthly",
+        base_value: 45000,
+        scope_type: "global",
         effective_from: "2026-05-19"
       },
       subjects: [academicData.courseId],
@@ -178,7 +180,7 @@ const TeacherRegistration_ApiTest = (function() {
     logger.success("Verification successful!");
     logger.detail(`Verified Name:         ${teacher.full_name}`);
     logger.detail(`Verified Username:     ${teacher.user ? teacher.user.username : "MISSING"}`);
-    logger.detail(`Verified Base Salary:  ${teacher.salary_config ? teacher.salary_config.base_amount : "MISSING"}`);
+    logger.detail(`Verified Base Salary:  ${teacher.salary_config ? teacher.salary_config.base_value : "MISSING"}`);
     
     const mappedCourse = teacher.subjects && teacher.subjects[0] && teacher.subjects[0].course ? teacher.subjects[0].course.name : "MISSING";
     logger.detail(`Verified Subject:      ${mappedCourse}`);
@@ -211,8 +213,10 @@ const TeacherRegistration_ApiTest = (function() {
       },
       subjects: ["CRS-INVALID-999"],                     // NOT FOUND
       salary_config: {
-        salary_type: "hourly",
-        base_amount: 500,
+        salary_config_type: "recurring_monthly",
+        rate_type: "monthly",
+        base_value: 500,
+        scope_type: "global",
         effective_from: "2026-05-19"
       }
     };

@@ -30,3 +30,7 @@ Test/*
 !Test/DeleteManyEntities.js
 !Test/Infrastructure_PurgeTests.js
 !Test/Finance_LedgerTests.js
+!Test/TeacherSalaryCalculationTests.js
+!Test/TeacherSalaryConfigIntegrationTests.js
+!Test/TeacherSalaryConfigSecureCrudTests.js
+!Test/Staff_SalaryCalculationTests.js

@@ -173,8 +173,10 @@ const StudentDeleteLifecycle_ApiTest = (function () {
             email: uniqueEmail
           },
           salary_config: {
-            salary_type: "monthly",
-            base_amount: 20000,
+            salary_config_type: "recurring_monthly",
+            rate_type: "monthly",
+            base_value: 20000,
+            scope_type: "global",
             effective_from: "2026-06-21"
           },
           subjects: [createdCourseId],

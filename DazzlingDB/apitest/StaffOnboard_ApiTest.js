@@ -67,8 +67,10 @@ const StaffOnboard_ApiTest = (function() {
           "email": uniqueEmail
         },
         "salary_config": {
-          "salary_type": "monthly",
-          "base_amount": 35000,
+          "salary_config_type": "recurring_monthly",
+          "rate_type": "monthly",
+          "base_value": 35000,
+          "scope_type": "global",
           "effective_from": "2026-05-17"
         },
         // Standard courses (e.g. from the DevBootstrap seeder)
@@ -114,8 +116,10 @@ const StaffOnboard_ApiTest = (function() {
           "email": uniqueEmail          // DUPLICATE
         },
         "salary_config": {
-          "salary_type": "monthly",
-          "base_amount": 30000,
+          "salary_config_type": "recurring_monthly",
+          "rate_type": "monthly",
+          "base_value": 30000,
+          "scope_type": "global",
           "effective_from": "2026-05-17"
         },
         "subjects": ["CRS-INVALID-XXX"], // NOT FOUND

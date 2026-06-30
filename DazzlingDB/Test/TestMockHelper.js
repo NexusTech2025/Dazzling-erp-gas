@@ -320,6 +320,37 @@ const TestMockHelper = {
       }
     }
     return payload;
+  },
+
+  /**
+   * Prepares a randomized TeacherSalaryConfig insertion payload satisfying schema validations.
+   * @param {string} entityId - Foreign key reference mapping to parent Teacher/StaffMember profile.
+   * @param {string} [entityType="Teacher"] - Discriminator type ("Teacher" | "StaffMember").
+   * @param {Object} [overrides={}] - Additional column overrides.
+   * @returns {Object} Validated TeacherSalaryConfig payload.
+   */
+  createTeacherSalaryConfigPayload: function(entityId, entityType = "Teacher", overrides = {}) {
+    if (typeof entityType === "object" && entityType !== null) {
+      overrides = entityType;
+      entityType = "Teacher";
+    }
+    if (!entityId) {
+      throw new Error("entityId is required to create a TeacherSalaryConfig payload.");
+    }
+    const salt = this._getSalt();
+    return {
+      entity_id: entityId,
+      entity_type: entityType,
+      salary_config_type: overrides.salary_config_type || "recurring_monthly",
+      effective_from: overrides.effective_from || "2026-06-01",
+      rate_type: overrides.rate_type || "monthly",
+      base_value: overrides.base_value !== undefined ? overrides.base_value : 30000.00,
+      scope_type: overrides.scope_type || "global",
+      remark: overrides.remark || "Regular config " + salt,
+      contract_status: overrides.contract_status || "active",
+      settlement_state: overrides.settlement_state || "unsettled",
+      ...overrides
+    };
   }
 };
 

@@ -164,7 +164,7 @@ const GLOBAL_CRUD_WHITELIST = new Set([
   "Branch", "PromoCode",
   "CourseType", "Course", "Batch", "BatchAllocation", "PackageItem", "PackagePerk",
   "Address", "ContactInfo", "Education", "StudentLead",
-  "TeacherSubject", "TeacherAttendance", "StudentAttendance", "TeacherDocument", "TeacherSalaryConfig", "TeacherPaymentTransaction",
+  "TeacherSubject", "TeacherAttendance", "StudentAttendance", "TeacherDocument", "TeacherPaymentTransaction",
   "FeePlan", "ExpenseCategory", "StaffMember", "MoneyTransaction",
   "Test", "TestMarks", "TestPaper"
 ]);

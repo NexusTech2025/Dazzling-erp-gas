@@ -383,13 +383,15 @@ function runUpdateTeacherTests() {
 
     StaffService.setSalaryConfig({
       teacher_id:     mockTeacherId,
-      salary_type:    "monthly",
-      base_amount:    45000,
+      salary_config_type: "recurring_monthly",
+      rate_type:      "monthly",
+      base_value:     45000,
+      scope_type:     "global",
       effective_from: "2026-05-26"
     }, mockContext);
     const configs = db.TeacherSalaryConfig.where({ teacher_id: mockTeacherId });
     const last = configs[configs.length - 1];
-    if (last && last.base_amount === 45000 && last.salary_type === "monthly") {
+    if (last && last.base_value === 45000 && last.rate_type === "monthly") {
       console.log("  ✅ Salary config (monthly / 45000) created successfully.");
     } else {
       console.error("  ❌ Monthly salary config mismatch.", JSON.stringify(last));
@@ -414,16 +416,19 @@ function runUpdateTeacherTests() {
 
     StaffService.setSalaryConfig({
       teacher_id:     mockTeacherId,
-      salary_type:    "per_class",
-      base_amount:    500,
+      salary_config_type: "recurring_monthly",
+      rate_type:      "revenue_percentage",
+      base_value:     25.0,
+      scope_type:     "single_batch",
+      scope_id:       "BTC-TEST-MOCK",
       effective_from: "2026-05-26"
     }, mockContext);
     const configs = db.TeacherSalaryConfig.where({ teacher_id: mockTeacherId });
-    const perClass = configs.find(c => c.salary_type === "per_class");
-    if (perClass && perClass.base_amount === 500) {
-      console.log("  ✅ Salary config (per_class / 500) created successfully.");
+    const perClass = configs.find(c => c.rate_type === "revenue_percentage");
+    if (perClass && perClass.base_value === 25.0) {
+      console.log("  ✅ Salary config (revenue_percentage / 25.0) created successfully.");
     } else {
-      console.error("  ❌ per_class salary config not found or base_amount wrong.");
+      console.error("  ❌ revenue_percentage salary config not found or base_value wrong.");
     }
   } catch (e) {
     console.error("  ❌ staff_set_salary_config (per_class) failed:", e.message);
@@ -439,8 +444,10 @@ function runUpdateTeacherTests() {
 
     StaffService.setSalaryConfig({
       teacher_id:  "TCH-NON-EXISTENT-XYZ",
-      salary_type: "monthly",
-      base_amount: 30000
+      salary_config_type: "recurring_monthly",
+      rate_type: "monthly",
+      base_value: 30000,
+      scope_type: "global"
     }, mockContext);
     console.error("  ❌ Should have thrown EntityNotFoundError.");
   } catch (e) {
@@ -471,15 +478,17 @@ function runUpdateTeacherTests() {
 
     StaffService.setSalaryConfig({
       teacher_id:     mockTeacherId,
-      salary_type:    "monthly",
-      base_amount:    55000,
+      salary_config_type: "recurring_monthly",
+      rate_type:      "monthly",
+      base_value:     55000,
+      scope_type:     "global",
       effective_from: new Date().toISOString().split("T")[0]
     }, mockContextSalary);
 
     const fetched  = db.Teacher.findById(mockTeacherId);
     const configs  = db.TeacherSalaryConfig.where({ teacher_id: mockTeacherId });
     const lastConf = configs[configs.length - 1];
-    if (fetched.notes === "Ordering verification note" && lastConf.base_amount === 55000) {
+    if (fetched.notes === "Ordering verification note" && lastConf.base_value === 55000) {
       console.log("  ✅ Core update + relational salary config applied in correct sequence.");
     } else {
       console.error("  ❌ Ordering contract broken — state mismatch detected.");

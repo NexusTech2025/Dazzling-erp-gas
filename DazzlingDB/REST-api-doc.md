@@ -83,7 +83,11 @@ Every request MUST include an `action` and a `payload`. For protected routes, a 
 | `staff_assign_subjects` | `{ "payload": { "teacher_id": "...", "subject_ids": ["ID1", "ID2"] } }` | Link teacher to courses. |
 | `staff_mark_attendance` | `{ "payload": { "teacher_id": "...", "status": "present", "attendance_date": "YYYY-MM-DD" } }` | Record attendance. |
 | `staff_record_payment` | `{ "payload": { "teacher_id": "...", "amount": 5000, "payment_type": "salary" } }` | Log financial transactions for staff. |
-| `staff_set_salary_config` | `{ "payload": { "teacher_id": "...", "salary_type": "monthly", "base_amount": 20000 } }` | Define payroll rules. |
+| `staff_set_salary_config` | `{ "payload": { "teacher_id": "...", "salary_config_type": "recurring_monthly", "rate_type": "monthly", "base_value": 20000, "scope_type": "global", "effective_from": "YYYY-MM-DD" } }` | Define payroll rules. |
+| `staff_get_salary_configs` | `{ "payload": { "teacher_id": "..." } }` | Retrieve all salary configs for a teacher. |
+| `staff_get_salary_config` | `{ "payload": { "teacher_id": "...", "salary_config_id": "..." } }` | Retrieve a specific salary config for a teacher. |
+| `staff_update_salary_config` | `{ "payload": { "teacher_id": "...", "salary_config_id": "...", "data": { ... } } }` | Update a teacher's salary config block. |
+| `staff_delete_salary_config` | `{ "payload": { "teacher_id": "...", "salary_config_id": "..." } }` | Delete a teacher's salary config block. |
 | `staff_add_document` | `{ "payload": { "teacher_id": "...", "document": {...} } }` | Attach file links to staff. |
 | `staff_delete_many_teachers` | `{ "payload": { "ids": ["TCH1", "TCH2"], "dryRun": true/false } }` | **Bulk Delete Teachers:** Restricts if assigned to active batches or payroll transactions exist, cascades to subjects/docs/salary configs. |
 | **Generic CRUD (StaffMember)** | Use generic actions (`data_create`, `data_query`, etc.) with `"table": "StaffMember"`. | Management of non-faculty staff members (admin, receptionist, security, support, etc.). |

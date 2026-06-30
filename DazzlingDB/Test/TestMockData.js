@@ -231,10 +231,17 @@ const TestMockData = {
   },
   TeacherSalaryConfig: {
     salary_config_id: "TSC-MOCK-1",
-    teacher_id: "TCH-MOCK-1",
-    salary_type: "monthly",
-    base_amount: 50000,
-    effective_from: "2026-01-01"
+    entity_type: "Teacher",
+    entity_id: "TCH-MOCK-1",
+    salary_config_type: "recurring_monthly",
+    effective_from: "2026-01-01",
+    effective_to: null,
+    rate_type: "monthly",
+    base_value: 50000.00,
+    scope_type: "global",
+    scope_id: null,
+    contract_status: "active",
+    settlement_state: "unsettled"
   },
   TeacherPaymentTransaction: {
     transaction_id: "TPT-MOCK-1",

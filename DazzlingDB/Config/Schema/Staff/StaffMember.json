@@ -53,6 +53,11 @@
       "target": "MoneyTransaction",
       "foreignKey": "party_id",
       "onDelete": "do_nothing"
+    },
+    "teachersalaryconfigs": {
+      "type": "hasMany",
+      "target": "TeacherSalaryConfig",
+      "foreignKey": "entity_id"
     }
   }
 }

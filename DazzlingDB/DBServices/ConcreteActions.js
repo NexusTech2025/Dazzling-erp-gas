@@ -430,6 +430,82 @@ class StaffSetSalaryConfigAction extends BaseAction {
   handle(requestContext) { return StaffService.setSalaryConfig(requestContext.params.payload, requestContext); }
 }
 
+class StaffGetSalaryConfigsAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.entity_id && !p.teacher_id) {
+      throw new ActionValidationError("payload must contain 'entity_id' or 'teacher_id'.");
+    }
+  }
+  handle(requestContext) {
+    const p = requestContext.params.payload;
+    const entityType = p.entity_type || "Teacher";
+    const entityId = p.entity_id || p.teacher_id;
+    return StaffService.getSalaryConfigs(entityId, entityType, requestContext);
+  }
+}
+
+class StaffGetSalaryConfigAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if ((!p.entity_id && !p.teacher_id) || !p.salary_config_id) {
+      throw new ActionValidationError("payload must contain ('entity_id' or 'teacher_id') and 'salary_config_id'.");
+    }
+  }
+  handle(requestContext) {
+    const p = requestContext.params.payload;
+    const entityType = p.entity_type || "Teacher";
+    const entityId = p.entity_id || p.teacher_id;
+    return StaffService.getSalaryConfig(entityId, entityType, p.salary_config_id, requestContext);
+  }
+}
+
+class StaffUpdateSalaryConfigAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if ((!p.entity_id && !p.teacher_id) || !p.salary_config_id || !p.data || typeof p.data !== "object") {
+      throw new ActionValidationError("payload must contain ('entity_id' or 'teacher_id'), 'salary_config_id', and a 'data' object.");
+    }
+  }
+  handle(requestContext) {
+    const p = requestContext.params.payload;
+    const entityType = p.entity_type || "Teacher";
+    const entityId = p.entity_id || p.teacher_id;
+    return StaffService.updateSalaryConfig(entityId, entityType, p.salary_config_id, p.data, requestContext);
+  }
+}
+
+class StaffDeleteSalaryConfigAction extends BaseAction {
+  constructor() {
+    super(ActionType.DELETE);
+  }
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if ((!p.entity_id && !p.teacher_id) || !p.salary_config_id) {
+      throw new ActionValidationError("payload must contain ('entity_id' or 'teacher_id') and 'salary_config_id'.");
+    }
+  }
+  handle(requestContext) {
+    const p = requestContext.params.payload;
+    const entityType = p.entity_type || "Teacher";
+    const entityId = p.entity_id || p.teacher_id;
+    return StaffService.deleteSalaryConfig(entityId, entityType, p.salary_config_id, requestContext);
+  }
+}
+
 class StaffMarkAttendanceAction extends BaseAction {
   constructor() {
     super(ActionType.CREATE);
@@ -1137,6 +1213,10 @@ globalThis.StaffOnboardTeacherAction = StaffOnboardTeacherAction;
 globalThis.StaffUpdateTeacherAction = StaffUpdateTeacherAction;
 globalThis.StaffAssignSubjectsAction = StaffAssignSubjectsAction;
 globalThis.StaffSetSalaryConfigAction = StaffSetSalaryConfigAction;
+globalThis.StaffGetSalaryConfigsAction = StaffGetSalaryConfigsAction;
+globalThis.StaffGetSalaryConfigAction = StaffGetSalaryConfigAction;
+globalThis.StaffUpdateSalaryConfigAction = StaffUpdateSalaryConfigAction;
+globalThis.StaffDeleteSalaryConfigAction = StaffDeleteSalaryConfigAction;
 globalThis.StaffMarkAttendanceAction = StaffMarkAttendanceAction;
 globalThis.StaffMarkAttendanceBulkAction = StaffMarkAttendanceBulkAction;
 globalThis.StaffQueryAttendanceAction = StaffQueryAttendanceAction;
@@ -1192,7 +1272,7 @@ class SheetBatchReadAction extends BaseAction {
     const resolvedPayload = payload.map(item => {
       const target = item.spreadsheetId;
       const resolvedId = this._resolveSpreadsheetId(target, db);
-      
+
       if (responseKeyType === "NAME") {
         const isPhysicalId = /^[a-zA-Z0-9-_]{44}$/.test(target);
         const name = !isPhysicalId ? target : (inverseCache[resolvedId] || resolvedId);
@@ -1302,7 +1382,7 @@ class GetAccountingDataAction extends BaseAction {
 
   handle(requestContext) {
     const db = requestContext.db;
-    
+
     // Resolve the "Finance" spreadsheet workbook file ID
     const financeSpreadsheetId = this._resolveSpreadsheetId("Finance", db);
 

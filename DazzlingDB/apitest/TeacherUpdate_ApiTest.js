@@ -71,8 +71,10 @@ const TeacherUpdate_ApiTest = (function () {
           // Relational updates consolidated in one call
           subjects: ["CRS-87206D7D", "CRS-2DEB0E44"],
           salary_config: {
-            salary_type: "monthly",
-            base_amount: 75000,
+            salary_config_type: "recurring_monthly",
+            rate_type: "monthly",
+            base_value: 75000,
+            scope_type: "global",
             effective_from: "2026-05-26"
           }
         }
@@ -109,7 +111,7 @@ const TeacherUpdate_ApiTest = (function () {
 
       const salaryConfigs = verifiedTeacher.teachersalaryconfig || [];
       const lastSalary = salaryConfigs.length > 0 ? salaryConfigs[salaryConfigs.length - 1] : null;
-      logger.detail(`Verified Base Salary: ${lastSalary ? lastSalary.base_amount : "MISSING"}`);
+      logger.detail(`Verified Base Salary: ${lastSalary ? lastSalary.base_value : "MISSING"}`);
       logger.detail(`Verified Subject count: ${verifiedTeacher.teachersubject ? verifiedTeacher.teachersubject.length : 0}`);
 
       console.log("\n🎉 TEACHER UPDATE API E2E TEST COMPLETED SUCCESSFULLY! 🎉\n");
