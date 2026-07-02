@@ -430,10 +430,20 @@ class StaffSetSalaryConfigAction extends BaseAction {
   handle(requestContext) { return StaffService.setSalaryConfig(requestContext.params.payload, requestContext); }
 }
 
+/**
+ * Action to retrieve all salary configuration records for a staff member.
+ * Operates on QUERY action type.
+ */
 class StaffGetSalaryConfigsAction extends BaseAction {
   constructor() {
     super(ActionType.QUERY);
   }
+
+  /**
+   * Validates that the request payload contains either 'entity_id' or 'teacher_id'.
+   * @override
+   * @throws {ActionValidationError} If validation parameters are missing.
+   */
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
@@ -441,6 +451,13 @@ class StaffGetSalaryConfigsAction extends BaseAction {
       throw new ActionValidationError("payload must contain 'entity_id' or 'teacher_id'.");
     }
   }
+
+  /**
+   * Resolves the target entity and fetches the corresponding salary configurations.
+   * @override
+   * @param {RequestContext} requestContext - Context containing request payload details.
+   * @returns {Object[]} Array of retrieved salary configuration records.
+   */
   handle(requestContext) {
     const p = requestContext.params.payload;
     const entityType = p.entity_type || "Teacher";
@@ -448,6 +465,7 @@ class StaffGetSalaryConfigsAction extends BaseAction {
     return StaffService.getSalaryConfigs(entityId, entityType, requestContext);
   }
 }
+
 
 class StaffGetSalaryConfigAction extends BaseAction {
   constructor() {

@@ -112,6 +112,7 @@ const ApiDispatcher = (function () {
       const params = _parseEvent(e);
       const actionKey = params.action;
 
+
       if (!actionKey) {
         throw new Error("No 'action' parameter provided.");
       }
@@ -119,7 +120,7 @@ const ApiDispatcher = (function () {
       // 2. Determine Registry (Admin vs Advanced vs Standard)
       let registry;
       let registryName = "Standard";
-      
+
       if (actionKey.startsWith("admin_")) {
         registry = _getAdminRegistry();
         registryName = "Admin";
@@ -176,25 +177,25 @@ const ApiDispatcher = (function () {
    */
   function _processGatewayAction(actionInstance, requestContext) {
     const startTime = Date.now();
-    
+
     try {
       const result = actionInstance.run(requestContext);
-      
+
       // Check if the endpoint executed falls under abstract generic CRUD operations
       if (result && result.isGenericCrudResult) {
         const affectedTable = requestContext.params.table || requestContext.params.target;
-        
+
         // If it's a delete operation, check dryRun
         const payload = requestContext.params.payload || {};
         const isDryRun = payload.dryRun === true || (actionInstance.constructor.name.includes("DeleteMany") && payload.dryRun !== false);
         const computedMutations = (affectedTable && !isDryRun) ? [affectedTable] : [];
-        
+
         return actionInstance.formatSuccessResponse(result.payload, startTime, {
           actionType: requestContext.actionType,
           mutationManifest: computedMutations
         }, resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV')));
       }
-      
+
       return result;
     } catch (globalError) {
       // Uncaught fallback protection wrapper routing path
