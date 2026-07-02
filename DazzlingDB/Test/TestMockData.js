@@ -246,12 +246,12 @@ const TestMockData = {
   TeacherPaymentTransaction: {
     transaction_id: "TPT-MOCK-1",
     teacher_id: "TCH-MOCK-1",
-    salary_config_id: "TSC-MOCK-1",
     payment_type: "salary",
     amount: 50000,
-    payment_mode: "bank_transfer",
+    payment_method: "bank",
     transaction_date: "2026-05-25",
-    reference_number: "REF-12345"
+    reference_number: "REF-12345",
+    salary_month: "2026-05"
   },
 
   // =========================================================================

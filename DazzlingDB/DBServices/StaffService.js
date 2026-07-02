@@ -576,21 +576,43 @@ const StaffService = {
   },
 
   /**
-   * Records a salary or advance payment.
+   * Records a manual payroll, advance, bonus, or deduction payment transaction.
+   * @param {Object} payload - Payout transaction input properties.
+   * @param {string} payload.teacher_id - Target teacher ID.
+   * @param {string} payload.payment_type - "salary", "advance", "bonus", or "deduction".
+   * @param {number} payload.amount - Numeric value.
+   * @param {string} payload.payment_method - Payment method (cash, Paytm, PhonePe, bank, other).
+   * @param {string} payload.transaction_date - Date (YYYY-MM-DD).
+   * @param {string} payload.salary_month - Month of service (YYYY-MM).
+   * @param {string} [payload.reference_number] - Reference number.
+   * @param {string} [payload.notes] - Comments.
+   * @param {Object} context - Request transaction execution context tracking mutations.
+   * @returns {Object} Newly committed TeacherPaymentTransaction record.
+   * @throws {SheetDB.ValidationError} When inputs fail business validations.
    */
   recordPayment(payload, context) {
     const db = DBContext.getInstance();
-    console.log(`[StaffService] Recording ${payload.payment_type} for teacher ${payload.teacher_id}`);
+    console.log(`[StaffService] Recording payment transaction for teacher ${payload.teacher_id}`);
 
-    if (!db.Teacher.findById(payload.teacher_id)) {
-      throw new SheetDB.EntityNotFoundError("Teacher", payload.teacher_id, "Staff");
+    const ctx = new ValidationContext(db, null, payload);
+    ValidationEngine.run(ctx, TeacherPaymentTransactionRules);
+
+    if (!ctx.isValid()) {
+      throw new SheetDB.ValidationError("Validation failed for recording teacher payment transaction.", { fields: ctx.errors });
     }
 
     const record = db.TeacherPaymentTransaction.insert({
-      ...payload,
-      transaction_date: payload.transaction_date || new Date(),
-      created_at: new Date()
+      teacher_id: ctx.payload.teacher_id,
+      payment_type: ctx.payload.payment_type,
+      amount: ctx.payload.amount,
+      payment_method: ctx.payload.payment_method,
+      transaction_date: ctx.payload.transaction_date,
+      reference_number: ctx.payload.reference_number || null,
+      salary_month: ctx.payload.salary_month,
+      notes: ctx.payload.notes || null,
+      created_by: payload.created_by || (context && context.user ? context.user.username : "system")
     });
+
     this._trackMutation(context, "TeacherPaymentTransaction");
     return record;
   },

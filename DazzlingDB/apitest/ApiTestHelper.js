@@ -59,9 +59,63 @@ const ApiTestHelper = (function() {
     return response.data;
   }
 
+  /**
+   * Formats and prints an object or array of objects as an ASCII table in the console.
+   * @param {string} title - The title of the table.
+   * @param {Object|Object[]} data - The data payload to format.
+   */
+  function printTable(title, data) {
+    if (!data) {
+      console.log(`\n--- ${title}: No Data ---`);
+      return;
+    }
+    const rows = Array.isArray(data) ? data : [data];
+    if (rows.length === 0) {
+      console.log(`\n--- ${title}: Empty Dataset ---`);
+      return;
+    }
+    // Gather all keys as columns
+    const columns = Object.keys(rows[0]);
+    // Calculate max widths for each column
+    const widths = {};
+    columns.forEach(col => {
+      widths[col] = col.length;
+    });
+    rows.forEach(row => {
+      columns.forEach(col => {
+        const valStr = row[col] !== undefined && row[col] !== null ? String(row[col]) : "";
+        if (valStr.length > widths[col]) {
+          widths[col] = valStr.length;
+        }
+      });
+    });
+
+    console.log(`\n📊 TABLE: ${title}`);
+    const printLine = () => {
+      const parts = columns.map(col => "-".repeat(widths[col] + 2));
+      console.log("+" + parts.join("+") + "+");
+    };
+
+    printLine();
+    const headerRow = columns.map(col => ` ${col.padEnd(widths[col])} `).join("|");
+    console.log(`|${headerRow}|`);
+    printLine();
+
+    rows.forEach(row => {
+      const dataRow = columns.map(col => {
+        const valStr = row[col] !== undefined && row[col] !== null ? String(row[col]) : "";
+        return ` ${valStr.padEnd(widths[col])} `;
+      }).join("|");
+      console.log(`|${dataRow}|`);
+    });
+    printLine();
+  }
+
   return {
     logger: logger,
-    callApi: callApi
+    callApi: callApi,
+    printTable: printTable
   };
 
 })();
+

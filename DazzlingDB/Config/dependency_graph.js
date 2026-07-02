@@ -200,13 +200,6 @@ const DEPENDENCY_GRAPH = {
       "onDelete": "protect"
     }
   ],
-  "TeacherSalaryConfig": [
-    {
-      "table": "TeacherPaymentTransaction",
-      "fk": "salary_config_id",
-      "onDelete": "protect"
-    }
-  ],
   "Address": [
     {
       "table": "ContactInfo",

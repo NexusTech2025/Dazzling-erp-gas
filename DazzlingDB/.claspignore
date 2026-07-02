@@ -17,6 +17,10 @@ database_template/**
 
 # Ignore the entire apitest directory
 apitest/**
+
+!apitest/ApiTestHelper.js
+!apitest/StaffGetSalaryConfig_ApiTest.js
+!apitest/ApiCallTest.js
 NodeTest/**
 
 # Ignore all files in the Test folder by default
@@ -26,11 +30,6 @@ Test/*
 !Test/TestHelper.js
 !Test/TestMockData.js
 !Test/TestMockHelper.js
-
-!Test/DeleteManyEntities.js
-!Test/Infrastructure_PurgeTests.js
-!Test/Finance_LedgerTests.js
-!Test/TeacherSalaryCalculationTests.js
-!Test/TeacherSalaryConfigIntegrationTests.js
-!Test/TeacherSalaryConfigSecureCrudTests.js
 !Test/Staff_SalaryCalculationTests.js
+!Test/TeacherPaymentTransactionTests.js
+!Test/db_test.js

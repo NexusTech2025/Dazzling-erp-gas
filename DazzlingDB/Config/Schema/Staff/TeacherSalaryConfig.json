@@ -129,11 +129,6 @@
         "Teacher": "Teacher",
         "StaffMember": "StaffMember"
       }
-    },
-    "teacherpaymenttransactions": {
-      "type": "hasMany",
-      "target": "TeacherPaymentTransaction",
-      "foreignKey": "salary_config_id"
     }
   }
 }
