@@ -390,6 +390,7 @@
           password: document.getElementById('wiz-password').value
         }
       };
+      this.reset(); // Clear credentials from DOM immediately
       setLoading(true);
       callApi("admin_bootstrap", payload, (res) => {
         try {
@@ -412,6 +413,7 @@
         username: document.getElementById('login-username').value,
         password: document.getElementById('login-password').value
       };
+      this.reset(); // Clear credentials from DOM immediately
       setLoading(true);
       callApi("user_login", payload, (res) => {
         try {

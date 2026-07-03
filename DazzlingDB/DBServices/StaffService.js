@@ -12,6 +12,122 @@ const StaffService = {
     }
   },
 
+
+
+  /**
+     * Automatically expires any active salary configurations that overlap with a new contract's scope parameters.
+     * This ensures an entity cannot have duplicate active payroll rules for the exact same class or group.
+     *
+     * @param {string} entityId 
+     * The unique ID of the target individual receiving the contract (e.g., 'TCH-001' or 'STF-102').
+     * @param {string} entityType 
+     * The polymorphic discriminator string identifying the profile table ('Teacher' or 'StaffMember').
+     * @param {string} scopeType 
+     * The assignment boundary style being evaluated, such as 'global', 'single_batch', or 'batch_group'.
+     * @param {string|Object} scopeId 
+     * The precise unique identifier token or serialized JSON mapping of the specific classes/batches being targeted.
+     * @param {string|null} [excludeConfigId=null] 
+     * Optional database record ID to protect from self-expiration during multi-field modification updates.
+     */
+  /**
+   * Robust comparison helper that evaluates whether two scope identifiers are logically equivalent.
+   * Handles string normalization, JSON object parsing, sorted-key comparison, and strict type verification.
+   *
+   * @param {string} scopeType - The scope type ('global' | 'single_batch' | 'batch_group').
+   * @param {*} scopeIdA - First scope ID, can be string, object, null, or undefined.
+   * @param {*} scopeIdB - Second scope ID, can be string, object, null, or undefined.
+   * @returns {boolean} True if the scopes are equivalent, false otherwise.
+   */
+  _isScopeEquivalent(scopeType, scopeIdA, scopeIdB) {
+    if (scopeIdA === scopeIdB) return true;
+
+    const resolveInput = (val) => {
+      if (val === null || val === undefined) {
+        return { isObject: false, value: "" };
+      }
+      if (typeof val === "object") {
+        return { isObject: true, value: val };
+      }
+      const strVal = String(val).trim();
+      if (scopeType === "batch_group") {
+        try {
+          const parsed = JSON.parse(strVal);
+          if (parsed && typeof parsed === "object") {
+            return { isObject: true, value: parsed };
+          }
+        } catch (e) {
+          console.warn(`[StaffService] Failed to parse scope JSON string: "${strVal}"`, e.message);
+        }
+      }
+      return { isObject: false, value: strVal };
+    };
+
+    try {
+      const resA = resolveInput(scopeIdA);
+      const resB = resolveInput(scopeIdB);
+
+      if (resA.isObject && resB.isObject) {
+        const objA = resA.value;
+        const objB = resB.value;
+
+        const keysA = Object.keys(objA).sort();
+        const keysB = Object.keys(objB).sort();
+
+        if (keysA.length !== keysB.length) return false;
+
+        for (let i = 0; i < keysA.length; i++) {
+          const key = keysA[i];
+          if (key !== keysB[i]) return false;
+          if (String(objA[key]).trim() !== String(objB[key]).trim()) return false;
+        }
+        return true;
+      }
+
+      if (resA.isObject || resB.isObject) {
+        return false;
+      }
+
+      return resA.value === resB.value;
+    } catch (err) {
+      console.error("[StaffService] Exception occurred during scope equivalence evaluation:", err.stack || err.message);
+      return false;
+    }
+  },
+
+  /**
+     * Automatically expires any active salary configurations that overlap with a new contract's scope parameters.
+     * This ensures an entity cannot have duplicate active payroll rules for the exact same class or group.
+     *
+     * @param {string} entityId 
+     * The unique ID of the target individual receiving the contract (e.g., 'TCH-001' or 'STF-102').
+     * @param {string} entityType 
+     * The polymorphic discriminator string identifying the profile table ('Teacher' or 'StaffMember').
+     * @param {string} scopeType 
+     * The assignment boundary style being evaluated, such as 'global', 'single_batch', or 'batch_group'.
+     * @param {string|Object} scopeId 
+     * The precise unique identifier token or serialized JSON mapping of the specific classes/batches being targeted.
+     * @param {string|null} [excludeConfigId=null] 
+     * Optional database record ID to protect from self-expiration during multi-field modification updates.
+     */
+  _expireOverlappingActiveConfigs(entityId, entityType, scopeType, scopeId, excludeConfigId = null) {
+    const db = DBContext.getInstance();
+
+    const activeConfigs = db.TeacherSalaryConfig.where({
+      entity_id: entityId,
+      entity_type: entityType,
+      contract_status: "active"
+    });
+
+    activeConfigs.forEach(conf => {
+      if (conf.salary_config_id === excludeConfigId) return;
+
+      if (conf.scope_type === scopeType && this._isScopeEquivalent(scopeType, conf.scope_id, scopeId)) {
+        console.log(`[StaffService] Auto-expiring overlapping salary config '${conf.salary_config_id}' for entity '${entityId}'`);
+        db.TeacherSalaryConfig.update(conf.salary_config_id, { contract_status: "expired" });
+      }
+    });
+  },
+
   /**
    * HR ONBOARDING
    */
@@ -238,12 +354,9 @@ const StaffService = {
       throw new SheetDB.ValidationError(`Unsupported entity_type: ${entityType}`);
     }
 
-    // Invariant Check: Max 1 active row per entity.
+    // Invariant Check: Max 1 active row per entity-scope pair.
     if (payload.contract_status === "active") {
-      const activeConfigs = db.TeacherSalaryConfig.where({ entity_id: entityId, entity_type: entityType, contract_status: "active" });
-      activeConfigs.forEach(conf => {
-        db.TeacherSalaryConfig.update(conf.salary_config_id, { contract_status: "expired" });
-      });
+      this._expireOverlappingActiveConfigs(entityId, entityType, payload.scope_type, payload.scope_id);
     }
 
     const insertPayload = {
@@ -319,12 +432,9 @@ const StaffService = {
 
     // Enforce active invariant if changing status to "active"
     if (updateData.contract_status === "active") {
-      const existingActive = db.TeacherSalaryConfig.where({ entity_id: entityId, entity_type: resolvedType, contract_status: "active" });
-      existingActive.forEach(conf => {
-        if (conf.salary_config_id !== salaryConfigId) {
-          db.TeacherSalaryConfig.update(conf.salary_config_id, { contract_status: "expired" });
-        }
-      });
+      const targetScopeType = updateData.scope_type !== undefined ? updateData.scope_type : config.scope_type;
+      const targetScopeId = updateData.scope_id !== undefined ? updateData.scope_id : config.scope_id;
+      this._expireOverlappingActiveConfigs(entityId, resolvedType, targetScopeType, targetScopeId, salaryConfigId);
     }
 
     const updatedRecord = db.TeacherSalaryConfig.update(salaryConfigId, updateData);
@@ -356,7 +466,7 @@ const StaffService = {
    */
   markAttendance(payload, context) {
     const db = DBContext.getInstance();
-    
+
     // 1. Validation and Casing Normalization
     if (!payload.teacher_id) throw new Error("teacher_id is required.");
     if (!payload.batch_id) throw new Error("batch_id is required.");
@@ -368,7 +478,7 @@ const StaffService = {
     const batchId = String(payload.batch_id).trim();
     const dateStr = String(payload.attendance_date).trim();
     const status = String(payload.status).trim().toUpperCase();
-    
+
     let mode = payload.attendance_mode || "Manual";
     const cleanMode = String(mode).trim().toUpperCase();
     if (cleanMode === "QR") mode = "QR";
@@ -437,7 +547,7 @@ const StaffService = {
     if (!payload.records || !Array.isArray(payload.records)) throw new Error("records array is required.");
 
     const dateStr = String(payload.attendance_date).trim();
-    
+
     let defaultMode = payload.attendance_mode || "Manual";
     const cleanDefaultMode = String(defaultMode).trim().toUpperCase();
     if (cleanDefaultMode === "QR") defaultMode = "QR";
@@ -450,7 +560,7 @@ const StaffService = {
     const existingRecords = db.TeacherAttendance.where({
       attendance_date: dateStr
     });
-    
+
     // Map existing records by teacher_id + batch_id for O(1) lookups
     const existingMap = {};
     existingRecords.forEach(rec => {
@@ -527,7 +637,7 @@ const StaffService = {
    */
   queryAttendance(payload) {
     const db = DBContext.getInstance();
-    
+
     const targetQuery = {
       target: "TeacherAttendance",
       ...payload
@@ -539,7 +649,7 @@ const StaffService = {
     // Hydrate each attendance log with dynamic durations and display names
     const hydrated = records.map(row => {
       const record = (typeof row.toJSON === 'function') ? row.toJSON() : row;
-      
+
       const rawEntry = record.entry_time;
       const rawExit = record.exit_time;
 
@@ -559,7 +669,7 @@ const StaffService = {
       if (batch) {
         record.batch_name = batch.batch_name;
         record.course_id = batch.course_id;
-        
+
         const course = db.Course.findById(batch.course_id);
         record.course_name = course ? course.name : "Unknown Course";
       } else {

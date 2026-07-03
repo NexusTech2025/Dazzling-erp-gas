@@ -159,9 +159,39 @@ const AuthBridge = {
   },
 
   /**
+   * Dynamically generates a secure setup key, persists it, and emails the project owner.
+   * Only executed if the system is not initialized.
+   * @returns {void}
+   */
+  ensureSetupKeyEmailed() {
+    const props = PropertiesService.getScriptProperties();
+    let setupKey = props.getProperty("SETUP_KEY");
+    if (!setupKey) {
+      setupKey = AuthCore.generateToken();
+      props.setProperty("SETUP_KEY", setupKey);
+      
+      const email = Session.getEffectiveUser().getEmail();
+      if (email) {
+        try {
+          MailApp.sendEmail({
+            to: email,
+            subject: "🔑 DazzlingDB: Secure Setup Key Generated",
+            body: `Hello,\n\nA secure setup key has been generated for your DazzlingDB instance.\n\nSetup Key: ${setupKey}\n\nUse this key in the First-Run Wizard to initialize your superadmin account.`
+          });
+          console.log("[AuthBridge] Setup key generated and emailed to project owner.");
+        } catch (e) {
+          console.error(`[AuthBridge] Failed to send setup key email: ${e.message}`);
+        }
+      } else {
+        console.warn("[AuthBridge] No email address retrieved for effective user. SETUP_KEY is stored in Script Properties.");
+      }
+    }
+  },
+
+  /**
    * Checks if user has access to a specific table.
    */
   checkAccess(userContext, tableName) {
     return RBAC.canAccessTable(userContext, tableName);
   }
-};
+}

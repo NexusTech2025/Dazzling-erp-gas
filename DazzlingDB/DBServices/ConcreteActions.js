@@ -698,8 +698,12 @@ class AdminSystemStatusAction extends BaseAction {
     super(ActionType.QUERY);
   }
   handle(requestContext) {
+    const isInitialized = AuthBridge.isSystemInitialized();
+    if (!isInitialized) {
+      AuthBridge.ensureSetupKeyEmailed();
+    }
     return {
-      isInitialized: AuthBridge.isSystemInitialized(),
+      isInitialized: isInitialized,
       database: DATABASE_SCHEMA.database,
       version: DATABASE_SCHEMA.version,
       timestamp: new Date().toISOString()
@@ -724,8 +728,8 @@ class AdminBootstrapAction extends BaseAction {
       throw new SheetDB.ForbiddenError("System already initialized. Bootstrap disabled.");
     }
 
-    const masterKey = PropertiesService.getScriptProperties().getProperty("SETUP_KEY") || "DAZZLING_2026";
-    if (this._params.payload.setupKey !== masterKey) {
+    const masterKey = PropertiesService.getScriptProperties().getProperty("SETUP_KEY");
+    if (!masterKey || this._params.payload.setupKey !== masterKey) {
       throw new SheetDB.ForbiddenError("Invalid Setup Key.");
     }
   }
@@ -737,11 +741,16 @@ class AdminBootstrapAction extends BaseAction {
     this._db.setup.provision();
 
     console.log("[AdminBootstrapAction] Registering superadmin...");
-    return AuthBridge.registerUser({
+    const result = AuthBridge.registerUser({
       ...userData,
       user_id: "ADMIN-SUPER",
       role: "admin"
     }, requestContext);
+
+    // Clear setup key after successful initialization to prevent reuse
+    PropertiesService.getScriptProperties().deleteProperty("SETUP_KEY");
+
+    return result;
   }
 }
 

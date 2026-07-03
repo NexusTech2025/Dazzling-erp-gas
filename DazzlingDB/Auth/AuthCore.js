@@ -49,11 +49,16 @@ const AuthCore = {
   },
 
   /**
-   * Validates password strength (basic).
+   * Validates password strength.
+   * Enforces minimum 8 characters, at least one uppercase letter,
+   * one lowercase letter, one digit, and one special character.
    * @param {string} password
    * @returns {boolean}
    */
   isStrongPassword(password) {
-    return password && password.length >= 8;
+    if (!password || password.length < 8) return false;
+    // Enforce one uppercase, one lowercase, one digit, and one special character
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-=_+\[\]{}|;:',.<>?\/])[A-Za-z\d!@#$%^&*()\-=_+\[\]{}|;:',.<>?\/]{8,}$/;
+    return regex.test(password);
   }
 };

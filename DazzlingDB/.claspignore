@@ -32,4 +32,7 @@ Test/*
 !Test/TestMockHelper.js
 !Test/Staff_SalaryCalculationTests.js
 !Test/TeacherPaymentTransactionTests.js
+!Test/TeacherSalaryConfigIntegrationTests.js
 !Test/db_test.js
+!Test/SecureBootstrapTests.js
+
