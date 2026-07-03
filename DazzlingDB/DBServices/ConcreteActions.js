@@ -743,8 +743,7 @@ class AdminBootstrapAction extends BaseAction {
     console.log("[AdminBootstrapAction] Registering superadmin...");
     const result = AuthBridge.registerUser({
       ...userData,
-      user_id: "ADMIN-SUPER",
-      role: "admin"
+      role: "superadmin"
     }, requestContext);
 
     // Clear setup key after successful initialization to prevent reuse
@@ -759,7 +758,7 @@ class AdminGetSchemaAction extends BaseAction {
     super(ActionType.QUERY);
   }
   _authorize() {
-    if (!this._user || this._user.role !== "admin") {
+    if (!this._user || (this._user.role !== "admin" && this._user.role !== "superadmin")) {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
@@ -771,7 +770,7 @@ class AdminAnalyzeTableAction extends BaseAction {
     super(ActionType.QUERY);
   }
   _authorize() {
-    if (!this._user || this._user.role !== "admin") {
+    if (!this._user || (this._user.role !== "admin" && this._user.role !== "superadmin")) {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
@@ -785,7 +784,7 @@ class AdminRepairTableAction extends BaseAction {
     super(ActionType.UPDATE);
   }
   _authorize() {
-    if (!this._user || this._user.role !== "admin") {
+    if (!this._user || (this._user.role !== "admin" && this._user.role !== "superadmin")) {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
@@ -805,7 +804,7 @@ class AdminPeekDataAction extends BaseAction {
     }
   }
   _authorize() {
-    if (!this._user || this._user.role !== "admin") {
+    if (!this._user || (this._user.role !== "admin" && this._user.role !== "superadmin")) {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
@@ -822,7 +821,7 @@ class AdminCacheAnalyzeAction extends BaseAction {
     super(ActionType.QUERY);
   }
   _authorize() {
-    if (!this._user || this._user.role !== "admin") {
+    if (!this._user || (this._user.role !== "admin" && this._user.role !== "superadmin")) {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }
@@ -836,7 +835,7 @@ class AdminPurgeCacheAction extends BaseAction {
     super(ActionType.DELETE);
   }
   _authorize() {
-    if (!this._user || this._user.role !== "admin") {
+    if (!this._user || (this._user.role !== "admin" && this._user.role !== "superadmin")) {
       throw new ActionAuthorizationError("Superadmin privileges required.");
     }
   }

@@ -8,6 +8,7 @@ const RBAC = {
   // Matrix defines which roles can access which tables
   // '*' means all tables/operations.
   _MATRIX: {
+    "superadmin": ["*"],
     "admin": ["*"],
     "teacher": [
       "Teacher", "Course", "Batch", "Student", "TeacherAttendance", 

@@ -16,7 +16,7 @@ class DeleteManyUsersAction extends DeleteManyRecordsAction {
 
     ids.forEach(id => {
       const usr = this._db.User.findById(id);
-      if (usr && usr.role === "admin") {
+      if (usr && (usr.role === "admin" || usr.role === "superadmin")) {
         throw new ActionValidationError(`User '${id}' is an administrator and cannot be deleted.`);
       }
       if (selfId && id === selfId) {
