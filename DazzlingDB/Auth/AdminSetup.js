@@ -45,8 +45,8 @@ function bootstrapAdminSystem(payload) {
     }
 
     // 2. Authorization: Verify Setup Key
-    const masterKey = PropertiesService.getScriptProperties().getProperty("SETUP_KEY") || "DAZZLING_2026";
-    if (payload.setupKey !== masterKey) {
+    const masterKey = PropertiesService.getScriptProperties().getProperty("SETUP_KEY");
+    if (!masterKey || payload.setupKey !== masterKey) {
       throw new SheetDB.ForbiddenError("Invalid Setup Key.");
     }
 
@@ -65,6 +65,9 @@ function bootstrapAdminSystem(payload) {
       ...payload.profileData,
       role: "admin"
     });
+
+    // Clear setup key after successful initialization to prevent reuse
+    PropertiesService.getScriptProperties().deleteProperty("SETUP_KEY");
 
     return { 
       success: true, 
