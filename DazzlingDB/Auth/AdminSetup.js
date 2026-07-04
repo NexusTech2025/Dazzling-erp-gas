@@ -63,7 +63,7 @@ function bootstrapAdminSystem(payload) {
     const adminUser = AuthBridge.registerUser({
       ...payload.userData,
       ...payload.profileData,
-      role: "admin"
+      role: "superadmin"
     });
 
     // Clear setup key after successful initialization to prevent reuse

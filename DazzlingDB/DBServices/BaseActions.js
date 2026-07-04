@@ -20,6 +20,7 @@ Object.freeze(ActionType);
  * @enum {string}
  */
 const Roles = {
+  SUPERADMIN: 'superadmin',
   ADMIN: 'admin',
   USER: 'user',
   GUEST: 'guest'
@@ -174,7 +175,7 @@ class BaseAction {
   _authorize() {
     if (this.requiredRole) {
       const userRole = this._user ? this._user.role : null;
-      if (userRole !== this.requiredRole) {
+      if (userRole !== this.requiredRole && userRole !== 'superadmin') {
         throw new ActionAuthorizationError(`Access denied. Action requires '${this.requiredRole}' role.`);
       }
     }
