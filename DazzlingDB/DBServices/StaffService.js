@@ -143,59 +143,13 @@ const StaffService = {
     // Track successfully inserted records for rollback
     const insertedRecords = [];
 
-    // 1. PRE-FLIGHT VALIDATION (Rich Multi-Field Collection)
-    const validationErrors = [];
+    // 1. DECOUPLED PRE-FLIGHT VALIDATION
+    const ctx = new ValidationContext(db, null, payload);
+    ValidationEngine.run(ctx, TeacherRegistrationRules);
 
-    // a. Mobile uniqueness
-    if (db.Teacher.exists({ mobile_number: payload.mobile_number })) {
-      validationErrors.push({
-        field: "mobile_number",
-        value: payload.mobile_number,
-        issue: "duplicate",
-        message: `A teacher with mobile number '${payload.mobile_number}' already exists.`
-      });
-    }
-
-    // b. Email uniqueness
-    if (payload.email && db.Teacher.exists({ email: payload.email })) {
-      validationErrors.push({
-        field: "email",
-        value: payload.email,
-        issue: "duplicate",
-        message: `A teacher with email '${payload.email}' already exists.`
-      });
-    }
-
-    // c. User account validation
-    if (payload.userData) {
-      if (db.User.exists({ username: payload.userData.username })) {
-        validationErrors.push({
-          field: "userData.username",
-          value: payload.userData.username,
-          issue: "duplicate",
-          message: `Username '${payload.userData.username}' is already taken.`
-        });
-      }
-    }
-
-    // d. Academic Subject validation
-    if (payload.subjects && Array.isArray(payload.subjects)) {
-      for (const subId of payload.subjects) {
-        if (!db.Course.findById(subId)) {
-          validationErrors.push({
-            field: "subjects",
-            value: subId,
-            issue: "not_found",
-            message: `Course/Subject with ID '${subId}' was not found in Academic.`
-          });
-        }
-      }
-    }
-
-    // Throw consolidated validation errors if any failures exist
-    if (validationErrors.length > 0) {
+    if (!ctx.isValid()) {
       throw new SheetDB.ValidationError("Pre-flight validation failed for teacher onboarding.", {
-        fields: validationErrors
+        fields: ctx.errors
       });
     }
 
@@ -233,11 +187,12 @@ const StaffService = {
         this._trackMutation(context, "User");
       }
 
-      // 4. RELATION: INITIAL COMPENSATION RATE
+      // 4. RELATION: INITIAL COMPENSATION RATE (Polymorphic schema alignment)
       if (payload.salary_config) {
         const salaryConfig = db.TeacherSalaryConfig.insert({
           ...payload.salary_config,
-          teacher_id: teacher.teacher_id,
+          entity_type: "Teacher",
+          entity_id: teacher.teacher_id,
           effective_from: payload.salary_config.effective_from || new Date()
         });
         insertedRecords.push({ table: "TeacherSalaryConfig", id: salaryConfig.salary_config_id });
@@ -246,27 +201,29 @@ const StaffService = {
 
       // 5. RELATION: ASSIGN TEACHING SUBJECTS
       if (payload.subjects && Array.isArray(payload.subjects)) {
-        for (const subId of payload.subjects) {
-          const teacherSubject = db.TeacherSubject.insert({
-            teacher_id: teacher.teacher_id,
-            subject_id: subId
-          });
-          insertedRecords.push({ table: "TeacherSubject", id: teacherSubject.teacher_subject_id });
-          self._trackMutation(context, "TeacherSubject");
-        }
+        const subjectsToInsert = payload.subjects.map(subId => ({
+          teacher_id: teacher.teacher_id,
+          subject_id: subId
+        }));
+        const insertedSubjects = db.TeacherSubject.insertMany(subjectsToInsert);
+        insertedSubjects.forEach(ts => {
+          insertedRecords.push({ table: "TeacherSubject", id: ts.teacher_subject_id });
+        });
+        self._trackMutation(context, "TeacherSubject");
       }
 
       // 6. RELATION: UPLOAD VERIFIED ONBOARDING DOCUMENTS
       if (payload.documents && Array.isArray(payload.documents)) {
-        for (const doc of payload.documents) {
-          const teacherDoc = db.TeacherDocument.insert({
-            ...doc,
-            teacher_id: teacher.teacher_id,
-            uploaded_at: new Date()
-          });
-          insertedRecords.push({ table: "TeacherDocument", id: teacherDoc.document_id });
-          self._trackMutation(context, "TeacherDocument");
-        }
+        const docsToInsert = payload.documents.map(doc => ({
+          ...doc,
+          teacher_id: teacher.teacher_id,
+          uploaded_at: new Date()
+        }));
+        const insertedDocs = db.TeacherDocument.insertMany(docsToInsert);
+        insertedDocs.forEach(td => {
+          insertedRecords.push({ table: "TeacherDocument", id: td.document_id });
+        });
+        self._trackMutation(context, "TeacherDocument");
       }
 
       console.log(`[StaffService] Onboarding transaction complete for: ${teacher.teacher_id}`);

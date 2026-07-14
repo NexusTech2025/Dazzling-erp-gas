@@ -380,6 +380,245 @@ class UserLogoutAction extends BaseAction {
 }
 
 /**
+ * Auth Domain: Queries user profiles using the database QueryEngine.
+ * Enforces superadmin authorization and sanitizes sensitive fields.
+ * 
+ * @extends BaseAction
+ */
+class UserQueryAction extends BaseAction {
+  constructor() {
+    super(ActionType.QUERY);
+  }
+
+  /**
+   * Validates that payload exists.
+   * @throws {ActionValidationError} If payload is missing.
+   */
+  _validate() {
+    this._requireParam("payload");
+  }
+
+  /**
+   * Restricts access to superadmins only.
+   * @throws {ActionAuthorizationError} If user role is not superadmin.
+   */
+  _authorize() {
+    if (!this._user || this._user.role !== Roles.SUPERADMIN) {
+      throw new ActionAuthorizationError("Access denied. Superadmin privileges required.");
+    }
+  }
+
+  /**
+   * Executes the query on the User table and sanitizes sensitive credentials.
+   * @param {Object} requestContext - Context metadata payload.
+   * @returns {Object|Array} Sanitized User record(s) matching criteria.
+   */
+  handle(requestContext) {
+    const payload = { ...requestContext.params.payload, target: "User" };
+    const results = QueryEngine.execute(payload, this._db);
+
+    const sanitize = (user) => {
+      if (user && typeof user === 'object') {
+        delete user.password_hash;
+        delete user.password_salt;
+      }
+      return user;
+    };
+
+    if (results && results.data && Array.isArray(results.data)) {
+      results.data = results.data.map(sanitize);
+    }
+    return results;
+  }
+}
+
+/**
+ * Auth Domain: Updates a user record. Supports plaintext password update by rehashing.
+ * Enforces superadmin authorization, validates strength, and sanitizes output.
+ * 
+ * @extends BaseAction
+ */
+class UserUpdateAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
+
+  /**
+   * Validates payload contains identifiers and data payload.
+   * @throws {ActionValidationError} If identifier or data is missing.
+   */
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.user_id && !p.id) {
+      throw new ActionValidationError("Payload must contain 'user_id' or 'id'.");
+    }
+    if (!p.data || typeof p.data !== "object") {
+      throw new ActionValidationError("Payload must contain a valid 'data' object.");
+    }
+  }
+
+  /**
+   * Restricts access to superadmins only.
+   * @throws {ActionAuthorizationError} If user role is not superadmin.
+   */
+  _authorize() {
+    if (!this._user || this._user.role !== Roles.SUPERADMIN) {
+      throw new ActionAuthorizationError("Access denied. Superadmin privileges required.");
+    }
+  }
+
+  /**
+   * Performs the update on the User entity. Handles password hashing and session termination.
+   * @param {Object} requestContext - Context metadata payload.
+   * @returns {Object} Update result and updated User details.
+   */
+  handle(requestContext) {
+    const p = requestContext.params.payload;
+    const userId = p.user_id || p.id;
+    const data = { ...p.data };
+
+    const existingUser = this._db.User.findById(userId);
+    if (!existingUser) {
+      throw new SheetDB.EntityNotFoundError("User", userId, "Auth");
+    }
+
+    // 1. Password change detection and handling
+    if (data.password) {
+      if (!AuthCore.isStrongPassword(data.password)) {
+        throw new ActionValidationError("Password is too weak (minimum 8 characters, with uppercase, lowercase, digit, and special char).");
+      }
+      const salt = AuthCore.generateSalt();
+      data.password_salt = salt;
+      data.password_hash = AuthCore.hashPassword(data.password, salt);
+      delete data.password;
+    }
+
+    // 2. Prevent role demotion of the target user if they are a superadmin and there are no other active superadmins
+    if (existingUser.role === Roles.SUPERADMIN && data.role && data.role !== Roles.SUPERADMIN) {
+      const allUsers = this._db.User.all();
+      const otherSuperAdmins = allUsers.filter(u => u.user_id !== userId && u.role === Roles.SUPERADMIN && u.status === "active");
+      if (otherSuperAdmins.length === 0) {
+        throw new ActionValidationError("Cannot demote the sole active superadmin.");
+      }
+    }
+
+    // 3. Prevent locking/disabling the target user if they are the sole active superadmin
+    if (existingUser.role === Roles.SUPERADMIN && data.status && data.status !== "active") {
+      const allUsers = this._db.User.all();
+      const otherSuperAdmins = allUsers.filter(u => u.user_id !== userId && u.role === Roles.SUPERADMIN && u.status === "active");
+      if (otherSuperAdmins.length === 0) {
+        throw new ActionValidationError("Cannot disable or lock the sole active superadmin.");
+      }
+    }
+
+    // 4. Terminate sessions if role or status changes
+    const roleChanged = data.role && data.role !== existingUser.role;
+    const statusChanged = data.status && data.status !== existingUser.status;
+    if (roleChanged || statusChanged) {
+      const allSessions = this._db.Session.all();
+      allSessions.forEach(sess => {
+        if (sess.user_id === userId) {
+          this._db.Session.remove(sess.session_id);
+        }
+      });
+    }
+
+    // 5. Update user record
+    const updatedUser = this._db.User.update(userId, data);
+    requestContext.mutationManifest.push("User");
+
+    // 6. Return sanitized updated user record
+    const result = { ...updatedUser };
+    delete result.password_hash;
+    delete result.password_salt;
+
+    return {
+      success: true,
+      message: `Successfully updated user '${userId}'.`,
+      user: result
+    };
+  }
+}
+
+/**
+ * Auth Domain: Deletes a single user and cascades deletion to sessions.
+ * Enforces superadmin checks, blocks self-deletion, and prevents deleting other superadmins.
+ * 
+ * @extends BaseAction
+ */
+class UserDeleteAction extends BaseAction {
+  constructor() {
+    super(ActionType.DELETE);
+  }
+
+  /**
+   * Validates target identifier is present.
+   * @throws {ActionValidationError} If user_id/id is missing.
+   */
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.user_id && !p.id) {
+      throw new ActionValidationError("Payload must contain 'user_id' or 'id'.");
+    }
+  }
+
+  /**
+   * Restricts access to superadmins only.
+   * @throws {ActionAuthorizationError} If user role is not superadmin.
+   */
+  _authorize() {
+    if (!this._user || this._user.role !== Roles.SUPERADMIN) {
+      throw new ActionAuthorizationError("Access denied. Superadmin privileges required.");
+    }
+  }
+
+  /**
+   * Deletes user record and cascade removes user sessions.
+   * @param {Object} requestContext - Context metadata payload.
+   * @returns {Object} Success response envelope details.
+   */
+  handle(requestContext) {
+    const p = requestContext.params.payload;
+    const userId = p.user_id || p.id;
+    const selfId = this._user ? this._user.user_id : null;
+
+    if (selfId && userId === selfId) {
+      throw new ActionValidationError("Self-deletion is prohibited.");
+    }
+
+    const usr = this._db.User.findById(userId);
+    if (!usr) {
+      throw new SheetDB.EntityNotFoundError("User", userId, "Auth");
+    }
+
+    // Prohibit deleting other superadmins to preserve system administration integrity
+    if (usr.role === Roles.SUPERADMIN) {
+      throw new ActionValidationError("Deleting other superadmins is prohibited.");
+    }
+
+    // Cascade delete user sessions
+    const allSessions = this._db.Session.all();
+    allSessions.forEach(sess => {
+      if (sess.user_id === userId) {
+        this._db.Session.remove(sess.session_id);
+      }
+    });
+
+    // Delete user
+    this._db.User.remove(userId);
+    requestContext.mutationManifest.push("User");
+
+    return {
+      success: true,
+      message: `Successfully deleted user '${userId}' and cleared all active sessions.`,
+      deleted_id: userId
+    };
+  }
+}
+
+/**
  * 👩‍🏫 STAFF DOMAIN ACTIONS
  */
 class StaffOnboardTeacherAction extends BaseAction {
@@ -1235,6 +1474,9 @@ globalThis.ValidatePromoCodeAction = ValidatePromoCodeAction;
 globalThis.UserRegisterAction = UserRegisterAction;
 globalThis.UserLoginAction = UserLoginAction;
 globalThis.UserLogoutAction = UserLogoutAction;
+globalThis.UserQueryAction = UserQueryAction;
+globalThis.UserUpdateAction = UserUpdateAction;
+globalThis.UserDeleteAction = UserDeleteAction;
 globalThis.StaffOnboardTeacherAction = StaffOnboardTeacherAction;
 globalThis.StaffUpdateTeacherAction = StaffUpdateTeacherAction;
 globalThis.StaffAssignSubjectsAction = StaffAssignSubjectsAction;
