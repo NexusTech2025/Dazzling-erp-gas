@@ -35,4 +35,6 @@ Test/*
 !Test/TeacherSalaryConfigIntegrationTests.js
 !Test/db_test.js
 !Test/SecureBootstrapTests.js
-
+!Test/TestTeacherSubject_Transaction.js
+!Test/OnboardTeacherTests.js
+!Test/UserSecureCrudTests.js

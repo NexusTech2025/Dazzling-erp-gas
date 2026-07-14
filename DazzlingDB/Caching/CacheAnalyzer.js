@@ -248,9 +248,13 @@ const CacheAnalyzer = (function() {
 
     const list = sessions.map(session => {
       const cachedUserId = cache.get(session.token);
+      const user = db.User.findById(session.user_id);
       return {
+        sessionId: session.session_id,
         token: session.token,
         userId: session.user_id,
+        username: user ? user.username : "Unknown",
+        role: user ? user.role : "Unknown",
         expiresAt: session.expires_at,
         isHit: cachedUserId !== null,
         cachedUserId: cachedUserId

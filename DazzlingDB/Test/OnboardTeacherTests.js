@@ -95,7 +95,7 @@ function runOnboardTeacherTests() {
       console.error("  ❌ Relational Check: Auth User not found or incorrect ID sync.");
     }
 
-    const salaryConfigs = db.TeacherSalaryConfig.where({ teacher_id: teacher.teacher_id });
+    const salaryConfigs = db.TeacherSalaryConfig.where({ entity_id: teacher.teacher_id, entity_type: "Teacher" });
     if (salaryConfigs.length > 0 && salaryConfigs[0].base_value === 85000) {
       console.log("  ✅ Relational Check: TeacherSalaryConfig successfully registered.");
     } else {

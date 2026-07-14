@@ -171,6 +171,9 @@
           <button class="nav-link border-0 w-100 text-start" onclick="showPanel('cache', event)">
             <i class="fas fa-memory me-2"></i> Cache Analyzer
           </button>
+          <button class="nav-link border-0 w-100 text-start" onclick="showPanel('sessions', event)">
+            <i class="fas fa-key me-2"></i> Session Tokens
+          </button>
           <button class="nav-link border-0 w-100 text-start" onclick="showPanel('logs', event)">
             <i class="fas fa-list-ul me-2"></i> Activity Logs
           </button>
@@ -280,6 +283,48 @@
                 <div class="card-body overflow-auto" id="cache-lockouts-list" style="max-height: 200px;">
                   <div class="text-center text-muted py-4"><i class="fas fa-search fa-2x mb-2"></i><p>Run analysis to view lockout states.</p></div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sessions Panel -->
+        <div id="panel-sessions" class="d-none">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h2 class="fw-bold mb-0">Session Tokens</h2>
+              <p class="text-muted">Overview of active login sessions and their cache status</p>
+            </div>
+            <button onclick="refreshSessions()" class="btn btn-primary px-4 fw-bold">
+              <i class="fas fa-sync me-2"></i>Refresh Tokens
+            </button>
+          </div>
+
+          <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+              <h5 class="fw-bold mb-0"><i class="fas fa-key text-success me-2"></i>Active Sessions & Cache States</h5>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="ps-4">Session ID</th>
+                      <th>Token</th>
+                      <th>Expiry Datetime</th>
+                      <th>User (Username)</th>
+                      <th>Role</th>
+                      <th class="pe-4 text-end">Cache Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sessions-table-body">
+                    <tr>
+                      <td colspan="6" class="text-center py-4 text-muted">
+                        <i class="fas fa-info-circle me-1"></i> Click Refresh to load tokens.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -681,6 +726,8 @@
         renderHealth();
       } else if (panelId === 'cache') {
         renderCache();
+      } else if (panelId === 'sessions') {
+        refreshSessions();
       }
     } catch (err) {
       showErrorModal(`Exception caught executing showPanel('${panelId}')`, err);
@@ -1006,6 +1053,47 @@
       });
     } catch (e) {
       showErrorModal("Exception caught initiating purgeSystemCache", e);
+    }
+  }
+
+  function refreshSessions() {
+    try {
+      const tbody = document.getElementById('sessions-table-body');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 mb-0">Loading active sessions...</p></td></tr>';
+      }
+      callApi("admin_cache_analyze", {}, (res) => {
+        try {
+          const sessions = res.data?.sessions?.list || [];
+          if (tbody) {
+            tbody.innerHTML = "";
+            if (sessions.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-info-circle me-1"></i> No active session tokens found.</td></tr>';
+              return;
+            }
+            sessions.forEach(s => {
+              const cacheBadge = s.isHit 
+                ? '<span class="badge bg-success">Cached (HIT)</span>' 
+                : '<span class="badge bg-warning text-dark">DB Only (MISS)</span>';
+              
+              tbody.innerHTML += `
+                <tr>
+                  <td class="ps-4 font-monospace small">${s.sessionId || 'N/A'}</td>
+                  <td class="font-monospace text-secondary" style="font-size: 12px; word-break: break-all;">${s.token}</td>
+                  <td>${new Date(s.expiresAt).toLocaleString()}</td>
+                  <td><span class="fw-bold">${s.username}</span> <span class="text-muted small">(${s.userId})</span></td>
+                  <td><span class="badge bg-secondary">${s.role}</span></td>
+                  <td class="pe-4 text-end">${cacheBadge}</td>
+                </tr>
+              `;
+            });
+          }
+        } catch (e) {
+          showErrorModal("Error rendering session tokens", e);
+        }
+      });
+    } catch (e) {
+      showErrorModal("Exception caught in refreshSessions", e);
     }
   }
 
