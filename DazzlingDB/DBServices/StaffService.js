@@ -609,11 +609,13 @@ const StaffService = {
 
       const rawEntry = record.entry_time;
       const rawExit = record.exit_time;
+      const rawAttendanceDate = record.attendance_date;
 
       // Calculate dynamic duration
       record.duration = AttendanceUtil.calculateDuration(rawEntry, rawExit);
 
       // Convert datetime back to JSON object for API output format
+      // record.attendance_date = SheetDB.DateComparator.toLocaleDateString(rawAttendanceDate)
       record.entry_time = AttendanceUtil.convertDateToJson(rawEntry);
       record.exit_time = AttendanceUtil.convertDateToJson(rawExit);
 
