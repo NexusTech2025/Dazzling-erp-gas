@@ -224,6 +224,8 @@ Object.assign(globalThis, {
   ForeignKeyField: globalThis.ForeignKeyField,
   isDate: globalThis.isDate,
   SheetDBDateTime: globalThis.SheetDBDateTime,
+  DateComparator: globalThis.DateComparator,
+  DateComparisonPolicy: globalThis.DateComparisonPolicy,
   
   // Relations OOP Classes
   BaseRelation: globalThis.BaseRelation,

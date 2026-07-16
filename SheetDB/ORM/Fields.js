@@ -30,6 +30,7 @@ class BaseField {
     this.default = options.default !== undefined ? options.default : null;
     this.choices = options.choices || null;
     this.validators = options.validators || [];
+    this.type = options.type || null;
 
     // Instantiate and compile validation pipeline
     this.pipeline = new ValidationPipeline(this.name);
