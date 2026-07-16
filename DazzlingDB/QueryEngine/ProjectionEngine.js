@@ -8,7 +8,7 @@
  * - Formats Apps Script types (Dates) into JSON-friendly strings.
  */
 
-const ProjectionEngine = (function() {
+const ProjectionEngine = (function () {
 
   /**
    * Projects and formats a dataset.
@@ -23,6 +23,54 @@ const ProjectionEngine = (function() {
   }
 
   /**
+   * Internal: Resolves the schema for a row object.
+   * Checks metadata row.__tableName first (for plain database rows),
+   * falling back to row.constructor.schema for instantiated models.
+   * 
+   * @private
+   * @param {Object} row - The row object to inspect.
+   * @returns {Object} Schema definition object.
+   * @throws {ValidationError} If row is falsy, or if BaseModel instance lacks a schema.
+   * @throws {IntegrityError} If plain row lacks __tableName or if registry model is missing.
+   */
+  function _resolveSchema(row) {
+    const ValidationErrorClass = (typeof SheetDB !== 'undefined' && SheetDB.ValidationError) || (typeof ValidationError !== 'undefined' ? ValidationError : Error);
+    const IntegrityErrorClass = (typeof SheetDB !== 'undefined' && SheetDB.IntegrityError) || (typeof IntegrityError !== 'undefined' ? IntegrityError : Error);
+
+    if (!row) {
+      throw new ValidationErrorClass("Row object is undefined or null", { component: "ProjectionEngine" });
+    }
+
+    // 1. If it's a BaseModel instance/class with schema defined, return it
+    const schema = row.constructor && row.constructor.schema;
+    if (schema) {
+      return schema;
+    }
+
+    // 2. Plain database row object validation
+    const tableName = row.__tableName;
+    if (!tableName) {
+      throw new IntegrityErrorClass("Data Integrity Violation: Plain row object lacks metadata '__tableName' identification property.", { component: "ProjectionEngine" });
+    }
+
+    if (typeof SheetDB === 'undefined' || !SheetDB.ModelRegistry) {
+      throw new IntegrityErrorClass("SheetDB ModelRegistry is not defined in scope.", { component: "ProjectionEngine" });
+    }
+
+    const modelClass = SheetDB.ModelRegistry.getModel(tableName);
+    if (!modelClass) {
+      throw new IntegrityErrorClass(`Data Integrity Violation: Model '${tableName}' is not registered in ModelRegistry.`, { component: "ProjectionEngine" });
+    }
+
+    const registrySchema = modelClass.schema;
+    if (!registrySchema) {
+      throw new ValidationErrorClass(`Model '${tableName}' lacks required 'schema' definition in registry`, { component: "ProjectionEngine", tableName });
+    }
+
+    return registrySchema;
+  }
+
+  /**
    * Internal: Projects a single row recursively (for nested relations).
    * @private
    */
@@ -34,11 +82,17 @@ const ProjectionEngine = (function() {
 
     keys.forEach(key => {
       let value = row[key];
-      const isDate = value && Object.prototype.toString.call(value) === '[object Date]';
+      const isDate = value && (value instanceof Date || Object.prototype.toString.call(value) === '[object Date]');
 
-      // 2. Handle Dates (Format to ISO)
+      // 2. Handle Dates (Format to ISO or local date)
       if (isDate) {
-        value = value.toISOString();
+        const schema = _resolveSchema(row);
+        const field = schema && schema[key];
+        if (field && field.type === "date" && typeof SheetDB !== 'undefined' && SheetDB.DateComparator) {
+          value = SheetDB.DateComparator.toLocaleDateString(value);
+        } else {
+          value = value.toISOString();
+        }
       }
 
       // 3. Handle Nested Relations (Recursive Projection)

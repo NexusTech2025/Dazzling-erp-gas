@@ -351,7 +351,67 @@ const TestMockHelper = {
       settlement_state: overrides.settlement_state || "unsettled",
       ...overrides
     };
+  },
+
+  /**
+   * Prepares a student registration payload containing only profile, address, contact, education,
+   * and course enrollment (without any payment/feeAccount records), matching the specified batchId.
+   * @param {string} courseId - The Course ID.
+   * @param {string} batchId - The Batch ID.
+   * @param {Object} [overrides={}] - Column overrides.
+   * @returns {Object} Payload for StudentService.registerStudent
+   */
+  createAcademicOnlyRegistrationPayload: function(courseId, batchId, overrides = {}) {
+    if (!courseId || !batchId) {
+      throw new Error("courseId and batchId are required for academic-only registration payload.");
+    }
+    const salt = this._getSalt();
+    const phone = this._getPhone();
+    
+    return {
+      profile: {
+        student_name: overrides.student_name || "Student " + salt,
+        gender: overrides.gender || "Male",
+        dob: overrides.dob || "2008-01-01",
+        status: overrides.status || "active",
+        mother_name: overrides.mother_name || "Mother " + salt,
+        father_name: overrides.father_name || "Father " + salt,
+        ...overrides.profile
+      },
+      address: {
+        line1: overrides.line1 || "Street " + salt,
+        city: overrides.city || "Jaipur",
+        state: overrides.state || "Rajasthan",
+        pin_code: overrides.pin_code || "302017",
+        country: overrides.country || "India",
+        ...overrides.address
+      },
+      contact: {
+        mobile_number: overrides.mobile_number || phone,
+        email: overrides.email || "student_" + salt.toLowerCase() + "@test.com",
+        ...overrides.contact
+      },
+      education: overrides.education || [
+        {
+          highest_qualification: "Class 10",
+          institution_name: "School " + salt,
+          year_of_passing: 2024,
+          percentage_or_cgpa: "90%"
+        }
+      ],
+      enrollments: [
+        {
+          enrollment_type: "course",
+          item_id: courseId,
+          fee: overrides.fee || 5000,
+          status: "active",
+          academic_status: "active",
+          batch_id: batchId
+        }
+      ]
+    };
   }
 };
+
 
 globalThis.TestMockHelper = TestMockHelper;
