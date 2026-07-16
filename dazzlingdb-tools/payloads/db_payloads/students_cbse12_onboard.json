@@ -1,0 +1,199 @@
+[
+  {
+    "profile": {
+      "student_name": "Karan Sharma",
+      "email": "karan.sharma@gmail.com",
+      "phone": "+919811122233",
+      "gender": "Male",
+      "dob": "2009-08-15",
+      "mother_name": "Suman Sharma",
+      "father_name": "Vijay Sharma",
+      "status": "active"
+    },
+    "address": {
+      "line1": "Flat 202, Sunshine Heights",
+      "line2": "Malviya Nagar",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "pin_code": "302017",
+      "country": "India"
+    },
+    "contact": {
+      "email": "karan.sharma@gmail.com",
+      "mobile_number": "9811122233",
+      "emergency_name": "Vijay Sharma",
+      "emergency_phone": "+919811122200",
+      "emergency_relationship": "Father"
+    },
+    "education": [
+      {
+        "highest_qualification": "Class 11",
+        "institution_name": "Ryan International School",
+        "year_of_passing": 2026,
+        "percentage_or_cgpa": "88.6%"
+      }
+    ],
+    "enrollments": [
+      {
+        "enrollment_type": "package",
+        "item_id": "PKG-94EE96F4",
+        "fee": 120000,
+        "roll_number": 20261201,
+        "enrollment_date": "2026-07-09",
+        "status": "active",
+        "academic_status": "active",
+        "package_batches": [
+          {
+            "course_id": "CRS-8F74FF2A",
+            "batch_id": "BAT-BE4B9CE0"
+          }
+        ]
+      }
+    ],
+    "feeAccount": {
+      "total_fee": 120000,
+      "discount": 0,
+      "final_fee": 120000,
+      "amount_paid": 30000,
+      "balance_due": 90000,
+      "is_overdue": false,
+      "penalty_amount": 0,
+      "next_due_date": "2026-08-01",
+      "status": "active",
+      "remarks": "Onboarded via CBSE Class 12 Science Package",
+      "created_by": "admin_moni",
+      "installments": [
+        {
+          "installment_number": 1,
+          "due_amount": 30000,
+          "paid_amount": 30000,
+          "late_fee_amount": 0,
+          "due_date": "2026-07-09",
+          "status": "paid"
+        },
+        {
+          "installment_number": 2,
+          "due_amount": 30000,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-08-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 3,
+          "due_amount": 30000,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-09-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 4,
+          "due_amount": 30000,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-10-01",
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  {
+    "profile": {
+      "student_name": "Riya Verma",
+      "email": "riya.verma@gmail.com",
+      "phone": "+919822233344",
+      "gender": "Female",
+      "dob": "2009-11-05",
+      "mother_name": "Anjali Verma",
+      "father_name": "Suresh Verma",
+      "status": "active"
+    },
+    "address": {
+      "line1": "C-12, Vaishali Nagar",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "pin_code": "302021",
+      "country": "India"
+    },
+    "contact": {
+      "email": "riya.verma@gmail.com",
+      "mobile_number": "9822233344",
+      "emergency_name": "Suresh Verma",
+      "emergency_phone": "+919822233300",
+      "emergency_relationship": "Father"
+    },
+    "education": [
+      {
+        "highest_qualification": "Class 11",
+        "institution_name": "Step by Step School",
+        "year_of_passing": 2026,
+        "percentage_or_cgpa": "91.2%"
+      }
+    ],
+    "enrollments": [
+      {
+        "enrollment_type": "package",
+        "item_id": "PKG-94EE96F4",
+        "fee": 120000,
+        "roll_number": 20261202,
+        "enrollment_date": "2026-07-09",
+        "status": "active",
+        "academic_status": "active",
+        "package_batches": [
+          {
+            "course_id": "CRS-8F74FF2A",
+            "batch_id": "BAT-BE4B9CE0"
+          }
+        ]
+      }
+    ],
+    "feeAccount": {
+      "total_fee": 120000,
+      "discount": 0,
+      "final_fee": 120000,
+      "amount_paid": 30000,
+      "balance_due": 90000,
+      "is_overdue": false,
+      "penalty_amount": 0,
+      "next_due_date": "2026-08-01",
+      "status": "active",
+      "remarks": "Onboarded via CBSE Class 12 Science Package",
+      "created_by": "admin_moni",
+      "installments": [
+        {
+          "installment_number": 1,
+          "due_amount": 30000,
+          "paid_amount": 30000,
+          "late_fee_amount": 0,
+          "due_date": "2026-07-09",
+          "status": "paid"
+        },
+        {
+          "installment_number": 2,
+          "due_amount": 30000,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-08-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 3,
+          "due_amount": 30000,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-09-01",
+          "status": "pending"
+        },
+        {
+          "installment_number": 4,
+          "due_amount": 30000,
+          "paid_amount": 0,
+          "late_fee_amount": 0,
+          "due_date": "2026-10-01",
+          "status": "pending"
+        }
+      ]
+    }
+  }
+]

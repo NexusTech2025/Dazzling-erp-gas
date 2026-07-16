@@ -1,0 +1,19 @@
+{
+  "student_id": "STU-F120AE5D",
+  "batch_id": "BAT-0A4F4A04",
+  "attendance_date": "2026-07-14",
+  "status": "P",
+  "entry_time": {
+    "hour": 4,
+    "minute": 0,
+    "period": "PM"
+  },
+  "exit_time": {
+    "hour": 5,
+    "minute": 0,
+    "period": "PM"
+  },
+  "attendance_mode": "Manual",
+  "remarks": "Marked via CLI action",
+  "marked_by": "TCH-083C6858"
+}

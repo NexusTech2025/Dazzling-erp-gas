@@ -1,0 +1,166 @@
+{
+  "metadata": {
+    "title": "SheetDB: TransactionTracker Process Knowledge Graph",
+    "description": "System architecture, operations, state tracking, and recovery actions for the transactional rollback manager in SheetDB.",
+    "version": "1.0.0",
+    "last_updated": "2026-07-07"
+  },
+  "nodes": [
+    {
+      "id": "TransactionTracker",
+      "type": "Class",
+      "category": "TransactionManager",
+      "description": "Generic LIFO rollback manager coordinating database transaction steps, backups, and restores.",
+      "properties": {
+        "namespace": "globalThis.TransactionTracker",
+        "file_path": "DazzlingDB/DBServices/TransactionTracker.js"
+      }
+    },
+    {
+      "id": "steps",
+      "type": "Property",
+      "category": "State",
+      "description": "An internal stack array storing recorded operations in chronological sequence.",
+      "properties": {
+        "type": "Array<Object>",
+        "supported_actions": ["delete", "update", "insert", "restore_sync"]
+      }
+    },
+    {
+      "id": "trackInsert",
+      "type": "Method",
+      "category": "StateRecorder",
+      "description": "Registers a newly inserted record primary key to be deleted upon transaction rollback.",
+      "properties": {
+        "signature": "trackInsert(repository, id)"
+      }
+    },
+    {
+      "id": "trackUpdate",
+      "type": "Method",
+      "category": "StateRecorder",
+      "description": "Registers a record update with a backup copy of its original pre-update state.",
+      "properties": {
+        "signature": "trackUpdate(repository, id, originalState)"
+      }
+    },
+    {
+      "id": "trackDelete",
+      "type": "Method",
+      "category": "StateRecorder",
+      "description": "Registers a record deletion with a hydrated backup model to be re-inserted upon rollback.",
+      "properties": {
+        "signature": "trackDelete(repository, backupModel)"
+      }
+    },
+    {
+      "id": "trackSync",
+      "type": "Method",
+      "category": "StateRecorder",
+      "description": "Registers a bulk synchronization step (delete and rewrite) with filters and backup models.",
+      "properties": {
+        "signature": "trackSync(repository, deleteFilters, backupModels)"
+      }
+    },
+    {
+      "id": "rollback",
+      "type": "Method",
+      "category": "TransactionExecutor",
+      "description": "Executes rollback steps in LIFO (Last-In, First-Out) reverse order to restore the database to its pre-transaction state.",
+      "properties": {
+        "signature": "rollback()"
+      }
+    },
+    {
+      "id": "DynamicRepository",
+      "type": "Class",
+      "category": "ORM",
+      "description": "The active dynamic table repository representing a Sheet database table interface.",
+      "properties": {
+        "file_path": "SheetDB/Repositories/DynamicRepository.js"
+      }
+    },
+    {
+      "id": "BaseModel",
+      "type": "Class",
+      "category": "ORM",
+      "description": "The base data model wrapper representing a validated record structure.",
+      "properties": {
+        "file_path": "SheetDB/Models/BaseModel.js"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "TransactionTracker",
+      "target": "steps",
+      "relation": "maintains",
+      "description": "Maintains an internal array stack of recovery step objects.",
+      "properties": {}
+    },
+    {
+      "source": "trackInsert",
+      "target": "steps",
+      "relation": "pushes_step",
+      "description": "Pushes a deletion recovery step into the steps array.",
+      "properties": {
+        "action": "delete"
+      }
+    },
+    {
+      "source": "trackUpdate",
+      "target": "steps",
+      "relation": "pushes_step",
+      "description": "Pushes an update recovery step with baseline state backup.",
+      "properties": {
+        "action": "update"
+      }
+    },
+    {
+      "source": "trackDelete",
+      "target": "steps",
+      "relation": "pushes_step",
+      "description": "Pushes an insert recovery step containing the deleted record's backup.",
+      "properties": {
+        "action": "insert"
+      }
+    },
+    {
+      "source": "trackSync",
+      "target": "steps",
+      "relation": "pushes_step",
+      "description": "Pushes a restore_sync step containing target query filters and backup state.",
+      "properties": {
+        "action": "restore_sync"
+      }
+    },
+    {
+      "source": "rollback",
+      "target": "steps",
+      "relation": "iterates_reverse_lifo",
+      "description": "Processes the steps array backwards to reverse modifications in the correct dependency order.",
+      "properties": {}
+    },
+    {
+      "source": "rollback",
+      "target": "DynamicRepository",
+      "relation": "invokes_operations_on",
+      "description": "Invokes ORM APIs (remove, update, insert) to revert table rows.",
+      "properties": {}
+    },
+    {
+      "source": "trackDelete",
+      "target": "BaseModel",
+      "relation": "accepts_backup",
+      "description": "Accepts a hydrated model instance representing the deleted state.",
+      "properties": {}
+    },
+    {
+      "source": "trackSync",
+      "target": "BaseModel",
+      "relation": "accepts_backups",
+      "description": "Accepts an array of backup model instances to restore upon rollback.",
+      "properties": {}
+    }
+  ]
+}

@@ -1,0 +1,266 @@
+{
+  "metadata": {
+    "title": "DazzlingDB: StaffService.onboardTeacher Process Knowledge Graph",
+    "description": "Comprehensive mapping of the teacher onboarding workflow, including pre-flight checks, schema validation, transactional inserts, user registration, and LIFO rollback recovery.",
+    "version": "1.1.0",
+    "last_updated": "2026-07-07"
+  },
+  "nodes": [
+    {
+      "id": "onboardTeacher",
+      "type": "ServiceMethod",
+      "category": "Orchestrator",
+      "description": "Coordinates full teacher onboarding by validating, inserting primary and relational records, and managing custom rollbacks on failure.",
+      "properties": {
+        "signature": "onboardTeacher(payload, context)",
+        "file_path": "DazzlingDB/DBServices/StaffService.js"
+      }
+    },
+    {
+      "id": "Teacher",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "description": "Database model storing core teacher profile records such as full name, contact info, status, and metadata.",
+      "properties": {
+        "primary_key": "teacher_id",
+        "uniqueness_guards": ["mobile_number", "email"],
+        "required_fields": ["full_name", "mobile_number", "status"]
+      }
+    },
+    {
+      "id": "User",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "description": "Database model storing authentication credentials and system role maps for users logging into the application.",
+      "properties": {
+        "primary_key": "user_id",
+        "uniqueness_guards": ["username"],
+        "relation_type": "1:1 with Teacher via identity key synchronization"
+      }
+    },
+    {
+      "id": "TeacherSalaryConfig",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "description": "Database model tracking payroll rates, contract configurations, scopes, and effective dates for a teacher's compensation plan.",
+      "properties": {
+        "primary_key": "salary_config_id",
+        "foreign_key": "teacher_id",
+        "defaults": {
+          "effective_from": "new Date()"
+        }
+      }
+    },
+    {
+      "id": "TeacherSubject",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "description": "Relational junction model linking a teacher's profile ID to various academic courses/subjects they are assigned to teach.",
+      "properties": {
+        "primary_key": "teacher_subject_id",
+        "foreign_keys": ["teacher_id", "subject_id"]
+      }
+    },
+    {
+      "id": "TeacherDocument",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "description": "Database model storing URLs and verification metadata for documents uploaded during teacher onboarding.",
+      "properties": {
+        "primary_key": "document_id",
+        "foreign_key": "teacher_id",
+        "auto_fields": ["uploaded_at"]
+      }
+    },
+    {
+      "id": "Course",
+      "type": "DatabaseModel",
+      "category": "Schema",
+      "description": "Academic database model defining courses/subjects available within the school system.",
+      "properties": {
+        "primary_key": "course_id",
+        "alias": "Subject"
+      }
+    },
+    {
+      "id": "AuthBridge",
+      "type": "InfrastructureSystem",
+      "category": "Security",
+      "description": "Cross-module bridge that exposes authentication registry operations, specifically registering user profiles.",
+      "properties": {
+        "method": "registerUser(userData, context)",
+        "role": "teacher"
+      }
+    },
+    {
+      "id": "ValidationError",
+      "type": "ErrorClass",
+      "category": "Exception",
+      "description": "Custom SheetDB error thrown when one or more pre-flight validation rules fail prior to performing database writes.",
+      "properties": {
+        "namespace": "SheetDB.ValidationError",
+        "purpose": "Consolidates all multi-field pre-flight failures into a single throw"
+      }
+    },
+    {
+      "id": "context",
+      "type": "ExecutionObject",
+      "category": "Metadata",
+      "description": "Shared request context object used to track active spreadsheet transactions and record mutation manifests.",
+      "properties": {
+        "mutationManifest": "Tracks updated tables for cross-realm synchronization"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "onboardTeacher",
+      "target": "Teacher",
+      "relation": "validates_uniqueness_of",
+      "description": "Validates that the input mobile_number and email do not already exist in the Teacher table to prevent duplicates.",
+      "properties": {
+        "fields": ["mobile_number", "email"]
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "User",
+      "relation": "validates_uniqueness_of",
+      "description": "Checks the User table to ensure that the input username is unique before attempting registration.",
+      "properties": {
+        "fields": ["userData.username"]
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "Course",
+      "relation": "validates_existence_of",
+      "description": "Verifies that all subject IDs supplied in the payload point to existing Course records.",
+      "properties": {
+        "field": "subjects"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "ValidationError",
+      "relation": "throws_on_validation_failure",
+      "description": "Throws a consolidated ValidationError containing all collected field issues if any validation check fails.",
+      "properties": {}
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "Teacher",
+      "relation": "inserts_into",
+      "description": "Inserts the core teacher profile record into the Teacher table and tracks its ID for transaction monitoring.",
+      "properties": {
+        "phase": "2. CORE",
+        "clean_payload": "excludes userData, salary_config, subjects, and documents"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "context",
+      "relation": "registers_mutation_on",
+      "description": "Tracks target table names within the request context's mutationManifest to support transaction isolation and caching.",
+      "properties": {
+        "tables": ["Teacher", "User", "TeacherSalaryConfig", "TeacherSubject", "TeacherDocument"]
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "AuthBridge",
+      "relation": "invokes_during_onboarding",
+      "description": "Delegates to AuthBridge to register a user account for the teacher if registration data is provided.",
+      "properties": {
+        "condition": "payload.userData is defined"
+      }
+    },
+    {
+      "source": "AuthBridge",
+      "target": "User",
+      "relation": "creates_row",
+      "description": "Creates a user account within the User table, syncing its primary key directly with the teacher's profile ID.",
+      "properties": {
+        "role": "teacher",
+        "sync_key": "user_id maps directly to teacher.teacher_id"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "TeacherSalaryConfig",
+      "relation": "inserts_into",
+      "description": "Appends a new salary rate config row to TeacherSalaryConfig referencing the newly generated teacher_id.",
+      "properties": {
+        "condition": "payload.salary_config is defined",
+        "phase": "4. RELATION"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "TeacherSubject",
+      "relation": "inserts_into",
+      "description": "Inserts relational mapping rows into TeacherSubject linking the teacher to each assigned subject ID.",
+      "properties": {
+        "condition": "payload.subjects exists and is an array",
+        "phase": "5. RELATION",
+        "multiplicity": "once per subject ID"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "TeacherDocument",
+      "relation": "inserts_into",
+      "description": "Saves document verification attachments into TeacherDocument referencing the teacher's ID.",
+      "properties": {
+        "condition": "payload.documents exists and is an array",
+        "phase": "6. RELATION",
+        "multiplicity": "once per document object"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "TeacherDocument",
+      "relation": "rolls_back_removes",
+      "description": "Removes successfully inserted documents in reverse chronological order if a downstream insertion step fails.",
+      "properties": {
+        "order": "1st in rollback (reverse LIFO hierarchy)"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "TeacherSubject",
+      "relation": "rolls_back_removes",
+      "description": "Removes assigned subject mappings if the onboarding transaction encounters an error after their creation.",
+      "properties": {
+        "order": "2nd in rollback"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "TeacherSalaryConfig",
+      "relation": "rolls_back_removes",
+      "description": "Removes the newly created salary configuration row if onboarding fails prior to completing the transaction.",
+      "properties": {
+        "order": "3rd in rollback"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "User",
+      "relation": "rolls_back_removes",
+      "description": "Deletes the created Auth User account from the User table if an onboarding error is caught.",
+      "properties": {
+        "order": "4th in rollback"
+      }
+    },
+    {
+      "source": "onboardTeacher",
+      "target": "Teacher",
+      "relation": "rolls_back_removes",
+      "description": "Deletes the core teacher profile record as the final step of rollback eviction, restoring the database to its pre-transaction state.",
+      "properties": {
+        "order": "5th in rollback (final LIFO step)"
+      }
+    }
+  ]
+}

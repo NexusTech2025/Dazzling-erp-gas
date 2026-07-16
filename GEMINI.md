@@ -76,6 +76,7 @@ You must follow this sequence for every task:
 
 ---
 
+[!important]
 ### **Coding Standards**
 
 * Use meaningful naming conventions
@@ -83,6 +84,8 @@ You must follow this sequence for every task:
 * Write modular, testable code
 * Avoid over-engineering
 * Add minimal, meaningful comments only when necessary
+* **Preserve & Update Comments:** Never remove existing comment lines from the codebase unless they are outdated. If they are outdated, replace them with updated, relevant comments rather than deleting them.
+* **JSDoc Preservation & Expansion:** Do not remove any existing class or method JSDoc annotations. Always write descriptive JSDoc for each method or class to clearly explain its purpose, arguments (including types), return values, and behavior to other developers.
 * **Declarative Strategy Pattern / Mapping Registry:** Avoid nested `if-else` or complex `switch` statements for type-based or policy-based conditional execution logic. Instead, map decoupled execution strategies inside a centralized registry object to support extensibility and maintainability. This design must be applied to all future multi-branch logical evaluation systems, validation checks, and rule processors that may expand.
 * **Custom Error Handling & Referential Integrity:** Define and raise domain-specific custom exception classes derived from structured base error classes (e.g., using `IntegrityError` as the base error class that must be raised when a protected field deletion is blocked, or `ValidationError` for schema compliance failures) instead of throwing generic `Error` instances. This ensures clear categorizations of database constraints, standardizes exception tracking, and simplifies boundary error-handling logic.
 * **Decoupled Module Utilities & Dependency Injection:** If a helper function is completely generic, does not depend on a class instance or state, and is not required as a static class method, define it as a standalone utility function outside of classes within the same module's global or file scope. Additionally, decouple operational sub-routines (like strategic drivers) using callback-based runtime dependency injection instead of hardcoding cross-dependency execution calls inside lower-level classes. This enforces Single Responsibility, DRY compliance, and testability. Always adhere to SOLID principles and design patterns wherever possible to maintain the code, and prioritize reusing existing codebase methods or proposing existing logic reusability before writing new helper procedures.

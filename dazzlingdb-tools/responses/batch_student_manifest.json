@@ -2,129 +2,217 @@
   "executionMetadata": {
     "tableContext": "Student",
     "actionContext": "student_register",
-    "timestamp": "2026-06-25T20:19:13.910Z",
-    "totalProcessed": 5,
-    "successCount": 5,
-    "failureCount": 0,
-    "wallTimeMs": 119633,
-    "averageLatencyMs": 23926.6
+    "timestamp": "2026-07-09T09:53:58.166Z",
+    "totalProcessed": 2,
+    "successCount": 0,
+    "failureCount": 2,
+    "wallTimeMs": 14717,
+    "averageLatencyMs": 7358.5
   },
-  "successManifest": [
-    {
-      "inputPayloadIndex": 0,
-      "resolvedId": "STU-F120AE5D",
-      "recordSnapshot": {
-        "student_name": "Aarav Mehta",
-        "email": "aarav.mehta@gmail.com",
-        "phone": "'+919876543210",
-        "gender": "Male",
-        "dob": "2010-04-11T18:30:00.000Z",
-        "mother_name": "Meera Mehta",
-        "father_name": "Rajesh Mehta",
-        "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261101.png",
-        "status": "active",
-        "student_id": "STU-F120AE5D",
-        "__tx_id": null,
-        "__tx_status": "PENDING",
-        "__created_at": "2026-06-25T14:47:22.000Z",
-        "_presentation": {
-          "display_status": "Fully Enrolled",
-          "toast_message": "Data transaction committed safely to physical files."
+  "successManifest": [],
+  "failureManifest": {
+    "0": {
+      "message": "undefined: Curriculum Integrity Breach: Selected package requires an active batch seat allocation for Course ID [CRS-2FFE76CC].",
+      "attemptedData": {
+        "profile": {
+          "student_name": "Karan Sharma",
+          "email": "karan.sharma@gmail.com",
+          "phone": "+919811122233",
+          "gender": "Male",
+          "dob": "2009-08-15",
+          "mother_name": "Suman Sharma",
+          "father_name": "Vijay Sharma",
+          "status": "active"
+        },
+        "address": {
+          "line1": "Flat 202, Sunshine Heights",
+          "line2": "Malviya Nagar",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "pin_code": "302017",
+          "country": "India"
+        },
+        "contact": {
+          "email": "karan.sharma@gmail.com",
+          "mobile_number": "9811122233",
+          "emergency_name": "Vijay Sharma",
+          "emergency_phone": "+919811122200",
+          "emergency_relationship": "Father"
+        },
+        "education": [
+          {
+            "highest_qualification": "Class 11",
+            "institution_name": "Ryan International School",
+            "year_of_passing": 2026,
+            "percentage_or_cgpa": "88.6%"
+          }
+        ],
+        "enrollments": [
+          {
+            "enrollment_type": "package",
+            "item_id": "PKG-94EE96F4",
+            "fee": 120000,
+            "roll_number": 20261201,
+            "enrollment_date": "2026-07-09",
+            "status": "active",
+            "academic_status": "active",
+            "package_batches": [
+              {
+                "course_id": "CRS-8F74FF2A",
+                "batch_id": "BAT-BE4B9CE0"
+              }
+            ]
+          }
+        ],
+        "feeAccount": {
+          "total_fee": 120000,
+          "discount": 0,
+          "final_fee": 120000,
+          "amount_paid": 30000,
+          "balance_due": 90000,
+          "is_overdue": false,
+          "penalty_amount": 0,
+          "next_due_date": "2026-08-01",
+          "status": "active",
+          "remarks": "Onboarded via CBSE Class 12 Science Package",
+          "created_by": "admin_moni",
+          "installments": [
+            {
+              "installment_number": 1,
+              "due_amount": 30000,
+              "paid_amount": 30000,
+              "late_fee_amount": 0,
+              "due_date": "2026-07-09",
+              "status": "paid"
+            },
+            {
+              "installment_number": 2,
+              "due_amount": 30000,
+              "paid_amount": 0,
+              "late_fee_amount": 0,
+              "due_date": "2026-08-01",
+              "status": "pending"
+            },
+            {
+              "installment_number": 3,
+              "due_amount": 30000,
+              "paid_amount": 0,
+              "late_fee_amount": 0,
+              "due_date": "2026-09-01",
+              "status": "pending"
+            },
+            {
+              "installment_number": 4,
+              "due_amount": 30000,
+              "paid_amount": 0,
+              "late_fee_amount": 0,
+              "due_date": "2026-10-01",
+              "status": "pending"
+            }
+          ]
         }
       }
     },
-    {
-      "inputPayloadIndex": 1,
-      "resolvedId": "STU-CFF573D5",
-      "recordSnapshot": {
-        "student_name": "Ishaan Sharma",
-        "email": "ishaan.sharma@gmail.com",
-        "phone": "'+919812345678",
-        "gender": "Male",
-        "dob": "2010-09-17T18:30:00.000Z",
-        "mother_name": "Sunita Sharma",
-        "father_name": "Alok Sharma",
-        "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261102.png",
-        "status": "active",
-        "student_id": "STU-CFF573D5",
-        "__tx_id": null,
-        "__tx_status": "PENDING",
-        "__created_at": "2026-06-25T14:47:40.000Z",
-        "_presentation": {
-          "display_status": "Fully Enrolled",
-          "toast_message": "Data transaction committed safely to physical files."
-        }
-      }
-    },
-    {
-      "inputPayloadIndex": 2,
-      "resolvedId": "STU-D5AAEF7D",
-      "recordSnapshot": {
-        "student_name": "Ananya Patel",
-        "email": "ananya.patel@gmail.com",
-        "phone": "'+919765432109",
-        "gender": "Female",
-        "dob": "2010-11-21T18:30:00.000Z",
-        "mother_name": "Kiran Patel",
-        "father_name": "Dinesh Patel",
-        "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261103.png",
-        "status": "active",
-        "student_id": "STU-D5AAEF7D",
-        "__tx_id": null,
-        "__tx_status": "PENDING",
-        "__created_at": "2026-06-25T14:48:06.000Z",
-        "_presentation": {
-          "display_status": "Fully Enrolled",
-          "toast_message": "Data transaction committed safely to physical files."
-        }
-      }
-    },
-    {
-      "inputPayloadIndex": 3,
-      "resolvedId": "STU-0667DFFF",
-      "recordSnapshot": {
-        "student_name": "Kabir Verma",
-        "email": "kabir.verma@gmail.com",
-        "phone": "'+919988776655",
-        "gender": "Male",
-        "dob": "2010-01-29T18:30:00.000Z",
-        "mother_name": "Rekha Verma",
-        "father_name": "Suresh Verma",
-        "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261104.png",
-        "status": "active",
-        "student_id": "STU-0667DFFF",
-        "__tx_id": null,
-        "__tx_status": "PENDING",
-        "__created_at": "2026-06-25T14:48:33.000Z",
-        "_presentation": {
-          "display_status": "Fully Enrolled",
-          "toast_message": "Data transaction committed safely to physical files."
-        }
-      }
-    },
-    {
-      "inputPayloadIndex": 4,
-      "resolvedId": "STU-AFDC2802",
-      "recordSnapshot": {
-        "student_name": "Diya Iyer",
-        "email": "diya.iyer@gmail.com",
-        "phone": "'+919654321987",
-        "gender": "Female",
-        "dob": "2010-07-04T18:30:00.000Z",
-        "mother_name": "Lakshmi Iyer",
-        "father_name": "Venkatesh Iyer",
-        "avatarUrl": "https://cdn.dazzling.com/avatars/stu_20261105.png",
-        "status": "active",
-        "student_id": "STU-AFDC2802",
-        "__tx_id": null,
-        "__tx_status": "PENDING",
-        "__created_at": "2026-06-25T14:48:57.000Z",
-        "_presentation": {
-          "display_status": "Fully Enrolled",
-          "toast_message": "Data transaction committed safely to physical files."
+    "1": {
+      "message": "undefined: Curriculum Integrity Breach: Selected package requires an active batch seat allocation for Course ID [CRS-2FFE76CC].",
+      "attemptedData": {
+        "profile": {
+          "student_name": "Riya Verma",
+          "email": "riya.verma@gmail.com",
+          "phone": "+919822233344",
+          "gender": "Female",
+          "dob": "2009-11-05",
+          "mother_name": "Anjali Verma",
+          "father_name": "Suresh Verma",
+          "status": "active"
+        },
+        "address": {
+          "line1": "C-12, Vaishali Nagar",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "pin_code": "302021",
+          "country": "India"
+        },
+        "contact": {
+          "email": "riya.verma@gmail.com",
+          "mobile_number": "9822233344",
+          "emergency_name": "Suresh Verma",
+          "emergency_phone": "+919822233300",
+          "emergency_relationship": "Father"
+        },
+        "education": [
+          {
+            "highest_qualification": "Class 11",
+            "institution_name": "Step by Step School",
+            "year_of_passing": 2026,
+            "percentage_or_cgpa": "91.2%"
+          }
+        ],
+        "enrollments": [
+          {
+            "enrollment_type": "package",
+            "item_id": "PKG-94EE96F4",
+            "fee": 120000,
+            "roll_number": 20261202,
+            "enrollment_date": "2026-07-09",
+            "status": "active",
+            "academic_status": "active",
+            "package_batches": [
+              {
+                "course_id": "CRS-8F74FF2A",
+                "batch_id": "BAT-BE4B9CE0"
+              }
+            ]
+          }
+        ],
+        "feeAccount": {
+          "total_fee": 120000,
+          "discount": 0,
+          "final_fee": 120000,
+          "amount_paid": 30000,
+          "balance_due": 90000,
+          "is_overdue": false,
+          "penalty_amount": 0,
+          "next_due_date": "2026-08-01",
+          "status": "active",
+          "remarks": "Onboarded via CBSE Class 12 Science Package",
+          "created_by": "admin_moni",
+          "installments": [
+            {
+              "installment_number": 1,
+              "due_amount": 30000,
+              "paid_amount": 30000,
+              "late_fee_amount": 0,
+              "due_date": "2026-07-09",
+              "status": "paid"
+            },
+            {
+              "installment_number": 2,
+              "due_amount": 30000,
+              "paid_amount": 0,
+              "late_fee_amount": 0,
+              "due_date": "2026-08-01",
+              "status": "pending"
+            },
+            {
+              "installment_number": 3,
+              "due_amount": 30000,
+              "paid_amount": 0,
+              "late_fee_amount": 0,
+              "due_date": "2026-09-01",
+              "status": "pending"
+            },
+            {
+              "installment_number": 4,
+              "due_amount": 30000,
+              "paid_amount": 0,
+              "late_fee_amount": 0,
+              "due_date": "2026-10-01",
+              "status": "pending"
+            }
+          ]
         }
       }
     }
-  ],
-  "failureManifest": {}
+  }
 }
