@@ -11,6 +11,9 @@
   "jsonExtensions": [
     ".json"
   ],
-  "filePushOrder": [],
+  "filePushOrder": [
+    "SheetDB/Utils/Utils.js",
+    "SheetDB/Utils/DateCmp.js"
+  ],
   "skipSubdirectories": false
 }

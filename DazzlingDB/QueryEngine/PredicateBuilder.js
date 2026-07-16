@@ -26,8 +26,8 @@ const PredicateBuilder = (function () {
 
         // 1. Simple Equality check
         if (typeof condition !== 'object' || condition === null) {
-          if (SheetDB.isDate(rowValue) && typeof condition === 'string') {
-            return rowValue.toISOString().split('T')[0] === condition.split('T')[0];
+          if (SheetDB.DateComparator.isDateLike(rowValue) && SheetDB.DateComparator.isDateLike(condition)) {
+            return SheetDB.DateComparator.compare(rowValue, condition, SheetDB.DateComparisonPolicy.DATE_ONLY);
           }
           return rowValue === condition;
         }
@@ -47,9 +47,13 @@ const PredicateBuilder = (function () {
     let rVal = rowValue;
     let tVal = targetValue;
 
-    if (SheetDB.isDate(rowValue) && typeof targetValue === 'string') {
-      rVal = rowValue.toISOString().split('T')[0];
-      tVal = targetValue.split('T')[0];
+    if (SheetDB.DateComparator.isDateLike(rowValue) || SheetDB.DateComparator.isDateLike(targetValue)) {
+      try {
+        rVal = SheetDB.DateComparator.getLocalDateString(rowValue);
+        tVal = SheetDB.DateComparator.getLocalDateString(targetValue);
+      } catch (e) {
+        // Fallback to raw values on conversion errors
+      }
     }
 
     switch (op.toLowerCase()) {

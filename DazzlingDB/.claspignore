@@ -38,3 +38,7 @@ Test/*
 !Test/TestTeacherSubject_Transaction.js
 !Test/OnboardTeacherTests.js
 !Test/UserSecureCrudTests.js
+!Test/Attendance_TimezoneDiagnosticTests.js
+!Test/Attendance_TimezoneIntegrationTests.js
+!Test/Teacher_AttendanceDateQueryTests.js
+!Test/QueryEngine_AttendanceTests.js

@@ -319,16 +319,26 @@ class BaseModel {
   toJSON() {
     const schema = this.constructor.schema;
     const json = {};
+    console.log(schema)
 
     // 1. Map fields defined in schema
     if (schema) {
       Object.keys(schema).forEach(key => {
         let val = this[key];
-        // Ensure dates are ISO in JSON
-        if (isDate(val)) val = val.toISOString();
-        // NOte: here i need to change the date serialization from iso string to local string or the
-        // we can transform whole date object in json object that contains 
-        // {year, month, date, hours, minutes, seconds, milliseconds, timezone as well if required}
+        // Ensure dates are formatted correctly in JSON
+        if (isDate(val)) {
+          const field = schema[key];
+
+          console.log(`[BaseModel:${this.constructor.name}] ${key} in toJSON (type = ${field.type}) `)
+
+
+          if (field && field.type === "date" && typeof SheetDB !== 'undefined' && SheetDB.DateComparator) {
+            val = SheetDB.DateComparator.toLocaleDateString(val);
+          } else {
+            val = val.toISOString();
+            console.warn(`[BaseModel:${this.constructor.name}] ${key} in toJSON (default fallback toISOString) = ${val} `)
+          }
+        }
         json[key] = val;
       });
     }

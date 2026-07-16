@@ -76,8 +76,11 @@ class TableGateway {
     return all.filter(row => {
       return Object.entries(filters).every(([key, value]) => {
         const rowVal = row[key];
-        if (isDate(rowVal) && typeof value === 'string') {
-          return rowVal.toISOString().split('T')[0] === value.split('T')[0];
+        if (isDate(rowVal) || (typeof value === 'string' && value.match(/^(\d{4})[-/]/))) {
+          const hasDateType = isDate(rowVal) || (typeof rowVal === 'string' && rowVal.match(/^(\d{4})[-/]/));
+          if (hasDateType) {
+            return DateComparator.compare(rowVal, value, DateComparisonPolicy.DATE_ONLY);
+          }
         }
         return rowVal === value;
       });
@@ -94,8 +97,11 @@ class TableGateway {
     return all.find(row => {
       return Object.entries(filters).every(([key, value]) => {
         const rowVal = row[key];
-        if (isDate(rowVal) && typeof value === 'string') {
-          return rowVal.toISOString().split('T')[0] === value.split('T')[0];
+        if (isDate(rowVal) || (typeof value === 'string' && value.match(/^(\d{4})[-/]/))) {
+          const hasDateType = isDate(rowVal) || (typeof rowVal === 'string' && rowVal.match(/^(\d{4})[-/]/));
+          if (hasDateType) {
+            return DateComparator.compare(rowVal, value, DateComparisonPolicy.DATE_ONLY);
+          }
         }
         return rowVal === value;
       });
@@ -324,16 +330,23 @@ class TableGateway {
    */
   _castValue(value, type) {
     if (value === null || value === undefined || value === "") return null;
-    try {
-      switch (type) {
-        case "number":   return Number(value);
-        case "boolean":  return Boolean(value);
-        case "date":     
-        case "datetime": return isDate(value) ? value : new Date(value);
-        case "json":     return typeof value === "string" ? JSON.parse(value) : value;
-        default:         return String(value);
+    switch (type) {
+      case "number":
+        try { return Number(value); } catch (e) { return value; }
+      case "boolean":
+        try { return Boolean(value); } catch (e) { return value; }
+      case "date": {
+        const d = DateComparator._normalizeToDate(value);
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
       }
-    } catch (e) { return value; }
+      case "datetime": {
+        return DateComparator._normalizeToDate(value);
+      }
+      case "json":
+        try { return typeof value === "string" ? JSON.parse(value) : value; } catch (e) { return value; }
+      default:
+        return String(value);
+    }
   }
 
   /**
