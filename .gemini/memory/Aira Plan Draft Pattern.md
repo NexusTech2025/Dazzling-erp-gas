@@ -88,6 +88,15 @@ Whenever an implementation plan addresses or refactors older architecture, or re
 
 ---
 
+### **Rule N7: Two-Phase Plan Separation (Testing & Verification)**
+
+You are strictly prohibited from auto-writing or updating any test files during the primary plan execution. Do not combine functional code modifications and test suite implementations into a single implementation phase.
+
+* **No Inline Test Files in Phase 1**: The initial `implementation_plan.md` must not contain any file write/update actions or snippets targeting `DazzlingDB/Test/` or `apitest/` files.
+* **Define Plan Phase 2**: Instead, dedicate a section at the end of the implementation plan labeled `Plan Phase 2 (Testing & Verification)` detailing the required test files, scenarios, and validation strategies we will plan, review, and execute as a separate subsequent step.
+
+---
+
 ## **2. Domain-Driven Business Rules**
 
 The following block defines the relational boundaries and business policies governing financial splitting, administrative separation, polymorphic registries, and transaction boundaries.
