@@ -19,8 +19,9 @@ database_template/**
 apitest/**
 
 !apitest/ApiTestHelper.js
-!apitest/StaffGetSalaryConfig_ApiTest.js
 !apitest/ApiCallTest.js
+!apitest/DevBootstrap_ApiTest.js
+!apitest/utils.js
 NodeTest/**
 
 # Ignore all files in the Test folder by default
@@ -29,16 +30,17 @@ Test/*
 # BUT explicitly allow our focused test suites
 !Test/TestHelper.js
 !Test/TestMockData.js
-!Test/TestMockHelper.js
-!Test/Staff_SalaryCalculationTests.js
-!Test/TeacherPaymentTransactionTests.js
-!Test/TeacherSalaryConfigIntegrationTests.js
-!Test/db_test.js
-!Test/SecureBootstrapTests.js
-!Test/TestTeacherSubject_Transaction.js
-!Test/OnboardTeacherTests.js
-!Test/UserSecureCrudTests.js
-!Test/Attendance_TimezoneDiagnosticTests.js
-!Test/Attendance_TimezoneIntegrationTests.js
-!Test/Teacher_AttendanceDateQueryTests.js
+; !Test/TestMockHelper.js
+; !Test/Staff_SalaryCalculationTests.js
+; !Test/TeacherPaymentTransactionTests.js
+; !Test/TeacherSalaryConfigIntegrationTests.js
+; !Test/db_test.js
+; !Test/SecureBootstrapTests.js
+; !Test/TestTeacherSubject_Transaction.js
+; !Test/OnboardTeacherTests.js
+; !Test/UserSecureCrudTests.js
+; !Test/Attendance_TimezoneDiagnosticTests.js
+; !Test/Attendance_TimezoneIntegrationTests.js
+; !Test/Teacher_AttendanceDateQueryTests.js
 !Test/QueryEngine_AttendanceTests.js
+!apitest/Core_GenericCrud_ApiTest.js

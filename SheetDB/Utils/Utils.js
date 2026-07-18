@@ -234,3 +234,29 @@ class SheetDBDateTime {
 
 globalThis.SheetDBDateTime = SheetDBDateTime;
 
+/**
+ * Resolves relational schema metadata config structures dynamically from active database context.
+ */
+class SchemaResolver {
+  /**
+   * Discovers and retrieves the column definition mapping block for a specific sheet.
+   * @param {Object} db - The active SheetDB database instance.
+   * @param {string} tableName - Collection name to search.
+   * @returns {Object|null} Structuring configuration attributes or null if not found.
+   */
+  static getTableSchema(db, tableName) {
+    if (!db || !db._schema || !db._schema.categories) {
+      return null;
+    }
+    for (const catName in db._schema.categories) {
+      const tables = db._schema.categories[catName].tables;
+      if (tables[tableName]) {
+        return tables[tableName];
+      }
+    }
+    return null;
+  }
+}
+globalThis.SchemaResolver = SchemaResolver;
+
+

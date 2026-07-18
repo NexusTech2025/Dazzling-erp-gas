@@ -126,7 +126,7 @@ const DateComparator = {
      */
     getLocalDateString(val) {
         const d = this._normalizeToDate(val);
-        return this.toLocaleDateString(d);
+        return d ? this.toLocaleDateString(d) : "";
     },
 
     /**
@@ -213,23 +213,15 @@ const DateComparator = {
      */
     _normalizeToDate(val, operandName = 'value') {
         if (val === null || val === undefined) {
-            throw new DateTimeError(
-                `Operand '${operandName}' is null or undefined.`,
-                DateTimeErrorCode.ERR_NULL_VALUE,
-                { operandName }
-            );
+            return null;
         }
         if (isDate(val)) return val;
 
         let dt = null;
         if (typeof val === 'string') {
             const cleanVal = val.trim();
-            if (cleanVal === '') {
-                throw new DateTimeError(
-                    `Operand '${operandName}' is an empty string.`,
-                    DateTimeErrorCode.ERR_EMPTY_STRING,
-                    { operandName }
-                );
+            if (cleanVal === '' || cleanVal === '{}') {
+                return null;
             }
 
             // Strategy A: Standalone Time Only ("08:30 PM", "20:30", "4:20 pm")
@@ -256,6 +248,21 @@ const DateComparator = {
                 );
             }
             dt = new Date(val);
+        } else if (val && typeof val === 'object') {
+            // Check if empty object or stringified empty object
+            if (Object.keys(val).length === 0) {
+                return null;
+            }
+            // Fallback: If it has getTime method (e.g. from another context)
+            if (typeof val.getTime === 'function') {
+                const t = val.getTime();
+                return isNaN(t) ? null : val;
+            }
+            throw new DateTimeError(
+                `Unsupported parameter type passed for Date translation: object`,
+                DateTimeErrorCode.ERR_UNSUPPORTED_TYPE,
+                { rawValue: val, type: typeof val }
+            );
         } else {
             throw new DateTimeError(
                 `Unsupported parameter type passed for Date translation: ${typeof val}`,
@@ -287,6 +294,9 @@ const DateComparator = {
         try {
             const d1 = this._normalizeToDate(val1, 'val1');
             const d2 = this._normalizeToDate(val2, 'val2');
+            if (d1 === null || d2 === null) {
+                return false;
+            }
 
             const strategy = this.strategies[policy];
             if (!strategy) {

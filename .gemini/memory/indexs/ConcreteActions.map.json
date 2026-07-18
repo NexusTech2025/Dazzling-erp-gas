@@ -1,0 +1,587 @@
+{
+  "file": "DazzlingDB/DBServices/ConcreteActions.js",
+  "generated_at": "2026-07-18T05:40:00.000Z",
+  "how_to_use": "This index provides a fast lookup directory of all action controller classes defined within ConcreteActions.js. Agents can use the 'line_range' attribute to immediately target and view individual class definitions instead of loading the entire file.",
+  "actions": [
+    {
+      "className": "PingAction",
+      "extendsClass": "BaseAction",
+      "goal": "Health Check Action",
+      "description": "Performs system check on server readiness.\nReturns system timestamp and online state verification.",
+      "line_range": {
+        "start": 9,
+        "end": 22
+      }
+    },
+    {
+      "className": "RegisterStudentAction",
+      "extendsClass": "BaseAction",
+      "goal": "Student Domain: Comprehensive Registration",
+      "description": "Creates new student records with custom packages.\nOrchestrates initial profile structure and handles academic onboarding.",
+      "line_range": {
+        "start": 27,
+        "end": 35
+      }
+    },
+    {
+      "className": "WithdrawStudentSubjectAction",
+      "extendsClass": "BaseAction",
+      "goal": "Student Domain: Withdraw a subject from package enrollment",
+      "description": "Withdraws a student from a specific subject enrollment.\nEvaluates package boundaries and flags remaining active subjects.",
+      "line_range": {
+        "start": 40,
+        "end": 57
+      }
+    },
+    {
+      "className": "UpgradeStudentPackageAction",
+      "extendsClass": "BaseAction",
+      "goal": "Student Domain: Upgrade standalone course enrollments to a package",
+      "description": "Upgrades standalone course configurations to bundled packages.\nPerforms package conversions and updates student fee ledgers.",
+      "line_range": {
+        "start": 62,
+        "end": 84
+      }
+    },
+    {
+      "className": "VerifyStudentAccessAction",
+      "extendsClass": "BaseAction",
+      "goal": "Student Domain: Verify class/portal access control",
+      "description": "Evaluates access validation status for student class entry.\nValidates current enrollment statuses and portal privileges.",
+      "line_range": {
+        "start": 89,
+        "end": 110
+      }
+    },
+    {
+      "className": "AddStudentLeadAction",
+      "extendsClass": "BaseAction",
+      "goal": "Student Lead Domain: Add a new student lead",
+      "description": "Registers active leads into lead-tracking database segments.\nRecords prospective course configurations and contact metadata.",
+      "line_range": {
+        "start": 115,
+        "end": 137
+      }
+    },
+    {
+      "className": "DeleteStudentAction",
+      "extendsClass": "BaseAction",
+      "goal": "Students Domain: Delete single student",
+      "description": "Removes a student account from physical database sheets.\nResolves and cascades related tables to clean up orphaned records.",
+      "line_range": {
+        "start": 142,
+        "end": 192
+      }
+    },
+    {
+      "className": "CreateCourseTypeAction",
+      "extendsClass": "BaseAction",
+      "goal": "Academic Domain: Create CourseType (Segment)",
+      "description": "Registers new course type levels or segments.\nConfigures segment meta definitions and operational structures.",
+      "line_range": {
+        "start": 197,
+        "end": 207
+      }
+    },
+    {
+      "className": "CreateCourseAction",
+      "extendsClass": "BaseAction",
+      "goal": "Academic Domain: Create Course (Subject)",
+      "description": "Provisions new subject configurations into the master catalog.\nSets course names, structural prerequisites, and category attributes.",
+      "line_range": {
+        "start": 212,
+        "end": 222
+      }
+    },
+    {
+      "className": "CreateBatchAction",
+      "extendsClass": "BaseAction",
+      "goal": "Academic Domain: Create Batch",
+      "description": "Initializes a new academic batch or student cohort.\nMaps batch timelines, branch references, and course mappings.",
+      "line_range": {
+        "start": 227,
+        "end": 237
+      }
+    },
+    {
+      "className": "CreatePackageAction",
+      "extendsClass": "BaseAction",
+      "goal": "Academic Domain: Bulk Package Creation",
+      "description": "Creates academic packages grouping multiple courses/batches.\nSets package pricing structures and discount bounds.",
+      "line_range": {
+        "start": 242,
+        "end": 252
+      }
+    },
+    {
+      "className": "UpdatePackageAction",
+      "extendsClass": "BaseAction",
+      "goal": "Academic Domain: Package Updates with Polymorphic & Casing Support",
+      "description": "Modifies package profiles and linked relationships.\nSupports casing validation and polymorphic adjustments on parameters.",
+      "line_range": {
+        "start": 257,
+        "end": 271
+      }
+    },
+    {
+      "className": "DeletePackageAction",
+      "extendsClass": "BaseAction",
+      "goal": "Academic Domain: Specialized Package Deletion Action",
+      "description": "Deletes academic package records from catalog tables.\nEnforces dependency checks to prevent deleting active packages.",
+      "line_range": {
+        "start": 276,
+        "end": 290
+      }
+    },
+    {
+      "className": "EnrollStudentAction",
+      "extendsClass": "BaseAction",
+      "goal": "Academic Domain: Enroll Student",
+      "description": "Registers a student directly into specific courses/batches.\nMaintains academic enrollment mappings and class schedules.",
+      "line_range": {
+        "start": 295,
+        "end": 305
+      }
+    },
+    {
+      "className": "CreateBranchAction",
+      "extendsClass": "BaseAction",
+      "goal": "🛠️ CORE DOMAIN ACTIONS",
+      "description": "Provisions new physical or online branch profiles.\nMaps branch metadata, structural keys, and location coordinates.",
+      "line_range": {
+        "start": 310,
+        "end": 316
+      }
+    },
+    {
+      "className": "CreatePromoCodeAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for CreatePromoCodeAction",
+      "description": "Creates marketing promotional discount keys.\nSets discount parameters, eligibility bounds, and limits.",
+      "line_range": {
+        "start": 318,
+        "end": 324
+      }
+    },
+    {
+      "className": "ValidatePromoCodeAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for ValidatePromoCodeAction",
+      "description": "Checks promotional voucher eligibility and dates.\nReturns validation status and discount values for checkout.",
+      "line_range": {
+        "start": 326,
+        "end": 341
+      }
+    },
+    {
+      "className": "UserRegisterAction",
+      "extendsClass": "BaseAction",
+      "goal": "🔐 AUTH DOMAIN ACTIONS",
+      "description": "Registers user login accounts into the system database.\nGenerates primary keys and initializes user security profile.",
+      "line_range": {
+        "start": 346,
+        "end": 352
+      }
+    },
+    {
+      "className": "UserLoginAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for UserLoginAction",
+      "description": "Authenticates user credentials and checks credentials.\nIssues valid session tokens and registers context details.",
+      "line_range": {
+        "start": 354,
+        "end": 369
+      }
+    },
+    {
+      "className": "UserLogoutAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for UserLogoutAction",
+      "description": "Invalidates existing authentication token sessions.\nPurges session registries to secure endpoints.",
+      "line_range": {
+        "start": 371,
+        "end": 380
+      }
+    },
+    {
+      "className": "UserQueryAction",
+      "extendsClass": "BaseAction",
+      "goal": "Auth Domain: Queries user profiles using the database QueryEngine. Enforces superadmin authorization and sanitizes sensitive fields. @extends BaseAction",
+      "description": "Queries database user records safely for administrative audits.\nSanitizes password hashes and enforces superadmin privileges.",
+      "line_range": {
+        "start": 388,
+        "end": 433
+      }
+    },
+    {
+      "className": "UserUpdateAction",
+      "extendsClass": "BaseAction",
+      "goal": "Auth Domain: Updates a user record. Supports plaintext password update by rehashing. Enforces superadmin authorization, validates strength, and sanitizes output. @extends BaseAction",
+      "description": "Updates existing user credentials and security properties.\nRehashes plaintext password updates and validates key strengths.",
+      "line_range": {
+        "start": 441,
+        "end": 542
+      }
+    },
+    {
+      "className": "UserDeleteAction",
+      "extendsClass": "BaseAction",
+      "goal": "Auth Domain: Deletes a single user and cascades deletion to sessions. Enforces superadmin checks, blocks self-deletion, and prevents deleting other superadmins. @extends BaseAction",
+      "description": "Deletes administrative user accounts from master systems.\nBlocks self-deletions and validates authorization scopes.",
+      "line_range": {
+        "start": 550,
+        "end": 619
+      }
+    },
+    {
+      "className": "StaffOnboardTeacherAction",
+      "extendsClass": "BaseAction",
+      "goal": "👩‍🏫 STAFF DOMAIN ACTIONS",
+      "description": "Onboards new instructors into system registries.\nSaves profile, status, and professional background fields.",
+      "line_range": {
+        "start": 624,
+        "end": 630
+      }
+    },
+    {
+      "className": "StaffUpdateTeacherAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffUpdateTeacherAction",
+      "description": "Updates active teacher profile and status fields.\nMaintains updated contact records and employment status.",
+      "line_range": {
+        "start": 632,
+        "end": 645
+      }
+    },
+    {
+      "className": "StaffAssignSubjectsAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffAssignSubjectsAction",
+      "description": "Assigns teaching privileges to teachers for specific subjects.\nMaintains subject-to-teacher mapping records.",
+      "line_range": {
+        "start": 647,
+        "end": 662
+      }
+    },
+    {
+      "className": "StaffSetSalaryConfigAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffSetSalaryConfigAction",
+      "description": "Configures pay structures for teaching staff.\nSets compensation rates, payment frequencies, and contracts.",
+      "line_range": {
+        "start": 664,
+        "end": 670
+      }
+    },
+    {
+      "className": "StaffGetSalaryConfigsAction",
+      "extendsClass": "BaseAction",
+      "goal": "Action to retrieve all salary configuration records for a staff member. Operates on QUERY action type.",
+      "description": "Queries list of historical compensation profiles.\nFilters records by active teacher or staff identification.",
+      "line_range": {
+        "start": 676,
+        "end": 706
+      }
+    },
+    {
+      "className": "StaffGetSalaryConfigAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffGetSalaryConfigAction",
+      "description": "Retrieves one specific compensation parameter record.\nSupports validation checks on requested contract profiles.",
+      "line_range": {
+        "start": 709,
+        "end": 726
+      }
+    },
+    {
+      "className": "StaffUpdateSalaryConfigAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffUpdateSalaryConfigAction",
+      "description": "Modifies salary settings and compensation parameters.\nEnforces transaction validations on modified payment structures.",
+      "line_range": {
+        "start": 728,
+        "end": 745
+      }
+    },
+    {
+      "className": "StaffDeleteSalaryConfigAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffDeleteSalaryConfigAction",
+      "description": "Removes designated salary configurations from systems.\nChecks for historical payment conflicts before deleting.",
+      "line_range": {
+        "start": 747,
+        "end": 764
+      }
+    },
+    {
+      "className": "StaffMarkAttendanceAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffMarkAttendanceAction",
+      "description": "Logs daily attendance sheets for teaching staff.\nRecords check-in times and shift duration values.",
+      "line_range": {
+        "start": 766,
+        "end": 772
+      }
+    },
+    {
+      "className": "StaffMarkAttendanceBulkAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffMarkAttendanceBulkAction",
+      "description": "Records batch attendance sheets for multiple staff members.\nHandles array payloads of attendance objects efficiently.",
+      "line_range": {
+        "start": 774,
+        "end": 780
+      }
+    },
+    {
+      "className": "StaffQueryAttendanceAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffQueryAttendanceAction",
+      "description": "Queries staff attendance records matching criteria.\nCalculates operational work times and shift patterns.",
+      "line_range": {
+        "start": 782,
+        "end": 788
+      }
+    },
+    {
+      "className": "StudentMarkAttendanceAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StudentMarkAttendanceAction",
+      "description": "Logs single daily student attendance marks.\nUpdates attendance registries for specific classes.",
+      "line_range": {
+        "start": 790,
+        "end": 796
+      }
+    },
+    {
+      "className": "StudentMarkAttendanceBulkAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StudentMarkAttendanceBulkAction",
+      "description": "Processes batch attendance markings for class cohorts.\nInserts multiple records inside a single batch database transaction.",
+      "line_range": {
+        "start": 798,
+        "end": 804
+      }
+    },
+    {
+      "className": "StudentQueryAttendanceAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StudentQueryAttendanceAction",
+      "description": "Retrieves attendance records for student reporting.\nExposes attendance rates and statistics per subject.",
+      "line_range": {
+        "start": 806,
+        "end": 812
+      }
+    },
+    {
+      "className": "CreateTestAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for CreateTestAction",
+      "description": "Creates academic tests or evaluation milestones.\nSets maximum scores, dates, and related course mappings.",
+      "line_range": {
+        "start": 814,
+        "end": 820
+      }
+    },
+    {
+      "className": "SaveTestMarksBulkAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for SaveTestMarksBulkAction",
+      "description": "Saves student test score matrices in bulk.\nHandles evaluation scores for complete class batches.",
+      "line_range": {
+        "start": 822,
+        "end": 828
+      }
+    },
+    {
+      "className": "QueryTestReportAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for QueryTestReportAction",
+      "description": "Extracts detailed academic report cards for students.\nComputes percentile grades, averages, and pass/fail metrics.",
+      "line_range": {
+        "start": 830,
+        "end": 836
+      }
+    },
+    {
+      "className": "StaffRecordPaymentAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffRecordPaymentAction",
+      "description": "Records financial payments made to teaching staff.\nUpdates payroll ledgers and updates accounting sheets.",
+      "line_range": {
+        "start": 838,
+        "end": 844
+      }
+    },
+    {
+      "className": "StaffAddDocumentAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for StaffAddDocumentAction",
+      "description": "Uploads and associates documents with teacher files.\nLinks document URIs, titles, and tags to profile records.",
+      "line_range": {
+        "start": 846,
+        "end": 861
+      }
+    },
+    {
+      "className": "InitErpAction",
+      "extendsClass": "BaseAction",
+      "goal": "🔍 ADVANCED QUERY ENGINE ACTION",
+      "description": "Hydrates critical database collections in a single request.\nSpeeds up client application initialization and metadata loading.",
+      "line_range": {
+        "start": 866,
+        "end": 914
+      }
+    },
+    {
+      "className": "QueryAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for QueryAction",
+      "description": "Executes data retrieval filters via QueryEngine.\nResolves pagination, sorting, and nested relations for tables.",
+      "line_range": {
+        "start": 916,
+        "end": 930
+      }
+    },
+    {
+      "className": "AdminSystemStatusAction",
+      "extendsClass": "BaseAction",
+      "goal": "🛠️ ADMIN CONTROL CENTER (ACC) ACTIONS",
+      "description": "Retrieves high-level diagnostics of database health.\nChecks system version, online modules, and bootstrap status.",
+      "line_range": {
+        "start": 935,
+        "end": 951
+      }
+    },
+    {
+      "className": "AdminBootstrapAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for AdminBootstrapAction",
+      "description": "Initializes system directories and tables for new databases.\nRegisters the first master superadmin user profile.",
+      "line_range": {
+        "start": 953,
+        "end": 993
+      }
+    },
+    {
+      "className": "AdminGetSchemaAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for AdminGetSchemaAction",
+      "description": "Retrieves metadata schema details for administrative tools.\nExposes categories, columns, and validation parameters.",
+      "line_range": {
+        "start": 995,
+        "end": 1005
+      }
+    },
+    {
+      "className": "AdminAnalyzeTableAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for AdminAnalyzeTableAction",
+      "description": "Analyzes database health to plan schema alignments.\nDetects drift between current sheets and target schemas.",
+      "line_range": {
+        "start": 1007,
+        "end": 1019
+      }
+    },
+    {
+      "className": "AdminRepairTableAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for AdminRepairTableAction",
+      "description": "Applies structural schema repairs to realign columns.\nAdds missing headers and ensures sheet validation compliance.",
+      "line_range": {
+        "start": 1021,
+        "end": 1033
+      }
+    },
+    {
+      "className": "AdminPeekDataAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for AdminPeekDataAction",
+      "description": "Peeks at table records for diagnostic inspections.\nRetrieves a limited chunk of data for target tables.",
+      "line_range": {
+        "start": 1035,
+        "end": 1056
+      }
+    },
+    {
+      "className": "AdminCacheAnalyzeAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for AdminCacheAnalyzeAction",
+      "description": "Inspects caching servers to report hit/miss metrics.\nExposes cached keys and memory footprint summaries.",
+      "line_range": {
+        "start": 1058,
+        "end": 1070
+      }
+    },
+    {
+      "className": "AdminPurgeCacheAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for AdminPurgeCacheAction",
+      "description": "Flushes active memory and metadata property caches.\nForces database drivers to reload tables directly from source.",
+      "line_range": {
+        "start": 1072,
+        "end": 1087
+      }
+    },
+    {
+      "className": "CreateRecordAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for CreateRecordAction",
+      "description": "Inserts single records using whitelisted generic CRUD.\nEvaluates override policies and resolves schema structures.",
+      "line_range": {
+        "start": 1093,
+        "end": 1150
+      }
+    },
+    {
+      "className": "UpdateRecordAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for UpdateRecordAction",
+      "description": "Modifies single records using generic CRUD matching keys.\nVerifies authorization rules and logs system updates.",
+      "line_range": {
+        "start": 1152,
+        "end": 1205
+      }
+    },
+    {
+      "className": "DeleteRecordAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for DeleteRecordAction",
+      "description": "Removes a single database record matching target keys.\nVerifies user permissions before executing delete.",
+      "line_range": {
+        "start": 1207,
+        "end": 1256
+      }
+    },
+    {
+      "className": "DeleteManyRecordsAction",
+      "extendsClass": "BaseAction",
+      "goal": "Class definition for DeleteManyRecordsAction",
+      "description": "Performs bulk record deletions with integrity checks.\nScans relational constraints to block referencing records.",
+      "line_range": {
+        "start": 1258,
+        "end": 1435
+      }
+    },
+    {
+      "className": "SheetBatchReadAction",
+      "extendsClass": "BaseAction",
+      "goal": "Action Handler to extract data matrices across spreadsheets. Inherits from BaseAction.",
+      "description": "Extracts data matrices across external spreadsheets.\nResolves spreadsheets by name or ID using Drive lookups.",
+      "line_range": {
+        "start": 1503,
+        "end": 1620
+      }
+    },
+    {
+      "className": "GetAccountingDataAction",
+      "extendsClass": "BaseAction",
+      "goal": "Finance Domain: Fetch all transactional accounting data via Advanced Sheet REST API (MVP Phase)",
+      "description": "Queries finance workspace sheets in bulk.\nReturns installment lists, fee adjustments, and student ledgers.",
+      "line_range": {
+        "start": 1627,
+        "end": 1699
+      }
+    }
+  ]
+}
