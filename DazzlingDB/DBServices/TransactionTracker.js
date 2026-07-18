@@ -18,6 +18,16 @@ class TransactionTracker {
   }
 
   /**
+   * Track multiple record inserts as a single transaction step.
+   * @param {Object} repository - The active dynamic table repository
+   * @param {Array<string|number>} ids - Array of primary key values
+   */
+  trackInsertMany(repository, ids) {
+    if (!ids || ids.length === 0) return;
+    this.steps.push({ action: 'delete_many', repository, ids });
+  }
+
+  /**
    * Track a record update.
    * @param {Object} repository - The active dynamic table repository
    * @param {string|number} id - Primary key value
@@ -57,6 +67,9 @@ class TransactionTracker {
         if (step.action === 'delete') {
           step.repository.remove(step.id);
           console.log(`[Rollback] Removed record ${step.id} from ${step.repository.entityName}`);
+        } else if (step.action === 'delete_many') {
+          step.repository.deleteMany(step.ids);
+          console.log(`[Rollback] Removed ${step.ids.length} records from ${step.repository.entityName}`);
         } else if (step.action === 'update') {
           step.repository.update(step.id, step.backup);
           console.log(`[Rollback] Restored original state for record ${step.id} in ${step.repository.entityName}`);

@@ -82,136 +82,79 @@ const AcademicService = {
    * Orchestrates the creation of a Package with nested courses and perks.
    * Leverages transactional loops and defensive polymorphic normalization.
    */
+  /**
+   * Orchestrate bulk creation of a Package along with its perks and courses/subjects.
+   * Uses optimized batch inserts and ValidationEngine pipelines.
+   * @param {Object} payload - The input data containing package metadata, perks, and courses.
+   * @param {Object} context - Execution request context.
+   * @returns {Object} The compiled presentation envelope of the newly created Package.
+   * @throws {SheetDB.ValidationError} Form validation or schema compliance failure.
+   */
   createPackage(payload, context) {
     const db = DBContext.getInstance();
-    console.log(`[AcademicService] Orchestrating Bulk Package: ${payload.name}`);
+    console.log(`[AcademicService] Orchestrating Bulk Package Creation: ${payload.name}`);
 
+    // 1. DECOUPLED PRE-FLIGHT VALIDATION
+    const validationStart = Date.now();
+    const ctx = new ValidationContext(db, null, payload);
+    ValidationEngine.run(ctx, globalThis.PackageRegistrationRules || PackageRegistrationRules);
+
+    if (!ctx.isValid()) {
+      throw new SheetDB.ValidationError("Pre-flight validation failed for Package creation.", {
+        fields: ctx.errors
+      });
+    }
+    const validationTime = Date.now() - validationStart;
+
+    const serviceStart = Date.now();
     const tx = new TransactionTracker();
 
-    // 1. Insert Core Package
-    const coreFields = ["name", "description", "target_class", "board", "month", "package_fee", "discount_percent", "status"];
-    const packageData = {};
-    coreFields.forEach(f => {
-      if (payload[f] !== undefined) packageData[f] = payload[f];
-    });
-    
-    const newPackage = db.Package.insert(packageData);
-    const packageId = newPackage.package_id;
-    tx.trackInsert(db.Package, packageId);
-    this._trackMutation(context, "Package");
-
-    const self = this;
-
     try {
-      // 2. Resolve Perks (Custom array or presets based on target_class)
-      let perksToInsert = payload.perks;
-      if (!perksToInsert || !Array.isArray(perksToInsert) || perksToInsert.length === 0) {
-        const targetClass = String(payload.target_class || "").toLowerCase();
-        if (targetClass.includes("11") || targetClass.includes("12") || targetClass.includes("senior")) {
-          perksToInsert = [
-            { perk_title: "Free Basic Computer Course with new admission", icon: "computer" },
-            { perk_title: "Daily Practice Papers (DPP)", icon: "file_copy" },
-            { perk_title: "Regular Assignments and Study Materials", icon: "book" },
-            { perk_title: "Monthly Parent-Teacher Meetings", icon: "people" },
-            { perk_title: "Dedicated Student Monitoring Mobile Application", icon: "smartphone" },
-            { perk_title: "Note: Package Excludes Hindi & English", icon: "info" }
-          ];
-        } else {
-          perksToInsert = [
-            { perk_title: "Daily Practice Papers (DPP)", icon: "file_copy" },
-            { perk_title: "Regular Assignments and Study Materials", icon: "book" },
-            { perk_title: "Monthly Parent-Teacher Meetings", icon: "people" },
-            { perk_title: "Online & Offline learning resources", icon: "language" },
-            { perk_title: "Dedicated Student Monitoring Mobile Application", icon: "smartphone" }
-          ];
-        }
-      }
-
-      perksToInsert.forEach((perk, index) => {
-        const newPerk = db.PackagePerk.insert({
-          package_id: packageId,
-          perk_title: perk.perk_title,
-          perk_description: perk.perk_description || "",
-          icon: perk.icon || "star",
-          display_order: perk.display_order || (index + 1)
-        });
-        tx.trackInsert(db.PackagePerk, newPerk.perk_id);
-        self._trackMutation(context, "PackagePerk");
+      // 2. CORE: INSERT CORE PACKAGE
+      const coreFields = ["name", "description", "target_class", "board", "month", "package_fee", "discount_percent", "status"];
+      const packageData = {};
+      coreFields.forEach(f => {
+        if (payload[f] !== undefined) packageData[f] = payload[f];
       });
 
-      // 3. Insert Polymorphic Courses/Subjects (Supports On-Demand Course creation and Normalization)
+      const newPackage = db.Package.insert(packageData);
+      const packageId = newPackage.package_id;
+      tx.trackInsert(db.Package, packageId);
+      this._trackMutation(context, "Package");
+
+      // 3. RESOLVE & BATCH INSERT PERKS
+      const perksToInsert = payload.perks || [];
+
+      const perksData = perksToInsert.map((perk, index) => ({
+        package_id: packageId,
+        perk_title: perk.perk_title,
+        perk_description: perk.perk_description || "",
+        icon: perk.icon || "star",
+        display_order: perk.display_order || (index + 1)
+      }));
+
+      if (perksData.length > 0) {
+        const insertedPerks = db.PackagePerk.insertMany(perksData);
+        tx.trackInsertMany(db.PackagePerk, insertedPerks.map(p => p.perk_id));
+        this._trackMutation(context, "PackagePerk");
+      }
+
+      // 4. RESOLVE & BATCH INSERT Polymorphic Courses/Subjects
       if (payload.courses && Array.isArray(payload.courses)) {
-        // Rule-05: Pre-fetch segments and courses to prevent N+1 spreadsheet reads
-        const allSegments = db.CourseType.all();
-        const segmentMap = {};
-        allSegments.forEach(s => {
-          segmentMap[s.segment_id] = s;
-          if (s.segment_name) {
-            segmentMap["name_" + s.segment_name.toLowerCase().trim()] = s;
-          }
-        });
-        const activeSegment = allSegments.find(s => s.status === "active") || allSegments[0];
+        const onDemandPayloads = [];
+        const packageItemPrep = [];
 
-        const existingCourses = db.Course.all();
-        const courseMap = {};
-        existingCourses.forEach(c => {
-          courseMap[c.course_id] = c;
-          if (c.short_code) {
-            courseMap["code_" + c.short_code.toLowerCase().trim()] = c;
-          }
-        });
-
-        payload.courses.forEach(item => {
+        payload.courses.forEach((item, index) => {
           const normalizedType = typeof item.entity_type === "string"
             ? item.entity_type.toLowerCase().trim()
             : item.entity_type;
 
-          if (normalizedType !== "course" && normalizedType !== "subject") {
-            const err = new SheetDB.ValidationError(`Validation failed for PackageItem: entity_type '${item.entity_type}' must be one of course, subject.`);
-            err.errorCode = "INVALID_ENTITY_TYPE";
-            throw err;
-          }
-
-          let courseId = item.entity_id;
-
           if (item.on_demand === true) {
-            let segmentId = item.segment_id;
-            if (!segmentId) {
-              if (item.segment_name) {
-                const ct = segmentMap["name_" + item.segment_name.toLowerCase().trim()];
-                if (ct) segmentId = ct.segment_id;
-              }
-              if (!segmentId && activeSegment) {
-                segmentId = activeSegment.segment_id;
-              }
-            }
-
-            if (!segmentId) {
-              const err = new SheetDB.ValidationError("Could not resolve segment for on-demand course creation. Please provide a valid 'segment_id' or 'segment_name'.");
-              err.errorCode = "SEGMENT_RESOLUTION_FAILED";
-              throw err;
-            }
-
-            // Verify segment exists
-            const segment = segmentMap[segmentId];
-            if (!segment) {
-              const err = new SheetDB.EntityNotFoundError("CourseType", segmentId, "Academic");
-              err.errorCode = "SEGMENT_NOT_FOUND";
-              throw err;
-            }
-
-            if (item.short_code) {
-              const existingCourseCode = courseMap["code_" + item.short_code.toLowerCase().trim()];
-              if (existingCourseCode) {
-                const err = new SheetDB.ConflictError(`Failed to save Course: Unique constraint violation on column 'short_code' (value '${item.short_code}' already exists).`);
-                err.errorCode = "DUPLICATE_SHORT_CODE";
-                throw err;
-              }
-            }
-
-            try {
-              const newCourse = db.Course.insert({
-                segment_id: segmentId,
+            onDemandPayloads.push({
+              index,
+              normalizedType,
+              data: {
+                segment_id: item._resolvedSegmentId,
                 entity_type: normalizedType,
                 name: item.name,
                 short_code: item.short_code,
@@ -220,51 +163,58 @@ const AcademicService = {
                 duration_unit: item.duration_unit || "months",
                 base_fee: item.base_fee,
                 status: item.status || "active"
-              });
-              courseId = newCourse.course_id;
-              tx.trackInsert(db.Course, courseId);
-              self._trackMutation(context, "Course");
-              
-              courseMap[courseId] = newCourse;
-              if (item.short_code) {
-                courseMap["code_" + item.short_code.toLowerCase().trim()] = newCourse;
               }
-            } catch (courseErr) {
-              if (courseErr.message && courseErr.message.includes("Unique constraint violation")) {
-                courseErr.errorCode = "DUPLICATE_SHORT_CODE";
-              } else if (!courseErr.errorCode) {
-                courseErr.errorCode = "COURSE_VALIDATION_FAILED";
-              }
-              throw courseErr;
-            }
+            });
           } else {
-            if (!courseId) {
-              const err = new SheetDB.ValidationError("Course registration requires either 'entity_id' or 'on_demand: true'.");
-              err.errorCode = "REFERENCED_COURSE_NOT_FOUND";
-              throw err;
-            }
-            const existing = courseMap[courseId];
-            if (!existing) {
-              const err = new SheetDB.ValidationError(`Referenced course ID '${courseId}' does not exist.`);
-              err.errorCode = "REFERENCED_COURSE_NOT_FOUND";
-              throw err;
-            }
+            packageItemPrep.push({
+              package_id: packageId,
+              entity_type: normalizedType,
+              entity_id: item.entity_id
+            });
           }
-
-          const newItem = db.PackageItem.insert({
-            package_id: packageId,
-            entity_type: normalizedType,
-            entity_id: courseId
-          });
-          tx.trackInsert(db.PackageItem, newItem.item_id);
-          self._trackMutation(context, "PackageItem");
         });
+
+        // 4a. Execute bulk inserts of on-demand courses if any
+        if (onDemandPayloads.length > 0) {
+          const coursesToInsert = onDemandPayloads.map(op => op.data);
+          const insertedCourses = db.Course.insertMany(coursesToInsert);
+          tx.trackInsertMany(db.Course, insertedCourses.map(c => c.course_id));
+          this._trackMutation(context, "Course");
+
+          // Map inserted on-demand course IDs back into PackageItem records
+          onDemandPayloads.forEach((op, idx) => {
+            const newCourse = insertedCourses[idx];
+            packageItemPrep.push({
+              package_id: packageId,
+              entity_type: op.normalizedType,
+              entity_id: newCourse.course_id
+            });
+          });
+        }
+
+        // 4b. Execute bulk inserts of PackageItems
+        if (packageItemPrep.length > 0) {
+          const insertedItems = db.PackageItem.insertMany(packageItemPrep);
+          tx.trackInsertMany(db.PackageItem, insertedItems.map(item => item.item_id));
+          this._trackMutation(context, "PackageItem");
+        }
       }
 
+      // Timing and Performance Logging Assertions (Rule N5)
+      const serviceTime = Date.now() - serviceStart;
+      const totalTime = Date.now() - validationStart;
+      console.log(`
+[AcademicService] createPackage execution complete:
+| Stage               | Duration |
+|---------------------|----------|
+| Validation (RAM)    | ${validationTime}ms |
+| Database Insertion  | ${serviceTime}ms |
+| Total Execution     | ${totalTime}ms |
+`);
       return newPackage.toJSON();
 
     } catch (error) {
-      console.error(`[AcademicService] Bulk creation failed, rolling back: ${error.message}`);
+      console.error(`[AcademicService] Bulk creation failed, rolling back transaction: ${error.message}`);
       tx.rollback();
       throw error;
     }
@@ -292,7 +242,7 @@ const AcademicService = {
       coreFields.forEach(f => {
         if (payload[f] !== undefined) updateData[f] = payload[f];
       });
-      
+
       const backupPackageState = { ...existingPackage };
       db.Package.update(packageId, updateData);
       tx.trackUpdate(db.Package, packageId, backupPackageState);
