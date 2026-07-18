@@ -1114,6 +1114,7 @@ class CreateRecordAction extends BaseAction {
 
   _authorize() {
     const tableName = this._params.payload.table;
+
     if (!AuthBridge.checkAccess(this._user, tableName)) {
       throw new ActionAuthorizationError(`Access denied: You are not authorized to create records in '${tableName}'.`);
     }
@@ -1123,37 +1124,17 @@ class CreateRecordAction extends BaseAction {
     const { table, data } = requestContext.params.payload;
     const dbGateway = this._db[table];
 
-    let tableSchema = null;
-    for (var cat in DATABASE_SCHEMA.categories) {
-      var tables = DATABASE_SCHEMA.categories[cat].tables;
-      if (tables[table]) {
-        tableSchema = tables[table];
-        break;
-      }
-    }
-
+    const tableSchema = SheetDB.SchemaResolver.getTableSchema(this._db, table);
     if (!tableSchema) {
       throw new ActionValidationError(`Table '${table}' schema definition not found.`);
     }
 
+    // Apply Override Policy Boundary (resiliently clears overrides in production)
+    AutoKeyField_Override_Policy.evaluate(table, data, this._db, tableSchema);
+
     const primaryKey = tableSchema.primaryKey;
-    let generatedId = null;
-
-    if (primaryKey && tableSchema.columns[primaryKey]) {
-      const pkCol = tableSchema.columns[primaryKey];
-      if (pkCol.type === "auto" && !data[primaryKey]) {
-        const fallbackRegistry = typeof ID_PREFIX_FALLBACK_REGISTRY !== 'undefined' ? ID_PREFIX_FALLBACK_REGISTRY : {};
-        const prefix = pkCol.idPrefix || fallbackRegistry[table] || "ID";
-        const utils = typeof SheetDB.Utils !== 'undefined' ? SheetDB.Utils : {
-          generateId: (p) => p + "-" + Math.random().toString(36).substring(2, 9).toUpperCase()
-        };
-        generatedId = utils.generateId(prefix);
-        data[primaryKey] = generatedId;
-      }
-    }
-
     const newRecord = dbGateway.insert(data);
-    const createdId = newRecord[primaryKey] || generatedId || "";
+    const createdId = newRecord[primaryKey] || "";
 
     console.log(`[CreateRecordAction] [User: ${this._user ? this._user.username : 'Guest'}] [Table: ${table}] [ID: ${createdId}] [Status: SUCCESS]`);
 
