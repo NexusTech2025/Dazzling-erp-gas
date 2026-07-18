@@ -25,6 +25,19 @@ function isDate(val) {
 globalThis.isDate = isDate;
 
 /**
+ * Safely checks if a value is a thenable (an object or function with a .then method).
+ * 
+ * @param {*} val - The value to inspect.
+ * @return {boolean} True if the value is thenable.
+ */
+function isThenable(val) {
+  return !!(val && (typeof val === 'object' || typeof val === 'function') && typeof val.then === 'function');
+}
+
+// Export to Global Namespace
+globalThis.isThenable = isThenable;
+
+/**
  * Aligned with the Declarative Strategy Pattern:
  * Maps format layout templates to parsing functions for custom date segment extraction.
  */
