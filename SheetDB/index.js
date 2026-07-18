@@ -226,6 +226,7 @@ Object.assign(globalThis, {
   SheetDBDateTime: globalThis.SheetDBDateTime,
   DateComparator: globalThis.DateComparator,
   DateComparisonPolicy: globalThis.DateComparisonPolicy,
+  SyncPromise: globalThis.SyncPromise,
   
   // Relations OOP Classes
   BaseRelation: globalThis.BaseRelation,
