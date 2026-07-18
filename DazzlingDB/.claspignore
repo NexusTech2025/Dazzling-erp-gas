@@ -44,3 +44,4 @@ Test/*
 ; !Test/Teacher_AttendanceDateQueryTests.js
 !Test/QueryEngine_AttendanceTests.js
 !apitest/Core_GenericCrud_ApiTest.js
+!Test/SyncPromiseTests.js

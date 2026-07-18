@@ -11,6 +11,10 @@
   "jsonExtensions": [
     ".json"
   ],
-  "filePushOrder": [],
+  "filePushOrder": [
+    "Utils/Utils.js",
+    "Utils/SyncPromise.js",
+    "Utils/DateCmp.js"
+  ],
   "skipSubdirectories": false
 }
