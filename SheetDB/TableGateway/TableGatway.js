@@ -122,15 +122,15 @@ class TableGateway {
    */
   insert(data) {
     if (!data[this.primaryKey]) throw new Error(`Insert failed: Missing primary key '${this.primaryKey}'.`);
-    
+
     const rowArray = this._mapObjectToRow(data);
     this.dataSource.insertRows(this.category, this.tableName, [rowArray]);
-    
+
     // Sync PrimaryKeyCache
     if (this.db && this.db._pkCache) {
       this.db._pkCache.add(this.tableName, data[this.primaryKey]);
     }
-    
+
     return this._normalizeRow(data);
   }
 
@@ -144,7 +144,7 @@ class TableGateway {
 
     // Map objects to 2D array
     const rows2D = dataArray.map(obj => this._mapObjectToRow(obj));
-    
+
     // Batch Write
     this.dataSource.insertRows(this.category, this.tableName, rows2D);
 
@@ -189,12 +189,12 @@ class TableGateway {
     if (!existing) throw new Error(`Delete failed: Record '${id}' not found.`);
 
     this.dataSource.deleteRow(this.category, this.tableName, existing.__rowNumber);
-    
+
     // Sync PrimaryKeyCache
     if (this.db && this.db._pkCache) {
       this.db._pkCache.remove(this.tableName, id);
     }
-    
+
     return true;
   }
 
@@ -205,7 +205,7 @@ class TableGateway {
    */
   deleteMany(ids) {
     console.log(`[TableGateway:${this.tableName}] Initiating deleteMany operation.`);
-    
+
     // Input validation
     if (!ids) {
       throw new BatchDeleteError("Batch delete failed: 'ids' parameter is required.");
@@ -217,11 +217,11 @@ class TableGateway {
       console.log(`[TableGateway:${this.tableName}] Empty ID list passed. Returning 0.`);
       return 0;
     }
-    
+
     try {
       // 1. Delegate batch deletion to data source
       const deleteCount = this.dataSource.deleteRowsBatch(this.category, this.tableName, this.primaryKey, ids);
-      
+
       if (deleteCount > 0) {
         // 2. Sync the PrimaryKeyCache
         if (this.db && this.db._pkCache) {
@@ -250,7 +250,7 @@ class TableGateway {
     if (!updatesMap || typeof updatesMap !== 'object') {
       throw new Error("Batch update failed: 'updatesMap' must be an object.");
     }
-    
+
     const ids = Object.keys(updatesMap);
     if (ids.length === 0) return [];
 
@@ -261,7 +261,7 @@ class TableGateway {
       for (const [colName, val] of Object.entries(fields)) {
         // Enforce PK isolation - do not allow PK alterations (TC 2)
         if (colName === this.primaryKey) continue;
-        
+
         const colSchema = this.columns[colName];
         const type = colSchema ? colSchema.type : "string";
         serializedUpdates[id][colName] = this._prepareForWrite(val, type);
@@ -270,7 +270,7 @@ class TableGateway {
 
     // Call batch update on datasource
     const count = this.dataSource.updateRowsBatch(this.category, this.tableName, this.primaryKey, serializedUpdates);
-    
+
     // Fetch and return the newly updated rows
     if (count > 0) {
       const allRows = this.all();
@@ -291,16 +291,16 @@ class TableGateway {
     try {
       // 1. Ask DataSource for the Absolute Truth (Physical Headers)
       const physicalHeaders = this.dataSource.getHeaders(this.category, this.tableName);
-      
+
       // 2. Map data EXACTLY to physical layout
       return physicalHeaders.map(headerName => {
         // Extract the value meant for this column
         const rawValue = obj[headerName];
-        
+
         // Get schema rules for this column (Fallback to string if not in schema)
         const columnSchema = this.columns[headerName];
         const type = columnSchema ? columnSchema.type : "string";
-        
+
         // Serialize safely
         return this._prepareForWrite(rawValue, type);
       });
@@ -317,7 +317,14 @@ class TableGateway {
   _normalizeRow(row) {
     const normalized = {};
     Object.keys(this.columns).forEach(col => {
-      normalized[col] = this._castValue(row[col], this.columns[col].type);
+      try {
+
+        normalized[col] = this._castValue(row[col], this.columns[col].type);
+      }
+      catch (e) {
+        console.error(`[TableGateway] Error casting column ${col}: ${e.message}`);
+        throw new IntegrityError(`Failed to cast column ${col}: ${e.message}`);
+      }
     });
     // Preserve row number for downstream use (e.g., repository tracking)
     if (row.__rowNumber) normalized.__rowNumber = row.__rowNumber;
@@ -337,7 +344,7 @@ class TableGateway {
         try { return Boolean(value); } catch (e) { return value; }
       case "date": {
         const d = DateComparator._normalizeToDate(value);
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+        return d ? new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0) : null;
       }
       case "datetime": {
         return DateComparator._normalizeToDate(value);
