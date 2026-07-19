@@ -343,11 +343,21 @@ class TableGateway {
       case "boolean":
         try { return Boolean(value); } catch (e) { return value; }
       case "date": {
-        const d = DateComparator._normalizeToDate(value);
-        return d ? new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0) : null;
+        try {
+          const d = DateComparator._normalizeToDate(value);
+          return d ? new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0) : null;
+        } catch (e) {
+          console.warn(`[TableGateway] Warning: Failed to parse date value: ${value}`);
+          return null;
+        }
       }
       case "datetime": {
-        return DateComparator._normalizeToDate(value);
+        try {
+          return DateComparator._normalizeToDate(value);
+        } catch (e) {
+          console.warn(`[TableGateway] Warning: Failed to parse datetime value: ${value}`);
+          return null;
+        }
       }
       case "json":
         try { return typeof value === "string" ? JSON.parse(value) : value; } catch (e) { return value; }
