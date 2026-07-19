@@ -1,0 +1,204 @@
+{
+  "file": "SheetDB/TableGateway/TableGatway.js",
+  "generated_at": "2026-07-19T09:53:47.220Z",
+  "how_to_use": "This index provides a fast lookup directory of all symbols defined within the target file. Agents can use the 'line_range' attribute to target and view individual sections instead of loading the entire file.",
+  "actions": [
+    {
+      "name": "TableGateway",
+      "type": "class",
+      "goal": "Represent one sheet as one logical table.",
+      "description": "Acts as the data mapping gateway for a spreadsheet sheet.\nHandles column mapping, type-casting normalization, and physical row operations via the underlying SheetDataSource.",
+      "line_range": {
+        "start": 12,
+        "end": 368
+      }
+    },
+    {
+      "name": "constructor",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Initialize a new TableGateway instance.",
+      "description": "Binds the logical sheet table name, SchemaRegistry, and SheetDataSource.\nPre-loads the primary keys, table category, and schema configurations.",
+      "line_range": {
+        "start": 18,
+        "end": 28
+      }
+    },
+    {
+      "name": "all",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Fetch all records as normalized objects.",
+      "description": "Queries and pulls all active rows from the spreadsheet sheet.\nNormalizes and parses cell types according to the schema registry.",
+      "line_range": {
+        "start": 33,
+        "end": 43
+      }
+    },
+    {
+      "name": "isTableExist",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Check if the table physically exists in the spreadsheet.",
+      "description": "Queries the SheetDataSource to verify if the physical sheet for the table exists.\nAllows repositories to bypass queries on un-provisioned tables.",
+      "line_range": {
+        "start": 49,
+        "end": 61
+      }
+    },
+    {
+      "name": "find",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Find a single record by its primary key.",
+      "description": "Finds and returns a normalized row object matching the primary key.\nUtilizes optimized row lookup filters to bypass table scanning.",
+      "line_range": {
+        "start": 66,
+        "end": 69
+      }
+    },
+    {
+      "name": "where",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Basic equality filtering.",
+      "description": "Filters sheet rows in memory using key-value pair checks.\nEnforces strict comparisons and parses columns to matching schema types.",
+      "line_range": {
+        "start": 74,
+        "end": 88
+      }
+    },
+    {
+      "name": "findOne",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Finds the first record matching the filters.",
+      "description": "Runs matching filters on the sheet rows and yields the first matching row object.\nReturns null if no matching records exist.",
+      "line_range": {
+        "start": 95,
+        "end": 109
+      }
+    },
+    {
+      "name": "count",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Counts records matching the filters.",
+      "description": "Computes the count of sheet rows matching filter criteria in memory.\nFast count validation check.",
+      "line_range": {
+        "start": 116,
+        "end": 118
+      }
+    },
+    {
+      "name": "insert",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Insert a new record.",
+      "description": "Appends a new normalized row into the spreadsheet.\nPerforms data serialization and primary key checks before writing.",
+      "line_range": {
+        "start": 123,
+        "end": 135
+      }
+    },
+    {
+      "name": "insertBatch",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Performs an optimized batch insertion of multiple records.",
+      "description": "Groups multiple records into a single physical batch insert call to SheetDataSource.\nDrastically reduces write time for large transactions.",
+      "line_range": {
+        "start": 142,
+        "end": 159
+      }
+    },
+    {
+      "name": "update",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Update an existing record by ID.",
+      "description": "Updates cell values for a specific row in the spreadsheet sheet.\nLocates row indices and applies changes matching the primary key.",
+      "line_range": {
+        "start": 164,
+        "end": 180
+      }
+    },
+    {
+      "name": "remove",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Physically remove a record by ID.",
+      "description": "Evicts the physical spreadsheet row matching the primary key.\nUpdates row ranges and triggers cache evictions for the table.",
+      "line_range": {
+        "start": 185,
+        "end": 199
+      }
+    },
+    {
+      "name": "deleteMany",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Delete multiple records by their primary keys.",
+      "description": "Evicts multiple spreadsheet rows matching IDs in a single operation.\nMinimizes Apps Script sheet updates using contiguous row deletions where possible.",
+      "line_range": {
+        "start": 206,
+        "end": 242
+      }
+    },
+    {
+      "name": "updateMany",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Batch update multiple records.",
+      "description": "Processes updates for multiple records using a mapping of IDs to data payloads.\nPerforms write calculations and updates the sheet in bulk.",
+      "line_range": {
+        "start": 249,
+        "end": 280
+      }
+    },
+    {
+      "name": "_mapObjectToRow",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Maps an object to a 2D row array based on the physical spreadsheet header order.",
+      "description": "Converts an object payload into a raw row array matching the physical sheet header order.\nInserts default values for unprovided fields.",
+      "line_range": {
+        "start": 290,
+        "end": 311
+      }
+    },
+    {
+      "name": "_normalizeRow",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Casts raw spreadsheet values to schema-defined types.",
+      "description": "Inspects raw sheet cell arrays and converts them into schema type-cast objects.\nHandles date strings, integers, booleans, and floats.",
+      "line_range": {
+        "start": 317,
+        "end": 332
+      }
+    },
+    {
+      "name": "_castValue",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Type casting engine.",
+      "description": "Converts raw string values from cells into javascript equivalents.\nUses isDate() cross-realm utility for date checking.",
+      "line_range": {
+        "start": 338,
+        "end": 357
+      }
+    },
+    {
+      "name": "_prepareForWrite",
+      "type": "method",
+      "parent": "TableGateway",
+      "goal": "Pre-write serialization.",
+      "description": "Serializes javascript values (dates, objects) into storage-friendly formats.\nEnsures compatibility with Google Sheets cell storage.",
+      "line_range": {
+        "start": 363,
+        "end": 367
+      }
+    }
+  ]
+}

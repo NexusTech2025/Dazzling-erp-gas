@@ -227,6 +227,9 @@ Object.assign(globalThis, {
   DateComparator: globalThis.DateComparator,
   DateComparisonPolicy: globalThis.DateComparisonPolicy,
   SyncPromise: globalThis.SyncPromise,
+  TransactionTracker: globalThis.TransactionTracker,
+  AtomicPipeline: globalThis.AtomicPipeline,
+  PipelineContext: globalThis.PipelineContext,
   
   // Relations OOP Classes
   BaseRelation: globalThis.BaseRelation,
@@ -255,6 +258,8 @@ Object.assign(globalThis, {
   AdvancedRestDriver: globalThis.AdvancedRestDriver,
   InvalidArgumentError: globalThis.InvalidArgumentError,
   StorageEngineError: globalThis.StorageEngineError,
+  CircularReferenceError: globalThis.CircularReferenceError,
+  TypeError: globalThis.CircularReferenceError,
   
   // Custom Validation & Relational Errors
   ValidationRegistryError: globalThis.ValidationRegistryError,

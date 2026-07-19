@@ -57,9 +57,8 @@ class PrimaryKeyCache {
    */
   add(tableName, id) {
     if (id === null || id === undefined || id === '') return;
-    if (this._cache[tableName]) {
-      this._cache[tableName].add(String(id).trim());
-    }
+    const cacheSet = this.get(tableName);
+    cacheSet.add(String(id).trim());
   }
 
   /**
@@ -69,9 +68,8 @@ class PrimaryKeyCache {
    */
   remove(tableName, id) {
     if (id === null || id === undefined || id === '') return;
-    if (this._cache[tableName]) {
-      this._cache[tableName].delete(String(id).trim());
-    }
+    const cacheSet = this.get(tableName);
+    cacheSet.delete(String(id).trim());
   }
 
   /**

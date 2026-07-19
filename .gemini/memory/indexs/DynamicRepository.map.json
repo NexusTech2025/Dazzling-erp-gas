@@ -1,0 +1,215 @@
+{
+  "file": "SheetDB/Repositories/DynamicRepository.js",
+  "generated_at": "2026-07-19T09:53:11.360Z",
+  "how_to_use": "This index provides a fast lookup directory of all symbols defined within the target file. Agents can use the 'line_range' attribute to target and view individual sections instead of loading the entire file.",
+  "actions": [
+    {
+      "name": "DynamicRepository",
+      "type": "class",
+      "goal": "Act as a schema-driven Active Record manager for a specific entity.",
+      "description": "Provides a high-level, fluent CRUD interface for dynamic model entities.\nHydrates raw rows from TableGateway into BaseModel instances, enforcing validations and relationship constraints.",
+      "line_range": {
+        "start": 12,
+        "end": 807
+      }
+    },
+    {
+      "name": "constructor",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Initialize dependencies for the repository.",
+      "description": "Binds the target entity table name, TableGateway I/O driver, SchemaRegistry, and RelationResolver.\nEnsures all active record query and relation mappings have access to necessary database subsystems.",
+      "line_range": {
+        "start": 19,
+        "end": 27
+      }
+    },
+    {
+      "name": "_hydrate",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Internal helper to convert raw data into a BaseModel instance.",
+      "description": "Converts raw spreadsheet arrays/objects into smart, validated BaseModel instances.\nRestores context-level bindings to enable active record methods (like save() and remove()) on individual row results.",
+      "line_range": {
+        "start": 33,
+        "end": 44
+      }
+    },
+    {
+      "name": "all",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Fetches all records from the table.",
+      "description": "Retrieves every physical row in the table collection.\nHydrates all records into model instances; useful for complete scans, catalog loading, or caching.",
+      "line_range": {
+        "start": 50,
+        "end": 53
+      }
+    },
+    {
+      "name": "findById",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Finds a single record by its primary key.",
+      "description": "Queries and hydrates a single record using its primary identifier.\nUse this for direct, key-based lookup when the key is known (highly optimized O(1) cache matching).",
+      "line_range": {
+        "start": 60,
+        "end": 63
+      }
+    },
+    {
+      "name": "isTableExist",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Checks if the table physically exists in the database.",
+      "description": "Verifies if the corresponding spreadsheet sheet has been provisioned.\nUse to prevent runtime errors prior to loading data from uninitialized tables.",
+      "line_range": {
+        "start": 69,
+        "end": 71
+      }
+    },
+    {
+      "name": "exists",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Checks if any record matches the filters.",
+      "description": "Verifies the existence of records matching custom filters without loading rows into memory.\nOptimized to check counts directly rather than hydrating model lists.",
+      "line_range": {
+        "start": 77,
+        "end": 80
+      }
+    },
+    {
+      "name": "findOne",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Finds the first record matching the filters.",
+      "description": "Queries the database and returns the first matching hydrated record.\nUse when you expect a single result or only need to verify/fetch a single representative instance.",
+      "line_range": {
+        "start": 87,
+        "end": 90
+      }
+    },
+    {
+      "name": "count",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Counts records matching the filters.",
+      "description": "Returns the size/count of rows matching target criteria.\nUse to get row statistics or check size bounds without loading payloads.",
+      "line_range": {
+        "start": 97,
+        "end": 100
+      }
+    },
+    {
+      "name": "where",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Filters records based on simple equality.",
+      "description": "Retrieves a list of hydrated model instances matching the provided key-value filters.\nUse to query specific segments of table data (e.g., student enrollments by package ID).",
+      "line_range": {
+        "start": 107,
+        "end": 110
+      }
+    },
+    {
+      "name": "insert",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Inserts a new record into the database.",
+      "description": "Persists a new row payload or saves an existing BaseModel instance.\nUse to create individual records; handles model schema validation and ID allocation.",
+      "line_range": {
+        "start": 117,
+        "end": 133
+      }
+    },
+    {
+      "name": "insertOne",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "MongoDB Style: Inserts a record and all its nested relations.",
+      "description": "Recursively processes and inserts a document with nested child relationships.\nHandles parent primary key generation and injects it as foreign keys on child tables automatically.",
+      "line_range": {
+        "start": 142,
+        "end": 186
+      }
+    },
+    {
+      "name": "insertMany",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Performs an optimized, prioritized batch insert for multiple nested documents.",
+      "description": "Leverages a BatchBucket to group and sequence writes across multiple tables in memory.\nMinimizes Apps Script sheet I/O operations by writing bulk matrices in a single call.",
+      "line_range": {
+        "start": 194,
+        "end": 247
+      }
+    },
+    {
+      "name": "update",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Updates an existing record by its primary key.",
+      "description": "Merges new updates with an existing record and saves the result.\nEnsures validations are executed on the fully merged state before writing to the database.",
+      "line_range": {
+        "start": 255,
+        "end": 267
+      }
+    },
+    {
+      "name": "enforceDeleteConstraints",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Enforces relational database constraints (protect, cascade, set_null) on deletion.",
+      "description": "Inspects the dynamic schema dependency graph for active references before deleting a parent record.\nEvicts cascaded records or nulls foreign key cells to guarantee database referential integrity.",
+      "line_range": {
+        "start": 274,
+        "end": 371
+      }
+    },
+    {
+      "name": "remove",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Deletes a record by its primary key.",
+      "description": "Evaluates delete constraint policies and physically evicts the row from the spreadsheet.\nUse to delete a single parent record cleanly with all its child constraints enforced.",
+      "line_range": {
+        "start": 378,
+        "end": 381
+      }
+    },
+    {
+      "name": "enforceDeleteConstraintsBatch",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Enforces batch relational database constraints (protect, cascade, set_null) on deletion.",
+      "description": "Implements a memory-optimized Surgical Graph Rollback strategy for batch deletions.\nPre-loads descendant tables in a single pass to check constraints in memory, rolling back if dry-run validation fails.",
+      "line_range": {
+        "start": 393,
+        "end": 775
+      }
+    },
+    {
+      "name": "deleteMany",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Deletes multiple records by their primary keys.",
+      "description": "Deletes a set of parent records and propagates cascading evictions/updates in bulk.\nMinimizes roundtrips by using batch constraint validations and batch spreadsheet row deletions.",
+      "line_range": {
+        "start": 783,
+        "end": 796
+      }
+    },
+    {
+      "name": "updateMany",
+      "type": "method",
+      "parent": "DynamicRepository",
+      "goal": "Batch update multiple records and return hydrated models.",
+      "description": "Updates multiple records using a mapping of IDs to changes in a single operation.\nOptimizes performance by batch-updating values and returning hydrated instances.",
+      "line_range": {
+        "start": 803,
+        "end": 806
+      }
+    }
+  ]
+}

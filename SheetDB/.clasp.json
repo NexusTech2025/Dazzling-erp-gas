@@ -14,7 +14,10 @@
   "filePushOrder": [
     "Utils/Utils.js",
     "Utils/SyncPromise.js",
-    "Utils/DateCmp.js"
+    "Utils/DateCmp.js",
+    "Transactions/PipelineContext.js",
+    "Transactions/TransactionTracker.js",
+    "Transactions/AtomicPipeline.js"
   ],
   "skipSubdirectories": false
 }
