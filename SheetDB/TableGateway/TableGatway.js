@@ -289,21 +289,17 @@ class TableGateway {
    */
   _mapObjectToRow(obj) {
     try {
-      // 1. Ask DataSource for the Absolute Truth (Physical Headers)
-      const physicalHeaders = this.dataSource.getHeaders(this.category, this.tableName);
+      let physicalHeaders = this.dataSource.getHeaders(this.category, this.tableName);
+      const physicalSet = new Set(physicalHeaders);
 
-      // 2. Map data EXACTLY to physical layout
-      return physicalHeaders.map(headerName => {
-        // Extract the value meant for this column
-        const rawValue = obj[headerName];
+      const schemaHeaders = Object.keys(this.columns);
+      const hasMissing = schemaHeaders.some(col => !physicalSet.has(col));
 
-        // Get schema rules for this column (Fallback to string if not in schema)
-        const columnSchema = this.columns[headerName];
-        const type = columnSchema ? columnSchema.type : "string";
+      if (hasMissing) {
+        physicalHeaders = handleMissingPhysicalHeaders(this, physicalHeaders);
+      }
 
-        // Serialize safely
-        return this._prepareForWrite(rawValue, type);
-      });
+      return mapObjectToPhysicalRowArray(this, obj, physicalHeaders);
     } catch (e) {
       console.error(`[TableGateway] FATAL Error building row for ${this.tableName}: ${e.message}`);
       throw new IntegrityError(`Failed to map object to row: ${e.message}`);
@@ -365,4 +361,59 @@ class TableGateway {
     if (type === "json") return JSON.stringify(value);
     return value;
   }
+}
+
+/**
+ * Evicts stale caches and re-reads headers directly from Google Sheets when columns are missing.
+ * @param {Object} gateway - The TableGateway instance.
+ * @param {Array<string>} physicalHeaders - Current physical headers list.
+ * @returns {Array<string>} Re-fetched clean physical headers list.
+ */
+function handleMissingPhysicalHeaders(gateway, physicalHeaders) {
+  console.warn(`[TableGateway] Stale headers cache detected for '${gateway.tableName}'. Purging and re-fetching...`);
+  if (typeof CacheService !== 'undefined') {
+    try {
+      const cache = CacheService.getScriptCache();
+      const cachedDataStr = cache.get("dazzling_db_headers_v2");
+      if (cachedDataStr) {
+        const allHeaders = JSON.parse(cachedDataStr);
+        const cacheKey = `${gateway.category}_${gateway.tableName}`;
+        if (allHeaders[cacheKey]) {
+          delete allHeaders[cacheKey];
+          cache.put("dazzling_db_headers_v2", JSON.stringify(allHeaders), 21600);
+        }
+      }
+    } catch (cacheErr) {
+      console.warn(`[TableGateway] CacheService eviction failed: ${cacheErr.message}`);
+    }
+  }
+  if (gateway.db && gateway.db._requestHeadersCache) {
+    const cacheKey = `${gateway.category}_${gateway.tableName}`;
+    delete gateway.db._requestHeadersCache[cacheKey];
+  }
+  return gateway.dataSource.getHeaders(gateway.category, gateway.tableName);
+}
+
+/**
+ * Decoupled row mapper translating key-value objects into sheet-indexed arrays.
+ * @param {Object} gateway - The TableGateway instance.
+ * @param {Object} obj - The target object containing write values.
+ * @param {Array<string>} physicalHeaders - Ordered sheet column headers.
+ * @returns {Array<any>} A flat array of values prepared for cell write.
+ */
+function mapObjectToPhysicalRowArray(gateway, obj, physicalHeaders) {
+  return physicalHeaders.map(headerName => {
+    const rawValue = obj[headerName];
+    const columnSchema = gateway.columns[headerName];
+
+    if (!columnSchema) {
+      const systemColumns = new Set(['__tx_id', '__tx_status', '__created_at']);
+      if (!systemColumns.has(headerName)) {
+        console.warn(`[TableGateway] Warning: Writing to undeclared physical column '${headerName}' in table '${gateway.tableName}'.`);
+      }
+    }
+
+    const type = columnSchema ? columnSchema.type : "string";
+    return gateway._prepareForWrite(rawValue, type);
+  });
 }
