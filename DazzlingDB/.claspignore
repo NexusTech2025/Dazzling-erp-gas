@@ -30,7 +30,7 @@ Test/*
 # BUT explicitly allow our focused test suites
 !Test/TestHelper.js
 !Test/TestMockData.js
-; !Test/TestMockHelper.js
+!Test/TestMockHelper.js
 ; !Test/Staff_SalaryCalculationTests.js
 ; !Test/TeacherPaymentTransactionTests.js
 ; !Test/TeacherSalaryConfigIntegrationTests.js
@@ -46,3 +46,4 @@ Test/*
 !apitest/Core_GenericCrud_ApiTest.js
 !Test/SyncPromiseTests.js
 !Test/AtomicPipelineTests.js
+!Test/Academic_PackageTransactionTests.js

@@ -266,6 +266,28 @@ function executeScenario6_CatchAndFinally() {
     if (!finallyFailureCalled) throw new Error("Finally finalizer was not executed on rejection.");
     if (finalException !== "error_reason") throw new Error(`Expected error to propagate through finally. Got: ${finalException}`);
 
+    // Finally Execution: Failure flow (finally returns rejected promise, overriding fulfillment)
+    let caughtOverrideFulfill = null;
+    SheetDB.SyncPromise.resolve("ok")
+      .finally(() => SheetDB.SyncPromise.reject("finally_error_override"))
+      .catch(err => {
+        caughtOverrideFulfill = err;
+      });
+    if (caughtOverrideFulfill !== "finally_error_override") {
+      throw new Error(`Expected finally rejection to override fulfillment. Got: ${caughtOverrideFulfill}`);
+    }
+
+    // Finally Execution: Failure flow (finally returns rejected promise, overriding rejection)
+    let caughtOverrideReject = null;
+    SheetDB.SyncPromise.reject("original_error")
+      .finally(() => SheetDB.SyncPromise.reject("finally_error_override"))
+      .catch(err => {
+        caughtOverrideReject = err;
+      });
+    if (caughtOverrideReject !== "finally_error_override") {
+      throw new Error(`Expected finally rejection to override parent rejection. Got: ${caughtOverrideReject}`);
+    }
+
     console.log("   ✅ Success! Catch recovery and finally operations perform correctly.");
     return "✅ PASSED";
   } catch (e) {
