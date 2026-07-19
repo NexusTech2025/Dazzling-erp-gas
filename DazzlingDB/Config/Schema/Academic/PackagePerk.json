@@ -4,7 +4,7 @@
     "package_id": {
       "type": "foreign_key",
       "maxLength": 255,
-      "onDelete": "protect"
+      "onDelete": "cascade"
     },
     "perk_title": {
       "type": "string",
@@ -34,7 +34,8 @@
     "package": {
       "type": "belongsTo",
       "target": "Package",
-      "foreignKey": "package_id"
+      "foreignKey": "package_id",
+      "onDelete": "cascade"
     }
   }
 }

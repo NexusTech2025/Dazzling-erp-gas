@@ -666,9 +666,9 @@ const DATABASE_SCHEMA = {
           "columns": {
             "package_id": {
               "type": "foreign_key",
-              "required": true,
+              "required": false,
               "maxLength": 255,
-              "onDelete": "protect"
+              "onDelete": "set_null"
             },
             "entity_type": {
               "type": "string",
@@ -676,13 +676,14 @@ const DATABASE_SCHEMA = {
                 "course",
                 "subject"
               ],
+              "onDelete": "set_null",
               "maxLength": 255
             },
             "entity_id": {
               "type": "foreign_key",
-              "required": true,
+              "required": false,
               "maxLength": 255,
-              "onDelete": "protect"
+              "onDelete": "set_null"
             },
             "item_id": {
               "type": "auto",
@@ -722,12 +723,14 @@ const DATABASE_SCHEMA = {
             "package": {
               "type": "belongsTo",
               "target": "Package",
-              "foreignKey": "package_id"
+              "foreignKey": "package_id",
+              "onDelete": "set_null"
             },
             "entity": {
               "type": "belongsToPolymorphic",
               "typeField": "entity_type",
               "idField": "entity_id",
+              "onDelete": "set_null",
               "mapping": {
                 "course": "Course",
                 "subject": "Course"
@@ -741,7 +744,7 @@ const DATABASE_SCHEMA = {
             "package_id": {
               "type": "foreign_key",
               "maxLength": 255,
-              "onDelete": "protect"
+              "onDelete": "cascade"
             },
             "perk_title": {
               "type": "string",
@@ -797,7 +800,8 @@ const DATABASE_SCHEMA = {
             "package": {
               "type": "belongsTo",
               "target": "Package",
-              "foreignKey": "package_id"
+              "foreignKey": "package_id",
+              "onDelete": "cascade"
             }
           }
         }

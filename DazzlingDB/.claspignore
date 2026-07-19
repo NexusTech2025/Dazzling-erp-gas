@@ -22,6 +22,7 @@ apitest/**
 !apitest/ApiCallTest.js
 !apitest/DevBootstrap_ApiTest.js
 !apitest/utils.js
+!apitest/PackageCreate_ApiTest.js
 NodeTest/**
 
 # Ignore all files in the Test folder by default
