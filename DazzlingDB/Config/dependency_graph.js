@@ -147,7 +147,7 @@ const DEPENDENCY_GRAPH = {
     {
       "table": "PackageItem",
       "fk": "package_id",
-      "onDelete": "set_null"
+      "onDelete": "cascade"
     },
     {
       "table": "PackagePerk",

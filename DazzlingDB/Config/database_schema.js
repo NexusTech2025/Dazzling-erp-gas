@@ -668,7 +668,7 @@ const DATABASE_SCHEMA = {
               "type": "foreign_key",
               "required": false,
               "maxLength": 255,
-              "onDelete": "set_null"
+              "onDelete": "cascade"
             },
             "entity_type": {
               "type": "string",
@@ -724,7 +724,7 @@ const DATABASE_SCHEMA = {
               "type": "belongsTo",
               "target": "Package",
               "foreignKey": "package_id",
-              "onDelete": "set_null"
+              "onDelete": "cascade"
             },
             "entity": {
               "type": "belongsToPolymorphic",
