@@ -51,6 +51,11 @@ class EntityNotFoundError extends SheetDBError {
 class ValidationError extends SheetDBError { }
 
 /**
+ * Thrown when a promise circular resolution deadlock is detected.
+ */
+class CircularReferenceError extends ValidationError { }
+
+/**
  * Thrown when a specific field fails validation or transformation.
  */
 class FieldError extends ValidationError {
@@ -199,3 +204,4 @@ globalThis.ResourceNotFoundError = ResourceNotFoundError;
 globalThis.PlatformQuotasExhaustedException = PlatformQuotasExhaustedException;
 globalThis.InvalidArgumentError = InvalidArgumentError;
 globalThis.StorageEngineError = StorageEngineError;
+globalThis.CircularReferenceError = CircularReferenceError;

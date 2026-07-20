@@ -31,12 +31,22 @@ class SyncPromise {
    * @param {*} value - Target resolution value or inner thenable.
    * @returns {void}
    * @internal
+   * @throws {CircularReferenceError} Rejects with custom CircularReferenceError on circular resolution.
    */
   _resolve(value) {
     if (this.state !== "pending") return;
 
-    // Duck-typing gate checking for objects or functions exposing a .then property (unwraps thenables recursively)
-    if (value && (typeof value === "object" || typeof value === "function") && typeof value.then === "function") {
+    // Identity Comparison Gate to prevent Call Stack Exhaustion (Promises/A+ 2.3.1 Compliance)
+    if (this === value) {
+      this._reject(new CircularReferenceError(
+        "SyncPromise Resolution Deadlock Detected: A promise cannot be resolved with itself " +
+        "to prevent infinite loop V8 stack overflow loops."
+      ));
+      return;
+    }
+
+    // Duck-typing gate checking for thenables (unwraps recursively)
+    if (isThenable(value)) {
       try {
         value.then(
           (val) => this._resolve(val),
@@ -136,14 +146,14 @@ class SyncPromise {
     return this.then(
       (value) => {
         const res = callback();
-        if (res && typeof res.then === "function") {
+        if (isThenable(res)) {
           return SyncPromise.resolve(res).then(() => value);
         }
         return value;
       },
       (reason) => {
         const res = callback();
-        if (res && typeof res.then === "function") {
+        if (isThenable(res)) {
           return SyncPromise.resolve(res).then(() => { throw reason; });
         }
         throw reason;

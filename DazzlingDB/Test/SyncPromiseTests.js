@@ -37,6 +37,9 @@ function runSyncPromiseTests() {
     console.log("\n=========================================");
     results.Scenario6_CatchAndFinally = executeScenario6_CatchAndFinally();
     
+    console.log("\n=========================================");
+    results.Scenario7_CircularReferenceDeadlock = executeScenario7_CircularReferenceDeadlock();
+    
     console.log("=========================================\n");
     console.log("📊 FINAL TEST RESULTS: \n", JSON.stringify(results, null, 2));
     
@@ -263,7 +266,65 @@ function executeScenario6_CatchAndFinally() {
     if (!finallyFailureCalled) throw new Error("Finally finalizer was not executed on rejection.");
     if (finalException !== "error_reason") throw new Error(`Expected error to propagate through finally. Got: ${finalException}`);
 
+    // Finally Execution: Failure flow (finally returns rejected promise, overriding fulfillment)
+    let caughtOverrideFulfill = null;
+    SheetDB.SyncPromise.resolve("ok")
+      .finally(() => SheetDB.SyncPromise.reject("finally_error_override"))
+      .catch(err => {
+        caughtOverrideFulfill = err;
+      });
+    if (caughtOverrideFulfill !== "finally_error_override") {
+      throw new Error(`Expected finally rejection to override fulfillment. Got: ${caughtOverrideFulfill}`);
+    }
+
+    // Finally Execution: Failure flow (finally returns rejected promise, overriding rejection)
+    let caughtOverrideReject = null;
+    SheetDB.SyncPromise.reject("original_error")
+      .finally(() => SheetDB.SyncPromise.reject("finally_error_override"))
+      .catch(err => {
+        caughtOverrideReject = err;
+      });
+    if (caughtOverrideReject !== "finally_error_override") {
+      throw new Error(`Expected finally rejection to override parent rejection. Got: ${caughtOverrideReject}`);
+    }
+
     console.log("   ✅ Success! Catch recovery and finally operations perform correctly.");
+    return "✅ PASSED";
+  } catch (e) {
+    console.error("   ❌ Failed:", e.message);
+    return `❌ FAILED: ${e.message}`;
+  }
+}
+
+function executeScenario7_CircularReferenceDeadlock() {
+  console.log("▶️ SCENARIO 7: Circular Reference Deadlock Prevention (Promises/A+ 2.3.1)");
+  try {
+    let resolvedFn = null;
+    const p = new SheetDB.SyncPromise(resolve => {
+      resolvedFn = resolve;
+    });
+
+    let rejectionError = null;
+    p.catch(err => {
+      rejectionError = err;
+    });
+
+    // Resolve promise with itself to trigger the circular reference check
+    resolvedFn(p);
+
+    if (!rejectionError) {
+      throw new Error("Expected promise to be rejected, but it was not.");
+    }
+
+    if (rejectionError.name !== "CircularReferenceError") {
+      throw new Error(`Expected CircularReferenceError, but got ${rejectionError.name}: ${rejectionError.message}`);
+    }
+
+    if (!(rejectionError instanceof SheetDB.TypeError)) {
+      throw new Error("CircularReferenceError does not inherit from SheetDB.TypeError.");
+    }
+
+    console.log("   ✅ Success! Circular reference resolution correctly throws catchable CircularReferenceError.");
     return "✅ PASSED";
   } catch (e) {
     console.error("   ❌ Failed:", e.message);

@@ -324,27 +324,31 @@ class SchemaSetupEngine {
   }
 
   _execEnsureHeader(op, ssCache, result) {
+    const mode = this.config.mode || 'safe';
+    const policy = HeaderExecutionPolicies[mode];
+    if (!policy) {
+      throw new Error(`[SchemaSetupEngine] Unsupported header update mode: '${mode}'`);
+    }
+    policy.execute(this, op, ssCache, result);
+  }
+
+  _execMetaUpdate(op, ssCache, result) {
     const ss = this._getSpreadsheet(op.target.category, ssCache);
-    const { expected, actual } = op.payload;
-    let sheet = ss.getSheetByName(op.target.table);
-
-    if (this.config.mode === 'force') {
-      this._log('WARN', 'EXECUTION', op.target.table, 'FORCE_RECREATE', 'Force mode: Moving old sheet to backup and recreating.');
-      const oldSheet = sheet;
-      oldSheet.setName(`${op.target.table}_backup_${Date.now()}`); // Actual Backup (Fixes Issue 5)
-      sheet = ss.insertSheet(op.target.table);
-      this._applyColumns(sheet, expected, 1);
-      result.updatedHeaders.push(`${op.target.category}.${op.target.table} (Recreated)`);
-      return;
+    let metaSheet = ss.getSheetByName('__meta__');
+    if (!metaSheet) {
+      metaSheet = ss.insertSheet('__meta__');
+      metaSheet.hideSheet();
     }
 
-    const missingHeaders = expected.filter(h => !this._normalizeHeaders([h])[0] || !this._normalizeHeaders(actual).includes(this._normalizeHeaders([h])[0]));
-    
-    if (missingHeaders.length > 0) {
-      const startCol = actual.length > 0 ? actual.length + 1 : 1;
-      this._applyColumns(sheet, missingHeaders, startCol);
-      result.updatedHeaders.push(`${op.target.category}.${op.target.table} (Appended)`);
-    }
+    const metaObj = {
+      schemaVersion: op.payload.version,
+      lastUpdated: new Date().toISOString(),
+      tables: Object.keys(this.schema.categories[op.target.category].tables)
+    };
+
+    metaSheet.getRange('A1').setValue('__SCHEMA_META__');
+    metaSheet.getRange('B1').setValue(JSON.stringify(metaObj));
+    result.metaUpdated.push(op.target.category);
   }
 
   _execEnsureMeta(op, ssCache, result) {
@@ -536,4 +540,128 @@ class SchemaSetupEngine {
     else if (level === 'WARN') console.warn(logStr);
     else console.log(logStr);
   }
+}
+
+/**
+ * Registry of execution policies for resolving physical sheet headers in force or safe mode.
+ * @type {Object<string, {execute: function(Object, Object, Object, Object): void}>}
+ */
+const HeaderExecutionPolicies = {
+  "force": {
+    execute(engine, op, ssCache, result) {
+      const ss = engine._getSpreadsheet(op.target.category, ssCache);
+      const { expected } = op.payload;
+      let sheet = ss.getSheetByName(op.target.table);
+
+      engine._log('WARN', 'EXECUTION', op.target.table, 'FORCE_RECREATE', 'Force mode: Moving old sheet to backup and recreating.');
+      const oldSheet = sheet;
+      oldSheet.setName(`${op.target.table}_backup_${Date.now()}`);
+      sheet = ss.insertSheet(op.target.table);
+      engine._applyColumns(sheet, expected, 1);
+      result.updatedHeaders.push(`${op.target.category}.${op.target.table} (Recreated)`);
+    }
+  },
+  "safe": {
+    execute(engine, op, ssCache, result) {
+      const ss = engine._getSpreadsheet(op.target.category, ssCache);
+      const { expected, actual } = op.payload;
+      let sheet = ss.getSheetByName(op.target.table);
+
+      const normActual = engine._normalizeHeaders(actual);
+      const isPresent = h => normActual.includes(engine._normalizeHeaders([h])[0]);
+
+      const expectedHeadersPresent = expected.filter(isPresent);
+      const actualHeadersExpected = actual.filter(h => engine._normalizeHeaders(expected).includes(engine._normalizeHeaders([h])[0]));
+      const missingHeaders = expected.filter(h => !isPresent(h));
+
+      const hasOrderMismatch = !engine._arraysEqual(expectedHeadersPresent, actualHeadersExpected);
+      const hasMissingHeaders = missingHeaders.length > 0;
+
+      if (hasOrderMismatch || hasMissingHeaders) {
+        alignPhysicalWorksheetColumns(engine, sheet, expected, actual, op.target.category, op.target.table, result);
+      }
+    }
+  }
+};
+
+/**
+ * Reorders physical column data in-memory to match expected schema columns order.
+ * Appends any extra columns to the end of the sheet, preventing data loss.
+ * Processes all cell mappings in RAM and commits a single batch write.
+ * @param {Object} engine - The SchemaSetupEngine instance.
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - The target sheet object.
+ * @param {Array<string>} expected - Expected schema column headers list.
+ * @param {Array<string>} actual - Current physical worksheet headers list.
+ * @param {string} category - Spreadsheet category name.
+ * @param {string} tableName - Target table name.
+ * @param {Object} result - Result compilation object.
+ */
+function alignPhysicalWorksheetColumns(engine, sheet, expected, actual, category, tableName, result) {
+  engine._log('INFO', 'EXECUTION', tableName, 'ALIGN_COLUMNS', `Aligning physical columns to match schema order for table '${tableName}'...`);
+
+  const range = sheet.getDataRange();
+  const rawValues = range.getValues();
+
+  if (rawValues.length > 0 && rawValues[0].length > 0) {
+    const actualHeaders = rawValues[0];
+    const colIndexMap = {};
+    actualHeaders.forEach((h, i) => {
+      colIndexMap[String(h).trim()] = i;
+    });
+
+    const extraHeaders = actualHeaders.filter(h => !expected.includes(String(h).trim()));
+    const newHeaders = [...expected, ...extraHeaders];
+
+    // Remap values to new layout in RAM using decoupled helper function
+    remapAndOverwriteSheet(sheet, rawValues, newHeaders, colIndexMap);
+    
+    // Apply styling via style helper function
+    applyStyle(sheet, newHeaders.length);
+
+    result.updatedHeaders.push(`${category}.${tableName} (Aligned)`);
+  } else {
+    engine._applyColumns(sheet, expected, 1);
+    result.updatedHeaders.push(`${category}.${tableName} (Headers Initialized)`);
+  }
+
+  if (engine.dataSource) {
+    try {
+      engine.dataSource.purgeCache();
+    } catch (purgeErr) {
+      engine._log('WARN', 'EXECUTION', tableName, 'PURGE_FAILED', `Cache purge failed: ${purgeErr.message}`);
+    }
+  }
+}
+
+/**
+ * Helper to perform safe, in-memory cell remapping and overwrite the sheet content.
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - Target sheet.
+ * @param {Array<Array<any>>} rawValues - Current raw spreadsheet values.
+ * @param {Array<string>} newHeaders - Ordered list of expected/extra headers.
+ * @param {Object<string, number>} colIndexMap - Mapping of column name to old index.
+ * @returns {void}
+ */
+function remapAndOverwriteSheet(sheet, rawValues, newHeaders, colIndexMap) {
+  const newValues = rawValues.map((row, rowIndex) => {
+    if (rowIndex === 0) return newHeaders;
+    return newHeaders.map(headerName => {
+      const oldIndex = colIndexMap[String(headerName).trim()];
+      return oldIndex !== undefined ? row[oldIndex] : "";
+    });
+  });
+
+  sheet.getDataRange().clearContent();
+  sheet.getRange(1, 1, newValues.length, newValues[0].length).setValues(newValues);
+}
+
+/**
+ * Applies header gray/bold styling and freezes row 1.
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - Target sheet.
+ * @param {number} colCount - Number of columns to format.
+ * @returns {void}
+ */
+function applyStyle(sheet, colCount) {
+  const range = sheet.getRange(1, 1, 1, colCount);
+  range.setFontWeight("bold").setBackground("#f3f3f3");
+  if (sheet.getFrozenRows() === 0) sheet.setFrozenRows(1);
 }

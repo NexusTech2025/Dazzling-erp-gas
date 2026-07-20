@@ -7,7 +7,7 @@
  * - Provides a unified access point for all Domain Services.
  */
 
-const DBContext = (function() {
+const DBContext = (function () {
   let instance = null;
 
   /**
@@ -18,7 +18,7 @@ const DBContext = (function() {
    */
   function resolveTestingSandboxFolder(scriptProperties) {
     let testFolderId = scriptProperties.getProperty('TEST_FOLDER_ID');
-    
+
     // If cache marker is empty, run an idempotent scan to provision the sandbox directory
     if (!testFolderId) {
       let baseRootId = scriptProperties.getProperty('BASE_ROOT_FOLDER_ID');
@@ -30,10 +30,10 @@ const DBContext = (function() {
           throw new Error("Framework Error: 'BASE_ROOT_FOLDER_ID' property must be set before initializing testing sandbox.");
         }
       }
-      
+
       const rootFolder = DriveApp.getFolderById(baseRootId);
       const searchSandbox = rootFolder.getFoldersByName('DazzlingDB_Testing_Sandbox');
-      
+
       let sandboxFolder;
       if (searchSandbox.hasNext()) {
         sandboxFolder = searchSandbox.next();
@@ -41,11 +41,11 @@ const DBContext = (function() {
         sandboxFolder = rootFolder.createFolder('DazzlingDB_Testing_Sandbox');
         console.log(`[DBContext] Idempotent Provisioning: Created isolated sandbox folder: ${sandboxFolder.getName()}`);
       }
-      
+
       testFolderId = sandboxFolder.getId();
       scriptProperties.setProperty('TEST_FOLDER_ID', testFolderId);
     }
-    
+
     return testFolderId;
   }
 
@@ -55,16 +55,55 @@ const DBContext = (function() {
     }
     const scriptProperties = PropertiesService.getScriptProperties();
     const env = resolveEnvironmentType(scriptProperties.getProperty('ENV'));
-    
+
     if (env === Environment.DEVELOPMENT) {
       return scriptProperties.getProperty('DEV_FOLDER_ID') || scriptProperties.getProperty('DEV_DATABASE_ROOT_FOLDER_ID') || DATABASE_ROOT_FOLDER_ID;
     }
-    
+
     if (env === Environment.TESTING) {
       return resolveTestingSandboxFolder(scriptProperties);
     }
-    
+
     throw new Error(`Environment Resolution Exception: Unrecognized system execution context [${env}]`);
+  }
+
+  /**
+   * Configures and overrides database caching mechanisms for request-level caching.
+   * @param {Object} db - The SheetDB database instance.
+   * @private
+   */
+  function setupRequestCache(db) {
+    if (!db || !db._dataSource) return;
+
+    // 1. Wrap purgeCache to also clear the request-scoped cache
+    if (typeof db._dataSource.purgeCache === 'function') {
+      const originalPurgeCache = db._dataSource.purgeCache.bind(db._dataSource);
+      db._dataSource.purgeCache = function () {
+        try {
+          originalPurgeCache();
+          db._requestHeadersCache = {}; // Clear request-scoped cache
+          console.log("[DBContext] Request-scoped headers cache cleared.");
+        } catch (err) {
+          console.warn(`[DBContext] Cache purge failed: ${err.message}`);
+        }
+      };
+    }
+
+    // 2. Wrap getHeaders with a request-scoped in-memory cache
+    if (typeof db._dataSource.getHeaders === 'function') {
+      const originalGetHeaders = db._dataSource.getHeaders.bind(db._dataSource);
+      db._requestHeadersCache = {};
+
+      db._dataSource.getHeaders = function (categoryName, tableName) {
+        const cacheKey = `${categoryName}_${tableName}`;
+        if (db._requestHeadersCache[cacheKey]) {
+          return db._requestHeadersCache[cacheKey];
+        }
+        const headers = originalGetHeaders(categoryName, tableName);
+        db._requestHeadersCache[cacheKey] = headers;
+        return headers;
+      };
+    }
   }
 
   function _init() {
@@ -72,7 +111,7 @@ const DBContext = (function() {
     const activeEnv = (typeof PropertiesService !== 'undefined')
       ? resolveEnvironmentType(PropertiesService.getScriptProperties().getProperty('ENV'))
       : (typeof SYSTEM_ENV !== 'undefined' ? SYSTEM_ENV : Environment.DEVELOPMENT);
-    
+
     // DATABASE_SCHEMA is assumed to be globally available from Config.js
     if (typeof DATABASE_SCHEMA === 'undefined') {
       throw new Error("[DBContext] Fatal: DATABASE_SCHEMA not found. Ensure Config.js is loaded.");
@@ -111,6 +150,9 @@ const DBContext = (function() {
       dependencyGraph: typeof DEPENDENCY_GRAPH !== 'undefined' ? DEPENDENCY_GRAPH : null
     });
 
+    // Configure Request-Scoped Cache & Boot Purging
+    setupRequestCache(db);
+
     // Seed/warm the spreadsheet name-to-ID cache in PropertiesService
     if (typeof PropertiesService !== 'undefined') {
       try {
@@ -138,13 +180,13 @@ const DBContext = (function() {
     }
 
     // Attach getSpreadsheetFileByName helper
-    db.getSpreadsheetFileByName = function(name) {
+    db.getSpreadsheetFileByName = function (name) {
       const fileMeta = db._fs.findByName(name);
       return fileMeta ? db._fs.open(fileMeta.id) : null;
     };
 
     // Attach bootstrapRepositories helper
-    db.bootstrapRepositories = function() {
+    db.bootstrapRepositories = function () {
       console.log("[DBContext] bootstrapRepositories invoked: resetting database instance.");
       instance = _init();
       return instance;
@@ -158,7 +200,7 @@ const DBContext = (function() {
      * Returns the singleton database instance.
      * @returns {Object} The active SheetDB instance.
      */
-    getInstance: function() {
+    getInstance: function () {
       const activeFolderId = getTargetFolderId();
       if (!instance || (instance._fs && instance._fs.rootFolderId !== activeFolderId)) {
         console.log("[DBContext] Cache MISS - Initializing fresh database instance (Cold Container).");
@@ -173,16 +215,16 @@ const DBContext = (function() {
      * Performs a physical health check (Ping) of the database.
      * @returns {Object} Health status report.
      */
-    ping: function() {
+    ping: function () {
       const db = this.getInstance();
       console.log("[DBContext] Executing Health Check...");
-      
+
       // Note: This relies on the library having the ping() method implemented.
       // If not, it will return a basic status.
       if (typeof db.ping === 'function') {
         return db.ping();
       }
-      
+
       return { status: "OK", message: "Database context is active. (Library-level ping pending implementation)" };
     }
   };
