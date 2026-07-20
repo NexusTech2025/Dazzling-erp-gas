@@ -41,9 +41,17 @@ function runAcademicPackageTransactionTests() {
     const ctPayload = TestMockHelper.createCourseTypePayload({ segment_name: "Test Academy" });
     const courseType = db.CourseType.insert(ctPayload);
 
-    const cPayload = TestMockHelper.createCoursePayload(courseType.segment_id, { name: "Test Math" });
-    const course = db.Course.insert(cPayload);
-    const mathId = course.course_id;
+    const subjectNames = ["Math", "Physics", "Chemistry", "Biology"];
+    const subjectIds = [];
+    subjectNames.forEach(name => {
+      const cPayload = TestMockHelper.createCoursePayload(courseType.segment_id, {
+        name: "Test " + name,
+        entity_type: "subject"
+      });
+      const c = db.Course.insert(cPayload);
+      subjectIds.push(c.course_id);
+    });
+    const mathId = subjectIds[0];
 
     timings.curriculum_boot = new Date().getTime() - tBootStart;
 
@@ -54,7 +62,7 @@ function runAcademicPackageTransactionTests() {
 
     console.log("\n=========================================");
     const tScen2Start = new Date().getTime();
-    results.Scenario2_RollbackEviction = executeScenario2_RollbackEviction(db, mathId);
+    results.Scenario2_RollbackEviction = executeScenario2_RollbackEviction(db, subjectIds);
     timings.scenario2_rollback = new Date().getTime() - tScen2Start;
 
     // 3. Print Performance Timings Table
@@ -176,18 +184,21 @@ function executeScenario1_SuccessPath(db, mathId) {
 /**
  * SCENARIO 2: Verifies transaction rollback LIFO eviction on validation/execution fracture
  */
-function executeScenario2_RollbackEviction(db, mathId) {
+function executeScenario2_RollbackEviction(db, subjectIds) {
   console.log("▶️ SCENARIO 2: Transaction Fracture & LIFO Rollback Eviction");
   try {
     const payload = {
       name: "Faulty Package " + new Date().getTime(),
       package_fee: 10000,
       description: "This record must be rolled back",
-      items: [
-        { entity_type: "course", entity_id: mathId }
-      ],
+      items: subjectIds.map(function (id) {
+        return { entity_type: "subject", entity_id: id };
+      }),
       perks: [
-        { perk_title: "Faulty Perk" }
+        { perk_title: "Perk 1", perk_description: "Description 1" },
+        { perk_title: "Perk 2", perk_description: "Description 2" },
+        { perk_title: "Perk 3", perk_description: "Description 3" },
+        { perk_description: "Invalid Perk (No Title)" } // Missing perk_title!
       ]
     };
 
@@ -217,21 +228,27 @@ function executeScenario2_RollbackEviction(db, mathId) {
           repo.insertMany(items);
         })
         .addStep("PackagePerk", function (repo, state) {
-          console.log("   [Forced failure point] Throwing execution exception...");
-          throw new Error("Forced step exception");
+          const perks = payload.perks.map(function (perk) {
+            return {
+              package_id: state.package_id,
+              perk_title: perk.perk_title,
+              perk_description: perk.perk_description
+            };
+          });
+          repo.insertMany(perks);
         })
         .execute();
     } catch (e) {
-      if (e.message === "Forced step exception") {
+      if (e.message.indexOf("perk_title") !== -1 || e.message.indexOf("validation") !== -1 || e.message.indexOf("ValidationError") !== -1 || e.message.indexOf("Required") !== -1) {
         transactionThrew = true;
-        console.log("   [Expected Catch] Intercepted forced failure.");
+        console.log("   [Expected Catch] Intercepted validation failure: " + e.message);
       } else {
         throw e;
       }
     }
 
     if (!transactionThrew) {
-      throw new Error("Expected transaction execution block to throw, but it ran successfully.");
+      throw new Error("Expected transaction execution block to throw due to invalid perk, but it ran successfully.");
     }
 
     // Verify eviction: package and child items should NOT exist in sheets
@@ -247,6 +264,11 @@ function executeScenario2_RollbackEviction(db, mathId) {
     const items = db.PackageItem.where({ package_id: generatedPackageId });
     if (items.length > 0) {
       throw new Error("Rollback failed: Child PackageItems were not evicted from sheet.");
+    }
+
+    const perks = db.PackagePerk.where({ package_id: generatedPackageId });
+    if (perks.length > 0) {
+      throw new Error("Rollback failed: Child PackagePerks were not evicted from sheet.");
     }
 
     console.log("   ✅ Success! Rollback evicted all partial records from physical sheets cleanly.");
