@@ -17,7 +17,36 @@ database_template/**
 
 # Ignore the entire apitest directory
 apitest/**
+
+!apitest/ApiTestHelper.js
+!apitest/ApiCallTest.js
+!apitest/DevBootstrap_ApiTest.js
+!apitest/utils.js
+!apitest/PackageCreate_ApiTest.js
 NodeTest/**
 
 # Ignore all files in the Test folder by default
-Test/**
+Test/*
+
+# BUT explicitly allow our focused test suites
+!Test/TestHelper.js
+!Test/TestMockData.js
+!Test/TestMockHelper.js
+!Test/Schema_HeaderVerificationTests.js
+; !Test/Staff_SalaryCalculationTests.js
+; !Test/TeacherPaymentTransactionTests.js
+; !Test/TeacherSalaryConfigIntegrationTests.js
+; !Test/db_test.js
+; !Test/SecureBootstrapTests.js
+; !Test/TestTeacherSubject_Transaction.js
+; !Test/OnboardTeacherTests.js
+; !Test/UserSecureCrudTests.js
+; !Test/Attendance_TimezoneDiagnosticTests.js
+; !Test/Attendance_TimezoneIntegrationTests.js
+; !Test/Teacher_AttendanceDateQueryTests.js
+!Test/QueryEngine_AttendanceTests.js
+!apitest/Core_GenericCrud_ApiTest.js
+!Test/SyncPromiseTests.js
+!Test/Schema_RobustnessRealignmentTests.js
+!Test/AtomicPipelineTests.js
+!Test/Academic_PackageTransactionTests.js

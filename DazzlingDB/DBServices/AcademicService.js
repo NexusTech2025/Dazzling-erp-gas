@@ -82,192 +82,143 @@ const AcademicService = {
    * Orchestrates the creation of a Package with nested courses and perks.
    * Leverages transactional loops and defensive polymorphic normalization.
    */
+  /**
+   * Orchestrate bulk creation of a Package along with its perks and courses/subjects.
+   * Uses optimized batch inserts and ValidationEngine pipelines.
+   * @param {Object} payload - The input data containing package metadata, perks, and courses.
+   * @param {Object} context - Execution request context.
+   * @returns {Object} The compiled presentation envelope of the newly created Package.
+   * @throws {SheetDB.ValidationError} Form validation or schema compliance failure.
+   */
   createPackage(payload, context) {
     const db = DBContext.getInstance();
-    console.log(`[AcademicService] Orchestrating Bulk Package: ${payload.name}`);
+    console.log(`[AcademicService] Orchestrating Bulk Package Creation: ${payload.name}`);
 
-    const tx = new TransactionTracker();
+    // 1. DECOUPLED PRE-FLIGHT VALIDATION
+    const validationStart = Date.now();
+    const ctx = new ValidationContext(db, null, payload);
+    ValidationEngine.run(ctx, globalThis.PackageRegistrationRules || PackageRegistrationRules);
 
-    // 1. Insert Core Package
-    const coreFields = ["name", "description", "target_class", "board", "month", "package_fee", "discount_percent", "status"];
-    const packageData = {};
-    coreFields.forEach(f => {
-      if (payload[f] !== undefined) packageData[f] = payload[f];
-    });
-    
-    const newPackage = db.Package.insert(packageData);
-    const packageId = newPackage.package_id;
-    tx.trackInsert(db.Package, packageId);
-    this._trackMutation(context, "Package");
+    if (!ctx.isValid()) {
+      throw new SheetDB.ValidationError("Pre-flight validation failed for Package creation.", {
+        fields: ctx.errors
+      });
+    }
+    const validationTime = Date.now() - validationStart;
 
-    const self = this;
+    const serviceStart = Date.now();
+    const pipeCtx = new SheetDB.PipelineContext(context);
 
-    try {
-      // 2. Resolve Perks (Custom array or presets based on target_class)
-      let perksToInsert = payload.perks;
-      if (!perksToInsert || !Array.isArray(perksToInsert) || perksToInsert.length === 0) {
-        const targetClass = String(payload.target_class || "").toLowerCase();
-        if (targetClass.includes("11") || targetClass.includes("12") || targetClass.includes("senior")) {
-          perksToInsert = [
-            { perk_title: "Free Basic Computer Course with new admission", icon: "computer" },
-            { perk_title: "Daily Practice Papers (DPP)", icon: "file_copy" },
-            { perk_title: "Regular Assignments and Study Materials", icon: "book" },
-            { perk_title: "Monthly Parent-Teacher Meetings", icon: "people" },
-            { perk_title: "Dedicated Student Monitoring Mobile Application", icon: "smartphone" },
-            { perk_title: "Note: Package Excludes Hindi & English", icon: "info" }
-          ];
-        } else {
-          perksToInsert = [
-            { perk_title: "Daily Practice Papers (DPP)", icon: "file_copy" },
-            { perk_title: "Regular Assignments and Study Materials", icon: "book" },
-            { perk_title: "Monthly Parent-Teacher Meetings", icon: "people" },
-            { perk_title: "Online & Offline learning resources", icon: "language" },
-            { perk_title: "Dedicated Student Monitoring Mobile Application", icon: "smartphone" }
-          ];
+    const result = SheetDB.AtomicPipeline.begin(db, pipeCtx)
+      .addStep("Package", (repo, state) => {
+        console.log(`[AcademicService] [createPackage] Step: Package | Started.`);
+        const coreFields = ["name", "description", "target_class", "board", "month", "package_fee", "discount_percent", "status"];
+        const packageData = {};
+        coreFields.forEach(f => {
+          if (payload[f] !== undefined) packageData[f] = payload[f];
+        });
+
+        state.newPackage = repo.insert(packageData);
+        state.packageId = state.newPackage.package_id;
+        console.log(`[AcademicService] [createPackage] Step: Package | Inserted Package ID: ${state.packageId}`);
+        if (db._pkCache) {
+          console.log(`[AcademicService] [createPackage] Step: Package | PKCache contains packageId?`, db._pkCache.get("Package").has(state.packageId));
         }
-      }
-
-      perksToInsert.forEach((perk, index) => {
-        const newPerk = db.PackagePerk.insert({
-          package_id: packageId,
+      })
+      .addStep("PackagePerk", (repo, state) => {
+        console.log(`[AcademicService] [createPackage] Step: PackagePerk | Started.`);
+        const perksToInsert = payload.perks || [];
+        const perksData = perksToInsert.map((perk, index) => ({
+          package_id: state.packageId,
           perk_title: perk.perk_title,
           perk_description: perk.perk_description || "",
           icon: perk.icon || "star",
           display_order: perk.display_order || (index + 1)
-        });
-        tx.trackInsert(db.PackagePerk, newPerk.perk_id);
-        self._trackMutation(context, "PackagePerk");
-      });
+        }));
 
-      // 3. Insert Polymorphic Courses/Subjects (Supports On-Demand Course creation and Normalization)
-      if (payload.courses && Array.isArray(payload.courses)) {
-        // Rule-05: Pre-fetch segments and courses to prevent N+1 spreadsheet reads
-        const allSegments = db.CourseType.all();
-        const segmentMap = {};
-        allSegments.forEach(s => {
-          segmentMap[s.segment_id] = s;
-          if (s.segment_name) {
-            segmentMap["name_" + s.segment_name.toLowerCase().trim()] = s;
-          }
-        });
-        const activeSegment = allSegments.find(s => s.status === "active") || allSegments[0];
+        console.log(`[AcademicService] [createPackage] Step: PackagePerk | Perks to insert count: ${perksData.length}`);
+        if (perksData.length > 0) {
+          repo.insertMany(perksData);
+        }
+      })
+      .addStep("Course", (repo, state) => {
+        console.log(`[AcademicService] [createPackage] Step: Course | Started.`);
+        state.onDemandPayloads = [];
+        state.packageItemPrep = [];
 
-        const existingCourses = db.Course.all();
-        const courseMap = {};
-        existingCourses.forEach(c => {
-          courseMap[c.course_id] = c;
-          if (c.short_code) {
-            courseMap["code_" + c.short_code.toLowerCase().trim()] = c;
-          }
-        });
+        if (payload.courses && Array.isArray(payload.courses)) {
+          payload.courses.forEach((item, index) => {
+            const normalizedType = typeof item.entity_type === "string"
+              ? item.entity_type.toLowerCase().trim()
+              : item.entity_type;
 
-        payload.courses.forEach(item => {
-          const normalizedType = typeof item.entity_type === "string"
-            ? item.entity_type.toLowerCase().trim()
-            : item.entity_type;
-
-          if (normalizedType !== "course" && normalizedType !== "subject") {
-            const err = new SheetDB.ValidationError(`Validation failed for PackageItem: entity_type '${item.entity_type}' must be one of course, subject.`);
-            err.errorCode = "INVALID_ENTITY_TYPE";
-            throw err;
-          }
-
-          let courseId = item.entity_id;
-
-          if (item.on_demand === true) {
-            let segmentId = item.segment_id;
-            if (!segmentId) {
-              if (item.segment_name) {
-                const ct = segmentMap["name_" + item.segment_name.toLowerCase().trim()];
-                if (ct) segmentId = ct.segment_id;
-              }
-              if (!segmentId && activeSegment) {
-                segmentId = activeSegment.segment_id;
-              }
-            }
-
-            if (!segmentId) {
-              const err = new SheetDB.ValidationError("Could not resolve segment for on-demand course creation. Please provide a valid 'segment_id' or 'segment_name'.");
-              err.errorCode = "SEGMENT_RESOLUTION_FAILED";
-              throw err;
-            }
-
-            // Verify segment exists
-            const segment = segmentMap[segmentId];
-            if (!segment) {
-              const err = new SheetDB.EntityNotFoundError("CourseType", segmentId, "Academic");
-              err.errorCode = "SEGMENT_NOT_FOUND";
-              throw err;
-            }
-
-            if (item.short_code) {
-              const existingCourseCode = courseMap["code_" + item.short_code.toLowerCase().trim()];
-              if (existingCourseCode) {
-                const err = new SheetDB.ConflictError(`Failed to save Course: Unique constraint violation on column 'short_code' (value '${item.short_code}' already exists).`);
-                err.errorCode = "DUPLICATE_SHORT_CODE";
-                throw err;
-              }
-            }
-
-            try {
-              const newCourse = db.Course.insert({
-                segment_id: segmentId,
-                entity_type: normalizedType,
-                name: item.name,
-                short_code: item.short_code,
-                language_medium: item.language_medium || "English",
-                duration_value: item.duration_value,
-                duration_unit: item.duration_unit || "months",
-                base_fee: item.base_fee,
-                status: item.status || "active"
+            if (item.on_demand === true) {
+              state.onDemandPayloads.push({
+                index,
+                normalizedType,
+                data: {
+                  segment_id: item._resolvedSegmentId,
+                  entity_type: normalizedType,
+                  name: item.name,
+                  short_code: item.short_code,
+                  language_medium: item.language_medium || "English",
+                  duration_value: item.duration_value,
+                  duration_unit: item.duration_unit || "months",
+                  base_fee: item.base_fee,
+                  status: item.status || "active"
+                }
               });
-              courseId = newCourse.course_id;
-              tx.trackInsert(db.Course, courseId);
-              self._trackMutation(context, "Course");
-              
-              courseMap[courseId] = newCourse;
-              if (item.short_code) {
-                courseMap["code_" + item.short_code.toLowerCase().trim()] = newCourse;
-              }
-            } catch (courseErr) {
-              if (courseErr.message && courseErr.message.includes("Unique constraint violation")) {
-                courseErr.errorCode = "DUPLICATE_SHORT_CODE";
-              } else if (!courseErr.errorCode) {
-                courseErr.errorCode = "COURSE_VALIDATION_FAILED";
-              }
-              throw courseErr;
+            } else {
+              state.packageItemPrep.push({
+                package_id: state.packageId,
+                entity_type: normalizedType,
+                entity_id: item.entity_id
+              });
             }
-          } else {
-            if (!courseId) {
-              const err = new SheetDB.ValidationError("Course registration requires either 'entity_id' or 'on_demand: true'.");
-              err.errorCode = "REFERENCED_COURSE_NOT_FOUND";
-              throw err;
-            }
-            const existing = courseMap[courseId];
-            if (!existing) {
-              const err = new SheetDB.ValidationError(`Referenced course ID '${courseId}' does not exist.`);
-              err.errorCode = "REFERENCED_COURSE_NOT_FOUND";
-              throw err;
-            }
-          }
-
-          const newItem = db.PackageItem.insert({
-            package_id: packageId,
-            entity_type: normalizedType,
-            entity_id: courseId
           });
-          tx.trackInsert(db.PackageItem, newItem.item_id);
-          self._trackMutation(context, "PackageItem");
-        });
-      }
 
-      return newPackage.toJSON();
+          console.log(`[AcademicService] [createPackage] Step: Course | On-Demand courses to insert count: ${state.onDemandPayloads.length}`);
+          if (state.onDemandPayloads.length > 0) {
+            const coursesToInsert = state.onDemandPayloads.map(op => op.data);
+            const insertedCourses = repo.insertMany(coursesToInsert);
 
-    } catch (error) {
-      console.error(`[AcademicService] Bulk creation failed, rolling back: ${error.message}`);
-      tx.rollback();
-      throw error;
-    }
+            // Map inserted on-demand course IDs back into PackageItem records
+            state.onDemandPayloads.forEach((op, idx) => {
+              const newCourse = insertedCourses[idx];
+              state.packageItemPrep.push({
+                package_id: state.packageId,
+                entity_type: op.normalizedType,
+                entity_id: newCourse.course_id
+              });
+            });
+          }
+        }
+        console.log(`[AcademicService] [createPackage] Step: Course | packageItemPrep count: ${state.packageItemPrep.length}`);
+      })
+      .addStep("PackageItem", (repo, state) => {
+        console.log(`[AcademicService] [createPackage] Step: PackageItem | Started.`);
+        console.log(`[AcademicService] [createPackage] Step: PackageItem | packageItemPrep:`, JSON.stringify(state.packageItemPrep));
+        if (db._pkCache) {
+          console.log(`[AcademicService] [createPackage] Step: PackageItem | PKCache contains packageId?`, db._pkCache.get("Package").has(state.packageId));
+        }
+        if (state.packageItemPrep && state.packageItemPrep.length > 0) {
+          repo.insertMany(state.packageItemPrep);
+        }
+      })
+      .execute(state => state.newPackage.toJSON());
+
+    // Timing and Performance Logging Assertions (Rule N5)
+    const serviceTime = Date.now() - serviceStart;
+    const totalTime = Date.now() - validationStart;
+    console.log(`
+[AcademicService] createPackage execution complete:
+| Stage               | Duration |
+|---------------------|----------|
+| Validation (RAM)    | ${validationTime}ms |
+| Database Insertion  | ${serviceTime}ms |
+| Total Execution     | ${totalTime}ms |
+`);
+    return result;
   },
 
   /**
@@ -282,75 +233,64 @@ const AcademicService = {
     const existingPackage = db.Package.findById(packageId);
     if (!existingPackage) throw new SheetDB.EntityNotFoundError("Package", packageId, "Academic");
 
-    const tx = new TransactionTracker();
-    const self = this;
+    const pipeCtx = new SheetDB.PipelineContext(context);
 
-    try {
-      // A. Update Core Package Attributes
-      const coreFields = ["name", "description", "target_class", "board", "month", "package_fee", "discount_percent", "status"];
-      const updateData = {};
-      coreFields.forEach(f => {
-        if (payload[f] !== undefined) updateData[f] = payload[f];
-      });
-      
-      const backupPackageState = { ...existingPackage };
-      db.Package.update(packageId, updateData);
-      tx.trackUpdate(db.Package, packageId, backupPackageState);
-      this._trackMutation(context, "Package");
-
-      // B. Update Polymorphic Courses (PackageItem Sync via clean rewrite & normalization)
-      if (payload.courses !== undefined) {
-        const backupItems = db.PackageItem.where({ package_id: packageId });
-        tx.trackSync(db.PackageItem, { package_id: packageId }, backupItems);
-
-        backupItems.forEach(item => db.PackageItem.remove(item.item_id));
-
-        payload.courses.forEach(item => {
-          const normalizedType = typeof item.entity_type === "string"
-            ? item.entity_type.toLowerCase().trim()
-            : item.entity_type;
-
-          db.PackageItem.insert({
-            package_id: packageId,
-            entity_type: normalizedType,
-            entity_id: item.entity_id
-          });
-          self._trackMutation(context, "PackageItem");
+    SheetDB.AtomicPipeline.begin(db, pipeCtx)
+      .addStep("Package", (repo, state) => {
+        const coreFields = ["name", "description", "target_class", "board", "month", "package_fee", "discount_percent", "status"];
+        const updateData = {};
+        coreFields.forEach(f => {
+          if (payload[f] !== undefined) updateData[f] = payload[f];
         });
-      }
 
-      // C. Update Package Perks (PackagePerk Sync via clean rewrite)
-      if (payload.perks !== undefined) {
-        const backupPerks = db.PackagePerk.where({ package_id: packageId });
-        tx.trackSync(db.PackagePerk, { package_id: packageId }, backupPerks);
+        repo.update(packageId, updateData);
+      })
+      .addStep("PackageItem", (repo, state) => {
+        if (payload.courses !== undefined) {
+          const existingItems = repo.where({ package_id: packageId });
+          if (existingItems.length > 0) {
+            repo.deleteMany(existingItems.map(item => item.item_id));
+          }
 
-        backupPerks.forEach(perk => db.PackagePerk.remove(perk.perk_id));
+          const itemsToInsert = payload.courses.map(item => {
+            const normalizedType = typeof item.entity_type === "string"
+              ? item.entity_type.toLowerCase().trim()
+              : item.entity_type;
+            return {
+              package_id: packageId,
+              entity_type: normalizedType,
+              entity_id: item.entity_id
+            };
+          });
 
-        payload.perks.forEach((perk, index) => {
-          db.PackagePerk.insert({
+          if (itemsToInsert.length > 0) {
+            repo.insertMany(itemsToInsert);
+          }
+        }
+      })
+      .addStep("PackagePerk", (repo, state) => {
+        if (payload.perks !== undefined) {
+          const existingPerks = repo.where({ package_id: packageId });
+          if (existingPerks.length > 0) {
+            repo.deleteMany(existingPerks.map(perk => perk.perk_id));
+          }
+
+          const perksToInsert = payload.perks.map((perk, index) => ({
             package_id: packageId,
             perk_title: perk.perk_title,
             perk_description: perk.perk_description || "",
             icon: perk.icon || "star",
             display_order: perk.display_order || (index + 1)
-          });
-          self._trackMutation(context, "PackagePerk");
-        });
-      }
+          }));
 
-      return { success: true, message: `Package '${packageId}' successfully updated.` };
+          if (perksToInsert.length > 0) {
+            repo.insertMany(perksToInsert);
+          }
+        }
+      })
+      .execute();
 
-    } catch (error) {
-      console.error(`[AcademicService] updatePackage failed for Package '${packageId}': ${error.message}`, error);
-      console.warn(`[AcademicService] Initiating database transaction rollback...`);
-      try {
-        tx.rollback();
-        console.log(`[AcademicService] Rollback completed successfully.`);
-      } catch (rollbackError) {
-        console.error(`[AcademicService] CRITICAL: Transaction rollback failed! Details: ${rollbackError.message}`, rollbackError);
-      }
-      throw error;
-    }
+    return { success: true, message: `Package '${packageId}' successfully updated.` };
   },
 
   /**
@@ -379,47 +319,29 @@ const AcademicService = {
       });
     }
 
-    const tx = new TransactionTracker();
-    const self = this;
+    const itemIds = db.PackageItem.where({ package_id: packageId }).map(i => i.item_id);
+    const perkIds = db.PackagePerk.where({ package_id: packageId }).map(p => p.perk_id);
 
-    try {
-      // 2. Fetch all child elements to track for rollback
-      const items = db.PackageItem.where({ package_id: packageId });
-      const perks = db.PackagePerk.where({ package_id: packageId });
+    const pipeCtx = new SheetDB.PipelineContext(context);
 
-      // 3. Cascade delete PackageItems
-      items.forEach(item => {
-        db.PackageItem.remove(item.item_id);
-        tx.trackDelete(db.PackageItem, item);
-        self._trackMutation(context, "PackageItem");
-      });
+    SheetDB.AtomicPipeline.begin(db, pipeCtx)
+      .addStep("PackageItem", (repo, state) => {
+        if (itemIds.length > 0) {
+          repo.deleteMany(itemIds);
+        }
+      })
+      .addStep("PackagePerk", (repo, state) => {
+        if (perkIds.length > 0) {
+          repo.deleteMany(perkIds);
+        }
+      })
+      .addStep("Package", (repo, state) => {
+        repo.remove(packageId);
+      })
+      .execute();
 
-      // 4. Cascade delete PackagePerks
-      perks.forEach(perk => {
-        db.PackagePerk.remove(perk.perk_id);
-        tx.trackDelete(db.PackagePerk, perk);
-        self._trackMutation(context, "PackagePerk");
-      });
-
-      // 5. Delete core Package record
-      db.Package.remove(packageId);
-      tx.trackDelete(db.Package, existingPackage);
-      this._trackMutation(context, "Package");
-
-      console.log(`[AcademicService] Package '${packageId}' and all related perks/items deleted successfully.`);
-      return { success: true, message: `Package '${packageId}' successfully deleted.` };
-
-    } catch (error) {
-      console.error(`[AcademicService] deletePackage failed for Package '${packageId}': ${error.message}`, error);
-      console.warn(`[AcademicService] Initiating database transaction rollback...`);
-      try {
-        tx.rollback();
-        console.log(`[AcademicService] Rollback completed successfully.`);
-      } catch (rollbackError) {
-        console.error(`[AcademicService] CRITICAL: Transaction rollback failed! Details: ${rollbackError.message}`, rollbackError);
-      }
-      throw error;
-    }
+    console.log(`[AcademicService] Package '${packageId}' and all related perks/items deleted successfully.`);
+    return { success: true, message: `Package '${packageId}' successfully deleted.` };
   },
 
   /**
