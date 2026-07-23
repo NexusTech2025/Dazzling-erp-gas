@@ -1700,3 +1700,192 @@ class GetAccountingDataAction extends BaseAction {
 
 globalThis.GetAccountingDataAction = GetAccountingDataAction;
 
+/**
+ * Finance Domain: Record Student Payment Transaction
+ * 
+ * Orchestrates an atomic 3-step payment processing pipeline across Payment, Installment, 
+ * and StudentFeeAccount entities leveraging SheetDB.AtomicPipeline for fail-safe transactions.
+ */
+class RecordPaymentAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
+
+  /**
+   * Pre-flight input validation step.
+   * Manually selects specific validation rules from globalThis.PaymentValidationRules object mapping
+   * and executes them via ValidationEngine before transaction initialization.
+   */
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    
+    // Pick required payment validation rules manually from global object mapping
+    const rules = [
+      globalThis.PaymentValidationRules.payment_amount_positive,
+      globalThis.PaymentValidationRules.payment_method_enum_valid,
+      globalThis.PaymentValidationRules.payment_date_format_valid,
+      globalThis.PaymentValidationRules.payment_references_required
+    ];
+
+    const valCtx = new ValidationContext(DBContext.getInstance(), p.installment_id, p);
+    ValidationEngine.run(valCtx, rules);
+    if (!valCtx.isValid()) {
+      throw new ActionValidationError(`Validation failed: ${valCtx.errors.map(e => e.message).join("; ")}`);
+    }
+  }
+
+  /**
+   * Executes the atomic 3-step student fee payment pipeline using SheetDB.AtomicPipeline.
+   * 
+   * STEP 1: PAYMENT RECEIPT CREATION
+   * - Inserts a new Payment record into the Payment table (PAY-xxx) logging the transaction receipt,
+   *   payment method, amount, reference code, and sanitized payment timestamp.
+   * 
+   * STEP 2: INSTALLMENT SCHEDULE REBALANCE
+   * - Fetches the target Installment row (INS-xxx), calculates the new cumulative paid amount,
+   *   and evaluates the updated status ('partially_paid' if balance remains, or 'paid' if fully settled).
+   * 
+   * STEP 3: MASTER FEE ACCOUNT REBALANCE
+   * - Fetches the parent StudentFeeAccount row (SFA-xxx), increments total amount_paid,
+   *   decrements balance_due (bounded to minimum 0), and updates overall status ('completed' if 0 balance, else 'active').
+   * 
+   * @param {Object} requestContext - Execution request context supplied by ApiDispatcher.
+   * @returns {Object} Compiled transaction summary presentation payload.
+   */
+  handle(requestContext) {
+    const payload = requestContext.params.payload;
+    const db = requestContext.db;
+
+    const { student_fee_id, installment_id, amount_paid, payment_method, payment_date, transaction_reference, remarks, created_by } = payload;
+    const paymentAmount = Number(amount_paid);
+
+    // Resolves payment date string safely using DazzlingDateTime to prevent cross-realm and timezone shift issues
+    let safePaymentDate;
+    if (payment_date) {
+      const parsed = typeof DazzlingDateTime !== 'undefined' && DazzlingDateTime.safeParseStringToDate
+        ? DazzlingDateTime.safeParseStringToDate(String(payment_date))
+        : new Date(payment_date);
+      safePaymentDate = (parsed && typeof DazzlingDateTime !== 'undefined' && DazzlingDateTime.toSheetSafeValue)
+        ? DazzlingDateTime.toSheetSafeValue(parsed)
+        : new Date().toISOString();
+    } else {
+      safePaymentDate = (typeof DazzlingDateTime !== 'undefined' && DazzlingDateTime.toSheetSafeValue)
+        ? DazzlingDateTime.toSheetSafeValue(new Date())
+        : new Date().toISOString();
+    }
+
+    const pipeCtx = new SheetDB.PipelineContext(requestContext);
+
+    // Initialize the Atomic Pipeline transaction engine
+    const result = SheetDB.AtomicPipeline.begin(db, pipeCtx)
+      
+      /* =========================================================================
+       * PIPELINE STEP 1: Insert Payment Receipt Row (Table: Payment)
+       * Description: Generates a unique PAY-xxx receipt row capturing payment details,
+       * payment method, transaction reference code, and creation timestamp.
+       * ========================================================================= */
+      .addStep("Payment", (repo, state) => {
+        console.log(`[RecordPaymentAction] Step 1: Creating Payment Receipt row for Fee Account ${student_fee_id}`);
+        const paymentData = {
+          student_fee_id,
+          installment_id,
+          amount_paid: paymentAmount,
+          payment_date: safePaymentDate,
+          payment_method: payment_method || "cash",
+          transaction_reference: transaction_reference || "",
+          status: "success",
+          remarks: remarks || "",
+          created_by: created_by || "System"
+        };
+        state.newPayment = repo.insert(paymentData);
+        console.log(`[RecordPaymentAction] Step 1 complete: Inserted Payment ID ${state.newPayment.payment_id}`);
+      })
+
+      /* =========================================================================
+       * PIPELINE STEP 2: Update Target Installment Schedule (Table: Installment)
+       * Description: Retrieves the target Installment (INS-xxx), increments its
+       * paid_amount by paymentAmount, and recalculates its status enum:
+       * - 'paid': if (newInstPaid >= due_amount)
+       * - 'partially_paid': if (newInstPaid < due_amount)
+       * ========================================================================= */
+      .addStep("Installment", (repo, state) => {
+        console.log(`[RecordPaymentAction] Step 2: Updating Installment ${installment_id}`);
+        const installment = repo.findById(installment_id);
+        if (!installment) {
+          throw new SheetDB.EntityNotFoundError("Installment", installment_id, "Finance");
+        }
+
+        const currentInstPaid = Number(installment.paid_amount || 0);
+        const newInstPaid = currentInstPaid + paymentAmount;
+        const dueAmount = Number(installment.due_amount || 0);
+        const instStatus = newInstPaid >= dueAmount ? "paid" : "partially_paid";
+
+        repo.update(installment_id, {
+          paid_amount: newInstPaid,
+          status: instStatus
+        });
+
+        state.instStatus = instStatus;
+        state.newInstPaid = newInstPaid;
+        console.log(`[RecordPaymentAction] Step 2 complete: Installment ${installment_id} updated. New Paid: ₹${newInstPaid}, Status: '${instStatus}'`);
+      })
+
+      /* =========================================================================
+       * PIPELINE STEP 3: Recalculate Master Fee Account Balances (Table: StudentFeeAccount)
+       * Description: Retrieves the parent StudentFeeAccount (SFA-xxx), increments cumulative
+       * amount_paid by paymentAmount, decrements balance_due (final_fee - amount_paid),
+       * and evaluates overall account status ('completed' if balance == 0, else 'active').
+       * ========================================================================= */
+      .addStep("StudentFeeAccount", (repo, state) => {
+        console.log(`[RecordPaymentAction] Step 3: Updating StudentFeeAccount ${student_fee_id}`);
+        const feeAccount = repo.findById(student_fee_id);
+        if (!feeAccount) {
+          throw new SheetDB.EntityNotFoundError("StudentFeeAccount", student_fee_id, "Finance");
+        }
+
+        const currentAccPaid = Number(feeAccount.amount_paid || 0);
+        const newAccPaid = currentAccPaid + paymentAmount;
+        const finalFee = Number(feeAccount.final_fee || 0);
+        const newBalance = Math.max(0, finalFee - newAccPaid);
+        const accStatus = newBalance === 0 ? "completed" : "active";
+
+        repo.update(student_fee_id, {
+          amount_paid: newAccPaid,
+          balance_due: newBalance,
+          status: accStatus
+        });
+
+        state.newBalance = newBalance;
+        state.newAccPaid = newAccPaid;
+        state.accStatus = accStatus;
+        console.log(`[RecordPaymentAction] Step 3 complete: StudentFeeAccount ${student_fee_id} updated. New Balance: ₹${newBalance}, Account Status: '${accStatus}'`);
+      })
+
+      /* =========================================================================
+       * PIPELINE EXECUTION & PRESENTATION COMPOSITION
+       * Description: Finalizes atomic commit across all 3 steps and returns clean presentation payload.
+       * ========================================================================= */
+      .execute(state => ({
+        success: true,
+        message: "Student payment transaction processed successfully.",
+        data: {
+          payment_id: state.newPayment.payment_id,
+          installment_id,
+          student_fee_id,
+          amount_paid: paymentAmount,
+          balance_due: state.newBalance,
+          installment_status: state.instStatus,
+          account_status: state.accStatus
+        }
+      }));
+
+    // Register mutated tables in request context for framework tracking
+    requestContext.mutationManifest.push("Payment", "Installment", "StudentFeeAccount");
+    return result;
+  }
+}
+
+globalThis.RecordPaymentAction = RecordPaymentAction;
+
+
