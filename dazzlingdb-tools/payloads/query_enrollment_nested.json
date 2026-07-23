@@ -1,0 +1,21 @@
+{
+  "target": "Enrollment",
+  "where": {},
+  "pagination": {
+    "limit": 3,
+    "offset": 0
+  },
+  "include": {
+    "studentfeeaccounts": {
+      "include": {
+        "feeplan": {},
+        "feeadjustments": {},
+        "installments": {
+          "include": [
+            "payments"
+          ]
+        }
+      }
+    }
+  }
+}

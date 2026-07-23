@@ -1,0 +1,43 @@
+[
+  {
+    "name": "CBSE Class 11 PCM Bundle (2026)",
+    "description": "Standard PCM Package for Class 11 CBSE student preparation.",
+    "target_class": "11",
+    "board": "CBSE",
+    "month": 12,
+    "package_fee": 65000,
+    "discount_percent": 15,
+    "status": "active",
+    "perks": [
+      {
+        "perk_title": "Comprehensive Material",
+        "perk_description": "Includes standard textbooks, homework worksheets, and past test archives.",
+        "icon": "book",
+        "display_order": 1
+      },
+      {
+        "perk_title": "Weekly Assessment",
+        "perk_description": "Weekly dynamic exams mapping standard CBSE layouts.",
+        "icon": "star",
+        "display_order": 2
+      }
+    ],
+    "courses": [
+      {
+        "entity_type": "subject",
+        "on_demand": false,
+        "entity_id": "CRS-FB15A55B"
+      },
+      {
+        "entity_type": "subject",
+        "on_demand": false,
+        "entity_id": "CRS-8FD279B7"
+      },
+      {
+        "entity_type": "subject",
+        "on_demand": false,
+        "entity_id": "CRS-79E92F19"
+      }
+    ]
+  }
+]

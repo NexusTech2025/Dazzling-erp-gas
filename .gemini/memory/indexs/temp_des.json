@@ -1,0 +1,78 @@
+{
+  "file": "SheetDB/TableGateway/TableGatway.js",
+  "generated_at": "2026-07-19T09:53:36.678Z",
+  "symbols": {
+    "TableGateway": {
+      "goal": "Represent one sheet as one logical table.",
+      "description": "Acts as the data mapping gateway for a spreadsheet sheet.\nHandles column mapping, type-casting normalization, and physical row operations via the underlying SheetDataSource."
+    },
+    "TableGateway.constructor": {
+      "goal": "Initialize a new TableGateway instance.",
+      "description": "Binds the logical sheet table name, SchemaRegistry, and SheetDataSource.\nPre-loads the primary keys, table category, and schema configurations."
+    },
+    "TableGateway.all": {
+      "goal": "Fetch all records as normalized objects.",
+      "description": "Queries and pulls all active rows from the spreadsheet sheet.\nNormalizes and parses cell types according to the schema registry."
+    },
+    "TableGateway.isTableExist": {
+      "goal": "Check if the table physically exists in the spreadsheet.",
+      "description": "Queries the SheetDataSource to verify if the physical sheet for the table exists.\nAllows repositories to bypass queries on un-provisioned tables."
+    },
+    "TableGateway.find": {
+      "goal": "Find a single record by its primary key.",
+      "description": "Finds and returns a normalized row object matching the primary key.\nUtilizes optimized row lookup filters to bypass table scanning."
+    },
+    "TableGateway.where": {
+      "goal": "Basic equality filtering.",
+      "description": "Filters sheet rows in memory using key-value pair checks.\nEnforces strict comparisons and parses columns to matching schema types."
+    },
+    "TableGateway.findOne": {
+      "goal": "Finds the first record matching the filters.",
+      "description": "Runs matching filters on the sheet rows and yields the first matching row object.\nReturns null if no matching records exist."
+    },
+    "TableGateway.count": {
+      "goal": "Counts records matching the filters.",
+      "description": "Computes the count of sheet rows matching filter criteria in memory.\nFast count validation check."
+    },
+    "TableGateway.insert": {
+      "goal": "Insert a new record.",
+      "description": "Appends a new normalized row into the spreadsheet.\nPerforms data serialization and primary key checks before writing."
+    },
+    "TableGateway.insertBatch": {
+      "goal": "Performs an optimized batch insertion of multiple records.",
+      "description": "Groups multiple records into a single physical batch insert call to SheetDataSource.\nDrastically reduces write time for large transactions."
+    },
+    "TableGateway.update": {
+      "goal": "Update an existing record by ID.",
+      "description": "Updates cell values for a specific row in the spreadsheet sheet.\nLocates row indices and applies changes matching the primary key."
+    },
+    "TableGateway.remove": {
+      "goal": "Physically remove a record by ID.",
+      "description": "Evicts the physical spreadsheet row matching the primary key.\nUpdates row ranges and triggers cache evictions for the table."
+    },
+    "TableGateway.deleteMany": {
+      "goal": "Delete multiple records by their primary keys.",
+      "description": "Evicts multiple spreadsheet rows matching IDs in a single operation.\nMinimizes Apps Script sheet updates using contiguous row deletions where possible."
+    },
+    "TableGateway.updateMany": {
+      "goal": "Batch update multiple records.",
+      "description": "Processes updates for multiple records using a mapping of IDs to data payloads.\nPerforms write calculations and updates the sheet in bulk."
+    },
+    "TableGateway._mapObjectToRow": {
+      "goal": "Maps an object to a 2D row array based on the physical spreadsheet header order.",
+      "description": "Converts an object payload into a raw row array matching the physical sheet header order.\nInserts default values for unprovided fields."
+    },
+    "TableGateway._normalizeRow": {
+      "goal": "Casts raw spreadsheet values to schema-defined types.",
+      "description": "Inspects raw sheet cell arrays and converts them into schema type-cast objects.\nHandles date strings, integers, booleans, and floats."
+    },
+    "TableGateway._castValue": {
+      "goal": "Type casting engine.",
+      "description": "Converts raw string values from cells into javascript equivalents.\nUses isDate() cross-realm utility for date checking."
+    },
+    "TableGateway._prepareForWrite": {
+      "goal": "Pre-write serialization.",
+      "description": "Serializes javascript values (dates, objects) into storage-friendly formats.\nEnsures compatibility with Google Sheets cell storage."
+    }
+  }
+}
