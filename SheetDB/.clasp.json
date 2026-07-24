@@ -12,9 +12,12 @@
     ".json"
   ],
   "filePushOrder": [
+    "Config.js",
     "Utils/Utils.js",
     "Utils/SyncPromise.js",
-    "Utils/DateCmp.js"
+    "Utils/DateCmp.js",
+    "DataSource/RequestHeaderCache.js",
+    "DataSource/DataSource.js"
   ],
   "skipSubdirectories": false
 }

@@ -49,4 +49,5 @@ Test/*
 !Test/Schema_RobustnessRealignmentTests.js
 !Test/Academic_PackageTransactionTests.js
 !Test/HeaderSync_DiagnosticSuite.js
+!Test/HeaderSync_DynamicTableTestSuite.js
 
