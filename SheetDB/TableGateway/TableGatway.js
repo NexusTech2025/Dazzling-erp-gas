@@ -366,30 +366,12 @@ class TableGateway {
 /**
  * Evicts stale caches and re-reads headers directly from Google Sheets when columns are missing.
  * @param {Object} gateway - The TableGateway instance.
- * @param {Array<string>} physicalHeaders - Current physical headers list.
  * @returns {Array<string>} Re-fetched clean physical headers list.
  */
-function handleMissingPhysicalHeaders(gateway, physicalHeaders) {
-  console.warn(`[TableGateway] Stale headers cache detected for '${gateway.tableName}'. Purging and re-fetching...`);
-  if (typeof CacheService !== 'undefined') {
-    try {
-      const cache = CacheService.getScriptCache();
-      const cachedDataStr = cache.get("dazzling_db_headers_v2");
-      if (cachedDataStr) {
-        const allHeaders = JSON.parse(cachedDataStr);
-        const cacheKey = `${gateway.category}_${gateway.tableName}`;
-        if (allHeaders[cacheKey]) {
-          delete allHeaders[cacheKey];
-          cache.put("dazzling_db_headers_v2", JSON.stringify(allHeaders), 21600);
-        }
-      }
-    } catch (cacheErr) {
-      console.warn(`[TableGateway] CacheService eviction failed: ${cacheErr.message}`);
-    }
-  }
-  if (gateway.db && gateway.db._requestHeadersCache) {
-    const cacheKey = `${gateway.category}_${gateway.tableName}`;
-    delete gateway.db._requestHeadersCache[cacheKey];
+function handleMissingPhysicalHeaders(gateway) {
+  console.warn(`[TableGateway] Stale headers cache detected for '${gateway.tableName}'. Purging RequestCache and re-fetching...`);
+  if (gateway.dataSource && gateway.dataSource.requestHeaderCache) {
+    gateway.dataSource.requestHeaderCache.clear();
   }
   return gateway.dataSource.getHeaders(gateway.category, gateway.tableName);
 }

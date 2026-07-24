@@ -47,3 +47,6 @@ Test/*
 !apitest/Core_GenericCrud_ApiTest.js
 !Test/SyncPromiseTests.js
 !Test/Schema_RobustnessRealignmentTests.js
+!Test/Academic_PackageTransactionTests.js
+!Test/HeaderSync_DiagnosticSuite.js
+
