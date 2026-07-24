@@ -1719,7 +1719,7 @@ class RecordPaymentAction extends BaseAction {
   _validate() {
     this._requireParam("payload");
     const p = this._params.payload;
-    
+
     // Pick required payment validation rules manually from global object mapping
     const rules = [
       globalThis.PaymentValidationRules.payment_amount_positive,
@@ -1739,16 +1739,14 @@ class RecordPaymentAction extends BaseAction {
    * Executes the atomic 3-step student fee payment pipeline using SheetDB.AtomicPipeline.
    * 
    * STEP 1: PAYMENT RECEIPT CREATION
-   * - Inserts a new Payment record into the Payment table (PAY-xxx) logging the transaction receipt,
-   *   payment method, amount, reference code, and sanitized payment timestamp.
+   * - Inserts a new Payment record into the Payment table (PAY-xxx) logging the transaction receipt.
    * 
-   * STEP 2: INSTALLMENT SCHEDULE REBALANCE
-   * - Fetches the target Installment row (INS-xxx), calculates the new cumulative paid amount,
-   *   and evaluates the updated status ('partially_paid' if balance remains, or 'paid' if fully settled).
+   * STEP 2: INSTALLMENT SCHEDULE CASCADING REBALANCE
+   * - Fetches all installments for the account, sorts by sequence, satisfies the target installment,
+   *   and propagates any excess funds down the timeline to subsequent pending installments.
    * 
    * STEP 3: MASTER FEE ACCOUNT REBALANCE
-   * - Fetches the parent StudentFeeAccount row (SFA-xxx), increments total amount_paid,
-   *   decrements balance_due (bounded to minimum 0), and updates overall status ('completed' if 0 balance, else 'active').
+   * - Fetches the parent StudentFeeAccount row (SFA-xxx) and balances global paid vs due metrics.
    * 
    * @param {Object} requestContext - Execution request context supplied by ApiDispatcher.
    * @returns {Object} Compiled transaction summary presentation payload.
@@ -1779,11 +1777,9 @@ class RecordPaymentAction extends BaseAction {
 
     // Initialize the Atomic Pipeline transaction engine
     const result = SheetDB.AtomicPipeline.begin(db, pipeCtx)
-      
+
       /* =========================================================================
        * PIPELINE STEP 1: Insert Payment Receipt Row (Table: Payment)
-       * Description: Generates a unique PAY-xxx receipt row capturing payment details,
-       * payment method, transaction reference code, and creation timestamp.
        * ========================================================================= */
       .addStep("Payment", (repo, state) => {
         console.log(`[RecordPaymentAction] Step 1: Creating Payment Receipt row for Fee Account ${student_fee_id}`);
@@ -1792,7 +1788,7 @@ class RecordPaymentAction extends BaseAction {
           installment_id,
           amount_paid: paymentAmount,
           payment_date: safePaymentDate,
-          payment_method: payment_method || "cash",
+          payment_method: payment_method || "upi",
           transaction_reference: transaction_reference || "",
           status: "success",
           remarks: remarks || "",
@@ -1803,39 +1799,89 @@ class RecordPaymentAction extends BaseAction {
       })
 
       /* =========================================================================
-       * PIPELINE STEP 2: Update Target Installment Schedule (Table: Installment)
-       * Description: Retrieves the target Installment (INS-xxx), increments its
-       * paid_amount by paymentAmount, and recalculates its status enum:
-       * - 'paid': if (newInstPaid >= due_amount)
-       * - 'partially_paid': if (newInstPaid < due_amount)
+       * PIPELINE STEP 2: Update Target & Cascading Installments (Table: Installment)
+       * Description: Sells down the balance sequentially across installments.
        * ========================================================================= */
       .addStep("Installment", (repo, state) => {
-        console.log(`[RecordPaymentAction] Step 2: Updating Installment ${installment_id}`);
-        const installment = repo.findById(installment_id);
-        if (!installment) {
+        console.log(`[RecordPaymentAction] Step 2: Processing allocation for Installment ${installment_id}`);
+
+        const targetInstallment = repo.findById(installment_id);
+        if (!targetInstallment) {
           throw new SheetDB.EntityNotFoundError("Installment", installment_id, "Finance");
         }
 
-        const currentInstPaid = Number(installment.paid_amount || 0);
-        const newInstPaid = currentInstPaid + paymentAmount;
-        const dueAmount = Number(installment.due_amount || 0);
-        const instStatus = newInstPaid >= dueAmount ? "paid" : "partially_paid";
+        // 1. Fetch all installments for this student fee account safely
+        let allInstallments = [];
+        if (typeof repo.where === 'function') {
+          allInstallments = repo.where({ student_fee_id });
+        } else if (typeof repo.findAll === 'function') {
+          allInstallments = repo.findAll().filter(i => i.student_fee_id === student_fee_id);
+        } else {
+          allInstallments = [targetInstallment];
+        }
 
+        // Sort sequentially by installment number
+        allInstallments.sort((a, b) => Number(a.installment_number || 0) - Number(b.installment_number || 0));
+
+        let balanceToAllocate = paymentAmount;
+
+        // 2. Determine target installment's capacity to absorb funds
+        const targetCurrentPaid = Number(targetInstallment.paid_amount || 0);
+        const targetDue = Number(targetInstallment.due_amount || 0);
+        const targetRemaining = Math.max(0, targetDue - targetCurrentPaid);
+
+        let targetAllocation = Math.min(balanceToAllocate, targetRemaining);
+        let targetNewPaid = targetCurrentPaid + targetAllocation;
+        balanceToAllocate -= targetAllocation;
+
+        // 3. Propagate remaining excess balance to subsequent installments
+        if (balanceToAllocate > 0) {
+          const targetNum = Number(targetInstallment.installment_number || 0);
+
+          for (const inst of allInstallments) {
+            if (Number(inst.installment_number || 0) > targetNum) {
+              if (balanceToAllocate <= 0) break;
+
+              const instCurrentPaid = Number(inst.paid_amount || 0);
+              const instDue = Number(inst.due_amount || 0);
+              const instRemaining = Math.max(0, instDue - instCurrentPaid);
+
+              if (instRemaining > 0) {
+                const alloc = Math.min(balanceToAllocate, instRemaining);
+                const newPaid = instCurrentPaid + alloc;
+                const status = newPaid >= instDue ? "paid" : "partially_paid";
+
+                repo.update(inst.installment_id, {
+                  paid_amount: newPaid,
+                  status: status
+                });
+
+                balanceToAllocate -= alloc;
+                console.log(`[RecordPaymentAction] Rolled over ₹${alloc} to Installment ${inst.installment_id}. New Paid: ₹${newPaid}, Status: '${status}'`);
+              }
+            }
+          }
+        }
+
+        // 4. If an ultimate excess remains after completely satisfying all downstream obligations,
+        // credit it back to the target installment as an overpayment buffer.
+        if (balanceToAllocate > 0) {
+          targetNewPaid += balanceToAllocate;
+        }
+
+        const targetStatus = targetNewPaid >= targetDue ? "paid" : "partially_paid";
         repo.update(installment_id, {
-          paid_amount: newInstPaid,
-          status: instStatus
+          paid_amount: targetNewPaid,
+          status: targetStatus
         });
 
-        state.instStatus = instStatus;
-        state.newInstPaid = newInstPaid;
-        console.log(`[RecordPaymentAction] Step 2 complete: Installment ${installment_id} updated. New Paid: ₹${newInstPaid}, Status: '${instStatus}'`);
+        state.instStatus = targetStatus;
+        state.newInstPaid = targetNewPaid;
+        console.log(`[RecordPaymentAction] Step 2 complete: Target Installment ${installment_id} resolved. Final Paid: ₹${targetNewPaid}, Status: '${targetStatus}'`);
       })
 
       /* =========================================================================
        * PIPELINE STEP 3: Recalculate Master Fee Account Balances (Table: StudentFeeAccount)
-       * Description: Retrieves the parent StudentFeeAccount (SFA-xxx), increments cumulative
-       * amount_paid by paymentAmount, decrements balance_due (final_fee - amount_paid),
-       * and evaluates overall account status ('completed' if balance == 0, else 'active').
        * ========================================================================= */
       .addStep("StudentFeeAccount", (repo, state) => {
         console.log(`[RecordPaymentAction] Step 3: Updating StudentFeeAccount ${student_fee_id}`);
@@ -1864,7 +1910,6 @@ class RecordPaymentAction extends BaseAction {
 
       /* =========================================================================
        * PIPELINE EXECUTION & PRESENTATION COMPOSITION
-       * Description: Finalizes atomic commit across all 3 steps and returns clean presentation payload.
        * ========================================================================= */
       .execute(state => ({
         success: true,
@@ -1887,5 +1932,4 @@ class RecordPaymentAction extends BaseAction {
 }
 
 globalThis.RecordPaymentAction = RecordPaymentAction;
-
 
