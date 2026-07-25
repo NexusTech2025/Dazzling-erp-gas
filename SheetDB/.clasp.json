@@ -12,12 +12,15 @@
     ".json"
   ],
   "filePushOrder": [
+    "Config.js",
     "Utils/Utils.js",
     "Utils/SyncPromise.js",
     "Utils/DateCmp.js",
     "Transactions/PipelineContext.js",
     "Transactions/TransactionTracker.js",
-    "Transactions/AtomicPipeline.js"
+    "Transactions/AtomicPipeline.js",
+    "DataSource/RequestHeaderCache.js",
+    "DataSource/DataSource.js"
   ],
   "skipSubdirectories": false
 }

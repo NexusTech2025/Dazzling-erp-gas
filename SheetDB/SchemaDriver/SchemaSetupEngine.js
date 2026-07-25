@@ -564,21 +564,18 @@ const HeaderExecutionPolicies = {
   "safe": {
     execute(engine, op, ssCache, result) {
       const ss = engine._getSpreadsheet(op.target.category, ssCache);
-      const { expected, actual } = op.payload;
+      const schemaHeaders = op.payload.expected;
+      const physicalHeaders = op.payload.actual;
       let sheet = ss.getSheetByName(op.target.table);
 
-      const normActual = engine._normalizeHeaders(actual);
-      const isPresent = h => normActual.includes(engine._normalizeHeaders([h])[0]);
+      const normPhysical = engine._normalizeHeaders(physicalHeaders);
+      const isPresent = h => normPhysical.includes(engine._normalizeHeaders([h])[0]);
+      const missingHeaders = schemaHeaders.filter(h => !isPresent(h));
 
-      const expectedHeadersPresent = expected.filter(isPresent);
-      const actualHeadersExpected = actual.filter(h => engine._normalizeHeaders(expected).includes(engine._normalizeHeaders([h])[0]));
-      const missingHeaders = expected.filter(h => !isPresent(h));
-
-      const hasOrderMismatch = !engine._arraysEqual(expectedHeadersPresent, actualHeadersExpected);
-      const hasMissingHeaders = missingHeaders.length > 0;
-
-      if (hasOrderMismatch || hasMissingHeaders) {
-        alignPhysicalWorksheetColumns(engine, sheet, expected, actual, op.target.category, op.target.table, result);
+      // Order differences between schemaHeaders and physicalHeaders are ignored.
+      // Only trigger alignment if headers are physically MISSING from the worksheet.
+      if (missingHeaders.length > 0) {
+        alignPhysicalWorksheetColumns(engine, sheet, schemaHeaders, physicalHeaders, op.target.category, op.target.table, result);
       }
     }
   }
@@ -603,14 +600,14 @@ function alignPhysicalWorksheetColumns(engine, sheet, expected, actual, category
   const rawValues = range.getValues();
 
   if (rawValues.length > 0 && rawValues[0].length > 0) {
-    const actualHeaders = rawValues[0];
+    const actualHeaders = rawValues[0].map(h => String(h).trim());
     const colIndexMap = {};
     actualHeaders.forEach((h, i) => {
-      colIndexMap[String(h).trim()] = i;
+      colIndexMap[h] = i;
     });
 
-    const extraHeaders = actualHeaders.filter(h => !expected.includes(String(h).trim()));
-    const newHeaders = [...expected, ...extraHeaders];
+    const missingInPhysical = expected.filter(h => !actualHeaders.includes(String(h).trim()));
+    const newHeaders = [...actualHeaders, ...missingInPhysical];
 
     // Remap values to new layout in RAM using decoupled helper function
     remapAndOverwriteSheet(sheet, rawValues, newHeaders, colIndexMap);

@@ -15,42 +15,37 @@ class SheetDataSource {
   constructor(fileSystem) {
     this.fs = fileSystem;
     this._cache = {}; // Local instance cache for open spreadsheets
+    this.requestHeaderCache = new RequestHeaderCache(); // Native RequestScope Cache
   }
 
   /**
-   * Clears the internal spreadsheet cache.
-   * Forces the next read to perform a fresh open from Drive.
+   * Clears in-memory spreadsheet instances and request-scoped header cache.
    */
   purgeCache() {
-    this._cache = {}; // Clear in-memory instances
-    CacheService.getScriptCache().remove("dazzling_db_headers_v2"); // Clear cross-execution cache
-    console.log("[SheetDataSource] Master Spreadsheet & Header caches purged.");
+    this._cache = {};
+    this.requestHeaderCache.clear();
+    console.log("[SheetDataSource] Master Spreadsheet & RequestHeaderCache purged.");
   }
 
   /**
-   * Retrieves physical headers, utilizing CacheService for cross-execution performance.
+   * Retrieves physical headers using ONLY RequestScope caching.
+   * Completely bypasses long-term CacheService to eliminate cross-execution stale cache risk.
    * @param {string} categoryName 
    * @param {string} tableName 
+   * @returns {Array<string>}
    */
   getHeaders(categoryName, tableName) {
-    const CACHE_KEY = "dazzling_db_headers_v2";
-    const cache = CacheService.getScriptCache();
-    const cacheKeyForTable = `${categoryName}_${tableName}`;
-    
-    // 1. Try Cache First (Blazing Fast)
-    const cachedDataStr = cache.get(CACHE_KEY);
-    let allHeaders = cachedDataStr ? JSON.parse(cachedDataStr) : {};
-    
-    if (allHeaders[cacheKeyForTable]) {
-      return allHeaders[cacheKeyForTable]; // O(1) Cache Hit!
+    // 1. RequestScope Cache Check (Fast RAM Read - 0 API Calls)
+    if (this.requestHeaderCache.has(categoryName, tableName)) {
+      return this.requestHeaderCache.get(categoryName, tableName);
     }
 
-    // 2. Cache Miss - Physical Read
-    console.log(`[SheetDataSource] Cache Miss: Physically reading headers for ${tableName}`);
+    // 2. RequestCache Miss - Physical Spreadsheet Read (Single Round-Trip per table per request)
+    console.log(`[SheetDataSource] RequestCache Miss: Physically reading headers for ${tableName}`);
     try {
       const ss = this._getSpreadsheet(categoryName);
       const sheet = ss.getSheetByName(tableName);
-      
+
       if (!sheet) throw new Error(`Table '${tableName}' not found in category '${categoryName}'.`);
 
       const lastCol = sheet.getLastColumn();
@@ -59,12 +54,8 @@ class SheetDataSource {
       const rawHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
       const cleanHeaders = rawHeaders.map(h => String(h).trim());
 
-      // 3. Update Cache Payload
-      allHeaders[cacheKeyForTable] = cleanHeaders;
-      
-      // Store for 6 hours (Max allowed by Apps Script). 
-      // Safe because columns rarely change in production.
-      cache.put(CACHE_KEY, JSON.stringify(allHeaders), 21600); 
+      // 3. Store EXCLUSIVELY in RequestHeaderCache (RAM)
+      this.requestHeaderCache.set(categoryName, tableName, cleanHeaders);
 
       return cleanHeaders;
 
@@ -176,7 +167,7 @@ class SheetDataSource {
       const values = sheet.getDataRange().getValues();
       if (values.length < 2) {
         console.log(`[SheetDataSource] Table '${tableName}' is empty or only has headers. Aborting.`);
-        return 0; 
+        return 0;
       }
 
       const headers = values[0];
@@ -204,7 +195,7 @@ class SheetDataSource {
 
       if (deleteCount === 0) {
         console.log(`[SheetDataSource] No matching records found for deletion. Skipping write.`);
-        return 0; 
+        return 0;
       }
 
       // 3. Clear data rows (retaining header in row 1)
@@ -257,7 +248,7 @@ class SheetDataSource {
         if (idsToMatch.has(rowId)) {
           const rowUpdates = updatesMap[rowId];
           const updatedRow = [...row];
-          
+
           // Apply changes to respective column indices
           Object.entries(rowUpdates).forEach(([colName, newVal]) => {
             const colIndex = headers.indexOf(colName);
@@ -265,7 +256,7 @@ class SheetDataSource {
               updatedRow[colIndex] = newVal;
             }
           });
-          
+
           updateCount++;
           return updatedRow;
         }
@@ -279,7 +270,7 @@ class SheetDataSource {
 
       // Overwrite the data range in a single range write (no clearContent required)
       sheet.getRange(2, 1, updatedDataRows.length, headers.length).setValues(updatedDataRows);
-      
+
       console.log(`[SheetDataSource] Batch update complete. Updated ${updateCount} rows.`);
       return updateCount;
     });
@@ -372,7 +363,7 @@ class SheetDataSource {
 
       // 3. Filter requested tables against actual physical worksheets
       const verifiedTables = tables.filter(tableName => physicalSheetTitles.includes(tableName));
-      
+
       if (verifiedTables.length === 0) {
         console.warn(`[SheetDataSource] Zero intersection found between schema criteria and physical sheets for category '${categoryName}'. Skipping REST call.`);
         return;
