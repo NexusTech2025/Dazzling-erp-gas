@@ -27,6 +27,7 @@ apitest/**
 !apitest/Finance_PaymentRecord_ApiTest.js
 !apitest/Finance_StudentRegistrationWithPayment_ApiTest.js
 !apitest/ApiTestSeedHook.js
+!apitest/TestBootstrapController.js
 !apitest/predefined_entities.json
 NodeTest/**
 

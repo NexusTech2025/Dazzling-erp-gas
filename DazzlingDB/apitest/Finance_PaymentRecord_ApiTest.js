@@ -21,17 +21,10 @@ function resetStudentFeeAccount(studentFeeId) {
   const targetFeeId = studentFeeId || "SFA-002002";
   console.log(`\n🔄 [RESET HOOK] Resetting Student Fee Account '${targetFeeId}' & Payment Transactions...`);
 
-  const initialEnv = typeof PropertiesService !== "undefined"
-    ? PropertiesService.getScriptProperties().getProperty("ENV")
-    : "DEVELOPMENT";
+  TestBootstrapController.captureEnvironment();
 
   try {
-    if (typeof PropertiesService !== "undefined") {
-      PropertiesService.getScriptProperties().setProperty("ENV", "TESTING");
-    }
-
-    const db = DBContext.getInstance();
-    db.bootstrapRepositories();
+    const db = TestBootstrapController.ensureBootstrapped({ env: "TESTING" });
 
     // 1. Locate and Delete All Associated Payment Records
     const payments = db.Payment.where({ student_fee_id: targetFeeId });
@@ -60,12 +53,14 @@ function resetStudentFeeAccount(studentFeeId) {
         resetInstallmentCount++;
       });
       console.log(`   └─ Reset ${resetInstallmentCount} Installment record(s) to 'pending' with paid_amount = 0.`);
+    } else {
+      console.warn(`   ⚠️ No Installment records found for '${targetFeeId}'.`);
     }
 
-    // 3. Reset Parent StudentFeeAccount Master Record
-    const feeAcc = db.StudentFeeAccount.findById(targetFeeId);
-    if (feeAcc) {
-      const originalFinalFee = Number(feeAcc.final_fee || feeAcc.total_amount || 0);
+    // 3. Reset Parent StudentFeeAccount Record
+    const feeAccount = db.StudentFeeAccount.findById(targetFeeId);
+    if (feeAccount) {
+      const originalFinalFee = Number(feeAccount.final_fee || 35000);
       db.StudentFeeAccount.update(targetFeeId, {
         amount_paid: 0,
         balance_due: originalFinalFee,
@@ -96,9 +91,7 @@ function resetStudentFeeAccount(studentFeeId) {
     console.error(`❌ [RESET HOOK] Failed to reset StudentFeeAccount '${targetFeeId}': ${err.message}`);
     throw err;
   } finally {
-    if (typeof PropertiesService !== "undefined") {
-      PropertiesService.getScriptProperties().setProperty("ENV", initialEnv);
-    }
+    TestBootstrapController.restoreEnvironment();
   }
 }
 
@@ -113,9 +106,7 @@ const Finance_PaymentRecord_ApiTest = (function () {
     console.log("\n🧪 STARTING FINANCE PAYMENT RECORD API TEST SUITE 🧪\n");
 
     // 1. Preserve Environment State
-    const initialEnv = typeof PropertiesService !== "undefined"
-      ? PropertiesService.getScriptProperties().getProperty("ENV")
-      : "DEVELOPMENT";
+    const initialEnv = TestBootstrapController.captureEnvironment();
 
     const timings = {};
     const stats = { passed: 0, failed: 0, scenarios: [] };
@@ -422,9 +413,7 @@ const Finance_PaymentRecord_Advanced_ApiTest = (function () {
 
     console.log("\n🧪 STARTING ADVANCED FINANCE PAYMENT RECORD API TEST SUITE 🧪\n");
 
-    const initialEnv = typeof PropertiesService !== "undefined"
-      ? PropertiesService.getScriptProperties().getProperty("ENV")
-      : "DEVELOPMENT";
+    TestBootstrapController.captureEnvironment();
 
     const timings = {};
     const stats = { passed: 0, failed: 0, scenarios: [] };
@@ -636,6 +625,57 @@ const Finance_PaymentRecord_Advanced_ApiTest = (function () {
           throw new Error("Validation failed: Non-existent installment_id was unexpectedly allowed.");
         }
         logger.success(`Invalid installment_id blocked correctly: ${parsed2.error ? parsed2.error.message : "Error"}`);
+      });
+
+      // -----------------------------------------------------------------------
+      // Phase 5: Total Overpayment Beyond Account Balance (₹40,000 on ₹35,000 Fee)
+      // -----------------------------------------------------------------------
+      runScenario("Phase 5: Total Overpayment Beyond Account Balance", () => {
+        logger.phase("5: Total Overpayment Beyond Account Balance");
+
+        // 5a. Reset account to clean state
+        resetStudentFeeAccount(targetFeeAccountId);
+
+        // 5b. Submit ₹40,000 payment targeting INS-002001 (total fee is ₹35,000)
+        const payload = {
+          student_fee_id: targetFeeAccountId,
+          installment_id: targetInstallmentId1,
+          amount_paid: 40000,
+          payment_method: "bank_transfer",
+          transaction_reference: `BANK-OVERPAY-${suffix}`,
+          remarks: "Total account overpayment test"
+        };
+
+        const res = callApi("finance_record_payment", payload, token);
+        const resData = (res && res.data) ? res.data : res;
+
+        // Verify API response envelope
+        if (resData.balance_due !== 0) {
+          throw new Error(`Expected balance_due 0, got ${resData.balance_due}`);
+        }
+        if (resData.account_status !== "completed") {
+          throw new Error(`Expected account_status 'completed', got '${resData.account_status}'`);
+        }
+
+        // Verify target installment INS-002001 absorbed its ₹17,500 capacity + ₹5,000 excess buffer (₹22,500)
+        const inst1 = db.Installment.findById(targetInstallmentId1);
+        if (!inst1 || inst1.paid_amount !== 22500 || inst1.status !== "paid") {
+          throw new Error(`Target INS-002001 overpayment credit failed. Paid: ${inst1 ? inst1.paid_amount : null}, Status: ${inst1 ? inst1.status : null}`);
+        }
+
+        // Verify downstream installment INS-002002 was fully paid (₹17,500)
+        const inst2 = db.Installment.findById(targetInstallmentId2);
+        if (!inst2 || inst2.paid_amount !== 17500 || inst2.status !== "paid") {
+          throw new Error(`Downstream INS-002002 full payment failed. Paid: ${inst2 ? inst2.paid_amount : null}, Status: ${inst2 ? inst2.status : null}`);
+        }
+
+        // Verify master fee account metrics (amount_paid = ₹40,000, balance_due = ₹0, status = "completed")
+        const feeAcc = db.StudentFeeAccount.findById(targetFeeAccountId);
+        if (!feeAcc || feeAcc.amount_paid !== 40000 || feeAcc.balance_due !== 0 || feeAcc.status !== "completed") {
+          throw new Error(`Fee account metrics failed assertions. Paid: ${feeAcc ? feeAcc.amount_paid : null}, Balance: ${feeAcc ? feeAcc.balance_due : null}, Status: ${feeAcc ? feeAcc.status : null}`);
+        }
+
+        logger.success(`Total Account Overpayment (₹40,000 on ₹35,000 fee) successful! Both installments paid, INS-002001 credited ₹22,500, Fee Account balance: ₹0, Status: 'completed'.`);
       });
 
       console.log("\n🎉 ADVANCED FINANCE PAYMENT RECORD API TEST COMPLETED SUCCESSFULLY! 🎉\n");

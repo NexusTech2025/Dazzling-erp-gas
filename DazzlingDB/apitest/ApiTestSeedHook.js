@@ -20,24 +20,13 @@ const ApiTestSeedHook = (function () {
    */
   function seed(options = {}) {
     const targetEnv = options.env || "TESTING";
-    const setOverride = options.allowAutoOverride !== false;
 
     console.log(`\n🌱 [ApiTestSeedHook] Initializing Pre-Flight Data Seed (Env: ${targetEnv})...`);
 
-    // 1. Lock Environment Context
-    if (typeof PropertiesService !== "undefined") {
-      PropertiesService.getScriptProperties().setProperty("ENV", targetEnv);
-    }
-    DBContext.getInstance().bootstrapRepositories();
-    const db = DBContext.getInstance();
+    // 1. Lock Environment & Ensure Warm Bootstrapped Singleton
+    const db = TestBootstrapController.ensureBootstrapped(options);
 
-    // 2. Configure Primary Key Override Policy
-    if (setOverride && db._config) {
-      db._config.allowAutoOverride = true;
-      console.log("   ✅ [ApiTestSeedHook] Enabled DBContext._config.allowAutoOverride = true");
-    }
-
-    // 3. Seed Fixed Mock Dataset
+    // 2. Seed Fixed Mock Dataset
     FixedMockData.seedLiveDatabase();
     console.log("   ✅ [ApiTestSeedHook] Fixed Mock Dataset successfully seeded with explicit PK IDs.\n");
 
@@ -56,10 +45,10 @@ const ApiTestSeedHook = (function () {
   function purge(options = {}) {
     console.log("\n🧹 [ApiTestSeedHook] Purging Fixed Mock Dataset...");
     FixedMockData.purgeFromLiveDatabase();
+    TestBootstrapController.invalidate();
 
-    if (options.restoreEnv && typeof PropertiesService !== "undefined") {
-      PropertiesService.getScriptProperties().setProperty("ENV", options.restoreEnv);
-      DBContext.getInstance().bootstrapRepositories();
+    if (options.restoreEnv) {
+      TestBootstrapController.restoreEnvironment(options.restoreEnv);
       console.log(`   ✅ [ApiTestSeedHook] Restored original environment state: ${options.restoreEnv}`);
     }
 
