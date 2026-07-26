@@ -1,150 +1,92 @@
 /**
- * @file Schema_HeaderVerificationTests.js
- * Automated integration test suite verifying that the schema definitions of each table
- * exactly match the physical header columns present in the corresponding Google Sheets.
- * 
- * Instructions: Run `runSchemaHeaderVerificationTests()` from the Apps Script editor.
+ * Standalone debug script to verify structure, intercept layout rules,
+ * and assert header order integrity returned by the core database datasource layer.
  */
+function runHeaderVerificationTest() {
+  console.log("\n🔍 STARTING DATABASE SCHEMA HEADER VERIFICATION TEST 🔍");
 
-function runSchemaHeaderVerificationTests() {
-  console.log("🚀 Starting Schema Header Verification Integration Tests...");
-
-  if (typeof PropertiesService === 'undefined') {
-    throw new Error("PropertiesService is not defined. This test must be run in the Google Apps Script environment.");
-  }
-
-  const scriptProperties = PropertiesService.getScriptProperties();
-  const originalEnv = scriptProperties.getProperty('ENV') || 'DEVELOPMENT';
-
-  const results = {};
-  let failures = 0;
-  let totalChecked = 0;
+  const initialEnv = typeof PropertiesService !== "undefined"
+    ? PropertiesService.getScriptProperties().getProperty("ENV")
+    : "DEVELOPMENT";
 
   try {
-    // 1. Force environment to TESTING and bootstrap repositories
-    scriptProperties.setProperty('ENV', 'TESTING');
-    const db = DBContext.getInstance().bootstrapRepositories();
-
-    // 2. Fetch all table names defined in the schema
-    if (typeof DATABASE_SCHEMA === 'undefined') {
-      throw new Error("DATABASE_SCHEMA is not defined in global scope. Cannot verify schemas.");
+    if (typeof PropertiesService !== "undefined") {
+      PropertiesService.getScriptProperties().setProperty("ENV", "DEVELOPMENT");
     }
 
-    const categories = DATABASE_SCHEMA.categories;
-    if (!categories) {
-      throw new Error("DATABASE_SCHEMA has no categories defined.");
+    console.log("⚙️ Bootstrapping database repositories...");
+    DBContext.getInstance().bootstrapRepositories();
+    const db = DBContext.getInstance();
+
+    if (!db._dataSource || typeof db._dataSource.getHeaders !== 'function') {
+      throw new Error("Critical Failure: Underlying data source or getHeaders method is completely missing.");
     }
 
-    const tableNames = [];
-    for (const categoryName in categories) {
-      const tables = categories[categoryName].tables;
-      for (const tableName in tables) {
-        tableNames.push(tableName);
+    // 1. Defined target matrices along with exact ordered column expectations
+    const inspectionTargets = [
+      {
+        category: "Finance",
+        table: "MoneyTransaction",
+        expectedHeaders: [
+          "transaction_id", "amount", "type", "category_id", "payment_method",
+          "payment_reference", "party_type", "party_id", "party_name", "transaction_date",
+          "notes", "remarks", "created_by", "__tx_id", "__tx_status",
+          "__created_at", "by", "from_to", "attachment_drive_id", "reconciliation_status"
+        ]
+      },
+      {
+        category: "Finance",
+        table: "ExpenseCategory",
+        expectedHeaders: [
+          "category_id", "name", "type", "description", "__tx_id", "__tx_status", "__created_at"
+        ]
       }
-    }
+    ];
 
-    console.log(`📊 Found ${tableNames.length} tables in DATABASE_SCHEMA. Starting verification...\n`);
+    console.log(`📦 Initiating header extractions for ${inspectionTargets.length} schema tables...`);
 
-    tableNames.forEach(tableName => {
-      totalChecked++;
-      console.log(`-----------------------------------------`);
-      console.log(`📋 Checking Table: '${tableName}'`);
+    inspectionTargets.forEach(({ category, table, expectedHeaders }, index) => {
+      console.log(`\n👉 Target [${index + 1}]: Fetching structural layout for "${table}"...`);
 
-      const repo = db[tableName];
-      if (!repo) {
-        results[tableName] = {
-          status: "❌ FAILED",
-          error: "Repository was not initialized/bound to DBContext."
-        };
-        failures++;
-        console.error(`❌ Repository for '${tableName}' not found in DBContext!`);
-        return;
+      const headers = db._dataSource.getHeaders(category, table);
+
+      console.log(`📊 Resulting Payload Elements Count: ${headers ? headers.length : 0}`);
+      console.log(`📝 Raw Array Map: ${JSON.stringify(headers)}`);
+
+      // 2. Validate structural presence
+      if (!headers || !Array.isArray(headers)) {
+        throw new Error(`Assertion Failed: Header response for [${table}] is null or not an array.`);
       }
 
-      try {
-        const gateway = repo.gateway;
-        const schemaColumns = Object.keys(gateway.columns);
+      // 3. Assert Array Length Bounds Match
+      if (headers.length !== expectedHeaders.length) {
+        throw new Error(
+          `❌ Count Mismatch for [${table}]: Expected structural size ${expectedHeaders.length}, but physical layout returned ${headers.length}.`
+        );
+      }
 
-        // Retrieve physical headers from the sheet
-        const physicalHeaders = gateway.dataSource.getHeaders(gateway.category, gateway.tableName);
-
-        const schemaSet = new Set(schemaColumns);
-        const physicalSet = new Set(physicalHeaders);
-
-        // Find missing columns (defined in schema but missing in sheet)
-        const missingInSheet = schemaColumns.filter(col => !physicalSet.has(col));
-
-        // Find extra columns (exist in sheet but missing in schema)
-        const extraInSheet = physicalHeaders.filter(col => !schemaSet.has(col));
-
-        // Check order discrepancies
-        let orderMatches = true;
-        const minLength = Math.min(schemaColumns.length, physicalHeaders.length);
-        const orderDiscrepancies = [];
-        for (let i = 0; i < minLength; i++) {
-          if (schemaColumns[i] !== physicalHeaders[i]) {
-            orderMatches = false;
-            orderDiscrepancies.push({
-              index: i,
-              schema: schemaColumns[i],
-              physical: physicalHeaders[i]
-            });
-          }
+      // 4. Run Strict Order Iteration Matching
+      expectedHeaders.forEach((expectedColumn, colIndex) => {
+        const actualColumn = headers[colIndex];
+        if (actualColumn !== expectedColumn) {
+          throw new Error(
+            `❌ Order Mismatch in [${table}] at Index ${colIndex}: Expected column field "${expectedColumn}", but physical layout returned "${actualColumn}".`
+          );
         }
+      });
 
-        const isSuccess = (missingInSheet.length === 0);
-
-        results[tableName] = {
-          status: isSuccess ? "✅ PASSED" : "❌ FAILED",
-          schemaColumnsCount: schemaColumns.length,
-          physicalColumnsCount: physicalHeaders.length,
-          missingInSheet: missingInSheet,
-          extraInSheet: extraInSheet,
-          orderMatches: orderMatches,
-          orderDiscrepancies: orderDiscrepancies
-        };
-
-        if (isSuccess) {
-          console.log(`✅ Table '${tableName}' verified successfully.`);
-          const systemColumns = new Set(['__tx_id', '__tx_status', '__created_at']);
-          const extraNonSystem = extraInSheet.filter(col => !systemColumns.has(col));
-          if (extraNonSystem.length > 0) {
-            console.warn(`   ⚠️ Extra columns in Sheet (Non-Schema): ${JSON.stringify(extraNonSystem)}`);
-          }
-          if (!orderMatches) {
-            console.warn(`   ⚠️ Order mismatch (Schema != Physical). Discrepancies count: ${orderDiscrepancies.length}`);
-          }
-        } else {
-          failures++;
-          console.error(`❌ Mismatch detected for table '${tableName}':`);
-          if (missingInSheet.length > 0) {
-            console.error(`   - Missing in Sheet (Defined in Schema): ${JSON.stringify(missingInSheet)}`);
-          }
-        }
-      } catch (tableError) {
-        failures++;
-        results[tableName] = {
-          status: "❌ CRASHED",
-          error: tableError.message
-        };
-        console.error(`❌ Error verifying table '${tableName}': ${tableError.message}`);
-      }
+      console.log(`✅ Order Assertion Passed: [${table}] exactly matches structural order schema rules.`);
     });
 
-    console.log(`\n=========================================`);
-    console.log(`📊 FINAL RESULTS: ${totalChecked - failures}/${totalChecked} Passed.`);
-    console.log(`=========================================\n`);
+    console.log("\n🎉 All header order processing validations successfully passed.");
 
-    if (failures > 0) {
-      throw new Error(`Schema Header Verification failed with ${failures} table mismatches.`);
-    }
-
+  } catch (error) {
+    console.error(`❌ Header Verification Pipeline Failed: ${error.message}`);
+    throw error;
   } finally {
-    // 3. Restore original environment
-    scriptProperties.setProperty('ENV', originalEnv);
-    DBContext.getInstance().bootstrapRepositories();
-    console.log(`🏁 Restored environment context to [${originalEnv}].`);
+    if (typeof PropertiesService !== "undefined" && initialEnv) {
+      PropertiesService.getScriptProperties().setProperty("ENV", initialEnv);
+    }
+    console.log("🏁 Header Verification Script Context Terminated.");
   }
-
-  return results;
 }

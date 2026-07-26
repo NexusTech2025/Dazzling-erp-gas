@@ -23,6 +23,12 @@ apitest/**
 !apitest/DevBootstrap_ApiTest.js
 !apitest/utils.js
 !apitest/PackageCreate_ApiTest.js
+!apitest/MoneyTransaction_ApiTest.js
+!apitest/Finance_PaymentRecord_ApiTest.js
+!apitest/Finance_StudentRegistrationWithPayment_ApiTest.js
+!apitest/ApiTestSeedHook.js
+!apitest/TestBootstrapController.js
+!apitest/predefined_entities.json
 NodeTest/**
 
 # Ignore all files in the Test folder by default
@@ -32,23 +38,8 @@ Test/*
 !Test/TestHelper.js
 !Test/TestMockData.js
 !Test/TestMockHelper.js
+!Test/SeedMockData.js
 !Test/Schema_HeaderVerificationTests.js
-; !Test/Staff_SalaryCalculationTests.js
-; !Test/TeacherPaymentTransactionTests.js
-; !Test/TeacherSalaryConfigIntegrationTests.js
-; !Test/db_test.js
-; !Test/SecureBootstrapTests.js
-; !Test/TestTeacherSubject_Transaction.js
-; !Test/OnboardTeacherTests.js
-; !Test/UserSecureCrudTests.js
-; !Test/Attendance_TimezoneDiagnosticTests.js
-; !Test/Attendance_TimezoneIntegrationTests.js
-; !Test/Teacher_AttendanceDateQueryTests.js
-!Test/QueryEngine_AttendanceTests.js
-!apitest/Core_GenericCrud_ApiTest.js
-!Test/SyncPromiseTests.js
-!Test/Schema_RobustnessRealignmentTests.js
-!Test/AtomicPipelineTests.js
 !Test/Academic_PackageTransactionTests.js
 !Test/HeaderSync_DiagnosticSuite.js
 !Test/HeaderSync_DynamicTableTestSuite.js

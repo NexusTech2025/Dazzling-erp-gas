@@ -67,6 +67,8 @@ const ApiDispatcher = (function () {
       "finance_delete_many_installments": DeleteManyInstallmentsAction,
       "finance_delete_many_payments": DeleteManyPaymentsAction,
       "finance_delete_many_adjustments": DeleteManyFeeAdjustmentsAction,
+      "finance_record_payment": RecordPaymentAction,
+      "recordpayment": RecordPaymentAction,
       "staff_delete_many_teachers": DeleteManyTeachersAction,
       "academic_delete_many_course_types": DeleteManyCourseTypeAction,
       "init_erp": InitErpAction

@@ -1,0 +1,66 @@
+{
+  "$schema_version": "1.0.0",
+  "description": "Canonical Registry of Predefined Entities and Relational Graph Connections for DazzlingDB Testing Environment",
+  "masterEntities": {
+    "branches": [
+      { "branch_id": "BRN-MAIN001", "branch_name": "Main Campus Central", "location": "123 Education Hub, Central Avenue, Jaipur", "status": "active" },
+      { "branch_id": "BRN-NORTH02", "branch_name": "North Extension Campus", "location": "45 Academic Square, North Road, Jaipur", "status": "active" }
+    ],
+    "courseTypes": [
+      { "segment_id": "SEG-ACAD001", "segment_name": "Academic Segment", "entity_label": "Academic Course", "status": "active" },
+      { "segment_id": "SEG-COMP002", "segment_name": "Competitive Segment", "entity_label": "Competitive Course", "status": "active" }
+    ],
+    "courses": [
+      { "course_id": "CRS-PHY001", "segment_id": "SEG-ACAD001", "name": "Physics Grade 12", "short_code": "PHY12", "base_fee": 15000, "status": "active" },
+      { "course_id": "CRS-CHE002", "segment_id": "SEG-ACAD001", "name": "Chemistry Grade 12", "short_code": "CHE12", "base_fee": 15000, "status": "active" },
+      { "course_id": "CRS-MAT003", "segment_id": "SEG-COMP002", "name": "Mathematics Advanced Grade 12", "short_code": "MAT12", "base_fee": 18000, "status": "active" }
+    ],
+    "packages": [
+      { "package_id": "PKG-PCM1201", "name": "Grade 12 PCM Complete Bundle", "package_fee": 40000, "discount_percent": 10, "items": ["PKI-001001", "PKI-001002", "PKI-001003"] }
+    ],
+    "packageItems": [
+      { "item_id": "PKI-001001", "package_id": "PKG-PCM1201", "entity_type": "course", "entity_id": "CRS-PHY001" },
+      { "item_id": "PKI-001002", "package_id": "PKG-PCM1201", "entity_type": "course", "entity_id": "CRS-CHE002" },
+      { "item_id": "PKI-001003", "package_id": "PKG-PCM1201", "entity_type": "course", "entity_id": "CRS-MAT003" }
+    ],
+    "teachers": [
+      { "teacher_id": "TCH-PHYS001", "branch_id": "BRN-MAIN001", "full_name": "Dr. Alan Physics", "specialization": "Physics" },
+      { "teacher_id": "TCH-CHEM002", "branch_id": "BRN-MAIN001", "full_name": "Prof. Marie Curie", "specialization": "Chemistry" },
+      { "teacher_id": "TCH-MATH003", "branch_id": "BRN-NORTH02", "full_name": "Dr. Srinivasa Ramanujan", "specialization": "Mathematics" }
+    ],
+    "batches": [
+      { "batch_id": "BAT-PHY12A01", "course_id": "CRS-PHY001", "teacher_id": "TCH-PHYS001", "branch_id": "BRN-MAIN001", "batch_name": "Physics 12 Morning Batch A" },
+      { "batch_id": "BAT-CHE12A01", "course_id": "CRS-CHE002", "teacher_id": "TCH-CHEM002", "branch_id": "BRN-MAIN001", "batch_name": "Chemistry 12 Morning Batch A" },
+      { "batch_id": "BAT-MAT12A02", "course_id": "CRS-MAT003", "teacher_id": "TCH-MATH003", "branch_id": "BRN-NORTH02", "batch_name": "Maths 12 Evening Batch B" }
+    ]
+  },
+  "predefinedStudentGraph1": {
+    "student": { "student_id": "STU-001001", "student_name": "John Doe", "status": "active" },
+    "address": { "address_id": "ADR-001001", "student_id": "STU-001001" },
+    "contact": { "contact_id": "CON-001001", "student_id": "STU-001001" },
+    "education": { "education_id": "EDU-001001", "student_id": "STU-001001" },
+    "enrollment": { "enrollment_id": "ENR-001001", "student_id": "STU-001001", "enrollment_type": "course", "item_id": "CRS-PHY001" },
+    "batchAllocation": { "allocation_id": "BAL-001001", "student_id": "STU-001001", "enrollment_id": "ENR-001001", "batch_id": "BAT-PHY12A01" },
+    "studentFeeAccount": { "student_fee_id": "SFA-001001", "enrollment_id": "ENR-001001", "total_fee": 15000, "final_fee": 15000, "amount_paid": 2000, "balance_due": 13000, "status": "active" },
+    "installments": [
+      { "installment_id": "INS-001001", "student_fee_id": "SFA-001001", "installment_number": 1, "due_amount": 7500, "paid_amount": 2000, "due_date": "2026-07-01", "status": "partially_paid" },
+      { "installment_id": "INS-001002", "student_fee_id": "SFA-001001", "installment_number": 2, "due_amount": 7500, "paid_amount": 0, "due_date": "2026-08-01", "status": "pending" }
+    ],
+    "payments": [
+      { "payment_id": "PAY-001001", "student_fee_id": "SFA-001001", "installment_id": "INS-001001", "amount_paid": 2000, "payment_method": "upi", "status": "success" }
+    ]
+  },
+  "predefinedStudentGraph2": {
+    "student": { "student_id": "STU-002002", "student_name": "Jane Smith", "status": "active" },
+    "address": { "address_id": "ADR-002002", "student_id": "STU-002002" },
+    "contact": { "contact_id": "CON-002002", "student_id": "STU-002002" },
+    "education": { "education_id": "EDU-002002", "student_id": "STU-002002" },
+    "enrollment": { "enrollment_id": "ENR-002002", "student_id": "STU-002002", "enrollment_type": "package", "item_id": "PKG-PCM1201" },
+    "batchAllocation": { "allocation_id": "BAL-002002", "student_id": "STU-002002", "enrollment_id": "ENR-002002", "batch_id": "BAT-MAT12A02" },
+    "studentFeeAccount": { "student_fee_id": "SFA-002002", "enrollment_id": "ENR-002002", "total_fee": 40000, "final_fee": 35000, "amount_paid": 0, "balance_due": 35000, "status": "active" },
+    "installments": [
+      { "installment_id": "INS-002001", "student_fee_id": "SFA-002002", "installment_number": 1, "due_amount": 17500, "paid_amount": 0, "due_date": "2026-07-01", "status": "pending" },
+      { "installment_id": "INS-002002", "student_fee_id": "SFA-002002", "installment_number": 2, "due_amount": 17500, "paid_amount": 0, "due_date": "2026-08-01", "status": "pending" }
+    ]
+  }
+}

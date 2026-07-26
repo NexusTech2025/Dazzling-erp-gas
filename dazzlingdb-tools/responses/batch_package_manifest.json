@@ -2,80 +2,58 @@
   "executionMetadata": {
     "tableContext": "Package",
     "actionContext": "academic_create_package",
-    "timestamp": "2026-06-25T19:04:08.968Z",
-    "totalProcessed": 3,
-    "successCount": 3,
-    "failureCount": 0,
-    "wallTimeMs": 52109,
-    "averageLatencyMs": 17369.7
+    "timestamp": "2026-07-19T10:49:39.061Z",
+    "totalProcessed": 1,
+    "successCount": 0,
+    "failureCount": 1,
+    "wallTimeMs": 9093,
+    "averageLatencyMs": 9093
   },
-  "successManifest": [
-    {
-      "inputPayloadIndex": 0,
-      "resolvedId": "PKG-8E7F42CE",
-      "recordSnapshot": {
-        "name": "Class 11 Science Bundle (CBSE)",
-        "description": null,
+  "successManifest": [],
+  "failureManifest": {
+    "0": {
+      "message": "undefined: A critical system exception was intercepted during server-side processing.",
+      "attemptedData": {
+        "name": "CBSE Class 11 PCM Bundle (2026)",
+        "description": "Standard PCM Package for Class 11 CBSE student preparation.",
         "target_class": "11",
         "board": "CBSE",
         "month": 12,
-        "package_fee": 110000,
-        "discount_percent": 0,
+        "package_fee": 65000,
+        "discount_percent": 15,
         "status": "active",
-        "package_id": "PKG-8E7F42CE",
-        "__tx_id": null,
-        "__tx_status": "PENDING",
-        "__created_at": "2026-06-25T13:33:24.000Z",
-        "_presentation": {
-          "display_status": "Fully Enrolled",
-          "toast_message": "Data transaction committed safely to physical files."
-        }
-      }
-    },
-    {
-      "inputPayloadIndex": 1,
-      "resolvedId": "PKG-65ED2466",
-      "recordSnapshot": {
-        "name": "Class 11 Science Bundle (RBSE - English Medium)",
-        "description": null,
-        "target_class": "11",
-        "board": "RBSE",
-        "month": 12,
-        "package_fee": 85000,
-        "discount_percent": 0,
-        "status": "active",
-        "package_id": "PKG-65ED2466",
-        "__tx_id": null,
-        "__tx_status": "PENDING",
-        "__created_at": "2026-06-25T13:33:44.000Z",
-        "_presentation": {
-          "display_status": "Fully Enrolled",
-          "toast_message": "Data transaction committed safely to physical files."
-        }
-      }
-    },
-    {
-      "inputPayloadIndex": 2,
-      "resolvedId": "PKG-94EE96F4",
-      "recordSnapshot": {
-        "name": "Class 12 Science Bundle (CBSE)",
-        "description": null,
-        "target_class": "12",
-        "board": "CBSE",
-        "month": 12,
-        "package_fee": 120000,
-        "discount_percent": 0,
-        "status": "active",
-        "package_id": "PKG-94EE96F4",
-        "__tx_id": null,
-        "__tx_status": "PENDING",
-        "__created_at": "2026-06-25T13:34:02.000Z",
-        "_presentation": {
-          "display_status": "Fully Enrolled",
-          "toast_message": "Data transaction committed safely to physical files."
-        }
+        "perks": [
+          {
+            "perk_title": "Comprehensive Material",
+            "perk_description": "Includes standard textbooks, homework worksheets, and past test archives.",
+            "icon": "book",
+            "display_order": 1
+          },
+          {
+            "perk_title": "Weekly Assessment",
+            "perk_description": "Weekly dynamic exams mapping standard CBSE layouts.",
+            "icon": "star",
+            "display_order": 2
+          }
+        ],
+        "courses": [
+          {
+            "entity_type": "subject",
+            "on_demand": false,
+            "entity_id": "CRS-FB15A55B"
+          },
+          {
+            "entity_type": "subject",
+            "on_demand": false,
+            "entity_id": "CRS-8FD279B7"
+          },
+          {
+            "entity_type": "subject",
+            "on_demand": false,
+            "entity_id": "CRS-79E92F19"
+          }
+        ]
       }
     }
-  ],
-  "failureManifest": {}
+  }
 }
