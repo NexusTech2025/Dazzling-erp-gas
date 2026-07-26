@@ -4,11 +4,3 @@ dazzlingdb-tools/node_modules/
 extra/
 .ipynb_checkpoints/
 DazzlingApp/
-.agents
-.gemini
-.antigravitycli
-SheetDB/
-dazzlingdb-tools
-DazzlingDB/Test/**
-DazzlingDB/apitest/**
-GEMINI.md

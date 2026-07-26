@@ -18,8 +18,13 @@ const Environment = Object.freeze({
  * @returns {string} One of the Environment enum values.
  */
 function resolveEnvironmentType(rawString) {
-  // Always return PRODUCTION for this production-locked branch
-  return Environment.PRODUCTION;
+  if (!rawString) return Environment.DEVELOPMENT;
+  const normalized = String(rawString).trim().toUpperCase();
+  if (normalized === 'PRODUCTION') {
+    console.warn("[Config] PRODUCTION environment is locked out on this development branch. Falling back to DEVELOPMENT.");
+    return Environment.DEVELOPMENT;
+  }
+  return Environment[normalized] || Environment.DEVELOPMENT;
 }
 
 // Bind to global scope for cross-file accessibility in GAS
@@ -37,33 +42,42 @@ let LOCAL_OVERRIDE = null;
  * @returns {Object} Active environment parameters
  */
 function resolveDatabaseEnvironment() {
-  // Option A: Hardcoded Defaults (Production only)
+  // Option A: Hardcoded Defaults
   const DEFAULTS = {
-    ENV: Environment.PRODUCTION,
-    PROD_DATABASE_ROOT_FOLDER_ID: "1LzSkVK4kYaGtv-nQX5y69TtuWtjQCWM3"   // Production Live folder
+    ENV: Environment.DEVELOPMENT,
+    DEV_DATABASE_ROOT_FOLDER_ID: "1eyTm-n2AUvcVS_Ipus7ApC4b0sCl8Q8I" // Developer Sandbox folder
+  };
+
+  const DEFAULT_FOLDER_REGISTRY = {
+    [Environment.DEVELOPMENT]: DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID,
+    [Environment.TESTING]: DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID
   };
 
   // Safe fallback if running in local compilers / CLI testing where GAS API is unavailable
   if (typeof PropertiesService === 'undefined') {
+    const localEnv = resolveEnvironmentType(LOCAL_OVERRIDE || DEFAULTS.ENV);
+    console.log(`[Config] Local execution detected. Using in-code defaults (ENV: '${localEnv}').`);
     return {
-      env: DEFAULTS.ENV,
-      rootFolderId: DEFAULTS.PROD_DATABASE_ROOT_FOLDER_ID
+      env: localEnv,
+      rootFolderId: DEFAULT_FOLDER_REGISTRY[localEnv] || DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID
     };
   }
 
   const scriptProperties = PropertiesService.getScriptProperties();
   let rawEnv = scriptProperties.getProperty("ENV");
-  let prodId = scriptProperties.getProperty("PROD_DATABASE_ROOT_FOLDER_ID");
+  let devId = scriptProperties.getProperty("DEV_DATABASE_ROOT_FOLDER_ID");
 
+  // Normalize active environment type dynamically
+  const env = resolveEnvironmentType(rawEnv);
   const updates = {};
 
   // Self-provision and auto-normalize mismatching properties
-  if (!rawEnv || rawEnv !== Environment.PRODUCTION) {
-    updates.ENV = Environment.PRODUCTION;
+  if (!rawEnv || rawEnv !== env) {
+    updates.ENV = env;
   }
-  if (!prodId) {
-    prodId = DEFAULTS.PROD_DATABASE_ROOT_FOLDER_ID;
-    updates.PROD_DATABASE_ROOT_FOLDER_ID = DEFAULTS.PROD_DATABASE_ROOT_FOLDER_ID;
+  if (!devId) {
+    devId = DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID;
+    updates.DEV_DATABASE_ROOT_FOLDER_ID = DEFAULTS.DEV_DATABASE_ROOT_FOLDER_ID;
   }
 
   // Bulk save updates to properties to avoid multiple setProperty remote network calls
@@ -72,7 +86,13 @@ function resolveDatabaseEnvironment() {
     scriptProperties.setProperties(updates);
   }
 
-  return { env: Environment.PRODUCTION, rootFolderId: prodId };
+  const ACTIVE_FOLDER_REGISTRY = {
+    [Environment.DEVELOPMENT]: devId,
+    [Environment.TESTING]: devId
+  };
+
+  const rootFolderId = ACTIVE_FOLDER_REGISTRY[env] || devId;
+  return { env, rootFolderId };
 }
 
 /**
@@ -80,16 +100,16 @@ function resolveDatabaseEnvironment() {
  * Updates local cache variables if running outside Google Apps Script environments.
  * 
  * @param {Object} [options={}] - Target parameters to write.
- * @param {string} [options.env] - Target environment (locked to PRODUCTION).
- * @param {string} [options.prodFolderId] - Production folder ID.
+ * @param {string} [options.env] - Target environment (DEVELOPMENT or TESTING).
+ * @param {string} [options.devFolderId] - Developer Sandbox folder ID.
  * @returns {Object} Updated database environment parameters {env, rootFolderId}.
  */
 function configureScriptProperties(options = {}) {
   const targetEnv = options.env || options.ENV;
   if (targetEnv) {
-    LOCAL_OVERRIDE = Environment.PRODUCTION;
+    LOCAL_OVERRIDE = targetEnv;
   }
-
+  
   if (typeof PropertiesService === 'undefined') {
     console.warn("[Config] PropertiesService is unavailable. Local override cache updated.");
     return resolveDatabaseEnvironment();
@@ -99,12 +119,12 @@ function configureScriptProperties(options = {}) {
   const updates = {};
 
   if (targetEnv) {
-    updates.ENV = Environment.PRODUCTION;
+    updates.ENV = resolveEnvironmentType(targetEnv);
   }
-
-  const prodFolderId = options.prodFolderId || options.PROD_DATABASE_ROOT_FOLDER_ID;
-  if (prodFolderId) {
-    updates.PROD_DATABASE_ROOT_FOLDER_ID = prodFolderId;
+  
+  const devFolderId = options.devFolderId || options.DEV_DATABASE_ROOT_FOLDER_ID;
+  if (devFolderId) {
+    updates.DEV_DATABASE_ROOT_FOLDER_ID = devFolderId;
   }
 
   if (Object.keys(updates).length > 0) {

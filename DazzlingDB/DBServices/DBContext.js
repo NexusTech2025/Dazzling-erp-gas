@@ -68,42 +68,13 @@ const DBContext = (function () {
   }
 
   /**
-   * Configures and overrides database caching mechanisms for request-level caching.
+   * Configures database caching mechanisms for request-level caching.
    * @param {Object} db - The SheetDB database instance.
    * @private
    */
   function setupRequestCache(db) {
     if (!db || !db._dataSource) return;
-
-    // 1. Wrap purgeCache to also clear the request-scoped cache
-    if (typeof db._dataSource.purgeCache === 'function') {
-      const originalPurgeCache = db._dataSource.purgeCache.bind(db._dataSource);
-      db._dataSource.purgeCache = function () {
-        try {
-          originalPurgeCache();
-          db._requestHeadersCache = {}; // Clear request-scoped cache
-          console.log("[DBContext] Request-scoped headers cache cleared.");
-        } catch (err) {
-          console.warn(`[DBContext] Cache purge failed: ${err.message}`);
-        }
-      };
-    }
-
-    // 2. Wrap getHeaders with a request-scoped in-memory cache
-    if (typeof db._dataSource.getHeaders === 'function') {
-      const originalGetHeaders = db._dataSource.getHeaders.bind(db._dataSource);
-      db._requestHeadersCache = {};
-
-      db._dataSource.getHeaders = function (categoryName, tableName) {
-        const cacheKey = `${categoryName}_${tableName}`;
-        if (db._requestHeadersCache[cacheKey]) {
-          return db._requestHeadersCache[cacheKey];
-        }
-        const headers = originalGetHeaders(categoryName, tableName);
-        db._requestHeadersCache[cacheKey] = headers;
-        return headers;
-      };
-    }
+    console.log("[DBContext] RequestHeaderCache protocol established natively via SheetDB.");
   }
 
   function _init() {

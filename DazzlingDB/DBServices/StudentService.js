@@ -58,7 +58,7 @@ const StudentService = {
     try {
       // 2. Cascading isolated database persistence steps
       const student = this._persistStudentProfile(payload, context, tx);
-      
+
       this._persistAddressGraph(student.student_id, payload.address, context, tx);
       this._persistContactGraph(student.student_id, payload.contact, context, tx);
       this._persistEducationGraph(student.student_id, payload.education, context, tx);
@@ -86,7 +86,7 @@ const StudentService = {
         targetPackageItems.forEach(pkgItem => {
           // Look for a corresponding allocation pointing to this required course
           const allocationMatch = batchAllocations.find(b => b.course_id === pkgItem.entity_id);
-          
+
           if (!allocationMatch || !allocationMatch.batch_id) {
             throw new PackageOrchestrationError(
               `Curriculum Integrity Breach: Selected package requires an active batch seat allocation for Course ID [${pkgItem.entity_id}].`,
@@ -132,7 +132,7 @@ const StudentService = {
   /** @private */
   _persistStudentProfile(payload, context, tx) {
     const db = DBContext.getInstance();
-    
+
     const profile = {
       ...payload.profile,
       created_at: new Date(),
@@ -149,7 +149,7 @@ const StudentService = {
   _persistAddressGraph(studentId, addressData, context, tx) {
     if (!addressData) return;
     const db = DBContext.getInstance();
-    
+
     const addr = {
       ...addressData,
       student_id: studentId
@@ -179,7 +179,7 @@ const StudentService = {
   _persistEducationGraph(studentId, educationData, context, tx) {
     if (!educationData || !Array.isArray(educationData)) return;
     const db = DBContext.getInstance();
-    
+
     educationData.forEach(edu => {
       const record = db.Education.insert({
         ...edu,
@@ -473,7 +473,7 @@ const StudentService = {
       }
 
       if (!totalBaseFeesSum || totalBaseFeesSum <= 0) {
-         throw new ActionValidationError("Invalid metadata: sum of course fees is zero or invalid.");
+        throw new ActionValidationError("Invalid metadata: sum of course fees is zero or invalid.");
       }
 
       const ratio = childBaseFee / totalBaseFeesSum;
@@ -490,7 +490,7 @@ const StudentService = {
       const newTotalFee = parentSfa.total_fee - refundAmount;
       const newDiscount = parentSfa.discount - calculatedDiscountToDeduct;
       const newFinalFee = parentSfa.final_fee - netRefundAmount;
-      
+
       const cashRefundOwed = Math.max(0, parentSfa.amount_paid - newFinalFee);
       const newAmountPaid = parentSfa.amount_paid - cashRefundOwed;
       const newBalanceDue = Math.max(0, newFinalFee - newAmountPaid);
@@ -593,7 +593,7 @@ const StudentService = {
         if (sfa) {
           totalPaymentsToRollover += (sfa.amount_paid || 0);
           const backupSfa = { ...sfa };
-          
+
           db.StudentFeeAccount.update(sfa.student_fee_id, {
             status: "completed",
             total_fee: 0,
