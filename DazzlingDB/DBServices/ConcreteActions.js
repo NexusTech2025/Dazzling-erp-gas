@@ -1933,3 +1933,41 @@ class RecordPaymentAction extends BaseAction {
 
 globalThis.RecordPaymentAction = RecordPaymentAction;
 
+/**
+ * Finance Domain: Reschedule Installment Schedule Action
+ * Thin action controller that validates pre-flight parameters and delegates execution
+ * to AcademicEnrollmentService.
+ */
+class RescheduleInstallmentsAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
+
+  /**
+   * Pre-flight input parameter validation.
+   */
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.student_fee_id || !String(p.student_fee_id).startsWith("SFA-")) {
+      throw new ActionValidationError("Valid 'student_fee_id' (SFA-xxx) is required in payload.");
+    }
+  }
+
+  /**
+   * Delegates execution to AcademicEnrollmentService.rescheduleInstallments().
+   *
+   * @param {Object} requestContext - Execution request context provided by ApiDispatcher.
+   * @returns {Object} Presentation success envelope.
+   */
+  handle(requestContext) {
+    const service = (typeof AcademicEnrollmentService !== 'undefined' && AcademicEnrollmentService.getInstance)
+      ? AcademicEnrollmentService.getInstance()
+      : globalThis.AcademicEnrollmentService.getInstance();
+    return service.rescheduleInstallments(requestContext.params.payload, requestContext);
+  }
+}
+
+globalThis.RescheduleInstallmentsAction = RescheduleInstallmentsAction;
+
+
