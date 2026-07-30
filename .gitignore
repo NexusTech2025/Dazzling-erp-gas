@@ -4,3 +4,8 @@ dazzlingdb-tools/node_modules/
 extra/
 .ipynb_checkpoints/
 DazzlingApp/
+DazzlingDB/Test/
+DazzlingDB/apitest/
+DazzlingDB/NodeTest/
+SheetDB/
+dazzlingdb-tools/
