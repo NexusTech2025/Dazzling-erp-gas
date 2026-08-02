@@ -163,8 +163,95 @@ const FinanceAllocationUtil = {
     return (parsedDate && typeof DazzlingDateTime !== 'undefined' && DazzlingDateTime.toSheetSafeValue)
       ? DazzlingDateTime.toSheetSafeValue(parsedDate)
       : String(earliest.due_date);
+  },
+
+  /**
+   * Rebalances unpaid/pending installments when a fee account's final_fee is adjusted.
+   * Protects fully paid installments and enforces cash floor guards and direct receipt alignment.
+   * 
+   * @param {Array<Object>} installments - Existing installment records for the account.
+   * @param {number} newFinalFee - Proposed updated final_fee for the StudentFeeAccount.
+   * @param {Object} [db] - Active database context instance for receipt checks.
+   * @returns {Array<Object>} Rebalanced copy of installments matching newFinalFee.
+   * @throws {AcademicEnrollmentError} If cash floor protection or receipt alignment fails.
+   */
+  allocateFeeAdjustmentRebalance: function(installments, newFinalFee, db, feeAccountAmountPaid = 0) {
+    if (!Array.isArray(installments)) return [];
+
+    console.log("[AcademicEnrollmentService:CALCULATION] Rebalancing unpaid installments for proposed final fee ₹" + newFinalFee);
+    const sorted = FinanceAllocationUtil.sortAndResequenceInstallments(installments);
+    const installmentsPaid = sorted.reduce((acc, inst) => acc + Number(inst.paid_amount || 0), 0);
+    const totalCollected = Math.max(Number(feeAccountAmountPaid || 0), installmentsPaid);
+    const roundedNewFinalFee = Math.round(Number(newFinalFee || 0) * 100) / 100;
+
+    if (roundedNewFinalFee < totalCollected) {
+      const errMsg = `Collected cash floor protection: Proposed final fee (₹${roundedNewFinalFee}) cannot be lower than collected payments (₹${totalCollected}).`;
+      console.warn("[AcademicEnrollmentService:WARN] " + errMsg);
+      throw new AcademicEnrollmentError(errMsg, "CASH_FLOOR_VIOLATION", {
+        proposed_final_fee: roundedNewFinalFee,
+        collected_amount_paid: totalCollected
+      });
+    }
+
+    const targetUnpaidBalance = Math.round((roundedNewFinalFee - totalCollected) * 100) / 100;
+    const unpaidInstallments = sorted.filter(inst => inst.status !== 'paid' && Number(inst.due_amount || 0) > Number(inst.paid_amount || 0));
+
+    if (unpaidInstallments.length > 0) {
+      const perInstallmentShare = Math.floor((targetUnpaidBalance / unpaidInstallments.length) * 100) / 100;
+      let remainder = Math.round((targetUnpaidBalance - (perInstallmentShare * unpaidInstallments.length)) * 100) / 100;
+
+      sorted.forEach(inst => {
+        if (inst.status !== 'paid' && Number(inst.due_amount || 0) > Number(inst.paid_amount || 0)) {
+          const paidPortion = Number(inst.paid_amount || 0);
+          let newUnpaidPortion = perInstallmentShare;
+          if (remainder > 0) {
+            newUnpaidPortion = Math.round((newUnpaidPortion + 0.01) * 100) / 100;
+            remainder = Math.round((remainder - 0.01) * 100) / 100;
+          }
+
+          const proposedDue = Math.round((paidPortion + newUnpaidPortion) * 100) / 100;
+
+          if (inst.installment_id && db) {
+            try {
+              FinanceAllocationUtil.validateDirectPaymentReceiptSum(inst.installment_id, proposedDue, db);
+            } catch (err) {
+              throw new AcademicEnrollmentError(err.message, "DIRECT_RECEIPT_ALIGNMENT_FAILURE", {
+                installment_id: inst.installment_id,
+                proposed_due: proposedDue
+              });
+            }
+          }
+
+          inst.due_amount = proposedDue;
+        }
+      });
+    }
+
+    try {
+      FinanceAllocationUtil.assertTotalFeeEquality(sorted, roundedNewFinalFee);
+    } catch (err) {
+      throw new AcademicEnrollmentError(err.message, "FEE_LEDGER_INVARIANT_MISMATCH", {
+        sum_installment_due: sorted.reduce((acc, inst) => acc + Number(inst.due_amount || 0), 0),
+        final_fee: roundedNewFinalFee
+      });
+    }
+
+    return FinanceAllocationUtil.allocatePaymentCascade(sorted, totalCollected);
   }
 };
+
+/**
+ * Custom Domain Exception Class for Academic & Finance Enrollment operations.
+ */
+class AcademicEnrollmentError extends Error {
+  constructor(message, errorCode, details = {}) {
+    super(message);
+    this.name = "AcademicEnrollmentError";
+    this.errorCode = errorCode;
+    this.details = details;
+  }
+}
+globalThis.AcademicEnrollmentError = AcademicEnrollmentError;
 
 /**
  * Singleton Domain Service class for Academic Enrollment and Financial Schedule management.
@@ -181,6 +268,249 @@ class AcademicEnrollmentService {
       AcademicEnrollmentService._instance = new AcademicEnrollmentService();
     }
     return AcademicEnrollmentService._instance;
+  }
+
+  /**
+   * Applies a post-enrollment fee adjustment using AtomicPipeline for transactional LIFO rollback safety.
+   * 
+   * @param {Object} payload - Adjustment parameters.
+   * @param {string} payload.student_fee_id - Target fee account ID (SFA-xxx).
+   * @param {string} payload.adjustment_type - Choice: 'scholarship'|'coupon'|'referral'|'manual'.
+   * @param {number} payload.amount - Positive adjustment amount.
+   * @param {string} [payload.reason] - Administrative reason.
+   * @param {string} [payload.created_by] - Staff ID.
+   * @param {Object} context - Execution request context.
+   * @returns {Object} Presentation envelope.
+   */
+  adjustFee(payload, context) {
+    console.log("[AcademicEnrollmentService:START] Executing adjustFee", payload);
+    console.time("ApplyFeeAdjustmentAction Execution");
+    const db = context.db || DBContext.getInstance();
+    const { student_fee_id, adjustment_type, amount, reason, created_by } = payload;
+
+    const feeAccount = db.StudentFeeAccount.findById(student_fee_id);
+    if (!feeAccount) {
+      console.warn("[AcademicEnrollmentService:WARN] StudentFeeAccount not found: " + student_fee_id);
+      throw new AcademicEnrollmentError(`StudentFeeAccount with ID '${student_fee_id}' not found.`, "FEE_ACCOUNT_NOT_FOUND", { student_fee_id });
+    }
+
+    const adjAmount = Math.round(Number(amount) * 100) / 100;
+    if (isNaN(adjAmount) || adjAmount <= 0) {
+      console.warn("[AcademicEnrollmentService:WARN] Invalid adjustment amount: " + amount);
+      throw new AcademicEnrollmentError("Fee adjustment 'amount' must be a positive number.", "INVALID_ADJUSTMENT_AMOUNT", { amount });
+    }
+
+    const allowedTypes = ["scholarship", "coupon", "referral", "manual"];
+    if (adjustment_type && !allowedTypes.includes(adjustment_type)) {
+      console.warn("[AcademicEnrollmentService:WARN] Invalid adjustment type: " + adjustment_type);
+      throw new AcademicEnrollmentError(`Invalid adjustment type '${adjustment_type}'. Allowed choices: ${allowedTypes.join(', ')}`, "INVALID_ADJUSTMENT_TYPE", { adjustment_type, allowed_choices: allowedTypes });
+    }
+
+    const sfaAdjType = adjustment_type === "manual" ? "manual_override" : adjustment_type;
+
+    const currentDiscount = Number(feeAccount.discount || 0);
+    const newDiscount = Math.round((currentDiscount + adjAmount) * 100) / 100;
+    const newTotalFee = Number(feeAccount.total_fee || 0);
+    const newFinalFee = Math.max(0, Math.round((newTotalFee - newDiscount) * 100) / 100);
+
+    console.log(`[AcademicEnrollmentService:CALCULATION] Fee Account ${student_fee_id}: Total Fee=₹${newTotalFee}, New Discount=₹${newDiscount}, New Final Fee=₹${newFinalFee}`);
+
+    let existingInstallments = [];
+    if (typeof db.Installment.where === 'function') {
+      existingInstallments = db.Installment.where({ student_fee_id: student_fee_id });
+    } else if (typeof db.Installment.all === 'function') {
+      existingInstallments = db.Installment.all().filter(i => i.student_fee_id === student_fee_id);
+    }
+
+    const totalAccountPaid = Number(feeAccount.amount_paid || 0);
+    const rebalancedSchedule = FinanceAllocationUtil.allocateFeeAdjustmentRebalance(existingInstallments, newFinalFee, db, totalAccountPaid);
+    const newBalance = Math.max(0, Math.round((newFinalFee - totalAccountPaid) * 100) / 100);
+    const newAccountStatus = newBalance <= 0 ? "completed" : "active";
+    const nextDueDate = FinanceAllocationUtil.recalculateAccountNextDueDate(rebalancedSchedule);
+
+    let createdAdjustmentRecord = null;
+    console.log("[AcademicEnrollmentService:PIPELINE] Beginning AtomicPipeline multi-table transaction execution");
+    const pipeCtx = (context && typeof context.trackMutation === 'function')
+      ? context
+      : (typeof PipelineContext !== 'undefined' ? new PipelineContext(context) : new SheetDB.PipelineContext(context));
+
+    const pipeline = (typeof AtomicPipeline !== 'undefined' ? AtomicPipeline : SheetDB.AtomicPipeline)
+      .begin(db, pipeCtx)
+      .addStep("FeeAdjustment", (repo) => {
+        createdAdjustmentRecord = repo.insert({
+          student_fee_id: student_fee_id,
+          adjustment_type: adjustment_type,
+          amount: adjAmount,
+          reason: reason ? String(reason) : "",
+          created_by: created_by ? String(created_by) : ""
+        });
+      })
+      .addStep("StudentFeeAccount", (repo) => {
+        repo.update(student_fee_id, {
+          discount: newDiscount,
+          adjustment_type: sfaAdjType,
+          final_fee: newFinalFee,
+          balance_due: newBalance,
+          next_due_date: nextDueDate,
+          status: newAccountStatus
+        });
+      })
+      .addStep("Installment", (repo) => {
+        rebalancedSchedule.forEach(inst => {
+          if (inst.installment_id && inst.status !== 'paid') {
+            repo.update(inst.installment_id, {
+              installment_number: inst.installment_number,
+              due_amount: inst.due_amount,
+              paid_amount: inst.paid_amount,
+              due_date: inst.due_date,
+              status: inst.status
+            });
+          }
+        });
+      });
+
+    pipeline.execute();
+    console.timeEnd("ApplyFeeAdjustmentAction Execution");
+    console.log(`[AcademicEnrollmentService:SUCCESS] Fee adjustment ₹${adjAmount} applied successfully to ${student_fee_id}`);
+
+    if (context && context.mutationManifest) {
+      if (typeof context.mutationManifest.push === 'function') {
+        context.mutationManifest.push("FeeAdjustment", "StudentFeeAccount", "Installment");
+      }
+    }
+
+    return {
+      success: true,
+      message: `Fee adjustment of ₹${adjAmount} applied successfully to account ${student_fee_id}.`,
+      data: {
+        adjustment: createdAdjustmentRecord,
+        student_fee_id: student_fee_id,
+        total_fee: newTotalFee,
+        discount: newDiscount,
+        final_fee: newFinalFee,
+        amount_paid: totalAccountPaid,
+        balance_due: newBalance,
+        next_due_date: nextDueDate,
+        status: newAccountStatus
+      }
+    };
+  }
+
+  /**
+   * Updates baseline fee account parameters (total_fee, discount, remarks) and delegates to adjustFee if payload.adjustment is provided.
+   * 
+   * @param {Object} payload - Update parameters.
+   * @param {string} payload.student_fee_id - Target fee account ID (SFA-xxx).
+   * @param {number} [payload.total_fee] - Updated base total fee.
+   * @param {number} [payload.discount] - Updated base discount.
+   * @param {string} [payload.adjustment_type] - Choice enum.
+   * @param {string} [payload.coupon_code] - Coupon code.
+   * @param {string} [payload.remarks] - Remarks.
+   * @param {Object} [payload.adjustment] - Nested adjustment payload block to delegate.
+   * @param {Object} context - Request context.
+   * @returns {Object} Presentation envelope.
+   */
+  updateFeeAccount(payload, context) {
+    console.log("[AcademicEnrollmentService:START] Executing updateFeeAccount", payload);
+
+    if (payload.adjustment && typeof payload.adjustment === 'object') {
+      console.log("[AcademicEnrollmentService:DELEGATE] Delegating fee adjustment sub-routine to adjustFee()");
+      const adjPayload = {
+        ...payload.adjustment,
+        student_fee_id: payload.student_fee_id
+      };
+      return this.adjustFee(adjPayload, context);
+    }
+
+    console.time("UpdateFeeAccountAction Execution");
+    const db = context.db || DBContext.getInstance();
+    const { student_fee_id, total_fee, discount, adjustment_type, coupon_code, remarks } = payload;
+
+    const feeAccount = db.StudentFeeAccount.findById(student_fee_id);
+    if (!feeAccount) {
+      console.warn("[AcademicEnrollmentService:WARN] StudentFeeAccount not found: " + student_fee_id);
+      throw new AcademicEnrollmentError(`StudentFeeAccount with ID '${student_fee_id}' not found.`, "FEE_ACCOUNT_NOT_FOUND", { student_fee_id });
+    }
+
+    const newTotalFee = total_fee !== undefined ? Math.round(Number(total_fee) * 100) / 100 : Number(feeAccount.total_fee || 0);
+    const newDiscount = discount !== undefined ? Math.round(Number(discount) * 100) / 100 : Number(feeAccount.discount || 0);
+    const newFinalFee = Math.max(0, Math.round((newTotalFee - newDiscount) * 100) / 100);
+
+    console.log(`[AcademicEnrollmentService:CALCULATION] Account ${student_fee_id}: Base Total=₹${newTotalFee}, Base Discount=₹${newDiscount}, Calculated Final Fee=₹${newFinalFee}`);
+
+    let existingInstallments = [];
+    if (typeof db.Installment.where === 'function') {
+      existingInstallments = db.Installment.where({ student_fee_id: student_fee_id });
+    } else if (typeof db.Installment.all === 'function') {
+      existingInstallments = db.Installment.all().filter(i => i.student_fee_id === student_fee_id);
+    }
+
+    const totalAccountPaid = Number(feeAccount.amount_paid || 0);
+    const rebalancedSchedule = FinanceAllocationUtil.allocateFeeAdjustmentRebalance(existingInstallments, newFinalFee, db, totalAccountPaid);
+    const newBalance = Math.max(0, Math.round((newFinalFee - totalAccountPaid) * 100) / 100);
+    const newAccountStatus = newBalance <= 0 ? "completed" : "active";
+    const nextDueDate = FinanceAllocationUtil.recalculateAccountNextDueDate(rebalancedSchedule);
+
+    const sfaAdjType = adjustment_type === "manual" ? "manual_override" : (adjustment_type || feeAccount.adjustment_type);
+
+    console.log("[AcademicEnrollmentService:PIPELINE] Beginning AtomicPipeline transaction execution");
+    const pipeCtx = (context && typeof context.trackMutation === 'function')
+      ? context
+      : (typeof PipelineContext !== 'undefined' ? new PipelineContext(context) : new SheetDB.PipelineContext(context));
+
+    const pipeline = (typeof AtomicPipeline !== 'undefined' ? AtomicPipeline : SheetDB.AtomicPipeline)
+      .begin(db, pipeCtx)
+      .addStep("StudentFeeAccount", (repo) => {
+        repo.update(student_fee_id, {
+          total_fee: newTotalFee,
+          discount: newDiscount,
+          adjustment_type: sfaAdjType,
+          coupon_code: coupon_code !== undefined ? String(coupon_code) : feeAccount.coupon_code,
+          final_fee: newFinalFee,
+          balance_due: newBalance,
+          next_due_date: nextDueDate,
+          status: newAccountStatus,
+          remarks: remarks !== undefined ? String(remarks) : feeAccount.remarks
+        });
+      })
+      .addStep("Installment", (repo) => {
+        rebalancedSchedule.forEach(inst => {
+          if (inst.installment_id && inst.status !== 'paid') {
+            repo.update(inst.installment_id, {
+              installment_number: inst.installment_number,
+              due_amount: inst.due_amount,
+              paid_amount: inst.paid_amount,
+              due_date: inst.due_date,
+              status: inst.status
+            });
+          }
+        });
+      });
+
+    pipeline.execute();
+    console.timeEnd("UpdateFeeAccountAction Execution");
+    console.log(`[AcademicEnrollmentService:SUCCESS] Fee account ${student_fee_id} updated successfully`);
+
+    if (context && context.mutationManifest) {
+      if (typeof context.mutationManifest.push === 'function') {
+        context.mutationManifest.push("StudentFeeAccount", "Installment");
+      }
+    }
+
+    return {
+      success: true,
+      message: `Fee account ${student_fee_id} updated successfully.`,
+      data: {
+        student_fee_id: student_fee_id,
+        total_fee: newTotalFee,
+        discount: newDiscount,
+        final_fee: newFinalFee,
+        amount_paid: totalAccountPaid,
+        balance_due: newBalance,
+        next_due_date: nextDueDate,
+        status: newAccountStatus
+      }
+    };
   }
 
   /**
@@ -232,7 +562,7 @@ class AcademicEnrollmentService {
         
         // Block deletion if paid_amount > 0
         if (Number(targetInst.paid_amount || 0) > 0) {
-          throw new SheetDB.ValidationError(`Payment protection: Cannot delete installment ${delId} because payments (₹${targetInst.paid_amount}) have already been collected on it.`);
+          throw new AcademicEnrollmentError(`Payment protection: Cannot delete installment ${delId} because payments (₹${targetInst.paid_amount}) have already been collected on it.`, "PAID_INSTALLMENT_MUTATION_PROTECTED", { installment_id: delId, paid_amount: targetInst.paid_amount });
         }
 
         // Block deletion if linked payments exist
@@ -246,7 +576,7 @@ class AcademicEnrollmentService {
         }
         const activePayments = linkedPayments.filter(p => p.status !== "voided");
         if (activePayments.length > 0) {
-          throw new SheetDB.ValidationError(`Payment protection: Cannot delete installment ${delId} because active payment transactions are linked to it.`);
+          throw new AcademicEnrollmentError(`Payment protection: Cannot delete installment ${delId} because active payment transactions are linked to it.`, "PAID_INSTALLMENT_MUTATION_PROTECTED", { installment_id: delId });
         }
 
         // Remove from working map
@@ -266,7 +596,11 @@ class AcademicEnrollmentService {
         const newDueAmount = up.due_amount !== undefined ? Number(up.due_amount) : Number(targetInst.due_amount);
 
         // Validate direct payment receipt alignment
-        FinanceAllocationUtil.validateDirectPaymentReceiptSum(up.installment_id, newDueAmount, db);
+        try {
+          FinanceAllocationUtil.validateDirectPaymentReceiptSum(up.installment_id, newDueAmount, db);
+        } catch (err) {
+          throw new AcademicEnrollmentError(err.message, "DIRECT_RECEIPT_ALIGNMENT_FAILURE", { installment_id: up.installment_id, proposed_due: newDueAmount });
+        }
 
         existingMap.set(up.installment_id, {
           ...targetInst,
@@ -301,7 +635,11 @@ class AcademicEnrollmentService {
     workingSchedule = FinanceAllocationUtil.sortAndResequenceInstallments(workingSchedule);
 
     // 7. Total Fee Equality Invariant Assertion
-    FinanceAllocationUtil.assertTotalFeeEquality(workingSchedule, feeAccount.final_fee);
+    try {
+      FinanceAllocationUtil.assertTotalFeeEquality(workingSchedule, feeAccount.final_fee);
+    } catch (err) {
+      throw new AcademicEnrollmentError(err.message, "FEE_LEDGER_INVARIANT_MISMATCH", { sum_installment_due: workingSchedule.reduce((a, c) => a + Number(c.due_amount || 0), 0), final_fee: feeAccount.final_fee });
+    }
 
     // 8. Cascading Payment Re-Allocation & Status Evaluation
     const totalAccountPaid = Number(feeAccount.amount_paid || 0);
@@ -404,4 +742,6 @@ class AcademicEnrollmentService {
 
 // Global scope registration for Google Apps Script execution realm
 globalThis.FinanceAllocationUtil = FinanceAllocationUtil;
+globalThis.AcademicEnrollmentError = AcademicEnrollmentError;
 globalThis.AcademicEnrollmentService = AcademicEnrollmentService;
+
