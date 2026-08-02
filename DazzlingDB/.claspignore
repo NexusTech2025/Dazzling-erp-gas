@@ -44,5 +44,8 @@ Test/*
 !Test/HeaderSync_DiagnosticSuite.js
 !Test/HeaderSync_DynamicTableTestSuite.js
 !Test/Finance_RescheduleInstallmentsTests.js
+!Test/Finance_UpdateFeeAccountTests.js
+!Test/Student_UpdateProfileTests.js
+
 
 

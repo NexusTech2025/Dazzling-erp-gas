@@ -1970,4 +1970,86 @@ class RescheduleInstallmentsAction extends BaseAction {
 
 globalThis.RescheduleInstallmentsAction = RescheduleInstallmentsAction;
 
+/**
+ * Finance Domain: Update Student Fee Account Action
+ * Thin action controller that validates pre-flight parameters and delegates execution
+ * to AcademicEnrollmentService.updateFeeAccount().
+ */
+class UpdateFeeAccountAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
+
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.student_fee_id || !String(p.student_fee_id).startsWith("SFA-")) {
+      throw new ActionValidationError("Valid 'student_fee_id' (SFA-xxx) is required in payload.");
+    }
+  }
+
+  handle(requestContext) {
+    const service = (typeof AcademicEnrollmentService !== 'undefined' && AcademicEnrollmentService.getInstance)
+      ? AcademicEnrollmentService.getInstance()
+      : globalThis.AcademicEnrollmentService.getInstance();
+    return service.updateFeeAccount(requestContext.params.payload, requestContext);
+  }
+}
+
+/**
+ * Finance Domain: Apply Fee Adjustment Action (Scholarship, Coupon, Referral, Manual)
+ * Thin action controller that validates pre-flight parameters and delegates execution
+ * to AcademicEnrollmentService.adjustFee().
+ */
+class ApplyFeeAdjustmentAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
+
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.student_fee_id || !String(p.student_fee_id).startsWith("SFA-")) {
+      throw new ActionValidationError("Valid 'student_fee_id' (SFA-xxx) is required in payload.");
+    }
+    if (!p.amount || isNaN(Number(p.amount)) || Number(p.amount) <= 0) {
+      throw new ActionValidationError("Positive numeric 'amount' is required for fee adjustment.");
+    }
+  }
+
+  handle(requestContext) {
+    const service = (typeof AcademicEnrollmentService !== 'undefined' && AcademicEnrollmentService.getInstance)
+      ? AcademicEnrollmentService.getInstance()
+      : globalThis.AcademicEnrollmentService.getInstance();
+    return service.adjustFee(requestContext.params.payload, requestContext);
+  }
+}
+
+globalThis.UpdateFeeAccountAction = UpdateFeeAccountAction;
+globalThis.ApplyFeeAdjustmentAction = ApplyFeeAdjustmentAction;
+
+/**
+ * Student Domain: Atomic Profile Update (Upsert across Student, Address, ContactInfo, Education)
+ */
+class UpdateStudentProfileAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
+
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.student_id || !String(p.student_id).startsWith("STU-")) {
+      throw new ActionValidationError("Valid 'student_id' (STU-xxx) is required in payload.");
+    }
+  }
+
+  handle(requestContext) {
+    return StudentService.updateStudentProfile(requestContext.params.payload, requestContext);
+  }
+}
+
+globalThis.UpdateStudentProfileAction = UpdateStudentProfileAction;
+
+
 

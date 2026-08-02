@@ -102,6 +102,11 @@ const ErrorMappingRegistry = {
     clientMessage: error.message,
     errorDetails: error.details || null
   }),
+  "StudentProfileError": (error) => ({
+    displayCode: error.errorCode || "STUDENT_PROFILE_FAILURE",
+    clientMessage: error.message,
+    errorDetails: error.details || null
+  }),
   "default": (error) => {
     if (error && error.errorCode) {
       return {

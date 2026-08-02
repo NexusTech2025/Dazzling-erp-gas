@@ -2945,7 +2945,23 @@ const DATABASE_SCHEMA = {
             },
             "percentage_or_cgpa": {
               "type": "string",
-              "maxLength": 255
+              "maxLength": 255,
+              "validations": [
+                {
+                  "rule": "custom",
+                  "handler": "validatePercentageOrCgpa"
+                }
+              ]
+            },
+            "meta": {
+              "type": "json",
+              "description": "Metadata container for score type and education attributes",
+              "validations": [
+                {
+                  "rule": "custom",
+                  "handler": "validateEducationMeta"
+                }
+              ]
             },
             "education_id": {
               "type": "auto",
