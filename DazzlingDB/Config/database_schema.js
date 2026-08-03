@@ -490,7 +490,8 @@ const DATABASE_SCHEMA = {
               "choices": [
                 "active",
                 "completed",
-                "withdrawn"
+                "withdrawn",
+                "discarded"
               ],
               "default": "active",
               "maxLength": 255
@@ -1596,7 +1597,8 @@ const DATABASE_SCHEMA = {
                 "pending",
                 "partially_paid",
                 "paid",
-                "overdue"
+                "overdue",
+                "cancelled"
               ],
               "default": "pending",
               "maxLength": 255
@@ -1991,7 +1993,8 @@ const DATABASE_SCHEMA = {
                 "active",
                 "completed",
                 "defaulted",
-                "refunded"
+                "refunded",
+                "cancelled"
               ],
               "default": "active",
               "maxLength": 255

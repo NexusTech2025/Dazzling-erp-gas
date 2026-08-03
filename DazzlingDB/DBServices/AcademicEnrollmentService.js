@@ -847,6 +847,364 @@ class AcademicEnrollmentService {
       }
     };
   }
+
+  /**
+   * Soft-deletes an enrollment contract with configurable financial settlement.
+   * Supports two discard modes:
+   *   - 'refund': Issues a refund Payment record, sets SFA status to 'refunded'.
+   *   - 'no_refund': Cancels the fee account, waives unpaid balance, preserves payment history.
+   *
+   * @param {Object} payload - Discard parameters.
+   * @param {string} payload.enrollment_id - Target enrollment ID (ENR-xxx).
+   * @param {string} payload.discard_mode - 'refund' | 'no_refund'.
+   * @param {string} [payload.remarks] - Optional reason for discard.
+   * @param {Object} requestContext - Execution context from ApiDispatcher.
+   * @returns {Object} Presentation envelope with discard summary.
+   * @throws {AcademicEnrollmentError} ENROLLMENT_NOT_FOUND | ALREADY_DISCARDED
+   */
+  discardEnrollment(payload, requestContext) {
+    const db = DBContext.getInstance();
+    const pipelineContext = new SheetDB.PipelineContext(requestContext || { mutationManifest: [] });
+
+    const targetEnrollment = db.Enrollment.findById(payload.enrollment_id);
+    if (!targetEnrollment) {
+      throw new AcademicEnrollmentError(
+        `Enrollment record not found for enrollment_id: ${payload.enrollment_id}`,
+        "ENROLLMENT_NOT_FOUND",
+        { enrollment_id: payload.enrollment_id }
+      );
+    }
+
+    if (targetEnrollment.status === "discarded") {
+      throw new AcademicEnrollmentError(
+        `Enrollment [${payload.enrollment_id}] is already discarded.`,
+        "ALREADY_DISCARDED",
+        { enrollment_id: payload.enrollment_id }
+      );
+    }
+
+    const existingAllocations = db.BatchAllocation.where({ enrollment_id: payload.enrollment_id });
+    const feeAccount = db.StudentFeeAccount.findOne({ enrollment_id: payload.enrollment_id });
+    const installments = feeAccount ? db.Installment.where({ student_fee_id: feeAccount.student_fee_id }) : [];
+    const totalPaid = feeAccount ? Number(feeAccount.amount_paid || 0) : 0;
+    const nowIso = new Date().toISOString();
+    const remarksStr = payload.remarks ? String(payload.remarks).trim() : "Enrollment discarded via administrative action";
+
+    const pipelineResult = SheetDB.AtomicPipeline.begin(db, pipelineContext)
+      .addStep("Enrollment", function(repo, state) {
+        state.discardedEnrollment = repo.update(payload.enrollment_id, {
+          status: "discarded",
+          academic_status: "withdrawn"
+        });
+      })
+      .addStep("BatchAllocation", function(repo, state) {
+        state.droppedAllocations = [];
+        existingAllocations.forEach(function(alloc) {
+          const droppedAlloc = repo.update(alloc.allocation_id, {
+            status: "dropped",
+            dropped_at: nowIso,
+            remarks: remarksStr
+          });
+          state.droppedAllocations.push(droppedAlloc);
+        });
+      })
+      .addStep("StudentFeeAccount", function(repo, state) {
+        if (!feeAccount) return;
+        if (payload.discard_mode === "refund") {
+          state.settledFeeAccount = repo.update(feeAccount.student_fee_id, {
+            status: "refunded",
+            amount_paid: 0,
+            balance_due: 0,
+            remarks: remarksStr
+          });
+        } else {
+          state.settledFeeAccount = repo.update(feeAccount.student_fee_id, {
+            status: "cancelled",
+            balance_due: 0,
+            remarks: remarksStr
+          });
+        }
+      })
+      .addStep("Installment", function(repo, state) {
+        state.cancelledInstallments = [];
+        installments.forEach(function(inst) {
+          if (inst.status !== "paid") {
+            const cancelledInst = repo.update(inst.installment_id, {
+              status: "cancelled",
+              due_amount: Number(inst.paid_amount || 0)
+            });
+            state.cancelledInstallments.push(cancelledInst);
+          }
+        });
+      })
+      .addStep("Payment", function(repo, state) {
+        if (payload.discard_mode === "refund" && feeAccount && totalPaid > 0) {
+          state.refundPayment = repo.insert({
+            student_fee_id: feeAccount.student_fee_id,
+            installment_id: null,
+            amount_paid: -totalPaid,
+            payment_date: nowIso,
+            payment_method: "cash",
+            status: "success",
+            remarks: `Refund issued upon enrollment discard: ${remarksStr}`,
+            created_by: (requestContext && requestContext.user) ? requestContext.user.username : "system"
+          });
+        }
+      })
+      .execute();
+
+    return {
+      success: true,
+      message: `Enrollment [${payload.enrollment_id}] discarded successfully (${payload.discard_mode}).`,
+      data: {
+        enrollment_id: payload.enrollment_id,
+        status: "discarded",
+        discard_mode: payload.discard_mode,
+        allocations_dropped: pipelineResult.droppedAllocations ? pipelineResult.droppedAllocations.length : 0,
+        fee_account_status: pipelineResult.settledFeeAccount ? pipelineResult.settledFeeAccount.status : null,
+        refund_amount: (payload.discard_mode === "refund") ? totalPaid : 0,
+        refund_payment_id: pipelineResult.refundPayment ? pipelineResult.refundPayment.payment_id : null
+      }
+    };
+  }
+
+  /**
+   * Migrates an active enrollment to a new Package or Course.
+   * Closes the source enrollment contract, rolls over paid amounts (optional),
+   * and creates a fresh academic contract with new BatchAllocation and fee account.
+   *
+   * @param {Object} payload - Migration parameters.
+   * @param {string} payload.enrollment_id - Source enrollment ID (ENR-xxx).
+   * @param {string} payload.target_type - Target entity type: 'course' | 'package'.
+   * @param {string} payload.target_id - Target Course/Package ID.
+   * @param {boolean} [payload.rollover_payments=false] - Roll over collected payments to new SFA.
+   * @param {number} [payload.new_fee] - Override total fee for new contract (optional).
+   * @param {Array<Object>} [payload.batch_assignments] - Per-course batch_id assignments [{course_id, batch_id}].
+   * @param {Array<Object>} [payload.installment_plan] - Optional installment schedule [{due_date, due_amount}].
+   * @param {string} [payload.remarks] - Administrative reason for migration.
+   * @param {Object} requestContext - Execution context from ApiDispatcher.
+   * @returns {Object} Presentation envelope with old and new enrollment summaries.
+   * @throws {AcademicEnrollmentError} ENROLLMENT_NOT_FOUND | ALREADY_CLOSED | TARGET_NOT_FOUND | TARGET_SAME_AS_SOURCE
+   */
+  migrateEnrollment(payload, requestContext) {
+    const db = DBContext.getInstance();
+    const pipelineContext = new SheetDB.PipelineContext(requestContext || { mutationManifest: [] });
+
+    // Step 1: Pre-flight Validations
+    const oldEnrollment = db.Enrollment.findById(payload.enrollment_id);
+    if (!oldEnrollment) {
+      throw new AcademicEnrollmentError(
+        `Source enrollment record not found for enrollment_id: ${payload.enrollment_id}`,
+        "ENROLLMENT_NOT_FOUND",
+        { enrollment_id: payload.enrollment_id }
+      );
+    }
+
+    const closedStatuses = ["discarded", "withdrawn", "completed"];
+    if (closedStatuses.includes(oldEnrollment.status)) {
+      throw new AcademicEnrollmentError(
+        `Cannot migrate non-active enrollment [${payload.enrollment_id}] (current status: ${oldEnrollment.status}).`,
+        "ALREADY_CLOSED",
+        { enrollment_id: payload.enrollment_id, status: oldEnrollment.status }
+      );
+    }
+
+    if (oldEnrollment.enrollment_type === payload.target_type && oldEnrollment.item_id === payload.target_id) {
+      throw new AcademicEnrollmentError(
+        `Target [${payload.target_type}:${payload.target_id}] is identical to current enrollment.`,
+        "TARGET_SAME_AS_SOURCE",
+        { target_type: payload.target_type, target_id: payload.target_id }
+      );
+    }
+
+    let targetEntity = null;
+    let courseIds = [];
+    let courseFeesMap = {};
+    let defaultTotalFee = 0;
+
+    if (payload.target_type === "package") {
+      targetEntity = db.Package ? db.Package.findById(payload.target_id) : null;
+      if (!targetEntity) {
+        throw new AcademicEnrollmentError(
+          `Target Package [${payload.target_id}] not found.`,
+          "TARGET_NOT_FOUND",
+          { target_id: payload.target_id }
+        );
+      }
+      defaultTotalFee = Number(targetEntity.package_fee || 0);
+
+      const packageItems = db.PackageItem ? db.PackageItem.where({ package_id: payload.target_id, entity_type: "course" }) : [];
+      packageItems.forEach(function(pi) {
+        courseIds.push(pi.entity_id);
+        const courseObj = db.Course ? db.Course.findById(pi.entity_id) : null;
+        courseFeesMap[pi.entity_id] = courseObj ? Number(courseObj.base_fee || 0) : 0;
+      });
+    } else {
+      targetEntity = db.Course ? db.Course.findById(payload.target_id) : null;
+      if (!targetEntity) {
+        throw new AcademicEnrollmentError(
+          `Target Course [${payload.target_id}] not found.`,
+          "TARGET_NOT_FOUND",
+          { target_id: payload.target_id }
+        );
+      }
+      defaultTotalFee = Number(targetEntity.base_fee || 0);
+      courseIds = [payload.target_id];
+      courseFeesMap[payload.target_id] = defaultTotalFee;
+    }
+
+    const oldAllocations = db.BatchAllocation.where({ enrollment_id: payload.enrollment_id });
+    const oldSfa = db.StudentFeeAccount.findOne({ enrollment_id: payload.enrollment_id });
+    const oldInstallments = oldSfa ? db.Installment.where({ student_fee_id: oldSfa.student_fee_id }) : [];
+
+    const rolloverAmount = payload.rollover_payments === true && oldSfa ? Number(oldSfa.amount_paid || 0) : 0;
+    const finalTotalFee = payload.new_fee !== undefined ? Number(payload.new_fee) : defaultTotalFee;
+    const balanceDue = Math.max(0, finalTotalFee - rolloverAmount);
+    const nowIso = new Date().toISOString();
+    const remarksStr = payload.remarks ? String(payload.remarks).trim() : `Migrated from ${oldEnrollment.enrollment_type}:${oldEnrollment.item_id}`;
+
+    // Map batch assignments from payload if provided
+    const batchAssignmentsMap = {};
+    if (Array.isArray(payload.batch_assignments)) {
+      payload.batch_assignments.forEach(function(ba) {
+        if (ba.course_id && ba.batch_id) {
+          batchAssignmentsMap[ba.course_id] = ba.batch_id;
+        }
+      });
+    }
+
+    // Step 2: Atomic Pipeline Execution
+    const pipelineResult = SheetDB.AtomicPipeline.begin(db, pipelineContext)
+      .addStep("Enrollment", function(repo, state) {
+        state.closedOldEnrollment = repo.update(payload.enrollment_id, {
+          status: "withdrawn",
+          academic_status: "withdrawn"
+        });
+      })
+      .addStep("BatchAllocation", function(repo, state) {
+        state.droppedOldAllocations = [];
+        oldAllocations.forEach(function(alloc) {
+          const droppedAlloc = repo.update(alloc.allocation_id, {
+            status: "dropped",
+            dropped_at: nowIso,
+            remarks: `Dropped via migration to ${payload.target_type}:${payload.target_id}`
+          });
+          state.droppedOldAllocations.push(droppedAlloc);
+        });
+      })
+      .addStep("StudentFeeAccount", function(repo, state) {
+        if (!oldSfa) return;
+        state.closedOldSfa = repo.update(oldSfa.student_fee_id, {
+          status: "completed",
+          balance_due: 0,
+          remarks: `Closed via migration to ${payload.target_type}:${payload.target_id}`
+        });
+      })
+      .addStep("Installment", function(repo, state) {
+        state.cancelledOldInstallments = [];
+        oldInstallments.forEach(function(inst) {
+          if (inst.status !== "paid") {
+            const cancelledInst = repo.update(inst.installment_id, {
+              status: "cancelled",
+              due_amount: Number(inst.paid_amount || 0)
+            });
+            state.cancelledOldInstallments.push(cancelledInst);
+          }
+        });
+      })
+      .addStep("Enrollment", function(repo, state) {
+        state.newEnrollment = repo.insert({
+          student_id: oldEnrollment.student_id,
+          enrollment_type: payload.target_type,
+          item_id: payload.target_id,
+          roll_number: oldEnrollment.roll_number || null,
+          enrollment_date: nowIso,
+          status: "active",
+          academic_status: "active",
+          metadata: { course_fees: courseFeesMap, migrated_from: payload.enrollment_id }
+        });
+        state.newEnrollmentId = state.newEnrollment.enrollment_id;
+      })
+      .addStep("BatchAllocation", function(repo, state) {
+        state.newAllocations = [];
+        courseIds.forEach(function(courseId) {
+          const assignedBatchId = batchAssignmentsMap[courseId] || null;
+          const newAlloc = repo.insert({
+            student_id: oldEnrollment.student_id,
+            enrollment_id: state.newEnrollmentId,
+            course_id: courseId,
+            batch_id: assignedBatchId,
+            status: "active",
+            remarks: `Allocated via migration from ${payload.enrollment_id}`
+          });
+          state.newAllocations.push(newAlloc);
+        });
+      })
+      .addStep("StudentFeeAccount", function(repo, state) {
+        let feePlanId = null;
+        if (db.FeePlan) {
+          const existingPlan = db.FeePlan.findOne({ entity_id: payload.target_id, entity_type: payload.target_type });
+          feePlanId = existingPlan ? existingPlan.fee_plan_id : null;
+        }
+
+        state.newSfa = repo.insert({
+          enrollment_id: state.newEnrollmentId,
+          fee_plan_id: feePlanId,
+          total_fee: finalTotalFee,
+          discount: 0,
+          final_fee: finalTotalFee,
+          amount_paid: rolloverAmount,
+          balance_due: balanceDue,
+          is_overdue: false,
+          status: balanceDue === 0 ? "completed" : "active",
+          remarks: remarksStr,
+          created_by: (requestContext && requestContext.user) ? requestContext.user.username : "system"
+        });
+        state.newSfaId = state.newSfa.student_fee_id;
+      })
+      .addStep("Installment", function(repo, state) {
+        state.newInstallments = [];
+        if (Array.isArray(payload.installment_plan) && payload.installment_plan.length > 0) {
+          payload.installment_plan.forEach(function(instInput, idx) {
+            const dueAmt = Number(instInput.due_amount || instInput.amount || 0);
+            const newInst = repo.insert({
+              student_fee_id: state.newSfaId,
+              installment_number: idx + 1,
+              due_amount: dueAmt,
+              paid_amount: 0,
+              due_date: instInput.due_date,
+              status: "pending"
+            });
+            state.newInstallments.push(newInst);
+          });
+        }
+      })
+      .execute();
+
+    return {
+      success: true,
+      message: `Enrollment migrated from [${payload.enrollment_id}] to new contract [${pipelineResult.newEnrollmentId}].`,
+      data: {
+        old_contract: {
+          enrollment_id: payload.enrollment_id,
+          status: "withdrawn",
+          fee_account_status: oldSfa ? "completed" : null
+        },
+        new_contract: {
+          enrollment_id: pipelineResult.newEnrollmentId,
+          enrollment_type: payload.target_type,
+          item_id: payload.target_id,
+          status: "active",
+          fee_account_id: pipelineResult.newSfaId,
+          total_fee: finalTotalFee,
+          amount_paid: rolloverAmount,
+          balance_due: balanceDue,
+          allocations_created: pipelineResult.newAllocations ? pipelineResult.newAllocations.length : 0,
+          installments_created: pipelineResult.newInstallments ? pipelineResult.newInstallments.length : 0
+        }
+      }
+    };
+  }
 }
 
 

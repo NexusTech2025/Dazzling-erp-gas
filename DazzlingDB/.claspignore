@@ -47,6 +47,9 @@ Test/*
 !Test/Finance_UpdateFeeAccountTests.js
 !Test/Student_UpdateProfileTests.js
 !Test/Academic_UpdateEnrollmentTests.js
+!Test/Academic_DiscardEnrollmentTests.js
+!Test/Academic_MigrateEnrollmentTests.js
+
 
 
 

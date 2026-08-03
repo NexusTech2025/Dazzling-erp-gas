@@ -84,6 +84,8 @@ const ApiTestSeedHook = (function () {
 
     // Reverse Topological LIFO Order (Leaf Children First)
     const lifoPurgeOrder = [
+      { repo: "MoneyTransaction", pk: "transaction_id" },
+      { repo: "FeeAdjustment", pk: "adjustment_id" },
       { repo: "Payment", pk: "payment_id" },
       { repo: "Installment", pk: "installment_id" },
       { repo: "StudentFeeAccount", pk: "student_fee_id" },
@@ -95,8 +97,10 @@ const ApiTestSeedHook = (function () {
       { repo: "Student", pk: "student_id" },
       { repo: "Batch", pk: "batch_id" },
       { repo: "Teacher", pk: "teacher_id" },
+      { repo: "PackagePerk", pk: "perk_id" },
       { repo: "PackageItem", pk: "item_id" },
       { repo: "Package", pk: "package_id" },
+      { repo: "FeePlan", pk: "fee_plan_id" },
       { repo: "Course", pk: "course_id" },
       { repo: "CourseType", pk: "segment_id" },
       { repo: "Branch", pk: "branch_id" }

@@ -328,6 +328,97 @@ class UpdateEnrollmentAction extends BaseAction {
   }
 }
 
+/**
+ * Academic Domain: Soft-delete an enrollment contract with configurable financial settlement.
+ * Marks enrollment status as 'discarded', cascades seating allocations to 'dropped',
+ * and settles the linked StudentFeeAccount as either refunded or cancelled.
+ *
+ * @extends BaseAction
+ */
+class DiscardEnrollmentAction extends BaseAction {
+  constructor() {
+    super(ActionType.DELETE);
+  }
+
+  /**
+   * Pre-flight validation: enrollment_id and discard_mode are mandatory.
+   * @throws {ActionValidationError} If enrollment_id or discard_mode is invalid.
+   */
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.enrollment_id || typeof p.enrollment_id !== "string" || !p.enrollment_id.trim()) {
+      throw new ActionValidationError("payload must contain a non-empty string 'enrollment_id'.");
+    }
+    const allowedModes = ["refund", "no_refund"];
+    if (!p.discard_mode || !allowedModes.includes(p.discard_mode)) {
+      throw new ActionValidationError("payload must contain 'discard_mode': 'refund' | 'no_refund'.");
+    }
+  }
+
+  /**
+   * Delegates to AcademicEnrollmentService.discardEnrollment().
+   * @param {Object} requestContext - Dispatched execution context.
+   * @returns {Object} Presentation envelope with settled financial summary.
+   */
+  handle(requestContext) {
+    const service = (typeof AcademicEnrollmentService !== 'undefined' && AcademicEnrollmentService.getInstance)
+      ? AcademicEnrollmentService.getInstance()
+      : globalThis.AcademicEnrollmentService.getInstance();
+    return service.discardEnrollment(requestContext.params.payload, requestContext);
+  }
+}
+
+/**
+ * Academic Domain: Migrate an existing enrollment to a new Package or Course.
+ * Closes the old enrollment, rolls over financial obligations (optional),
+ * and creates a fresh Enrollment + BatchAllocation + StudentFeeAccount contract.
+ *
+ * @extends BaseAction
+ */
+class MigrateEnrollmentAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
+
+  /**
+   * Pre-flight validation: enrollment_id, target_type, target_id are mandatory.
+   * @throws {ActionValidationError} If required migration parameters are missing.
+   */
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.enrollment_id || typeof p.enrollment_id !== "string" || !p.enrollment_id.trim()) {
+      throw new ActionValidationError("payload must contain a non-empty string 'enrollment_id'.");
+    }
+    const allowedTypes = ["course", "package"];
+    if (!p.target_type || !allowedTypes.includes(p.target_type)) {
+      throw new ActionValidationError("payload must contain 'target_type': 'course' | 'package'.");
+    }
+    if (!p.target_id || typeof p.target_id !== "string" || !p.target_id.trim()) {
+      throw new ActionValidationError("payload must contain a non-empty string 'target_id'.");
+    }
+  }
+
+  /**
+   * Delegates to AcademicEnrollmentService.migrateEnrollment().
+   * @param {Object} requestContext - Dispatched execution context.
+   * @returns {Object} Presentation envelope with new enrollment contract details.
+   */
+  handle(requestContext) {
+    const service = (typeof AcademicEnrollmentService !== 'undefined' && AcademicEnrollmentService.getInstance)
+      ? AcademicEnrollmentService.getInstance()
+      : globalThis.AcademicEnrollmentService.getInstance();
+    const result = service.migrateEnrollment(requestContext.params.payload, requestContext);
+    return result && result.data ? result.data : result;
+  }
+}
+
+globalThis.UpdateEnrollmentAction = UpdateEnrollmentAction;
+globalThis.DiscardEnrollmentAction = DiscardEnrollmentAction;
+globalThis.MigrateEnrollmentAction = MigrateEnrollmentAction;
+
+
 
 
 /**
