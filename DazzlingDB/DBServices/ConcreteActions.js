@@ -305,6 +305,32 @@ class EnrollStudentAction extends BaseAction {
 }
 
 /**
+ * Academic Domain: Update existing administrative enrollment contract and seating allocations.
+ */
+class UpdateEnrollmentAction extends BaseAction {
+  constructor() {
+    super(ActionType.UPDATE);
+  }
+
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.enrollment_id || typeof p.enrollment_id !== "string" || !p.enrollment_id.trim()) {
+      throw new ActionValidationError("payload must contain a non-empty string 'enrollment_id'.");
+    }
+  }
+
+  handle(requestContext) {
+    const service = (typeof AcademicEnrollmentService !== 'undefined' && AcademicEnrollmentService.getInstance)
+      ? AcademicEnrollmentService.getInstance()
+      : globalThis.AcademicEnrollmentService.getInstance();
+    return service.updateEnrollment(requestContext.params.payload, requestContext);
+  }
+}
+
+
+
+/**
  * 🛠️ CORE DOMAIN ACTIONS
  */
 class CreateBranchAction extends BaseAction {

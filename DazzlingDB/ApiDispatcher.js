@@ -24,6 +24,7 @@ const ApiDispatcher = (function () {
       "academic_update_package": UpdatePackageAction,
       "academic_delete_package": DeletePackageAction,
       "academic_enroll_student": EnrollStudentAction,
+      "academic_update_enrollment": UpdateEnrollmentAction,
       "core_create_branch": CreateBranchAction,
       "core_create_promo": CreatePromoCodeAction,
       "core_validate_promo": ValidatePromoCodeAction,

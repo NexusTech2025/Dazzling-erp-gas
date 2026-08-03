@@ -107,6 +107,11 @@ const ErrorMappingRegistry = {
     clientMessage: error.message,
     errorDetails: error.details || null
   }),
+  "AcademicEnrollmentError": (error) => ({
+    displayCode: error.errorCode || "ACADEMIC_ENROLLMENT_FAILURE",
+    clientMessage: error.message,
+    errorDetails: error.details || null
+  }),
   "default": (error) => {
     if (error && error.errorCode) {
       return {

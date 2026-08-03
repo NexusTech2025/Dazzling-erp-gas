@@ -738,10 +738,157 @@ class AcademicEnrollmentService {
       }
     };
   }
+
+  /**
+   * Updates an existing Enrollment record and its associated BatchAllocation records atomically using AtomicPipeline.
+   * Delegates pre-flight rules execution to ValidationEngine and EnrollmentUpdateRules.
+   * 
+   * @param {Object} payload - Input parameters.
+   * @param {Object} requestContext - System execution context containing db and mutationManifest.
+   * @returns {Object} Presentation envelope object with updated Enrollment and BatchAllocation rows.
+   * @throws {AcademicEnrollmentError} Structured domain exception for invalid state/not found scenarios.
+   */
+  updateEnrollment(payload, requestContext) {
+    const db = DBContext.getInstance();
+    const pipelineContext = new SheetDB.PipelineContext(requestContext || { mutationManifest: [] });
+
+    // Step 1: Execute Pre-Flight Validation Engine Pipeline
+    const vCtx = new ValidationContext(db, payload ? payload.enrollment_id : null, payload);
+    if (typeof EnrollmentUpdateRules !== "undefined") {
+      ValidationEngine.run(vCtx, EnrollmentUpdateRules);
+    }
+
+    if (!vCtx.isValid()) {
+      const firstErr = vCtx.errors[0];
+      let errCode = "VALIDATION_FAILURE";
+      if (firstErr.field === "enrollment_id") errCode = "ENROLLMENT_NOT_FOUND";
+      if (firstErr.field === "allocations") errCode = "INVALID_BATCH_ALLOCATION";
+
+      throw new AcademicEnrollmentError(
+        firstErr.message,
+        errCode,
+        { errors: vCtx.errors }
+      );
+    }
+
+    const targetEnrollment = vCtx.state.existingEnrollment || db.Enrollment.findById(payload.enrollment_id);
+    if (!targetEnrollment) {
+      throw new AcademicEnrollmentError(
+        `Enrollment record not found for enrollment_id: ${payload.enrollment_id}`,
+        "ENROLLMENT_NOT_FOUND",
+        { enrollment_id: payload.enrollment_id }
+      );
+    }
+
+    const existingAllocations = vCtx.state.existingAllocations || db.BatchAllocation.where({ enrollment_id: payload.enrollment_id });
+
+    // Step 2: AtomicPipeline Fluent Execution Chain
+    const pipelineResult = SheetDB.AtomicPipeline.begin(db, pipelineContext)
+      .addStep("Enrollment", function(repo, state) {
+        const updateData = {};
+        if (payload.roll_number !== undefined) updateData.roll_number = payload.roll_number;
+        if (payload.enrollment_date !== undefined) updateData.enrollment_date = payload.enrollment_date;
+        if (payload.status !== undefined) updateData.status = payload.status;
+        if (payload.academic_status !== undefined) updateData.academic_status = payload.academic_status;
+        if (payload.metadata !== undefined) updateData.metadata = payload.metadata;
+
+        if (Object.keys(updateData).length > 0) {
+          state.updatedEnrollment = repo.update(payload.enrollment_id, updateData);
+        } else {
+          state.updatedEnrollment = targetEnrollment;
+        }
+      })
+      .addStep("BatchAllocation", function(repo, state) {
+        state.updatedAllocations = [];
+        const explicitAllocations = Array.isArray(payload.allocations) ? payload.allocations : [];
+        const updatedAllocationIds = new Set();
+
+        // Apply explicit seating reassignments
+        explicitAllocations.forEach(function (allocInput) {
+          const matchingAlloc = existingAllocations.find(function (a) { return a.allocation_id === allocInput.allocation_id; });
+          const allocPatch = {};
+          if (allocInput.batch_id !== undefined) allocPatch.batch_id = allocInput.batch_id;
+          if (allocInput.status !== undefined) allocPatch.status = allocInput.status;
+          if (allocInput.remarks !== undefined) allocPatch.remarks = allocInput.remarks;
+          if (allocInput.status === "dropped" && matchingAlloc && !matchingAlloc.dropped_at) {
+            allocPatch.dropped_at = new Date().toISOString();
+          }
+
+          if (matchingAlloc) {
+            const updatedAlloc = repo.update(allocInput.allocation_id, allocPatch);
+            state.updatedAllocations.push(updatedAlloc);
+            updatedAllocationIds.add(allocInput.allocation_id);
+          }
+        });
+
+        // Calculate and apply seating status cascades using standalone internal helper
+        const newStatus = payload.status || payload.academic_status;
+        const cascadePatches = _calculateAllocationStatusCascade(
+          newStatus,
+          existingAllocations,
+          updatedAllocationIds
+        );
+
+        cascadePatches.forEach(function (patch) {
+          const allocId = patch.allocation_id;
+          delete patch.allocation_id;
+          const cascadedAlloc = repo.update(allocId, patch);
+          state.updatedAllocations.push(cascadedAlloc);
+        });
+      })
+      .execute();
+
+    return {
+      success: true,
+      message: `Enrollment contract [${payload.enrollment_id}] updated successfully.`,
+      data: {
+        enrollment: pipelineResult.updatedEnrollment,
+        allocations: pipelineResult.updatedAllocations
+      }
+    };
+  }
+}
+
+
+
+
+/**
+ * Internal helper to calculate seating allocation status cascades when an Enrollment status changes.
+ * Standard function declaration pattern outside property assignments.
+ * 
+ * @param {string} enrollmentStatus - Updated status or academic_status.
+ * @param {Array<Object>} existingAllocations - Current BatchAllocation rows.
+ * @param {Set<string>} updatedAllocationIds - Set of allocation_ids already handled explicitly.
+ * @returns {Array<Object>} List of allocation patch descriptors.
+ */
+function _calculateAllocationStatusCascade(enrollmentStatus, existingAllocations, updatedAllocationIds) {
+  if (!enrollmentStatus || !["withdrawn", "completed", "suspended"].includes(enrollmentStatus)) {
+    return [];
+  }
+
+  const cascadeStatus = enrollmentStatus === "withdrawn" ? "dropped" : enrollmentStatus;
+  const patches = [];
+
+  existingAllocations.forEach(function (alloc) {
+    if (!updatedAllocationIds.has(alloc.allocation_id) && alloc.status !== cascadeStatus) {
+      const patch = {
+        allocation_id: alloc.allocation_id,
+        status: cascadeStatus
+      };
+      if (cascadeStatus === "dropped") {
+        patch.dropped_at = new Date().toISOString();
+      }
+      patches.push(patch);
+    }
+  });
+
+  return patches;
 }
 
 // Global scope registration for Google Apps Script execution realm
 globalThis.FinanceAllocationUtil = FinanceAllocationUtil;
 globalThis.AcademicEnrollmentError = AcademicEnrollmentError;
 globalThis.AcademicEnrollmentService = AcademicEnrollmentService;
+globalThis._calculateAllocationStatusCascade = _calculateAllocationStatusCascade;
+
 
