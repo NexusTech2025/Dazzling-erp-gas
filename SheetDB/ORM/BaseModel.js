@@ -319,7 +319,7 @@ class BaseModel {
   toJSON() {
     const schema = this.constructor.schema;
     const json = {};
-    console.log(schema)
+
 
     // 1. Map fields defined in schema
     if (schema) {

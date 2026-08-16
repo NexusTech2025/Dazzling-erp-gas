@@ -1,0 +1,98 @@
+{
+  "knowledge_graph": {
+    "system": "AtomicPipeline Architectural Framework (SheetDB Transactions Layer)",
+    "nodes": [
+      {
+        "id": "AtomicPipeline",
+        "layer": "Transaction Orchestration & Execution Layer",
+        "responsibilities": [
+          "Initiates fluent execution chains via static method AtomicPipeline.begin(db, context)",
+          "Enforces duck-typed PipelineContext interface validation (must implement trackMutation)",
+          "Instantiates an isolated TransactionTracker instance and state payload object",
+          "Executes step boundaries eagerly wrapped inside SyncPromise chain",
+          "Intercepts boundary exceptions and automatically executes LIFO rollback prior to consumer error propagation"
+        ],
+        "time_complexity": "O(1) pipeline initiation, O(S) step execution where S is step count",
+        "references": [
+          "SheetDB/Transactions/AtomicPipeline.js",
+          "SheetDB/Transactions/PipelineContext.js"
+        ]
+      },
+      {
+        "id": "TrackingRepository",
+        "layer": "Repository Interception & Decorator Facade Layer",
+        "responsibilities": [
+          "Wraps raw DynamicRepository instances dynamically during addStep calls",
+          "Intercepts insert/insertMany mutations and registers trackInsert/trackInsertMany undo actions in TransactionTracker",
+          "Intercepts update/updateMany mutations, snapshots original row data via toDatabaseRow(), and registers trackUpdate undo actions",
+          "Intercepts remove/deleteMany mutations, snapshots backup models, and registers trackDelete undo actions",
+          "Delegates read operations (findById, where, all) directly to the underlying raw repository"
+        ],
+        "time_complexity": "O(1) interception per single row mutation, O(K) snapshot captures for batch mutations",
+        "references": [
+          "SheetDB/Transactions/AtomicPipeline.js"
+        ]
+      },
+      {
+        "id": "TransactionTracker",
+        "layer": "LIFO Undo Log & Recovery Engine",
+        "responsibilities": [
+          "Maintains an ordered stack of mutation undo operations (steps array)",
+          "Supports trackInsert, trackInsertMany, trackUpdate, trackDelete, and trackSync operation entries",
+          "Executes rollback operations in strict Last-In, First-Out (LIFO) reverse chronological order",
+          "Restores deleted records directly via TableGateway.insert(toDatabaseRow()) to preserve original primary key IDs",
+          "Restores updated rows directly to original row backup states"
+        ],
+        "time_complexity": "O(M) LIFO rollback execution where M is total tracked mutations",
+        "references": [
+          "SheetDB/Transactions/TransactionTracker.js"
+        ]
+      },
+      {
+        "id": "PipelineContext",
+        "layer": "Domain Context & Mutation Manifest Synchronization Layer",
+        "responsibilities": [
+          "Maintains mutationManifest array tracking mutated repository names",
+          "Safely forwards client metadata (auth context, user roles, env, headers)",
+          "Provides trackMutation(repositoryName) method for dynamic manifest registration during step completion"
+        ],
+        "time_complexity": "O(1) manifest tracking",
+        "references": [
+          "SheetDB/Transactions/PipelineContext.js"
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "source": "AtomicPipeline",
+        "target": "PipelineContext",
+        "relation": "validates_and_interacts",
+        "description": "Validates PipelineContext contract at initialization and updates mutationManifest via context.trackMutation(repoName)"
+      },
+      {
+        "source": "AtomicPipeline",
+        "target": "TransactionTracker",
+        "relation": "instantiates_and_triggers",
+        "description": "Creates dedicated TransactionTracker instance and calls tx.rollback() upon step boundary fracture"
+      },
+      {
+        "source": "AtomicPipeline",
+        "target": "TrackingRepository",
+        "relation": "decorates_and_invokes",
+        "description": "Wraps raw DynamicRepository in TrackingRepository facade and passes it to step operation blocks"
+      },
+      {
+        "source": "TrackingRepository",
+        "target": "TransactionTracker",
+        "relation": "logs_undo_operations",
+        "description": "Calls trackInsert, trackUpdate, trackDelete on TransactionTracker during repository mutations"
+      },
+      {
+        "source": "TransactionTracker",
+        "target": "TableGateway",
+        "relation": "executes_direct_restores",
+        "description": "Re-inserts deleted backup rows directly via TableGateway.insert() to preserve original primary key IDs"
+      }
+    ]
+  }
+}

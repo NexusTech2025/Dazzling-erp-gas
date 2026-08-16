@@ -97,6 +97,18 @@ You are strictly prohibited from auto-writing or updating any test files during 
 
 ---
 
+### **Rule N8: Reusable Helper Function Decomposition & Decoupled Scope**
+
+Any multi-step calculation, state evaluation, or data transformation must be decomposed into reusable helper functions within the appropriate domain Service, Utility, or Module scope. Internal helper functions must be defined using standard function declarations (`function _helperName(...)`) at module/file scope rather than property assignments or inline loops to ensure reusability, testability, and DRY compliance across actions.
+
+---
+
+### **Rule N9: Custom Domain Exception & Error Code Verification Mandate**
+
+Before introducing exception throwing in actions or domain services, the agent must verify whether domain-specific custom exception classes (e.g., `AcademicEnrollmentError` extending structured error bases) and explicit error code strings (e.g., `ENROLLMENT_NOT_FOUND`, `INVALID_BATCH_ALLOCATION`, `VALIDATION_FAILURE`) are defined and registered in `BaseActions.js` (`ErrorMappingRegistry`). If absent, the implementation plan MUST prioritize defining the custom exception class and registering its error code mappings prior to usage.
+
+---
+
 ## **2. Domain-Driven Business Rules**
 
 The following block defines the relational boundaries and business policies governing financial splitting, administrative separation, polymorphic registries, and transaction boundaries.
@@ -156,3 +168,26 @@ When removing parent entities, you must construct a leaf-first topological sorti
 
 * **Financial Protection:** Active payment lines (`Payment`, `Installments`) must block deletions of parent administrative contracts (`Enrollment`) by throwing a `SheetDB.ValidationError`.
 * **Cycle Check:** Independent child records must be evaluated against the "Visited Set Cycle Prevention" rules to bypass circular reference loops.
+
+---
+
+### Rule D7: Mandatory AtomicPipeline Architecture for Multi-Row/Table Transactions
+
+All multi-table or multi-row mutation workflows across `DazzlingDB` and `SheetDB` must be executed exclusively via the `SheetDB.AtomicPipeline` architecture (`SheetDB.AtomicPipeline.begin(db, context).addStep(...).execute()`).
+
+* **Fluent Execution Chain:** Transactions must use the fluent `.addStep(targetRepoKey, stepFunction)` chaining interface, passing a duck-typed or explicit `PipelineContext` instance (`new SheetDB.PipelineContext({ mutationManifest: [] })`).
+* **Automatic LIFO Rollback Safeguard:** Manual non-transactional single-table repository updates or un-tracked raw array loops are strictly forbidden for multi-entity writes. If any step block throws an exception, `AtomicPipeline` automatically triggers `TransactionTracker.rollback()` in LIFO order and restores initial table snapshots.
+
+---
+
+### Rule D8: Mandatory Pre-Flight Validation Engine Execution
+
+All Action classes and domain mutation workflows must execute pre-flight input and state validations exclusively via `ValidationEngine.run(vCtx, rules)` using a `ValidationContext` instance before entering persistence pipelines or database mutations.
+
+---
+
+### Rule D9: Declarative Validation Map Registry Location & Schema
+
+All validation rules must be saved under `DazzlingDB/Validate/` (e.g., `DazzlingDB/Validate/[Domain][Action]ValidationPipeline.js`). Rules must be structured as declarative Object maps containing named rule objects (`{ name, critical, validator, onError }`) exported globally, allowing individual validation routines to be independently reused, tested, and composed into pipeline arrays.
+
+

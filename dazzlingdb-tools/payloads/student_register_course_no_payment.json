@@ -1,0 +1,79 @@
+{
+  "profile": {
+    "student_name": "Karan Sharma",
+    "email": "karan.sharma.test2026@dazzling.com",
+    "phone": "+919876501234",
+    "gender": "Male",
+    "dob": "2008-07-10",
+    "mother_name": "Sunita Sharma",
+    "father_name": "Ramesh Sharma",
+    "avatarUrl": "https://cdn.dazzling.com/avatars/karan.png",
+    "status": "active"
+  },
+  "address": {
+    "line1": "Plot 12, Malviya Nagar",
+    "line2": "Near Apex Mall",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "pin_code": "302017",
+    "country": "India"
+  },
+  "contact": {
+    "email": "karan.contact@dazzling.com",
+    "mobile_number": "9876501234",
+    "emergency_name": "Ramesh Sharma",
+    "emergency_phone": "9876501235",
+    "emergency_relationship": "Father"
+  },
+  "education": [
+    {
+      "highest_qualification": "Class 10",
+      "institution_name": "St. Anselm Senior Secondary School",
+      "year_of_passing": 2025,
+      "percentage_or_cgpa": "88.5%"
+    }
+  ],
+  "enrollments": [
+    {
+      "enrollment_type": "course",
+      "item_id": "CRS-FD0D2D6C",
+      "fee": 8000,
+      "roll_number": 1051,
+      "enrollment_date": "2026-08-16",
+      "status": "active",
+      "academic_status": "active",
+      "batch_id": "BAT-03EB435A"
+    }
+  ],
+  "feeAccount": {
+    "total_fee": 8000,
+    "discount": 0,
+    "final_fee": 8000,
+    "amount_paid": 0,
+    "balance_due": 8000,
+    "is_overdue": false,
+    "penalty_amount": 0,
+    "next_due_date": "2026-09-01",
+    "status": "active",
+    "remarks": "Standard course enrollment with zero down payment",
+    "created_by": "admin_moni",
+    "installments": [
+      {
+        "installment_number": 1,
+        "due_amount": 4000,
+        "paid_amount": 0,
+        "late_fee_amount": 0,
+        "due_date": "2026-09-01",
+        "status": "pending"
+      },
+      {
+        "installment_number": 2,
+        "due_amount": 4000,
+        "paid_amount": 0,
+        "late_fee_amount": 0,
+        "due_date": "2026-10-01",
+        "status": "pending"
+      }
+    ]
+  }
+}

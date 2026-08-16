@@ -490,7 +490,8 @@ const DATABASE_SCHEMA = {
               "choices": [
                 "active",
                 "completed",
-                "withdrawn"
+                "withdrawn",
+                "discarded"
               ],
               "default": "active",
               "maxLength": 255
@@ -1596,7 +1597,8 @@ const DATABASE_SCHEMA = {
                 "pending",
                 "partially_paid",
                 "paid",
-                "overdue"
+                "overdue",
+                "cancelled"
               ],
               "default": "pending",
               "maxLength": 255
@@ -1991,7 +1993,8 @@ const DATABASE_SCHEMA = {
                 "active",
                 "completed",
                 "defaulted",
-                "refunded"
+                "refunded",
+                "cancelled"
               ],
               "default": "active",
               "maxLength": 255
@@ -2945,7 +2948,23 @@ const DATABASE_SCHEMA = {
             },
             "percentage_or_cgpa": {
               "type": "string",
-              "maxLength": 255
+              "maxLength": 255,
+              "validations": [
+                {
+                  "rule": "custom",
+                  "handler": "validatePercentageOrCgpa"
+                }
+              ]
+            },
+            "meta": {
+              "type": "json",
+              "description": "Metadata container for score type and education attributes",
+              "validations": [
+                {
+                  "rule": "custom",
+                  "handler": "validateEducationMeta"
+                }
+              ]
             },
             "education_id": {
               "type": "auto",

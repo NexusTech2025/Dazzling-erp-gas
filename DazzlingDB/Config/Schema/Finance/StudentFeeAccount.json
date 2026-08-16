@@ -60,7 +60,8 @@
         "active",
         "completed",
         "defaulted",
-        "refunded"
+        "refunded",
+        "cancelled"
       ],
       "default": "active",
       "maxLength": 255

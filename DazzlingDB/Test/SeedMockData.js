@@ -300,10 +300,82 @@ const FixedMockData = (function () {
       }
     ],
 
-    // --- 8. ENROLLMENTS (2) & BATCH ALLOCATIONS (2) ---
+    // --- 8. ENROLLMENTS & BATCH ALLOCATIONS ---
     enrollments: [
       {
         enrollment_id: "ENR-001001",
+        student_id: "STU-001001",
+        enrollment_type: "course",
+        item_id: "CRS-PHY001",
+        enrollment_date: "2026-06-01",
+        status: "active",
+        academic_status: "active"
+      },
+      {
+        enrollment_id: "ENR-001002",
+        student_id: "STU-001001",
+        enrollment_type: "course",
+        item_id: "CRS-PHY001",
+        enrollment_date: "2026-06-01",
+        status: "active",
+        academic_status: "active"
+      },
+      {
+        enrollment_id: "ENR-001004",
+        student_id: "STU-001001",
+        enrollment_type: "course",
+        item_id: "CRS-PHY001",
+        enrollment_date: "2026-06-01",
+        status: "active",
+        academic_status: "active"
+      },
+      {
+        enrollment_id: "ENR-001005",
+        student_id: "STU-001001",
+        enrollment_type: "course",
+        item_id: "CRS-PHY001",
+        enrollment_date: "2026-06-01",
+        status: "active",
+        academic_status: "active"
+      },
+      {
+        enrollment_id: "ENR-001007",
+        student_id: "STU-001001",
+        enrollment_type: "course",
+        item_id: "CRS-PHY001",
+        enrollment_date: "2026-06-01",
+        status: "active",
+        academic_status: "active"
+      },
+      {
+        enrollment_id: "ENR-001008",
+        student_id: "STU-001001",
+        enrollment_type: "course",
+        item_id: "CRS-PHY001",
+        enrollment_date: "2026-06-01",
+        status: "active",
+        academic_status: "active"
+      },
+      {
+        enrollment_id: "ENR-001009",
+        student_id: "STU-001001",
+        enrollment_type: "course",
+        item_id: "CRS-PHY001",
+        enrollment_date: "2026-06-01",
+        status: "active",
+        academic_status: "active"
+      },
+      {
+        enrollment_id: "ENR-001011",
+        student_id: "STU-001001",
+        enrollment_type: "course",
+        item_id: "CRS-PHY001",
+        enrollment_date: "2026-06-01",
+        status: "active",
+        academic_status: "active"
+      },
+      {
+        enrollment_id: "ENR-001012",
         student_id: "STU-001001",
         enrollment_type: "course",
         item_id: "CRS-PHY001",
@@ -331,6 +403,70 @@ const FixedMockData = (function () {
         status: "active"
       },
       {
+        allocation_id: "BAL-001002",
+        student_id: "STU-001001",
+        enrollment_id: "ENR-001002",
+        course_id: "CRS-PHY001",
+        batch_id: "BAT-PHY12A01",
+        status: "active"
+      },
+      {
+        allocation_id: "BAL-001004",
+        student_id: "STU-001001",
+        enrollment_id: "ENR-001004",
+        course_id: "CRS-PHY001",
+        batch_id: "BAT-PHY12A01",
+        status: "active"
+      },
+      {
+        allocation_id: "BAL-001005",
+        student_id: "STU-001001",
+        enrollment_id: "ENR-001005",
+        course_id: "CRS-PHY001",
+        batch_id: "BAT-PHY12A01",
+        status: "active"
+      },
+      {
+        allocation_id: "BAL-001007",
+        student_id: "STU-001001",
+        enrollment_id: "ENR-001007",
+        course_id: "CRS-PHY001",
+        batch_id: "BAT-PHY12A01",
+        status: "active"
+      },
+      {
+        allocation_id: "BAL-001008",
+        student_id: "STU-001001",
+        enrollment_id: "ENR-001008",
+        course_id: "CRS-PHY001",
+        batch_id: "BAT-PHY12A01",
+        status: "active"
+      },
+      {
+        allocation_id: "BAL-001009",
+        student_id: "STU-001001",
+        enrollment_id: "ENR-001009",
+        course_id: "CRS-PHY001",
+        batch_id: "BAT-PHY12A01",
+        status: "active"
+      },
+      {
+        allocation_id: "BAL-001011",
+        student_id: "STU-001001",
+        enrollment_id: "ENR-001011",
+        course_id: "CRS-PHY001",
+        batch_id: "BAT-PHY12A01",
+        status: "active"
+      },
+      {
+        allocation_id: "BAL-001012",
+        student_id: "STU-001001",
+        enrollment_id: "ENR-001012",
+        course_id: "CRS-PHY001",
+        batch_id: "BAT-PHY12A01",
+        status: "active"
+      },
+      {
         allocation_id: "BAL-002002",
         student_id: "STU-002002",
         enrollment_id: "ENR-002002",
@@ -340,11 +476,99 @@ const FixedMockData = (function () {
       }
     ],
 
-    // --- 9. STUDENT FEE ACCOUNTS (2) & INSTALLMENTS (4) ---
+    // --- 9. STUDENT FEE ACCOUNTS & INSTALLMENTS ---
     studentFeeAccounts: [
       {
         student_fee_id: "SFA-001001",
         enrollment_id: "ENR-001001",
+        total_fee: 15000,
+        discount: 0,
+        final_fee: 15000,
+        amount_paid: 2000,
+        balance_due: 13000,
+        is_overdue: false,
+        status: "active"
+      },
+      {
+        student_fee_id: "SFA-001002",
+        enrollment_id: "ENR-001002",
+        total_fee: 15000,
+        discount: 0,
+        final_fee: 15000,
+        amount_paid: 2000,
+        balance_due: 13000,
+        is_overdue: false,
+        status: "active"
+      },
+      {
+        student_fee_id: "SFA-001004",
+        enrollment_id: "ENR-001004",
+        total_fee: 15000,
+        discount: 0,
+        final_fee: 15000,
+        amount_paid: 2000,
+        balance_due: 13000,
+        is_overdue: false,
+        status: "active"
+      },
+      {
+        student_fee_id: "SFA-001005",
+        enrollment_id: "ENR-001005",
+        total_fee: 15000,
+        discount: 0,
+        final_fee: 15000,
+        amount_paid: 2000,
+        balance_due: 13000,
+        is_overdue: false,
+        status: "active"
+      },
+      {
+        student_fee_id: "SFA-001007",
+        enrollment_id: "ENR-001007",
+        total_fee: 15000,
+        discount: 0,
+        final_fee: 15000,
+        amount_paid: 2000,
+        balance_due: 13000,
+        is_overdue: false,
+        status: "active"
+      },
+      {
+        student_fee_id: "SFA-001008",
+        enrollment_id: "ENR-001008",
+        total_fee: 15000,
+        discount: 0,
+        final_fee: 15000,
+        amount_paid: 2000,
+        balance_due: 13000,
+        is_overdue: false,
+        status: "active"
+      },
+      {
+        student_fee_id: "SFA-001009",
+        enrollment_id: "ENR-001009",
+        total_fee: 15000,
+        discount: 0,
+        final_fee: 15000,
+        amount_paid: 2000,
+        balance_due: 13000,
+        is_overdue: false,
+        status: "active"
+      },
+      {
+        student_fee_id: "SFA-001011",
+        enrollment_id: "ENR-001011",
+        total_fee: 15000,
+        discount: 0,
+        final_fee: 15000,
+        amount_paid: 2000,
+        balance_due: 13000,
+        is_overdue: false,
+        status: "active"
+      },
+      {
+        student_fee_id: "SFA-001012",
+        enrollment_id: "ENR-001012",
         total_fee: 15000,
         discount: 0,
         final_fee: 15000,
@@ -517,25 +741,29 @@ const FixedMockData = (function () {
 
     // Strict Reverse-Topological LIFO Teardown
     try {
-      data.payments.forEach(p => db.Payment && db.Payment.remove(p.payment_id));
-      data.installments.forEach(i => db.Installment && db.Installment.remove(i.installment_id));
-      data.studentFeeAccounts.forEach(sfa => db.StudentFeeAccount && db.StudentFeeAccount.remove(sfa.student_fee_id));
-      data.batchAllocations.forEach(ba => db.BatchAllocation && db.BatchAllocation.remove(ba.allocation_id));
-      data.enrollments.forEach(e => db.Enrollment && db.Enrollment.remove(e.enrollment_id));
+      if (db.MoneyTransaction) db.MoneyTransaction.all().forEach(m => db.MoneyTransaction.remove(m.transaction_id));
+      if (db.FeeAdjustment) db.FeeAdjustment.all().forEach(fa => db.FeeAdjustment.remove(fa.adjustment_id));
+      if (db.Payment) db.Payment.all().forEach(p => db.Payment.remove(p.payment_id));
+      if (db.Installment) db.Installment.all().forEach(i => db.Installment.remove(i.installment_id));
+      if (db.StudentFeeAccount) db.StudentFeeAccount.all().forEach(sfa => db.StudentFeeAccount.remove(sfa.student_fee_id));
+      if (db.BatchAllocation) db.BatchAllocation.all().forEach(ba => db.BatchAllocation.remove(ba.allocation_id));
+      if (db.Enrollment) db.Enrollment.all().forEach(e => db.Enrollment.remove(e.enrollment_id));
 
-      data.educations.forEach(ed => db.Education && db.Education.remove(ed.education_id));
-      data.contactInfos.forEach(c => db.ContactInfo && db.ContactInfo.remove(c.contact_id));
-      data.addresses.forEach(a => db.Address && db.Address.remove(a.address_id));
-      data.students.forEach(s => db.Student && db.Student.remove(s.student_id));
+      if (db.Education) db.Education.all().forEach(ed => db.Education.remove(ed.education_id));
+      if (db.ContactInfo) db.ContactInfo.all().forEach(c => db.ContactInfo.remove(c.contact_id));
+      if (db.Address) db.Address.all().forEach(a => db.Address.remove(a.address_id));
+      if (db.Student) db.Student.all().forEach(s => db.Student.remove(s.student_id));
 
-      data.batches.forEach(b => db.Batch && db.Batch.remove(b.batch_id));
-      data.teachers.forEach(t => db.Teacher && db.Teacher.remove(t.teacher_id));
+      if (db.Batch) db.Batch.all().forEach(b => db.Batch.remove(b.batch_id));
+      if (db.Teacher) db.Teacher.all().forEach(t => db.Teacher.remove(t.teacher_id));
 
-      data.packageItems.forEach(pi => db.PackageItem && db.PackageItem.remove(pi.item_id));
-      data.packages.forEach(p => db.Package && db.Package.remove(p.package_id));
-      data.courses.forEach(c => db.Course && db.Course.remove(c.course_id));
-      data.courseTypes.forEach(ct => db.CourseType && db.CourseType.remove(ct.segment_id));
-      data.branches.forEach(b => db.Branch && db.Branch.remove(b.branch_id));
+      if (db.PackagePerk) db.PackagePerk.all().forEach(pp => db.PackagePerk.remove(pp.perk_id));
+      if (db.PackageItem) db.PackageItem.all().forEach(pi => db.PackageItem.remove(pi.item_id));
+      if (db.Package) db.Package.all().forEach(p => db.Package.remove(p.package_id));
+      if (db.FeePlan) db.FeePlan.all().forEach(fp => db.FeePlan.remove(fp.fee_plan_id));
+      if (db.Course) db.Course.all().forEach(c => db.Course.remove(c.course_id));
+      if (db.CourseType) db.CourseType.all().forEach(ct => db.CourseType.remove(ct.segment_id));
+      if (db.Branch) db.Branch.all().forEach(b => db.Branch.remove(b.branch_id));
 
       console.log("🧹 Fixed Mock Data purged successfully from Live Database.");
     } catch (err) {

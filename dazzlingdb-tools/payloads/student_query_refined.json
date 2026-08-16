@@ -4,7 +4,8 @@
     "contact",
     "education",
     "enrollments",
-    "allocations"
+    "allocations",
+    "studentattendance"
   ],
   "limit": 5,
   "display": {
@@ -13,7 +14,8 @@
       "student_name",
       "address",
       "education",
-      "enrollments"
+      "enrollments",
+      "studentattendance"
     ],
     "sort": {
       "by": "student_name",

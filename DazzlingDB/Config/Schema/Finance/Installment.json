@@ -31,7 +31,8 @@
         "pending",
         "partially_paid",
         "paid",
-        "overdue"
+        "overdue",
+        "cancelled"
       ],
       "default": "pending",
       "maxLength": 255
