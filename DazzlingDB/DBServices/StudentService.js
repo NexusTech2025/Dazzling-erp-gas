@@ -1289,56 +1289,56 @@ const StudentService = {
 
     if (paymentIds.length > 0) {
       pipeline.addStep("Payment", function(repo) {
-        paymentIds.forEach(id => repo.remove(id));
+        repo.deleteMany(paymentIds);
       });
     }
     if (installmentIds.length > 0) {
       pipeline.addStep("Installment", function(repo) {
-        installmentIds.forEach(id => repo.remove(id));
+        repo.deleteMany(installmentIds);
       });
     }
     if (feeAccountIds.length > 0) {
       pipeline.addStep("StudentFeeAccount", function(repo) {
-        feeAccountIds.forEach(id => repo.remove(id));
+        repo.deleteMany(feeAccountIds);
       });
     }
     if (attendanceIds.length > 0) {
       pipeline.addStep("StudentAttendance", function(repo) {
-        attendanceIds.forEach(id => repo.remove(id));
+        repo.deleteMany(attendanceIds);
       });
     }
     if (testMarkIds.length > 0) {
       pipeline.addStep("TestMarks", function(repo) {
-        testMarkIds.forEach(id => repo.remove(id));
+        repo.deleteMany(testMarkIds);
       });
     }
     if (allocationIds.length > 0) {
       pipeline.addStep("BatchAllocation", function(repo) {
-        allocationIds.forEach(id => repo.remove(id));
+        repo.deleteMany(allocationIds);
       });
     }
     if (enrollmentIds.length > 0) {
       pipeline.addStep("Enrollment", function(repo) {
-        enrollmentIds.forEach(id => repo.remove(id));
+        repo.deleteMany(enrollmentIds);
       });
     }
     if (educationIds.length > 0) {
       pipeline.addStep("Education", function(repo) {
-        educationIds.forEach(id => repo.remove(id));
+        repo.deleteMany(educationIds);
       });
     }
     if (contactIds.length > 0) {
       pipeline.addStep("ContactInfo", function(repo) {
-        contactIds.forEach(id => repo.remove(id));
+        repo.deleteMany(contactIds);
       });
     }
     if (addressIds.length > 0) {
       pipeline.addStep("Address", function(repo) {
-        addressIds.forEach(id => repo.remove(id));
+        repo.deleteMany(addressIds);
       });
     }
     pipeline.addStep("Student", function(repo) {
-      repo.remove(studentId);
+      repo.deleteMany([studentId]);
     });
 
     pipeline.execute();

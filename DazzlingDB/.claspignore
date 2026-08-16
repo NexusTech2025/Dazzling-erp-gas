@@ -52,6 +52,7 @@ Test/*
 !Test/Student_DeleteUntouchedTests.js
 !Test/Student_SoftDeleteTests.js
 !Test/Student_HardDeleteTests.js
+!Test/FeeAccount_InstallmentConstraintTests.js
 
 
 
