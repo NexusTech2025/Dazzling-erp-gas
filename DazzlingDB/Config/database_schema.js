@@ -3055,7 +3055,8 @@ const DATABASE_SCHEMA = {
               "choices": [
                 "active",
                 "inactive",
-                "applicant"
+                "applicant",
+                "deleted"
               ],
               "default": "active",
               "maxLength": 255

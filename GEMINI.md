@@ -73,6 +73,7 @@ You must follow this sequence for every task:
 * Avoid unnecessary explanations or filler
 * Think out loud in a structured way
 * Justify technical decisions clearly
+* **Chat Response Formatting Rule:** Always use standard Unicode symbols (e.g., ₹, →, ≤, ≥, ≠, ×, ÷, ±, ∑, Δ, etc.) and plain formatted text for mathematical expressions in chat responses instead of LaTeX syntax ($...$ or $$...$$).
 
 ---
 
