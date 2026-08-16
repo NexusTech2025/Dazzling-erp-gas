@@ -1,0 +1,79 @@
+{
+  "profile": {
+    "student_name": "Rohan Malhotra",
+    "email": "rohan.malhotra.2026@dazzling.com",
+    "phone": "+919876512345",
+    "gender": "Male",
+    "dob": "2009-03-25",
+    "mother_name": "Pooja Malhotra",
+    "father_name": "Vikram Malhotra",
+    "avatarUrl": "https://cdn.dazzling.com/avatars/rohan.png",
+    "status": "active"
+  },
+  "address": {
+    "line1": "Flat 402, Royal Palms, Vaishali Nagar",
+    "line2": "Near Gandhi Path",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "pin_code": "302021",
+    "country": "India"
+  },
+  "contact": {
+    "email": "rohan.malhotra.2026@dazzling.com",
+    "mobile_number": "9876512345",
+    "emergency_name": "Vikram Malhotra",
+    "emergency_phone": "9876512346",
+    "emergency_relationship": "Father"
+  },
+  "education": [
+    {
+      "highest_qualification": "Class 10",
+      "institution_name": "Delhi Public School, Jaipur",
+      "year_of_passing": 2025,
+      "percentage_or_cgpa": "91.2%"
+    }
+  ],
+  "enrollments": [
+    {
+      "enrollment_type": "course",
+      "item_id": "CRS-FB15A55B",
+      "fee": 15000,
+      "roll_number": 1052,
+      "enrollment_date": "2026-08-16",
+      "status": "active",
+      "academic_status": "active",
+      "batch_id": "BAT-0A4F4A04"
+    }
+  ],
+  "feeAccount": {
+    "total_fee": 15000,
+    "discount": 0,
+    "final_fee": 15000,
+    "amount_paid": 0,
+    "balance_due": 15000,
+    "is_overdue": false,
+    "penalty_amount": 0,
+    "next_due_date": "2026-09-01",
+    "status": "active",
+    "remarks": "Enrolled with zero immediate down payment",
+    "created_by": "admin_moni",
+    "installments": [
+      {
+        "installment_number": 1,
+        "due_amount": 7500,
+        "paid_amount": 0,
+        "late_fee_amount": 0,
+        "due_date": "2026-09-01",
+        "status": "pending"
+      },
+      {
+        "installment_number": 2,
+        "due_amount": 7500,
+        "paid_amount": 0,
+        "late_fee_amount": 0,
+        "due_date": "2026-10-01",
+        "status": "pending"
+      }
+    ]
+  }
+}

@@ -509,7 +509,41 @@ const DATABASE_SCHEMA = {
             },
             "metadata": {
               "type": "json",
-              "required": false
+              "required": false,
+              "description": "Structured JSON metadata snapshot for enrollment attributes, course fee distributions, migration provenance, shift preferences, and administrative notes.",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "course_fees": {
+                    "type": "object",
+                    "description": "Mapping of individual course IDs (e.g. CRS-XXXXXX) to their frozen base fee amounts at enrollment creation time.",
+                    "additionalProperties": {
+                      "type": "number"
+                    }
+                  },
+                  "migrated_from": {
+                    "type": "string",
+                    "description": "Identifier of the prior enrollment (e.g. ENR-XXXXXX) if this record originated from an enrollment migration."
+                  },
+                  "shift_preference": {
+                    "type": "string",
+                    "enum": [
+                      "morning",
+                      "afternoon",
+                      "evening"
+                    ],
+                    "description": "Student's requested schedule batch shift timing."
+                  },
+                  "notes": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional administrative notes or special conditions."
+                  }
+                },
+                "additionalProperties": true
+              }
             },
             "enrollment_id": {
               "type": "auto",
@@ -2586,12 +2620,12 @@ const DATABASE_SCHEMA = {
                 "revenue_percentage"
               ],
               "maxLength": 255,
-              "description": "Dictates the distinct mathematical strategy used by the automated payroll payroll engine to compute line payouts.\nMaps directly to system calculation functions: absolute flat calculation, annualized fraction splits, or variable percentage shares.\nActs as a structural gateway, redefining how the accompanying 'base_value' coefficient must be evaluated at runtime."
+              "description": "Dictates the distinct mathematical strategy used by the automated payroll engine to compute line payouts.\n'monthly' and 'yearly' evaluate flat baseline compensation with calendar proration.\n'revenue_percentage' calculates variable compensation based on verified student tuition received in the Payment table, allocating course fee weights for package enrollments."
             },
             "base_value": {
               "type": "number",
               "required": true,
-              "description": "The core numerical multiplier or flat payment value parsed directly by the payroll resolution script.\nInterpreted as a pure flat currency amount when paired with 'monthly' or 'yearly' strategic rate settings.\nFunctions as a floating percentage coefficient (e.g., 25.0 for 25.0%) when evaluating dynamic 'revenue_percentage' entries."
+              "description": "The core numerical multiplier or flat payment value parsed directly by the payroll resolution script.\nInterpreted as a pure flat currency amount when paired with 'monthly' or 'yearly' strategic rate settings.\nFunctions as a percentage rate (e.g., 25.0 for 25.0%) applied to student fee revenue when evaluating 'single_batch' 'revenue_percentage' entries."
             },
             "total_contract_value": {
               "type": "number",
@@ -2607,13 +2641,13 @@ const DATABASE_SCHEMA = {
                 "single_batch"
               ],
               "maxLength": 255,
-              "description": "Determines the structural operational boundary and target application scope of this compensation rule.\n'global' covers all unassigned activities, while 'single_batch' limits rules exclusively to one operational class target.\n'batch_group' signals to the processing engine that complex, multi-batch configurations must be parsed downstream."
+              "description": "Determines the structural operational boundary and target application scope of this compensation rule.\n'global' covers all unassigned activities, while 'single_batch' limits rules exclusively to one operational class target.\n'batch_group' signals to the processing engine that multi-batch configurations with independent rates must be parsed downstream."
             },
             "scope_id": {
               "type": "string",
               "required": false,
               "maxLength": 255,
-              "description": "Holds a singular string target ID matching a specific Batch table record when scope is localized.\nWhen 'scope_type' matches 'batch_group', it stores an in-memory stringified JSON object mapping batch IDs to weight splits.\nExample structure: '{\"BTC-101\":60,\"BTC-102\":40}', which allows the engine to distribute fixed base payouts proportionally without extra table rows."
+              "description": "Holds a singular string target ID matching a specific Batch table record when scope is single_batch.\nWhen 'scope_type' matches 'batch_group', it stores an in-memory stringified JSON object mapping batch IDs to independent percentage rates.\nExample structure: '{\"BTC-101\":25,\"BTC-102\":20}', where each batch rate is independently evaluated (0 to 100%) against that batch's collected student fee revenue."
             },
             "remark": {
               "type": "string",

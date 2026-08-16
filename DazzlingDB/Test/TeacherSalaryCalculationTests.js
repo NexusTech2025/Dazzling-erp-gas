@@ -33,7 +33,7 @@ function runTeacherSalaryCalculationTests() {
         fn();
       } catch (err) {
         threw = true;
-        if (!expectedRegex.test(err.message)) {
+        if (expectedRegex && !expectedRegex.test(err.message)) {
           throw new Error((message || "") + " -> Expected error matching " + expectedRegex + ", but got: " + err.message);
         }
       }
@@ -52,7 +52,11 @@ function runTeacherSalaryCalculationTests() {
   const mockDb = {
     teachers: {},
     configs: [],
-    transactions: [],
+    allocations: [],
+    enrollments: {},
+    studentFeeAccounts: [],
+    payments: [],
+    paymentTransactions: [],
     
     Teacher: {
       findById: function(id) {
@@ -62,50 +66,95 @@ function runTeacherSalaryCalculationTests() {
     
     TeacherSalaryConfig: {
       where: function(filter) {
-        if (!filter || typeof filter.teacher_id !== 'string') {
+        if (!filter || typeof filter.entity_id !== 'string') {
           throw new Error("where() expects an equality filter object");
         }
-        return mockDb.configs.filter(c => c.teacher_id === filter.teacher_id);
+        return mockDb.configs.filter(c => c.entity_id === filter.entity_id && c.entity_type === filter.entity_type);
       }
     },
-    
-    MoneyTransaction: {
+
+    BatchAllocation: {
       where: function(filter) {
-        if (!filter || typeof filter.batch_id !== 'string' || filter.status !== 'cleared') {
+        if (!filter || typeof filter.batch_id !== 'string') {
           throw new Error("where() expects an equality filter object");
         }
-        return mockDb.transactions.filter(t => t.batch_id === filter.batch_id && t.status === filter.status);
+        return mockDb.allocations.filter(a => a.batch_id === filter.batch_id);
+      }
+    },
+
+    Enrollment: {
+      findById: function(id) {
+        return mockDb.enrollments[id] || null;
+      }
+    },
+
+    StudentFeeAccount: {
+      where: function(filter) {
+        if (!filter || typeof filter.enrollment_id !== 'string') {
+          throw new Error("where() expects an equality filter object");
+        }
+        return mockDb.studentFeeAccounts.filter(s => s.enrollment_id === filter.enrollment_id);
+      }
+    },
+
+    Payment: {
+      where: function(filter) {
+        if (!filter || typeof filter.student_fee_id !== 'string') {
+          throw new Error("where() expects an equality filter object");
+        }
+        return mockDb.payments.filter(p => p.student_fee_id === filter.student_fee_id);
+      }
+    },
+
+    TeacherPaymentTransaction: {
+      where: function(filter) {
+        if (!filter || typeof filter.salary_config_id !== 'string') {
+          throw new Error("where() expects an equality filter object");
+        }
+        return mockDb.paymentTransactions.filter(t => t.salary_config_id === filter.salary_config_id);
       }
     }
   };
 
+  function resetDb() {
+    mockDb.teachers = {};
+    mockDb.configs = [];
+    mockDb.allocations = [];
+    mockDb.enrollments = {};
+    mockDb.studentFeeAccounts = [];
+    mockDb.payments = [];
+    mockDb.paymentTransactions = [];
+  }
+
   // Test Case 1: Teacher Not Found Exception
   (function() {
+    resetDb();
     const engine = new TeacherSalaryCalculationEngine(mockDb);
     assert.throws(
       function() { engine.calculateTeacherPayroll("TCH-INVALID", "2026-06"); },
-      /Teacher record 'TCH-INVALID' not found/
+      /Teacher.*not found/i
     );
     console.log("✅ Test 1: Teacher Not Found exception passed.");
   })();
 
   // Test Case 2: Strategy A - Flat monthly global configuration
   (function() {
-    mockDb.teachers = {};
-    mockDb.configs = [];
-    mockDb.transactions = [];
+    resetDb();
 
     mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
     mockDb.configs.push({
       salary_config_id: "TSC-001",
-      teacher_id: "TCH-001",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "recurring_monthly",
       effective_from: "2026-01-01",
       effective_to: null,
       rate_type: "monthly",
       base_value: 15000.00,
       scope_type: "global",
-      scope_id: null
+      scope_id: null,
+      contract_status: "active",
+      settlement_state: "unsettled"
     });
 
     const engine = new TeacherSalaryCalculationEngine(mockDb);
@@ -118,28 +167,28 @@ function runTeacherSalaryCalculationTests() {
 
   // Test Case 3: Strategy A - Flat monthly with batch_group weight splits
   (function() {
-    mockDb.teachers = {};
-    mockDb.configs = [];
-    mockDb.transactions = [];
+    resetDb();
 
     mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
     mockDb.configs.push({
       salary_config_id: "TSC-002",
-      teacher_id: "TCH-001",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "recurring_monthly",
       effective_from: "2026-01-01",
       effective_to: null,
       rate_type: "monthly",
       base_value: 10000.00,
       scope_type: "batch_group",
-      scope_id: '{"BTC-101":60,"BTC-102":40}'
+      scope_id: '{"BTC-101":60,"BTC-102":40}',
+      contract_status: "active",
+      settlement_state: "unsettled"
     });
 
     const engine = new TeacherSalaryCalculationEngine(mockDb);
     const txs = engine.calculateTeacherPayroll("TCH-001", "2026-06");
     assert.strictEqual(txs.length, 2);
     
-    // Sort transactions by batch note for deterministic assertion
     txs.sort((a, b) => a.notes.localeCompare(b.notes));
     
     assert.strictEqual(txs[0].amount, 6000.00);
@@ -151,212 +200,227 @@ function runTeacherSalaryCalculationTests() {
 
   // Test Case 4: Strategy B - Amortized yearly strategy
   (function() {
-    mockDb.teachers = {};
-    mockDb.configs = [];
-    mockDb.transactions = [];
+    resetDb();
 
     mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
     mockDb.configs.push({
       salary_config_id: "TSC-003",
-      teacher_id: "TCH-001",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "fixed_duration_pool",
       effective_from: "2026-01-01",
       effective_to: "2026-12-31",
       rate_type: "yearly",
       base_value: 120000.00,
       scope_type: "global",
-      scope_id: null
+      scope_id: null,
+      contract_status: "active",
+      settlement_state: "unsettled"
     });
 
     const engine = new TeacherSalaryCalculationEngine(mockDb);
     const txs = engine.calculateTeacherPayroll("TCH-001", "2026-06");
     assert.strictEqual(txs.length, 1);
-    assert.strictEqual(txs[0].amount, 10000.00); // 120,000 / 12
+    assert.strictEqual(txs[0].amount, 10000.00);
     console.log("✅ Test 4: Amortized yearly strategy calculation passed.");
   })();
 
-  // Test Case 5: Strategy C - Variable revenue_percentage strategy
+  // Test Case 5: Strategy C - Variable revenue_percentage strategy on single_batch via Payment
   (function() {
-    mockDb.teachers = {};
-    mockDb.configs = [];
-    mockDb.transactions = [];
+    resetDb();
 
     mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
     mockDb.configs.push({
       salary_config_id: "TSC-004",
-      teacher_id: "TCH-001",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "recurring_monthly",
       effective_from: "2026-06-01",
       effective_to: "2026-11-30",
       rate_type: "revenue_percentage",
       base_value: 20.0,
       scope_type: "single_batch",
-      scope_id: "BTC-101"
+      scope_id: "BTC-101",
+      contract_status: "active",
+      settlement_state: "unsettled"
     });
 
-    // Seed money transactions
-    mockDb.transactions.push(
-      { transaction_id: "MTR-001", batch_id: "BTC-101", amount: 5000, status: "cleared", transaction_date: "2026-06-10" },
-      { transaction_id: "MTR-002", batch_id: "BTC-101", amount: 3000, status: "cleared", transaction_date: "2026-06-15" },
-      // Same batch but next month (should be ignored)
-      { transaction_id: "MTR-003", batch_id: "BTC-101", amount: 4000, status: "cleared", transaction_date: "2026-07-01" },
-      // Different batch same month (should be ignored)
-      { transaction_id: "MTR-004", batch_id: "BTC-102", amount: 2000, status: "cleared", transaction_date: "2026-06-20" },
-      // Uncleared payment (should be ignored)
-      { transaction_id: "MTR-005", batch_id: "BTC-101", amount: 1000, status: "pending", transaction_date: "2026-06-25" }
+    mockDb.allocations.push({ allocation_id: "BAL-001", batch_id: "BTC-101", enrollment_id: "ENR-001", course_id: "CRS-001" });
+    mockDb.enrollments["ENR-001"] = { enrollment_id: "ENR-001", enrollment_type: "course" };
+    mockDb.studentFeeAccounts.push({ student_fee_id: "SFA-001", enrollment_id: "ENR-001" });
+
+    mockDb.payments.push(
+      { payment_id: "PAY-001", student_fee_id: "SFA-001", amount_paid: 5000, status: "success", payment_date: "2026-06-10" },
+      { payment_id: "PAY-002", student_fee_id: "SFA-001", amount_paid: 3000, status: "success", payment_date: "2026-06-15" },
+      { payment_id: "PAY-003", student_fee_id: "SFA-001", amount_paid: 4000, status: "success", payment_date: "2026-07-01" },
+      { payment_id: "PAY-004", student_fee_id: "SFA-001", amount_paid: 1000, status: "pending", payment_date: "2026-06-25" }
     );
 
     const engine = new TeacherSalaryCalculationEngine(mockDb);
     const txs = engine.calculateTeacherPayroll("TCH-001", "2026-06");
     assert.strictEqual(txs.length, 1);
-    // Cleared revenue for BTC-101 in June = 5000 + 3000 = 8000. 20% of 8000 = 1600.
     assert.strictEqual(txs[0].amount, 1600.00);
     console.log("✅ Test 5: Variable revenue_percentage strategy calculation passed.");
   })();
 
-  // Test Case 6: Invalid Weights Validation Failure
+  // Test Case 6: Invalid Percentage Rate (>100) Validation Failure
   (function() {
-    mockDb.teachers = {};
-    mockDb.configs = [];
-    mockDb.transactions = [];
+    resetDb();
 
     mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
     mockDb.configs.push({
       salary_config_id: "TSC-005",
-      teacher_id: "TCH-001",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "recurring_monthly",
       effective_from: "2026-01-01",
       effective_to: null,
-      rate_type: "monthly",
-      base_value: 10000.00,
-      scope_type: "batch_group",
-      scope_id: '{"BTC-101":60,"BTC-102":50}' // Sums to 110%
+      rate_type: "revenue_percentage",
+      base_value: 120.00,
+      scope_type: "single_batch",
+      scope_id: "BTC-101",
+      contract_status: "active",
+      settlement_state: "unsettled"
     });
 
     const engine = new TeacherSalaryCalculationEngine(mockDb);
     assert.throws(
       function() { engine.calculateTeacherPayroll("TCH-001", "2026-06"); },
-      /weightage total must equal 100%/
+      /Invalid base_value percentage/
     );
-    console.log("✅ Test 6: Invalid weights sum validation exception passed.");
+    console.log("✅ Test 6: Invalid percentage rate (>100) validation exception passed.");
   })();
 
-  // Test Case 7: Temporal Boundaries Verification (Skipping Expired Contracts)
+  // Test Case 7: Temporal Boundaries Verification (Skipping Expired/Settled Contracts)
   (function() {
-    mockDb.teachers = {}; mockDb.configs = []; mockDb.transactions = [];
+    resetDb();
     mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
     
-    // Contract expired in May 2026
     mockDb.configs.push({
       salary_config_id: "TSC-EXP",
-      teacher_id: "TCH-001",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "fixed_duration_pool",
       effective_from: "2026-01-01",
       effective_to: "2026-05-31",
       rate_type: "monthly",
       base_value: 20000.00,
       scope_type: "global",
-      scope_id: null
+      scope_id: null,
+      contract_status: "expired",
+      settlement_state: "settled"
     });
 
     const engine = new TeacherSalaryCalculationEngine(mockDb);
-    const txs = engine.calculateTeacherPayroll("TCH-001", "2026-06"); // Processing June
-    assert.strictEqual(txs.length, 0, "Expired contract must not generate payroll lines.");
-    console.log("✅ Test 7: Temporal boundary expiration parsing passed.");
+    const txs = engine.calculateTeacherPayroll("TCH-001", "2026-06");
+    assert.strictEqual(txs.length, 0);
+    console.log("✅ Test 7: Skip expired and settled configurations passed.");
   })();
 
   // Test Case 8: Malformed JSON Syntax Handling
   (function() {
-    mockDb.teachers = {}; mockDb.configs = []; mockDb.transactions = [];
+    resetDb();
     mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
     mockDb.configs.push({
       salary_config_id: "TSC-MAL",
-      teacher_id: "TCH-001",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "recurring_monthly",
       effective_from: "2026-01-01",
       effective_to: null,
       rate_type: "monthly",
       base_value: 10000.00,
       scope_type: "batch_group",
-      scope_id: '{"BTC-101":60, "corrupted_syntax": }' // Malformed JSON string
+      scope_id: '{"BTC-101":60, "corrupted_syntax": }',
+      contract_status: "active",
+      settlement_state: "unsettled"
     });
 
     const engine = new TeacherSalaryCalculationEngine(mockDb);
     assert.throws(
       function() { engine.calculateTeacherPayroll("TCH-001", "2026-06"); },
-      /valid JSON/i,
-      "Engine must throw a descriptive exception when parsing invalid scope JSON structures."
+      /valid JSON/i
     );
     console.log("✅ Test 8: Malformed scope_id JSON catch exception passed.");
   })();
 
-  // Test Case 9: Strategy C - Combined Revenue Percentage with Weighted Batch Groups
+  // Test Case 9: Strategy C - Independent Multi-Batch Percentage Rates (batch_group)
   (function() {
-    mockDb.teachers = {}; mockDb.configs = []; mockDb.transactions = [];
+    resetDb();
     mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
     mockDb.configs.push({
-      salary_config_id: "TSC-REV-WEIGHT",
-      teacher_id: "TCH-001",
+      salary_config_id: "TSC-REV-MULTI",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "recurring_monthly",
       effective_from: "2026-01-01",
       effective_to: null,
       rate_type: "revenue_percentage",
-      base_value: 10.0, // 10% overall share cut
+      base_value: 0,
       scope_type: "batch_group",
-      scope_id: '{"BTC-101":70,"BTC-102":30}' // Distributed weights across pools
+      scope_id: '{"BTC-101":25,"BTC-102":20}',
+      contract_status: "active",
+      settlement_state: "unsettled"
     });
 
-    // Seed transaction allocations for both batches in June
-    mockDb.transactions.push(
-      { transaction_id: "MTR-A", batch_id: "BTC-101", amount: 10000, status: "cleared", transaction_date: "2026-06-10" }, // 10% of 10000 * 70% = 700
-      { transaction_id: "MTR-B", batch_id: "BTC-102", amount: 20000, status: "cleared", transaction_date: "2026-06-15" }  // 10% of 20000 * 30% = 600
-    );
+    mockDb.allocations.push({ allocation_id: "BAL-001", batch_id: "BTC-101", enrollment_id: "ENR-001", course_id: "CRS-001" });
+    mockDb.enrollments["ENR-001"] = { enrollment_id: "ENR-001", enrollment_type: "course" };
+    mockDb.studentFeeAccounts.push({ student_fee_id: "SFA-001", enrollment_id: "ENR-001" });
+    mockDb.payments.push({ payment_id: "PAY-001", student_fee_id: "SFA-001", amount_paid: 10000, status: "success", payment_date: "2026-06-10" });
+
+    mockDb.allocations.push({ allocation_id: "BAL-002", batch_id: "BTC-102", enrollment_id: "ENR-002", course_id: "CRS-002" });
+    mockDb.enrollments["ENR-002"] = { enrollment_id: "ENR-002", enrollment_type: "course" };
+    mockDb.studentFeeAccounts.push({ student_fee_id: "SFA-002", enrollment_id: "ENR-002" });
+    mockDb.payments.push({ payment_id: "PAY-002", student_fee_id: "SFA-002", amount_paid: 20000, status: "success", payment_date: "2026-06-15" });
 
     const engine = new TeacherSalaryCalculationEngine(mockDb);
     const txs = engine.calculateTeacherPayroll("TCH-001", "2026-06");
     assert.strictEqual(txs.length, 2);
     
-    txs.sort((a, b) => a.amount - b.amount); // Deterministic ordering
-    assert.strictEqual(txs[0].amount, 600.00, "BTC-102 line should evaluate to exactly 600.");
-    assert.strictEqual(txs[1].amount, 700.00, "BTC-101 line should evaluate to exactly 700.");
-    console.log("✅ Test 9: Complex revenue share mapping with multi-batch weights passed.");
+    txs.sort((a, b) => a.amount - b.amount);
+    assert.strictEqual(txs[0].amount, 2500.00);
+    assert.strictEqual(txs[1].amount, 4000.00);
+    console.log("✅ Test 9: Independent multi-batch rate mapping passed.");
   })();
 
   // Test Case 10: Multi-Contract Hybrid Stacking Concurrent Execution
   (function() {
-    mockDb.teachers = {}; mockDb.configs = []; mockDb.transactions = [];
+    resetDb();
     mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
     
-    // Config 1: Flat global monthly allocation
     mockDb.configs.push({
       salary_config_id: "TSC-STACK1",
-      teacher_id: "TCH-001",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "recurring_monthly",
       effective_from: "2026-01-01",
       effective_to: null,
       rate_type: "monthly",
       base_value: 12000.00,
       scope_type: "global",
-      scope_id: null
+      scope_id: null,
+      contract_status: "active",
+      settlement_state: "unsettled"
     });
 
-    // Config 2: Weighted batch groups running simultaneously
     mockDb.configs.push({
       salary_config_id: "TSC-STACK2",
-      teacher_id: "TCH-001",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "recurring_monthly",
       effective_from: "2026-01-01",
       effective_to: null,
       rate_type: "monthly",
       base_value: 10000.00,
       scope_type: "batch_group",
-      scope_id: '{"BTC-101":50,"BTC-102":50}'
+      scope_id: '{"BTC-101":50,"BTC-102":50}',
+      contract_status: "active",
+      settlement_state: "unsettled"
     });
 
     const engine = new TeacherSalaryCalculationEngine(mockDb);
     const txs = engine.calculateTeacherPayroll("TCH-001", "2026-06");
     
-    // Output check: should yield 1 global line item + 2 weighted split lines = 3 transactions total
     assert.strictEqual(txs.length, 3, "Engine must successfully compile multi-tiered hybrid stacked entries.");
     
     const combinedTotalAmount = txs.reduce((acc, row) => acc + row.amount, 0);
@@ -366,29 +430,73 @@ function runTeacherSalaryCalculationTests() {
 
   // Test Case 11: Mid-Month Day Proration verification (Strategy B)
   (function() {
-    mockDb.teachers = {}; mockDb.configs = []; mockDb.transactions = [];
+    resetDb();
     mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
     
-    // Contract starts mid-month: June 16, 2026.
-    // June 2026 has 30 days. Active days: 15 days (June 16 to June 30).
     mockDb.configs.push({
       salary_config_id: "TSC-PRORATE",
-      teacher_id: "TCH-001",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
       salary_config_type: "fixed_duration_pool",
       effective_from: "2026-06-16",
       effective_to: null,
       rate_type: "yearly",
-      base_value: 120000.00, // Monthly draw base: 10,000
+      base_value: 120000.00,
       scope_type: "global",
-      scope_id: null
+      scope_id: null,
+      contract_status: "active",
+      settlement_state: "unsettled"
     });
 
     const engine = new TeacherSalaryCalculationEngine(mockDb);
     const txs = engine.calculateTeacherPayroll("TCH-001", "2026-06");
     assert.strictEqual(txs.length, 1);
-    // 10,000 * (15 / 30) = 5,000
     assert.strictEqual(txs[0].amount, 5000.00);
     console.log("✅ Test 11: Mid-month day proration calculation passed.");
+  })();
+
+  // Test Case 12: Package Enrollment with metadata.course_fees proportional split
+  (function() {
+    resetDb();
+
+    mockDb.teachers["TCH-001"] = { teacher_id: "TCH-001", full_name: "Rahul Baba" };
+    mockDb.configs.push({
+      salary_config_id: "TSC-PKG",
+      entity_id: "TCH-001",
+      entity_type: "Teacher",
+      salary_config_type: "recurring_monthly",
+      effective_from: "2026-01-01",
+      effective_to: null,
+      rate_type: "revenue_percentage",
+      base_value: 20.0,
+      scope_type: "single_batch",
+      scope_id: "BTC-101",
+      contract_status: "active",
+      settlement_state: "unsettled"
+    });
+
+    mockDb.enrollments["ENR-PKG"] = {
+      enrollment_id: "ENR-PKG",
+      enrollment_type: "package",
+      metadata: {
+        course_fees: {
+          "CRS-PHY": 30000,
+          "CRS-CHE": 70000
+        }
+      }
+    };
+    mockDb.allocations.push(
+      { allocation_id: "BAL-PKG-1", batch_id: "BTC-101", enrollment_id: "ENR-PKG", course_id: "CRS-PHY" },
+      { allocation_id: "BAL-PKG-2", batch_id: "BTC-102", enrollment_id: "ENR-PKG", course_id: "CRS-CHE" }
+    );
+    mockDb.studentFeeAccounts.push({ student_fee_id: "SFA-PKG", enrollment_id: "ENR-PKG" });
+    mockDb.payments.push({ payment_id: "PAY-PKG", student_fee_id: "SFA-PKG", amount_paid: 10000, status: "success", payment_date: "2026-06-20" });
+
+    const engine = new TeacherSalaryCalculationEngine(mockDb);
+    const txs = engine.calculateTeacherPayroll("TCH-001", "2026-06");
+    assert.strictEqual(txs.length, 1);
+    assert.strictEqual(txs[0].amount, 600.00);
+    console.log("✅ Test 12: Package enrollment proportional course_fees split calculation passed.");
   })();
 
   console.log("🎉 All TeacherSalaryCalculationEngine unit tests passed successfully!");
@@ -398,3 +506,5 @@ function runTeacherSalaryCalculationTests() {
 if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
   runTeacherSalaryCalculationTests();
 }
+
+globalThis.runTeacherSalaryCalculationTests = runTeacherSalaryCalculationTests;

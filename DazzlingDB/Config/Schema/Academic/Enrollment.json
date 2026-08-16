@@ -55,7 +55,41 @@
     },
     "metadata": {
       "type": "json",
-      "required": false
+      "required": false,
+      "description": "Structured JSON metadata snapshot for enrollment attributes, course fee distributions, migration provenance, shift preferences, and administrative notes.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "course_fees": {
+            "type": "object",
+            "description": "Mapping of individual course IDs (e.g. CRS-XXXXXX) to their frozen base fee amounts at enrollment creation time.",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "migrated_from": {
+            "type": "string",
+            "description": "Identifier of the prior enrollment (e.g. ENR-XXXXXX) if this record originated from an enrollment migration."
+          },
+          "shift_preference": {
+            "type": "string",
+            "enum": [
+              "morning",
+              "afternoon",
+              "evening"
+            ],
+            "description": "Student's requested schedule batch shift timing."
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional administrative notes or special conditions."
+          }
+        },
+        "additionalProperties": true
+      }
     },
     "enrollment_id": {
       "type": "auto",
