@@ -1232,20 +1232,30 @@ const StudentService = {
    *
    * @param {Object} payload - Input parameter envelope containing student_id.
    * @param {Object} [context] - Request lifecycle context for mutation tracking.
+  /**
+   * Permanently hard-deletes a Student account and cascades physical deletion
+   * leaf-first across all 10 downstream relational tables via SheetDB.AtomicPipeline.
+   *
+   * @param {Object} payload - Input payload.
+   * @param {string} payload.student_id - Target student ID.
+   * @param {boolean} [payload.force=false] - If true, permits purging paid accounts (requires superadmin).
+   * @param {string} [payload.reason] - Administrative reason for deletion.
+   * @param {Object} context - Execution request context.
    * @returns {Object} Operational summary containing student_id and purged counts.
-   * @throws {SheetDB.ValidationError} If validation engine rules fail.
+   * @throws {SheetDB.ValidationError} If validation rules or financial guards fail.
    */
-  deleteUntouchedStudent(payload, context) {
-    const db = DBContext.getInstance();
+  hardDeleteStudent(payload, context) {
+    const db = (context && context.db) || DBContext.getInstance();
 
     // 1. Run Validation Engine pre-flight pipeline
     const valCtx = new ValidationContext(db, payload ? payload.student_id : null, payload);
-    ValidationEngine.run(valCtx, StudentDeleteUntouchedRules);
+    valCtx.user = context ? context.user : null;
+    ValidationEngine.run(valCtx, StudentHardDeleteRules);
 
     if (!valCtx.isValid()) {
       const primaryErr = valCtx.errors[0];
-      throw new SheetDB.ValidationError(primaryErr ? primaryErr.message : "Validation failed for student deletion.", {
-        errorCode: "STUDENT_DELETE_VALIDATION_FAILURE",
+      throw new SheetDB.ValidationError(primaryErr ? primaryErr.message : "Validation failed for student hard deletion.", {
+        errorCode: "STUDENT_HARD_DELETE_VALIDATION_FAILURE",
         details: valCtx.errors
       });
     }
@@ -1254,56 +1264,96 @@ const StudentService = {
     const student = valCtx.state.student;
 
     // 2. Extract pre-discovered graph IDs from validation context state
+    const paymentIds = valCtx.state.paymentIds || [];
     const installmentIds = valCtx.state.installmentIds || [];
     const feeAccountIds = valCtx.state.feeAccountIds || [];
+    const attendanceIds = valCtx.state.attendanceIds || [];
+    const testMarkIds = valCtx.state.testMarkIds || [];
     const allocationIds = valCtx.state.allocationIds || [];
     const enrollmentIds = valCtx.state.enrollmentIds || [];
     const educationIds = valCtx.state.educationIds || [];
     const contactIds = valCtx.state.contactIds || [];
     const addressIds = valCtx.state.addressIds || [];
 
-    // 3. Execute Atomic Pipeline Leaf-First LIFO Deletion
-    const pipeline = new SheetDB.AtomicPipeline(db, context);
+    // 3. Wrap Context in PipelineContext Facade
+    const pipelineContext = (context && typeof context.trackMutation === 'function')
+      ? context
+      : ((typeof SheetDB !== 'undefined' && SheetDB.PipelineContext)
+          ? new SheetDB.PipelineContext(context || { mutationManifest: [] })
+          : ((typeof PipelineContext !== 'undefined')
+              ? new PipelineContext(context || { mutationManifest: [] })
+              : { trackMutation: function(t) { if (context && context.mutationManifest) context.mutationManifest.push(t); } }));
 
-    pipeline
-      .addStep("Installment", function(repo) {
+    // 4. Execute Leaf-First Topological Physical Deletion via AtomicPipeline
+    const pipeline = new SheetDB.AtomicPipeline(db, pipelineContext);
+
+    if (paymentIds.length > 0) {
+      pipeline.addStep("Payment", function(repo) {
+        paymentIds.forEach(id => repo.remove(id));
+      });
+    }
+    if (installmentIds.length > 0) {
+      pipeline.addStep("Installment", function(repo) {
         installmentIds.forEach(id => repo.remove(id));
-      })
-      .addStep("StudentFeeAccount", function(repo) {
+      });
+    }
+    if (feeAccountIds.length > 0) {
+      pipeline.addStep("StudentFeeAccount", function(repo) {
         feeAccountIds.forEach(id => repo.remove(id));
-      })
-      .addStep("BatchAllocation", function(repo) {
+      });
+    }
+    if (attendanceIds.length > 0) {
+      pipeline.addStep("StudentAttendance", function(repo) {
+        attendanceIds.forEach(id => repo.remove(id));
+      });
+    }
+    if (testMarkIds.length > 0) {
+      pipeline.addStep("TestMarks", function(repo) {
+        testMarkIds.forEach(id => repo.remove(id));
+      });
+    }
+    if (allocationIds.length > 0) {
+      pipeline.addStep("BatchAllocation", function(repo) {
         allocationIds.forEach(id => repo.remove(id));
-      })
-      .addStep("Enrollment", function(repo) {
+      });
+    }
+    if (enrollmentIds.length > 0) {
+      pipeline.addStep("Enrollment", function(repo) {
         enrollmentIds.forEach(id => repo.remove(id));
-      })
-      .addStep("Education", function(repo) {
+      });
+    }
+    if (educationIds.length > 0) {
+      pipeline.addStep("Education", function(repo) {
         educationIds.forEach(id => repo.remove(id));
-      })
-      .addStep("ContactInfo", function(repo) {
+      });
+    }
+    if (contactIds.length > 0) {
+      pipeline.addStep("ContactInfo", function(repo) {
         contactIds.forEach(id => repo.remove(id));
-      })
-      .addStep("Address", function(repo) {
+      });
+    }
+    if (addressIds.length > 0) {
+      pipeline.addStep("Address", function(repo) {
         addressIds.forEach(id => repo.remove(id));
-      })
-      .addStep("Student", function(repo) {
-        repo.remove(studentId);
-      })
-      .execute();
-
-    // 4. Register touched tables into context mutation manifest
-    const touchedTables = ["Installment", "StudentFeeAccount", "BatchAllocation", "Enrollment", "Education", "ContactInfo", "Address", "Student"];
-    touchedTables.forEach(tableName => {
-      this._trackMutation(context, tableName);
+      });
+    }
+    pipeline.addStep("Student", function(repo) {
+      repo.remove(studentId);
     });
+
+    pipeline.execute();
 
     return {
       student_id: studentId,
       student_name: student.student_name,
+      mode: "hard",
+      force: payload.force === true,
       purged_counts: {
+        payments: paymentIds.length,
         installments: installmentIds.length,
         fee_accounts: feeAccountIds.length,
+        attendance: attendanceIds.length,
+        test_marks: testMarkIds.length,
         allocations: allocationIds.length,
         enrollments: enrollmentIds.length,
         education: educationIds.length,
@@ -1312,6 +1362,13 @@ const StudentService = {
         student: 1
       }
     };
+  },
+
+  /**
+   * Backward-compatible delegation for untouched student account deletion.
+   */
+  deleteUntouchedStudent(payload, context) {
+    return this.hardDeleteStudent({ ...payload, mode: "hard", force: false }, context);
   },
 
   /**

@@ -51,6 +51,7 @@ Test/*
 !Test/Academic_MigrateEnrollmentTests.js
 !Test/Student_DeleteUntouchedTests.js
 !Test/Student_SoftDeleteTests.js
+!Test/Student_HardDeleteTests.js
 
 
 

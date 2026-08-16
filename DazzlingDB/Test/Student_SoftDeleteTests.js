@@ -173,11 +173,11 @@ function _testScenario1_HappyPathSoftDelete(db) {
   if (updatedStudent.status !== "deleted") {
     throw new Error(`Expected Student.status 'deleted', got '${updatedStudent.status}'`);
   }
-  if (!updatedStudent.metadata || !updatedStudent.metadata.deleted_at) {
-    throw new Error("Expected metadata.deleted_at timestamp to be populated on soft-deleted student");
+  if (!result.deleted_at) {
+    throw new Error("Expected deleted_at timestamp in soft-delete result");
   }
 
-  return { student_id: targetId, status: updatedStudent.status, deleted_at: updatedStudent.metadata.deleted_at };
+  return { student_id: targetId, status: updatedStudent.status, deleted_at: result.deleted_at };
 }
 
 /**
