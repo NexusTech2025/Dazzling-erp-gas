@@ -375,16 +375,183 @@ const StudentService = {
   },
 
   /**
-   * Retrieves a full student profile with all relations.
+   * Atomically updates a student's profile across Student, Address, ContactInfo,
+   * and Education tables using upsert semantics.
+   *
+   * @param {Object} payload - The update payload.
+   * @param {string} payload.student_id - Required. The target student primary key.
+   * @param {Object} [payload.profile] - Partial Student table field updates.
+   * @param {Object} [payload.address] - Address upsert data (creates if missing).
+   * @param {Object} [payload.contact] - ContactInfo upsert data (creates if missing).
+   * @param {Array<Object>} [payload.education] - Education records array.
+   * @param {Object} context - Request execution lifecycle context.
+   * @returns {Object} Full hydrated student profile (Student + Address + ContactInfo + Education[]).
    */
-  getProfile(studentId) {
+  updateStudentProfile(payload, context) {
+    if (!payload || !payload.student_id) {
+      throw new ActionValidationError("payload must contain 'student_id'.");
+    }
+
+    const studentId = String(payload.student_id).trim();
     const db = DBContext.getInstance();
-    return db.Student.findById(studentId, ['Address', 'ContactInfo', 'Enrollment']);
+
+    // 1. Pre-flight verification routines
+    const student = db.Student.findById(studentId);
+    if (!student) {
+      throw new StudentProfileError(`Student with ID '${studentId}' not found.`, {
+        errorCode: "STUDENT_NOT_FOUND",
+        details: { student_id: studentId }
+      });
+    }
+
+    if (student.status === "inactive") {
+      throw new StudentProfileError(`Cannot update inactive student profile for '${studentId}'.`, {
+        errorCode: "INACTIVE_STUDENT_PROFILE",
+        details: { student_id: studentId, status: student.status }
+      });
+    }
+
+    // Uniqueness pre-flight check for email
+    if (payload.profile && payload.profile.email) {
+      const targetEmail = String(payload.profile.email).trim();
+      const existingMatch = db.Student.where({ email: targetEmail });
+      const conflict = existingMatch.find(s => String(s.student_id) !== studentId);
+      if (conflict) {
+        throw new StudentProfileError(`Email '${targetEmail}' is already registered to another student ('${conflict.student_id}').`, {
+          errorCode: "DUPLICATE_EMAIL",
+          details: { email: targetEmail, conflicting_student_id: conflict.student_id }
+        });
+      }
+    }
+
+    // Pre-flight validation for Address upsert (if creating new)
+    const existingAddress = db.Address.findOne({ student_id: studentId });
+    if (payload.address && !existingAddress) {
+      const reqFields = ["line1", "city", "state", "pin_code"];
+      const missing = reqFields.filter(f => !payload.address[f] || !String(payload.address[f]).trim());
+      if (missing.length > 0) {
+        throw new StudentProfileError(`Creating new Address requires fields: ${missing.join(", ")}.`, {
+          errorCode: "ADDRESS_REQUIRED_FIELDS_MISSING",
+          details: { missing_fields: missing }
+        });
+      }
+    }
+
+    // Pre-flight validation for Education array
+    if (payload.education && Array.isArray(payload.education)) {
+      payload.education.forEach(edu => {
+        if (edu.education_id) {
+          const eduId = String(edu.education_id).trim();
+          const existingEdu = db.Education.findById(eduId);
+          if (!existingEdu) {
+            throw new StudentProfileError(`Education record with ID '${eduId}' not found.`, {
+              errorCode: "EDUCATION_RECORD_NOT_FOUND",
+              details: { education_id: eduId }
+            });
+          }
+          if (String(existingEdu.student_id) !== studentId) {
+            throw new StudentProfileError(`Education record '${eduId}' belongs to student '${existingEdu.student_id}', not '${studentId}'.`, {
+              errorCode: "EDUCATION_OWNERSHIP_MISMATCH",
+              details: { education_id: eduId, owner_student_id: existingEdu.student_id, target_student_id: studentId }
+            });
+          }
+        }
+        if (edu.meta) {
+          const errStr = (typeof SheetDB !== 'undefined' && SheetDB.ValidationRegistry)
+            ? SheetDB.ValidationRegistry.execute('validateEducationMeta', edu.meta)
+            : null;
+          if (errStr) {
+            throw new ActionValidationError(errStr);
+          }
+        }
+      });
+    }
+
+    // 2. Wrap context in PipelineContext interface facade
+    const pipeCtx = (context && typeof context.trackMutation === 'function')
+      ? context
+      : (typeof PipelineContext !== 'undefined' 
+          ? new PipelineContext(context) 
+          : new SheetDB.PipelineContext(context));
+
+    const pipeline = (typeof AtomicPipeline !== 'undefined' ? AtomicPipeline : SheetDB.AtomicPipeline)
+      .begin(db, pipeCtx);
+
+    // Step 1: Update Student profile table
+    if (payload.profile && Object.keys(payload.profile).length > 0) {
+      pipeline.addStep("Student", (repo) => {
+        const profileUpdates = { ...payload.profile, updated_at: new Date() };
+        delete profileUpdates.student_id;
+        repo.update(studentId, profileUpdates);
+        this._trackMutation(context, "Student");
+      });
+    }
+
+    // Step 2: Address Upsert
+    if (payload.address && Object.keys(payload.address).length > 0) {
+      pipeline.addStep("Address", (repo) => {
+        if (existingAddress) {
+          const addrUpdates = { ...payload.address };
+          delete addrUpdates.address_id;
+          delete addrUpdates.student_id;
+          repo.update(existingAddress.address_id, addrUpdates);
+        } else {
+          repo.insert({
+            ...payload.address,
+            student_id: studentId
+          });
+        }
+        this._trackMutation(context, "Address");
+      });
+    }
+
+    // Step 3: ContactInfo Upsert
+    if (payload.contact && Object.keys(payload.contact).length > 0) {
+      pipeline.addStep("ContactInfo", (repo) => {
+        const existingContact = db.ContactInfo.findOne({ student_id: studentId });
+        if (existingContact) {
+          const contactUpdates = { ...payload.contact };
+          delete contactUpdates.contact_id;
+          delete contactUpdates.student_id;
+          repo.update(existingContact.contact_id, contactUpdates);
+        } else {
+          repo.insert({
+            ...payload.contact,
+            student_id: studentId
+          });
+        }
+        this._trackMutation(context, "ContactInfo");
+      });
+    }
+
+    // Step 4: Education Upsert
+    if (payload.education && Array.isArray(payload.education) && payload.education.length > 0) {
+      pipeline.addStep("Education", (repo) => {
+        payload.education.forEach(edu => {
+          if (edu.education_id) {
+            const eduId = String(edu.education_id).trim();
+            const eduUpdates = { ...edu };
+            delete eduUpdates.education_id;
+            delete eduUpdates.student_id;
+            repo.update(eduId, eduUpdates);
+          } else {
+            repo.insert({
+              ...edu,
+              student_id: studentId
+            });
+          }
+        });
+        this._trackMutation(context, "Education");
+      });
+    }
+
+    // Execute atomic transaction
+    pipeline.execute();
+
+    // 3. Hydrate and return full profile
+    return this.getProfile(studentId);
   },
 
-  /**
-   * Creates a new StudentLead record.
-   */
   /**
    * Retrieves a full student profile with all relations.
    */
@@ -393,10 +560,15 @@ const StudentService = {
     const student = db.Student.findById(studentId);
     if (!student) return null;
 
+    const addrRecord = (typeof student.address === 'function') ? student.address() : null;
+    const contactRecord = (typeof student.contact === 'function') ? student.contact() : null;
+    const eduRecords = db.Education ? db.Education.where({ student_id: studentId }) : [];
+
     return {
       ...student.toJSON(),
-      address: student.address ? student.address().toJSON() : null,
-      contact: student.contact ? student.contact().toJSON() : null,
+      address: addrRecord ? addrRecord.toJSON() : null,
+      contact: contactRecord ? contactRecord.toJSON() : null,
+      education: eduRecords.map(e => (typeof e.toJSON === 'function' ? e.toJSON() : e)),
       enrollments: student.enrollments ? student.enrollments().map(e => e.toJSON()) : []
     };
   },
@@ -1051,6 +1223,95 @@ const StudentService = {
 
     results.data = hydrated;
     return results;
+  },
+
+  /**
+   * Safely purges an untouched student account and its linked leaf dependencies.
+   * Delegates pre-flight checks to ValidationEngine.run using StudentDeleteUntouchedRules,
+   * then executes a leaf-first LIFO deletion pipeline via SheetDB.AtomicPipeline.
+   *
+   * @param {Object} payload - Input parameter envelope containing student_id.
+   * @param {Object} [context] - Request lifecycle context for mutation tracking.
+   * @returns {Object} Operational summary containing student_id and purged counts.
+   * @throws {SheetDB.ValidationError} If validation engine rules fail.
+   */
+  deleteUntouchedStudent(payload, context) {
+    const db = DBContext.getInstance();
+
+    // 1. Run Validation Engine pre-flight pipeline
+    const valCtx = new ValidationContext(db, payload ? payload.student_id : null, payload);
+    ValidationEngine.run(valCtx, StudentDeleteUntouchedRules);
+
+    if (!valCtx.isValid()) {
+      const primaryErr = valCtx.errors[0];
+      throw new SheetDB.ValidationError(primaryErr ? primaryErr.message : "Validation failed for student deletion.", {
+        errorCode: "STUDENT_DELETE_VALIDATION_FAILURE",
+        details: valCtx.errors
+      });
+    }
+
+    const studentId = payload.student_id;
+    const student = valCtx.state.student;
+
+    // 2. Extract pre-discovered graph IDs from validation context state
+    const installmentIds = valCtx.state.installmentIds || [];
+    const feeAccountIds = valCtx.state.feeAccountIds || [];
+    const allocationIds = valCtx.state.allocationIds || [];
+    const enrollmentIds = valCtx.state.enrollmentIds || [];
+    const educationIds = valCtx.state.educationIds || [];
+    const contactIds = valCtx.state.contactIds || [];
+    const addressIds = valCtx.state.addressIds || [];
+
+    // 3. Execute Atomic Pipeline Leaf-First LIFO Deletion
+    const pipeline = new SheetDB.AtomicPipeline(db, context);
+
+    pipeline
+      .addStep("Installment", function(repo) {
+        installmentIds.forEach(id => repo.remove(id));
+      })
+      .addStep("StudentFeeAccount", function(repo) {
+        feeAccountIds.forEach(id => repo.remove(id));
+      })
+      .addStep("BatchAllocation", function(repo) {
+        allocationIds.forEach(id => repo.remove(id));
+      })
+      .addStep("Enrollment", function(repo) {
+        enrollmentIds.forEach(id => repo.remove(id));
+      })
+      .addStep("Education", function(repo) {
+        educationIds.forEach(id => repo.remove(id));
+      })
+      .addStep("ContactInfo", function(repo) {
+        contactIds.forEach(id => repo.remove(id));
+      })
+      .addStep("Address", function(repo) {
+        addressIds.forEach(id => repo.remove(id));
+      })
+      .addStep("Student", function(repo) {
+        repo.remove(studentId);
+      })
+      .execute();
+
+    // 4. Register touched tables into context mutation manifest
+    const touchedTables = ["Installment", "StudentFeeAccount", "BatchAllocation", "Enrollment", "Education", "ContactInfo", "Address", "Student"];
+    touchedTables.forEach(tableName => {
+      this._trackMutation(context, tableName);
+    });
+
+    return {
+      student_id: studentId,
+      student_name: student.student_name,
+      purged_counts: {
+        installments: installmentIds.length,
+        fee_accounts: feeAccountIds.length,
+        allocations: allocationIds.length,
+        enrollments: enrollmentIds.length,
+        education: educationIds.length,
+        contacts: contactIds.length,
+        addresses: addressIds.length,
+        student: 1
+      }
+    };
   }
 };
 

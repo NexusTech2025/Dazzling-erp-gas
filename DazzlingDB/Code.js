@@ -71,6 +71,66 @@ function registerDatabaseValidators() {
           }
         }
         return null;
+      },
+      validatePercentageOrCgpa: function (value) {
+        if (value === null || value === undefined || value === "") {
+          return null; // Optional field fallback
+        }
+
+        const strVal = String(value).trim();
+
+        // Mode 1: Percentage Format (Must end with '%')
+        if (strVal.endsWith("%")) {
+          const rawNum = strVal.slice(0, -1).trim();
+          const num = Number(rawNum);
+
+          if (rawNum === "" || isNaN(num) || num < 0 || num > 100) {
+            return 'Percentage must be a valid number between 0% and 100% (e.g., "95.5%").';
+          }
+          return null;
+        }
+
+        // Mode 2: CGPA Format (Must NOT contain '%')
+        if (strVal.includes("%")) {
+          return "CGPA format cannot contain percentage symbols when specifying CGPA.";
+        }
+
+        const cgpaNum = Number(strVal);
+        if (isNaN(cgpaNum) || cgpaNum < 0 || cgpaNum > 10) {
+          return 'CGPA must be a numeric score between 0.0 and 10.0 (e.g., "8.5").';
+        }
+
+        return null;
+      },
+      validateEducationMeta: function (value) {
+        if (value === null || value === undefined || value === "") {
+          return null; // Optional field fallback
+        }
+
+        let obj = value;
+        if (typeof obj === "string") {
+          try {
+            obj = JSON.parse(obj);
+          } catch (e) {
+            return "Education meta must be a valid JSON object.";
+          }
+        }
+
+        if (typeof obj !== "object" || Array.isArray(obj)) {
+          return "Education meta must be a key-value object.";
+        }
+
+        const allowedKeys = ["score_type", "board", "stream"];
+        const invalidKeys = Object.keys(obj).filter(k => !allowedKeys.includes(k));
+        if (invalidKeys.length > 0) {
+          return `Invalid Education meta property: [${invalidKeys.join(", ")}]. Allowed properties: [${allowedKeys.join(", ")}].`;
+        }
+
+        if (obj.score_type && !["pct", "cgpa"].includes(String(obj.score_type).toLowerCase())) {
+          return "meta.score_type must be either 'pct' or 'cgpa'.";
+        }
+
+        return null;
       }
     });
   }

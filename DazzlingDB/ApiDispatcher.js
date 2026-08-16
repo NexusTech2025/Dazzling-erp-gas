@@ -12,6 +12,7 @@ const ApiDispatcher = (function () {
     return {
       "ping": PingAction,
       "student_register": RegisterStudentAction,
+      "student_update_profile": UpdateStudentProfileAction,
       "student_withdraw_subject": WithdrawStudentSubjectAction,
       "student_upgrade_package": UpgradeStudentPackageAction,
       "student_verify_access": VerifyStudentAccessAction,
@@ -23,6 +24,9 @@ const ApiDispatcher = (function () {
       "academic_update_package": UpdatePackageAction,
       "academic_delete_package": DeletePackageAction,
       "academic_enroll_student": EnrollStudentAction,
+      "academic_update_enrollment": UpdateEnrollmentAction,
+      "academic_discard_enrollment": DiscardEnrollmentAction,
+      "academic_migrate_enrollment": MigrateEnrollmentAction,
       "core_create_branch": CreateBranchAction,
       "core_create_promo": CreatePromoCodeAction,
       "core_validate_promo": ValidatePromoCodeAction,
@@ -53,6 +57,7 @@ const ApiDispatcher = (function () {
       "data_update": UpdateRecordAction,
       "data_delete": DeleteRecordAction,
       "student_delete": DeleteStudentAction,
+      "student_delete_untouched": DeleteUntouchedStudentAction,
       "data_delete_many": DeleteManyRecordsAction,
       "auth_delete_many_users": DeleteManyUsersAction,
       "user_query": UserQueryAction,
@@ -69,6 +74,9 @@ const ApiDispatcher = (function () {
       "finance_delete_many_adjustments": DeleteManyFeeAdjustmentsAction,
       "finance_record_payment": RecordPaymentAction,
       "finance_reschedule_installments": RescheduleInstallmentsAction,
+      "finance_update_fee_account": UpdateFeeAccountAction,
+      "finance_adjust_fee": ApplyFeeAdjustmentAction,
+      "finance_apply_discount": ApplyFeeAdjustmentAction,
       "recordpayment": RecordPaymentAction,
       "staff_delete_many_teachers": DeleteManyTeachersAction,
       "academic_delete_many_course_types": DeleteManyCourseTypeAction,
@@ -218,17 +226,33 @@ const ApiDispatcher = (function () {
    * @private
    */
   function _parseEvent(e) {
-    const params = { ...e.parameter };
+    if (!e) return {};
 
-    // Parse JSON body if present
+    // 1. Inspect top-level properties if e is passed directly as a parameter object
+    const params = (typeof e === 'object' && !Array.isArray(e)) ? { ...e } : {};
+
+    // 2. Merge query parameters from GAS e.parameter if present
+    if (e.parameter && typeof e.parameter === 'object') {
+      Object.assign(params, e.parameter);
+    }
+
+    // 3. Merge POST body JSON contents if present
     if (e.postData && e.postData.contents) {
       try {
         const body = JSON.parse(e.postData.contents);
-        Object.assign(params, body);
+        if (body && typeof body === 'object') {
+          Object.assign(params, body);
+        }
       } catch (err) {
         console.warn("[ApiDispatcher] Failed to parse JSON body:", err.message);
       }
     }
+
+    // Clean up internal event wrapper properties if copied from top-level e
+    delete params.parameter;
+    delete params.parameters;
+    delete params.postData;
+    delete params.queryString;
 
     return params;
   }

@@ -36,7 +36,8 @@
       "choices": [
         "active",
         "completed",
-        "withdrawn"
+        "withdrawn",
+        "discarded"
       ],
       "default": "active",
       "maxLength": 255

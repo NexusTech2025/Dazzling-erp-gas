@@ -36,6 +36,11 @@ class AuthAccountLockedError extends AuthAuthenticationError {}
 class PackageOrchestrationError extends SystemError {}
 
 /**
+ * 👤 STUDENT PROFILE ERRORS
+ */
+class StudentProfileError extends SystemError {}
+
+/**
  * ⚡ ACTION LAYER ERRORS (UI Compatibility)
  */
 class BaseActionError extends SystemError {
@@ -51,6 +56,7 @@ globalThis.SystemError = SystemError;
 globalThis.AuthAuthenticationError = AuthAuthenticationError;
 globalThis.AuthAccountLockedError = AuthAccountLockedError;
 globalThis.PackageOrchestrationError = PackageOrchestrationError;
+globalThis.StudentProfileError = StudentProfileError;
 globalThis.BaseActionError = BaseActionError;
 globalThis.ActionValidationError = ActionValidationError;
 globalThis.ActionAuthorizationError = ActionAuthorizationError;
