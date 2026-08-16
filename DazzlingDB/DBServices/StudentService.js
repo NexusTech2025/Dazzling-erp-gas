@@ -1312,8 +1312,162 @@ const StudentService = {
         student: 1
       }
     };
+  },
+
+  /**
+   * Soft deletes a Student account, cascading status updates across
+   * linked enrollments, seating batch allocations, and settling linked fee accounts.
+   *
+   * @param {Object} payload - Input payload.
+   * @param {string} payload.student_id - Target student ID.
+   * @param {string} [payload.reason] - Administrative reason for deletion.
+   * @param {Object} [payload.financial_settlement] - Optional declarative settlement policy (defaults to 'waive_unpaid').
+   * @param {Object} context - Execution request context.
+   * @returns {Object} Operational summary containing mutated counts and affected entity IDs.
+   * @throws {SheetDB.ValidationError} If validation rules fail.
+   */
+  softDeleteStudent(payload, context) {
+    const db = (context && context.db) || DBContext.getInstance();
+    const nowIso = new Date().toISOString();
+
+    // 1. Run Validation Engine pre-flight pipeline
+    const valCtx = new ValidationContext(db, payload ? payload.student_id : null, payload);
+    ValidationEngine.run(valCtx, StudentSoftDeleteRules);
+
+    if (!valCtx.isValid()) {
+      const primaryErr = valCtx.errors[0];
+      throw new SheetDB.ValidationError(primaryErr ? primaryErr.message : "Validation failed for student soft deletion.", {
+        errorCode: "STUDENT_DELETE_VALIDATION_FAILURE",
+        details: valCtx.errors
+      });
+    }
+
+    const studentId = payload.student_id;
+    const student = valCtx.state.student;
+    const reasonStr = payload.reason ? String(payload.reason).trim() : "Student soft-deleted via administrative action";
+
+    // 2. Discover linked child records
+    const enrollments = db.Enrollment.where({ student_id: studentId });
+    const enrollmentIds = enrollments.map(e => e.enrollment_id);
+
+    const allocations = db.BatchAllocation.where({ student_id: studentId });
+    const feeAccounts = enrollmentIds.length > 0
+      ? db.StudentFeeAccount.all().filter(sfa => enrollmentIds.includes(sfa.enrollment_id))
+      : [];
+    const feeAccountIds = feeAccounts.map(sfa => sfa.student_fee_id);
+
+    const installments = feeAccountIds.length > 0
+      ? db.Installment.all().filter(ins => feeAccountIds.includes(ins.student_fee_id))
+      : [];
+
+    // 3. Resolve Financial Settlement Strategy
+    const strategyRegistry = (typeof FinancialSettlementStrategyRegistry !== 'undefined')
+      ? FinancialSettlementStrategyRegistry
+      : globalThis.FinancialSettlementStrategyRegistry;
+
+    const policy = (payload.financial_settlement && payload.financial_settlement.policy) || "waive_unpaid";
+    const strategyFn = (strategyRegistry && strategyRegistry[policy])
+      ? strategyRegistry[policy]
+      : (strategyRegistry ? strategyRegistry["waive_unpaid"] : null);
+
+    // 4. Wrap Context in PipelineContext Facade Contract
+    const pipelineContext = (context && typeof context.trackMutation === 'function')
+      ? context
+      : ((typeof SheetDB !== 'undefined' && SheetDB.PipelineContext)
+          ? new SheetDB.PipelineContext(context || { mutationManifest: [] })
+          : ((typeof PipelineContext !== 'undefined')
+              ? new PipelineContext(context || { mutationManifest: [] })
+              : { trackMutation: function(t) { if (context && context.mutationManifest) context.mutationManifest.push(t); } }));
+
+    // 5. Execute Atomic Multi-Table Soft Deletion
+    const pipeline = new SheetDB.AtomicPipeline(db, pipelineContext);
+
+    // Step 1: Update Student status to 'deleted' and attach deletion metadata
+    pipeline.addStep("Student", function(repo, state) {
+      const currentMeta = (student.metadata && typeof student.metadata === 'object' && !Array.isArray(student.metadata))
+        ? { ...student.metadata }
+        : {};
+      currentMeta.deleted_at = nowIso;
+      currentMeta.deleted_reason = reasonStr;
+
+      state.softDeletedStudent = repo.update(studentId, {
+        status: "deleted",
+        metadata: currentMeta
+      });
+    });
+
+    // Step 2: Cascade active/suspended enrollments to 'discarded' / 'withdrawn'
+    if (enrollments.length > 0) {
+      pipeline.addStep("Enrollment", function(repo, state) {
+        state.cascadedEnrollments = [];
+        enrollments.forEach(function(enr) {
+          if (enr.status !== "discarded" && enr.status !== "withdrawn") {
+            const updatedEnr = repo.update(enr.enrollment_id, {
+              status: "discarded",
+              academic_status: "withdrawn"
+            });
+            state.cascadedEnrollments.push(updatedEnr);
+          }
+        });
+      });
+    }
+
+    // Step 3: Cascade active/suspended batch allocations to 'dropped'
+    if (allocations.length > 0) {
+      pipeline.addStep("BatchAllocation", function(repo, state) {
+        state.cascadedAllocations = [];
+        allocations.forEach(function(alloc) {
+          if (alloc.status !== "dropped" && alloc.status !== "completed") {
+            const updatedAlloc = repo.update(alloc.allocation_id, {
+              status: "dropped",
+              dropped_at: alloc.dropped_at || nowIso,
+              remarks: alloc.remarks ? `${alloc.remarks} | Dropped on student soft-delete` : "Dropped on student soft-delete"
+            });
+            state.cascadedAllocations.push(updatedAlloc);
+          }
+        });
+      });
+    }
+
+    // Step 4: Apply Financial Settlement Strategy to linked fee accounts
+    if (feeAccounts.length > 0 && typeof strategyFn === 'function') {
+      feeAccounts.forEach(function(feeAccount) {
+        const accountInstallments = installments.filter(ins => ins.student_fee_id === feeAccount.student_fee_id);
+        const strategyContext = {
+          feeAccount: feeAccount,
+          installments: accountInstallments,
+          payload: payload,
+          user: context ? context.user : null,
+          nowIso: nowIso
+        };
+        strategyFn(strategyContext, pipeline);
+      });
+    }
+
+    pipeline.execute();
+
+    // 5. Register touched tables into context mutation manifest
+    const touchedTables = ["Student", "Enrollment", "BatchAllocation", "StudentFeeAccount", "Installment"];
+    touchedTables.forEach(tableName => {
+      this._trackMutation(context, tableName);
+    });
+
+    return {
+      student_id: studentId,
+      student_name: student.student_name,
+      status: "deleted",
+      deleted_at: nowIso,
+      cascaded_counts: {
+        enrollments: enrollments.length,
+        allocations: allocations.length,
+        fee_accounts: feeAccounts.length,
+        installments: installments.length
+      },
+      financial_settlement_policy: policy
+    };
   }
 };
 
 // Bind to global namespace
 globalThis.StudentService = StudentService;
+

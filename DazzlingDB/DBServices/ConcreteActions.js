@@ -153,40 +153,72 @@ class DeleteStudentAction extends BaseAction {
   }
 
   _authorize() {
-    if (!AuthBridge.checkAccess(this._user, "Student")) {
-      throw new ActionAuthorizationError("Access denied: You are not authorized to delete students.");
+    const isHard = (this._params?.payload?.mode || "").toLowerCase() === "hard";
+    const requiredTables = isHard
+      ? ["Student", "Enrollment", "BatchAllocation", "StudentFeeAccount", "Installment", "Address", "ContactInfo", "Education"]
+      : ["Student", "Enrollment", "BatchAllocation", "StudentFeeAccount", "Installment"];
+
+    for (let i = 0; i < requiredTables.length; i++) {
+      const tableName = requiredTables[i];
+      if (!AuthBridge.checkAccess(this._user, tableName)) {
+        throw new ActionAuthorizationError(
+          `Access denied: User '${this._user ? this._user.username : 'unknown'}' (role: '${this._user ? this._user.role : 'guest'}') lacks authorization for required table '${tableName}'.`
+        );
+      }
     }
   }
 
   handle(requestContext) {
-    const { student_id, dryRun } = requestContext.params.payload;
-    const isDryRun = dryRun !== false;
+    const payload = requestContext.params.payload;
+    const mode = (payload.mode || "soft").toLowerCase();
 
-    const student = this._db.Student.findById(student_id);
-    if (!student) {
-      throw new SheetDB.EntityNotFoundError("Student", student_id, "Academic");
-    }
+    if (mode === "hard") {
+      if (typeof StudentService !== 'undefined' && typeof StudentService.hardDeleteStudent === 'function') {
+        const result = StudentService.hardDeleteStudent(payload, requestContext);
+        return {
+          success: true,
+          message: `Successfully hard-deleted Student '${payload.student_id}'.`,
+          data: result
+        };
+      }
+      const { student_id, dryRun } = payload;
+      const isDryRun = dryRun !== false;
 
-    try {
-      if (isDryRun) {
-        this._db.Student.enforceDeleteConstraints(student_id);
-      } else {
-        this._db.Student.remove(student_id);
-        if (requestContext.mutationManifest) {
-          requestContext.mutationManifest.push("Student");
+      const student = this._db.Student.findById(student_id);
+      if (!student) {
+        throw new SheetDB.EntityNotFoundError("Student", student_id, "Academic");
+      }
+
+      try {
+        if (isDryRun) {
+          this._db.Student.enforceDeleteConstraints(student_id);
+        } else {
+          this._db.Student.remove(student_id);
+          if (requestContext.mutationManifest) {
+            requestContext.mutationManifest.push("Student");
+          }
         }
+      } catch (e) {
+        if (e instanceof SheetDB.IntegrityError || e.name === "IntegrityError") {
+          throw new ActionValidationError(e.message, { details: e.context });
+        }
+        throw e;
       }
-    } catch (e) {
-      if (e instanceof SheetDB.IntegrityError || e.name === "IntegrityError") {
-        throw new ActionValidationError(e.message, { details: e.context });
-      }
-      throw e;
+
+      return {
+        success: true,
+        message: `Successfully deleted Student '${student_id}'.`,
+        student_id: student_id
+      };
     }
 
+    // Default mode: "soft"
+    const service = (typeof StudentService !== 'undefined') ? StudentService : globalThis.StudentService;
+    const result = service.softDeleteStudent(payload, requestContext);
     return {
       success: true,
-      message: `Successfully deleted Student '${student_id}'.`,
-      student_id: student_id
+      message: `Successfully soft-deleted Student '${payload.student_id}'.`,
+      data: result
     };
   }
 }
