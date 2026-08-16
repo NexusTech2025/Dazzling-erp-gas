@@ -9,3 +9,8 @@ DazzlingDB/apitest/
 DazzlingDB/NodeTest/
 SheetDB/
 dazzlingdb-tools/
+.agents/
+.gemini/
+.antigravitycli/
+NodeEnvDB/
+GEMINI.md
