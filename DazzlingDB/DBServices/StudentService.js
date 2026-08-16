@@ -1223,6 +1223,95 @@ const StudentService = {
 
     results.data = hydrated;
     return results;
+  },
+
+  /**
+   * Safely purges an untouched student account and its linked leaf dependencies.
+   * Delegates pre-flight checks to ValidationEngine.run using StudentDeleteUntouchedRules,
+   * then executes a leaf-first LIFO deletion pipeline via SheetDB.AtomicPipeline.
+   *
+   * @param {Object} payload - Input parameter envelope containing student_id.
+   * @param {Object} [context] - Request lifecycle context for mutation tracking.
+   * @returns {Object} Operational summary containing student_id and purged counts.
+   * @throws {SheetDB.ValidationError} If validation engine rules fail.
+   */
+  deleteUntouchedStudent(payload, context) {
+    const db = DBContext.getInstance();
+
+    // 1. Run Validation Engine pre-flight pipeline
+    const valCtx = new ValidationContext(db, payload ? payload.student_id : null, payload);
+    ValidationEngine.run(valCtx, StudentDeleteUntouchedRules);
+
+    if (!valCtx.isValid()) {
+      const primaryErr = valCtx.errors[0];
+      throw new SheetDB.ValidationError(primaryErr ? primaryErr.message : "Validation failed for student deletion.", {
+        errorCode: "STUDENT_DELETE_VALIDATION_FAILURE",
+        details: valCtx.errors
+      });
+    }
+
+    const studentId = payload.student_id;
+    const student = valCtx.state.student;
+
+    // 2. Extract pre-discovered graph IDs from validation context state
+    const installmentIds = valCtx.state.installmentIds || [];
+    const feeAccountIds = valCtx.state.feeAccountIds || [];
+    const allocationIds = valCtx.state.allocationIds || [];
+    const enrollmentIds = valCtx.state.enrollmentIds || [];
+    const educationIds = valCtx.state.educationIds || [];
+    const contactIds = valCtx.state.contactIds || [];
+    const addressIds = valCtx.state.addressIds || [];
+
+    // 3. Execute Atomic Pipeline Leaf-First LIFO Deletion
+    const pipeline = new SheetDB.AtomicPipeline(db, context);
+
+    pipeline
+      .addStep("Installment", function(repo) {
+        installmentIds.forEach(id => repo.remove(id));
+      })
+      .addStep("StudentFeeAccount", function(repo) {
+        feeAccountIds.forEach(id => repo.remove(id));
+      })
+      .addStep("BatchAllocation", function(repo) {
+        allocationIds.forEach(id => repo.remove(id));
+      })
+      .addStep("Enrollment", function(repo) {
+        enrollmentIds.forEach(id => repo.remove(id));
+      })
+      .addStep("Education", function(repo) {
+        educationIds.forEach(id => repo.remove(id));
+      })
+      .addStep("ContactInfo", function(repo) {
+        contactIds.forEach(id => repo.remove(id));
+      })
+      .addStep("Address", function(repo) {
+        addressIds.forEach(id => repo.remove(id));
+      })
+      .addStep("Student", function(repo) {
+        repo.remove(studentId);
+      })
+      .execute();
+
+    // 4. Register touched tables into context mutation manifest
+    const touchedTables = ["Installment", "StudentFeeAccount", "BatchAllocation", "Enrollment", "Education", "ContactInfo", "Address", "Student"];
+    touchedTables.forEach(tableName => {
+      this._trackMutation(context, tableName);
+    });
+
+    return {
+      student_id: studentId,
+      student_name: student.student_name,
+      purged_counts: {
+        installments: installmentIds.length,
+        fee_accounts: feeAccountIds.length,
+        allocations: allocationIds.length,
+        enrollments: enrollmentIds.length,
+        education: educationIds.length,
+        contacts: contactIds.length,
+        addresses: addressIds.length,
+        student: 1
+      }
+    };
   }
 };
 

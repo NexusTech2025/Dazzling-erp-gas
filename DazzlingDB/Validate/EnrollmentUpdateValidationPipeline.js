@@ -28,7 +28,7 @@ const EnrollmentUpdateRulesMap = {
     name: "enrollment_status_choices",
     validator: function (ctx) {
       if (ctx.payload.status !== undefined) {
-        const allowed = ["active", "completed", "withdrawn"];
+        const allowed = ["active", "completed", "withdrawn", "discarded"];
         if (!allowed.includes(ctx.payload.status)) {
           ctx.state.statusError = `Invalid enrollment status [${ctx.payload.status}]. Allowed: ${allowed.join(", ")}`;
           return false;
@@ -97,6 +97,55 @@ const EnrollmentUpdateRulesMap = {
     onError: function (ctx) {
       ctx.addError("allocations", ctx.state.allocError || "Batch allocation validation failed.");
     }
+  },
+
+  financial_settlement_integrity: {
+    name: "financial_settlement_integrity",
+    validator: function (ctx) {
+      const settlement = ctx.payload.financial_settlement;
+      if (!settlement) return true;
+
+      if (typeof settlement !== "object" || Array.isArray(settlement)) {
+        ctx.state.settlementError = "financial_settlement must be a valid JSON object.";
+        return false;
+      }
+
+      const allowedPolicies = ["waive_unpaid", "settle_liability", "refund", "prorated_refund", "retain_ledger"];
+      if (!settlement.policy || !allowedPolicies.includes(settlement.policy)) {
+        ctx.state.settlementError = `Invalid financial_settlement.policy [${settlement.policy}]. Allowed: ${allowedPolicies.join(", ")}`;
+        return false;
+      }
+
+      const feeAccount = ctx.db.StudentFeeAccount.findOne({ enrollment_id: ctx.payload.enrollment_id });
+      ctx.state.existingFeeAccount = feeAccount;
+
+      if (settlement.policy === "settle_liability") {
+        const reqAmt = settlement.required_amount !== undefined ? settlement.required_amount : settlement.liability_amount;
+        if (reqAmt === undefined || isNaN(Number(reqAmt)) || Number(reqAmt) < 0) {
+          ctx.state.settlementError = "settle_liability policy requires a non-negative numeric 'required_amount'.";
+          return false;
+        }
+      }
+
+      if (settlement.policy === "refund" || settlement.policy === "prorated_refund") {
+        const totalPaid = feeAccount ? Number(feeAccount.amount_paid || 0) : 0;
+        if (settlement.refund_amount !== undefined) {
+          const refAmt = Number(settlement.refund_amount);
+          if (isNaN(refAmt) || refAmt < 0) {
+            ctx.state.settlementError = "refund_amount must be a non-negative number.";
+            return false;
+          }
+          if (refAmt > totalPaid) {
+            ctx.state.settlementError = `refund_amount [₹${refAmt}] exceeds accumulated amount_paid [₹${totalPaid}].`;
+            return false;
+          }
+        }
+      }
+      return true;
+    },
+    onError: function (ctx) {
+      ctx.addError("financial_settlement", ctx.state.settlementError || "Invalid financial settlement configuration.");
+    }
   }
 };
 
@@ -104,7 +153,8 @@ const EnrollmentUpdateRules = [
   EnrollmentUpdateRulesMap.enrollment_existence,
   EnrollmentUpdateRulesMap.enrollment_status_choices,
   EnrollmentUpdateRulesMap.academic_status_choices,
-  EnrollmentUpdateRulesMap.allocations_integrity
+  EnrollmentUpdateRulesMap.allocations_integrity,
+  EnrollmentUpdateRulesMap.financial_settlement_integrity
 ];
 
 // Global exports for Google Apps Script execution context

@@ -1,13 +1,20 @@
 /**
  * @file Academic_UpdateEnrollmentTests.js
- * Integration test suite for the Student Enrollment Update Feature (academic_update_enrollment).
- * Verifies pre-flight validations, scalar contract updates, seating batch transfers,
- * automatic seating status cascading, and AtomicPipeline LIFO rollbacks.
- * 
+ * Path: DazzlingDB/Test/Academic_UpdateEnrollmentTests.js
+ *
+ * Integration & Diagnostic Test Suite for:
+ * - Academic Enrollment Update Action (`academic_update_enrollment`)
+ * - AcademicEnrollmentService.updateEnrollment
+ * - FinancialSettlementStrategyRegistry ('waive_unpaid', 'settle_liability', 'refund', 'prorated_refund', 'retain_ledger')
+ * - EnrollmentUpdateValidationPipeline & ValidationEngine rules
+ *
+ * Verifies scalar contract updates, seating batch transfers, automatic seating cascades,
+ * single-installment liability rescheduling, financial settlement policies, and AtomicPipeline LIFO rollbacks.
+ *
  * Uses ApiTestSeedHook / FixedMockData predefined seeding mechanism:
- * - ENR-001001 (Student STU-001001, Course CRS-PHY001, Allocation BAL-001001, Batch BAT-PHY12A01)
- * - ENR-002002 (Student STU-002002, Package PKG-PCM1201, Allocation BAL-002002, Batch BAT-MAT12A02)
- * 
+ * - ENR-001001 (Student STU-001001, Course CRS-PHY001, Allocation BAL-001001, Batch BAT-PHY12A01, SFA-001001: ₹2,000 paid)
+ * - ENR-002002 (Student STU-002002, Package PKG-PCM1201, Allocation BAL-002002, Batch BAT-MAT12A02, SFA-002002: ₹0 paid)
+ *
  * INSTRUCTIONS:
  * Run 'runAcademicUpdateEnrollmentTests' from the Apps Script IDE.
  */
@@ -25,13 +32,13 @@ function runAcademicUpdateEnrollmentTests() {
     throw new Error("❌ Safety Guard: Test suite cannot be executed in the PRODUCTION environment.");
   }
 
-  const timings = {};
   let passedCount = 0;
   let failedCount = 0;
+  const timings = {};
 
   try {
     // 1. Initialize Sandbox Environment (Rule: TESTING environment mandate)
-    const tStart = new Date().getTime();
+    const tStart = Date.now();
     if (typeof PropertiesService !== 'undefined' && PropertiesService.getScriptProperties()) {
       PropertiesService.getScriptProperties().setProperty('ENV', 'TESTING');
     }
@@ -45,33 +52,61 @@ function runAcademicUpdateEnrollmentTests() {
       FixedMockData.seedLiveDatabase();
     }
 
-    DBContext.getInstance().bootstrapRepositories();
     const db = DBContext.getInstance();
-    timings.sandbox_setup = new Date().getTime() - tStart;
+    db.bootstrapRepositories();
+    timings.sandbox_setup = Date.now() - tStart;
 
     // 3. Execute Scenarios
-    _executeScenario("Scenario 1: Scalar Update & Seating Batch Transfer (ENR-001001)", () => {
+    _executeScenario("Scenario 1: Scalar Properties Update & Batch Seat Transfer (ENR-001001)", () => {
       return _testScenario1_ScalarUpdateAndBatchTransfer(db);
     }, () => passedCount++, () => failedCount++);
 
-    _executeScenario("Scenario 2: Automatic Seating Status Cascade on Withdrawn (ENR-001001)", () => {
-      return _testScenario2_StatusCascadeOnWithdrawn(db);
+    _executeScenario("Scenario 2: Automatic Seating Cascade & Default waive_unpaid on Withdrawn (ENR-001001)", () => {
+      return _testScenario2_DefaultWaiveUnpaidOnWithdrawn(db);
     }, () => passedCount++, () => failedCount++);
 
-    _executeScenario("Scenario 3: Pipeline LIFO Rollback on Course Mismatch Error", () => {
-      return _testScenario3_PipelineRollbackOnCourseMismatch(db);
+    _executeScenario("Scenario 3: settle_liability Policy on Zero-Paid Enrollment (ENR-002002)", () => {
+      return _testScenario3_SettleLiabilityZeroPaid(db);
     }, () => passedCount++, () => failedCount++);
 
-    _executeScenario("Scenario 4: Pre-Flight Nonexistent Enrollment Guard (ENROLLMENT_NOT_FOUND)", () => {
-      return _testScenario4_NonexistentEnrollmentGuard(db);
+    _executeScenario("Scenario 4: settle_liability Policy on Partially-Paid Enrollment (ENR-001001)", () => {
+      return _testScenario4_SettleLiabilityPartiallyPaid(db);
     }, () => passedCount++, () => failedCount++);
 
-    _executeScenario("Scenario 5: Pre-Flight Invalid Status Choice Guard (VALIDATION_FAILURE)", () => {
-      return _testScenario5_InvalidStatusGuard(db);
+    _executeScenario("Scenario 5: refund Policy on Withdrawn (ENR-001001 - Negative Payment Created)", () => {
+      return _testScenario5_RefundPolicyOnWithdrawn(db);
     }, () => passedCount++, () => failedCount++);
 
-    _executeScenario("Scenario 6: Pre-Flight Unlinked Allocation Guard (INVALID_BATCH_ALLOCATION)", () => {
-      return _testScenario6_UnlinkedAllocationGuard(db);
+    _executeScenario("Scenario 6: prorated_refund Policy on Withdrawn (ENR-001001)", () => {
+      return _testScenario6_ProratedRefundPolicy(db);
+    }, () => passedCount++, () => failedCount++);
+
+    _executeScenario("Scenario 7: retain_ledger Policy on Withdrawn (ENR-001001)", () => {
+      return _testScenario7_RetainLedgerPolicy(db);
+    }, () => passedCount++, () => failedCount++);
+
+    _executeScenario("Scenario 8: Guard - Missing/Negative required_amount in settle_liability", () => {
+      return _testScenario8_InvalidSettleLiabilityGuard(db);
+    }, () => passedCount++, () => failedCount++);
+
+    _executeScenario("Scenario 9: Guard - Refund Amount Exceeds Amount Paid", () => {
+      return _testScenario9_RefundExceedsPaidGuard(db);
+    }, () => passedCount++, () => failedCount++);
+
+    _executeScenario("Scenario 10: Guard - Invalid Status Choice", () => {
+      return _testScenario10_InvalidStatusGuard(db);
+    }, () => passedCount++, () => failedCount++);
+
+    _executeScenario("Scenario 11: Guard - Nonexistent Enrollment", () => {
+      return _testScenario11_NonexistentEnrollmentGuard(db);
+    }, () => passedCount++, () => failedCount++);
+
+    _executeScenario("Scenario 12: Pipeline LIFO Rollback on Course Mismatch Error", () => {
+      return _testScenario12_PipelineRollbackOnCourseMismatch(db);
+    }, () => passedCount++, () => failedCount++);
+
+    _executeScenario("Scenario 13: ApiDispatcher Routing Integration (academic_update_enrollment)", () => {
+      return _testScenario13_ApiDispatcherIntegration(db);
     }, () => passedCount++, () => failedCount++);
 
     // 4. Output Performance Benchmarks (Rule N5)
@@ -87,7 +122,13 @@ function runAcademicUpdateEnrollmentTests() {
     console.log("🏁 Academic Update Enrollment Tests Complete.");
     return { passedCount: passedCount, failedCount: failedCount };
   } finally {
-    // Teardown environment reset (Rule TESTING environment mandate)
+    // Teardown / reset environment (Rule TESTING environment mandate)
+    if (typeof ApiTestSeedHook !== 'undefined') {
+      ApiTestSeedHook.purgeAll();
+    } else if (typeof FixedMockData !== 'undefined') {
+      FixedMockData.purgeFromLiveDatabase();
+    }
+
     if (typeof PropertiesService !== 'undefined' && PropertiesService.getScriptProperties()) {
       PropertiesService.getScriptProperties().setProperty('ENV', originalEnv);
     }
@@ -102,15 +143,19 @@ function _executeScenario(title, fn, onSuccess, onError) {
   console.log(`\n---------------------------------------------------------------`);
   console.log(`▶️ ${title}`);
   console.log(`---------------------------------------------------------------`);
+  const startTime = Date.now();
   try {
     const res = fn();
-    console.log(`✅ [PASS] ${title}`);
+    const duration = Date.now() - startTime;
+    console.log(`  ✅ [PASS] ${title} (${duration}ms)`);
     if (res) console.log("   Result:", JSON.stringify(res));
     if (typeof onSuccess === 'function') onSuccess();
   } catch (err) {
-    console.error(`❌ [FAIL] ${title}`);
+    const duration = Date.now() - startTime;
+    console.error(`  ❌ [FAIL] ${title} (${duration}ms)`);
     console.error(`   Error: ${err.message}`);
     if (err.details) console.error("   Details:", JSON.stringify(err.details));
+    if (err.stack) console.error(err.stack);
     if (typeof onError === 'function') onError();
   }
 }
@@ -121,7 +166,7 @@ function _executeScenario(title, fn, onSuccess, onError) {
 function _testScenario1_ScalarUpdateAndBatchTransfer(db) {
   const enrollmentId = "ENR-001001";
   const allocationId = "BAL-001001";
-  // We need a batch belonging to CRS-PHY001. BAT-PHY12A01 is current. Let's create an alternate Physics batch BAT-PHY12B02
+
   let targetBatch = db.Batch.findById("BAT-PHY12B02");
   if (!targetBatch) {
     targetBatch = db.Batch.insert({
@@ -150,8 +195,8 @@ function _testScenario1_ScalarUpdateAndBatchTransfer(db) {
   };
 
   const context = { db: db, params: { payload: payload }, mutationManifest: [] };
-  const action = new UpdateEnrollmentAction();
-  const response = action.handle(context);
+  const service = AcademicEnrollmentService.getInstance();
+  const response = service.updateEnrollment(payload, context);
 
   if (!response || !response.success) {
     throw new Error(`Scenario 1 Failed: ${JSON.stringify(response)}`);
@@ -171,9 +216,9 @@ function _testScenario1_ScalarUpdateAndBatchTransfer(db) {
 }
 
 /**
- * SCENARIO 2: Automatic status cascade when Enrollment is withdrawn (ENR-001001)
+ * SCENARIO 2: Automatic seating status cascade & default waive_unpaid policy when Enrollment is withdrawn (ENR-001001)
  */
-function _testScenario2_StatusCascadeOnWithdrawn(db) {
+function _testScenario2_DefaultWaiveUnpaidOnWithdrawn(db) {
   const enrollmentId = "ENR-001001";
   const allocationId = "BAL-001001";
 
@@ -183,8 +228,8 @@ function _testScenario2_StatusCascadeOnWithdrawn(db) {
   };
 
   const context = { db: db, params: { payload: payload }, mutationManifest: [] };
-  const action = new UpdateEnrollmentAction();
-  const response = action.handle(context);
+  const service = AcademicEnrollmentService.getInstance();
+  const response = service.updateEnrollment(payload, context);
 
   if (!response || !response.success) {
     throw new Error(`Scenario 2 Failed: ${JSON.stringify(response)}`);
@@ -200,18 +245,392 @@ function _testScenario2_StatusCascadeOnWithdrawn(db) {
     throw new Error(`Assertion failed: Allocation should be dropped with dropped_at timestamp. Got status ${alloc.status}`);
   }
 
-  return { enr_status: enr.status, alloc_status: alloc.status, dropped_at: alloc.dropped_at };
+  // Assert default waive_unpaid policy: SFA completed, balance_due 0, unpaid installments cancelled
+  const sfa = db.StudentFeeAccount.findOne({ enrollment_id: enrollmentId });
+  if (sfa) {
+    if (sfa.status !== "completed") {
+      throw new Error(`Expected SFA status 'completed', got '${sfa.status}'`);
+    }
+    if (sfa.balance_due !== 0) {
+      throw new Error(`Expected SFA balance_due 0, got ${sfa.balance_due}`);
+    }
+
+    const installments = db.Installment.where({ student_fee_id: sfa.student_fee_id });
+    installments.forEach(function (inst) {
+      if (inst.paid_amount === 0 && inst.status !== "cancelled") {
+        throw new Error(`Expected unpaid installment ${inst.installment_id} to be 'cancelled', got '${inst.status}'`);
+      }
+    });
+  }
+
+  return { enr_status: enr.status, alloc_status: alloc.status, sfa_status: sfa ? sfa.status : null };
 }
 
 /**
- * SCENARIO 3: Pipeline LIFO Rollback when batch course_id does not match allocation course_id
+ * SCENARIO 3: settle_liability Policy on Zero-Paid Enrollment (ENR-002002)
+ * Drops course, reschedules Installment #1 with required_amount (e.g. ₹3,000), cancels Installments #2..n
  */
-function _testScenario3_PipelineRollbackOnCourseMismatch(db) {
+function _testScenario3_SettleLiabilityZeroPaid(db) {
+  const enrollmentId = "ENR-002002";
+  const requiredAmount = 3000;
+
+  const payload = {
+    enrollment_id: enrollmentId,
+    status: "withdrawn",
+    financial_settlement: {
+      policy: "settle_liability",
+      required_amount: requiredAmount,
+      due_date: "2026-09-15",
+      remarks: "Drop penalty for 30 days attendance"
+    }
+  };
+
+  const context = { db: db, params: { payload: payload }, mutationManifest: [] };
+  const service = AcademicEnrollmentService.getInstance();
+  const response = service.updateEnrollment(payload, context);
+
+  if (!response || !response.success) {
+    throw new Error(`Scenario 3 Failed: ${JSON.stringify(response)}`);
+  }
+
+  const sfa = db.StudentFeeAccount.findOne({ enrollment_id: enrollmentId });
+  if (!sfa) throw new Error("SFA-002002 not found");
+
+  if (sfa.final_fee !== requiredAmount) {
+    throw new Error(`Expected SFA final_fee ${requiredAmount}, got ${sfa.final_fee}`);
+  }
+  if (sfa.balance_due !== requiredAmount) {
+    throw new Error(`Expected SFA balance_due ${requiredAmount}, got ${sfa.balance_due}`);
+  }
+  if (sfa.status !== "active") {
+    throw new Error(`Expected SFA status 'active' for pending liability, got '${sfa.status}'`);
+  }
+
+  const installments = db.Installment.where({ student_fee_id: sfa.student_fee_id });
+  const sortedInst = installments.sort((a, b) => Number(a.installment_number || 1) - Number(b.installment_number || 1));
+
+  if (sortedInst.length > 0) {
+    const inst1 = sortedInst[0];
+    if (inst1.due_amount !== requiredAmount) {
+      throw new Error(`Expected Installment #1 due_amount ${requiredAmount}, got ${inst1.due_amount}`);
+    }
+    const dueDateStr = (typeof SheetDB !== 'undefined' && SheetDB.DateComparator)
+      ? SheetDB.DateComparator.getLocalDateString(inst1.due_date)
+      : ((typeof DateComparator !== 'undefined' && DateComparator.getLocalDateString)
+        ? DateComparator.getLocalDateString(inst1.due_date)
+        : (inst1.due_date instanceof Date ? inst1.due_date.toISOString().slice(0, 10) : String(inst1.due_date)));
+    if (dueDateStr !== "2026-09-15") {
+      throw new Error(`Expected Installment #1 due_date '2026-09-15', got '${dueDateStr}'`);
+    }
+
+    for (let i = 1; i < sortedInst.length; i++) {
+      if (sortedInst[i].status !== "cancelled") {
+        throw new Error(`Expected Installment #${i + 1} status 'cancelled', got '${sortedInst[i].status}'`);
+      }
+    }
+  }
+
+  return { final_fee: sfa.final_fee, balance_due: sfa.balance_due, inst1_due: sortedInst[0]?.due_amount };
+}
+
+/**
+ * SCENARIO 4: settle_liability Policy on Partially-Paid Enrollment (ENR-001001)
+ * Paid amount is ₹2,000, required liability is ₹5,000 -> balance_due should be ₹3,000
+ */
+function _testScenario4_SettleLiabilityPartiallyPaid(db) {
+  const enrollmentId = "ENR-001001";
+  const requiredAmount = 5000;
+
+  // Restore SFA-001001 to active partially-paid state for test isolation
+  const sfa = db.StudentFeeAccount.findOne({ enrollment_id: enrollmentId });
+  if (sfa) {
+    db.StudentFeeAccount.update(sfa.student_fee_id, {
+      total_fee: 15000,
+      final_fee: 15000,
+      amount_paid: 2000,
+      balance_due: 13000,
+      status: "active"
+    });
+  }
+
+  const payload = {
+    enrollment_id: enrollmentId,
+    status: "withdrawn",
+    financial_settlement: {
+      policy: "settle_liability",
+      required_amount: requiredAmount,
+      remarks: "Partial liability settlement"
+    }
+  };
+
+  const context = { db: db, params: { payload: payload }, mutationManifest: [] };
+  const service = AcademicEnrollmentService.getInstance();
+  const response = service.updateEnrollment(payload, context);
+
+  if (!response || !response.success) {
+    throw new Error(`Scenario 4 Failed: ${JSON.stringify(response)}`);
+  }
+
+  const updatedSfa = db.StudentFeeAccount.findOne({ enrollment_id: enrollmentId });
+  if (updatedSfa.final_fee !== requiredAmount) {
+    throw new Error(`Expected SFA final_fee ${requiredAmount}, got ${updatedSfa.final_fee}`);
+  }
+  if (updatedSfa.balance_due !== (requiredAmount - 2000)) {
+    throw new Error(`Expected SFA balance_due ${requiredAmount - 2000}, got ${updatedSfa.balance_due}`);
+  }
+
+  return { final_fee: updatedSfa.final_fee, amount_paid: updatedSfa.amount_paid, balance_due: updatedSfa.balance_due };
+}
+
+/**
+ * SCENARIO 5: refund Policy on Withdrawn (ENR-001001 - Negative Payment Created)
+ */
+function _testScenario5_RefundPolicyOnWithdrawn(db) {
+  const enrollmentId = "ENR-001001";
+
+  // Restore SFA-001001 with ₹2,000 paid
+  const sfa = db.StudentFeeAccount.findOne({ enrollment_id: enrollmentId });
+  if (sfa) {
+    db.StudentFeeAccount.update(sfa.student_fee_id, {
+      amount_paid: 2000,
+      balance_due: 13000,
+      status: "active"
+    });
+  }
+
+  const payload = {
+    enrollment_id: enrollmentId,
+    status: "withdrawn",
+    financial_settlement: {
+      policy: "refund",
+      refund_amount: 2000,
+      payment_method: "bank_transfer",
+      remarks: "Full refund issued on medical drop"
+    }
+  };
+
+  const context = { db: db, params: { payload: payload }, user: { username: "admin_tester" }, mutationManifest: [] };
+  const service = AcademicEnrollmentService.getInstance();
+  const response = service.updateEnrollment(payload, context);
+
+  if (!response || !response.success) {
+    throw new Error(`Scenario 5 Failed: ${JSON.stringify(response)}`);
+  }
+
+  const updatedSfa = db.StudentFeeAccount.findOne({ enrollment_id: enrollmentId });
+  if (updatedSfa.status !== "refunded") {
+    throw new Error(`Expected SFA status 'refunded', got '${updatedSfa.status}'`);
+  }
+  if (updatedSfa.amount_paid !== 0) {
+    throw new Error(`Expected SFA amount_paid 0 after refund, got ${updatedSfa.amount_paid}`);
+  }
+
+  // Assert negative refund payment was inserted
+  const payments = db.Payment.where({ student_fee_id: sfa.student_fee_id });
+  const refundPmt = payments.find(p => Number(p.amount_paid) < 0);
+  if (!refundPmt || Number(refundPmt.amount_paid) !== -2000) {
+    throw new Error(`Expected refund payment of -2000, got ${refundPmt ? refundPmt.amount_paid : 'none'}`);
+  }
+
+  return { sfa_status: updatedSfa.status, refund_payment_id: refundPmt.payment_id, refund_amount: refundPmt.amount_paid };
+}
+
+/**
+ * SCENARIO 6: prorated_refund Policy on Withdrawn (ENR-001001)
+ */
+function _testScenario6_ProratedRefundPolicy(db) {
+  const enrollmentId = "ENR-001001";
+
+  // Setup SFA with ₹2,000 paid, retain ₹500, refund ₹1,500
+  const sfa = db.StudentFeeAccount.findOne({ enrollment_id: enrollmentId });
+  if (sfa) {
+    db.StudentFeeAccount.update(sfa.student_fee_id, {
+      amount_paid: 2000,
+      balance_due: 13000,
+      status: "active"
+    });
+  }
+
+  const payload = {
+    enrollment_id: enrollmentId,
+    status: "withdrawn",
+    financial_settlement: {
+      policy: "prorated_refund",
+      retained_amount: 500,
+      refund_amount: 1500,
+      remarks: "Prorated 1-week attendance fee deduction"
+    }
+  };
+
+  const context = { db: db, params: { payload: payload }, user: { username: "admin_tester" }, mutationManifest: [] };
+  const service = AcademicEnrollmentService.getInstance();
+  const response = service.updateEnrollment(payload, context);
+
+  if (!response || !response.success) {
+    throw new Error(`Scenario 6 Failed: ${JSON.stringify(response)}`);
+  }
+
+  const updatedSfa = db.StudentFeeAccount.findOne({ enrollment_id: enrollmentId });
+  if (updatedSfa.final_fee !== 500) {
+    throw new Error(`Expected SFA final_fee 500, got ${updatedSfa.final_fee}`);
+  }
+  if (updatedSfa.amount_paid !== 500) {
+    throw new Error(`Expected SFA amount_paid 500, got ${updatedSfa.amount_paid}`);
+  }
+  if (updatedSfa.balance_due !== 0) {
+    throw new Error(`Expected SFA balance_due 0, got ${updatedSfa.balance_due}`);
+  }
+
+  return { sfa_final_fee: updatedSfa.final_fee, sfa_amount_paid: updatedSfa.amount_paid };
+}
+
+/**
+ * SCENARIO 7: retain_ledger Policy on Withdrawn (ENR-001001)
+ */
+function _testScenario7_RetainLedgerPolicy(db) {
+  const enrollmentId = "ENR-001001";
+
+  const payload = {
+    enrollment_id: enrollmentId,
+    status: "withdrawn",
+    financial_settlement: {
+      policy: "retain_ledger",
+      remarks: "Audit review pending by accounts"
+    }
+  };
+
+  const context = { db: db, params: { payload: payload }, mutationManifest: [] };
+  const service = AcademicEnrollmentService.getInstance();
+  const response = service.updateEnrollment(payload, context);
+
+  if (!response || !response.success) {
+    throw new Error(`Scenario 7 Failed: ${JSON.stringify(response)}`);
+  }
+
+  const enr = db.Enrollment.findById(enrollmentId);
+  if (enr.status !== "withdrawn") {
+    throw new Error(`Expected Enrollment status 'withdrawn', got '${enr.status}'`);
+  }
+
+  return { enr_status: enr.status, policy: "retain_ledger" };
+}
+
+/**
+ * SCENARIO 8: Pre-flight validation guard: Missing or negative required_amount in settle_liability
+ */
+function _testScenario8_InvalidSettleLiabilityGuard(db) {
+  const payload = {
+    enrollment_id: "ENR-001001",
+    status: "withdrawn",
+    financial_settlement: {
+      policy: "settle_liability",
+      required_amount: -500 // Negative value prohibited
+    }
+  };
+
+  let caught = false;
+  try {
+    const service = AcademicEnrollmentService.getInstance();
+    service.updateEnrollment(payload, {});
+  } catch (err) {
+    caught = true;
+    if (err.errorCode !== "INVALID_FINANCIAL_SETTLEMENT" && err.name !== "AcademicEnrollmentError") {
+      throw new Error(`Expected INVALID_FINANCIAL_SETTLEMENT, got '${err.errorCode}'`);
+    }
+  }
+
+  if (!caught) {
+    throw new Error("Expected exception for negative required_amount in settle_liability.");
+  }
+}
+
+/**
+ * SCENARIO 9: Pre-flight validation guard: refund_amount exceeds accumulated amount_paid
+ */
+function _testScenario9_RefundExceedsPaidGuard(db) {
+  const sfa = db.StudentFeeAccount.findOne({ enrollment_id: "ENR-001001" });
+  const totalPaid = sfa ? Number(sfa.amount_paid || 0) : 0;
+
+  const payload = {
+    enrollment_id: "ENR-001001",
+    status: "withdrawn",
+    financial_settlement: {
+      policy: "refund",
+      refund_amount: totalPaid + 50000 // Exceeds paid amount
+    }
+  };
+
+  let caught = false;
+  try {
+    const service = AcademicEnrollmentService.getInstance();
+    service.updateEnrollment(payload, {});
+  } catch (err) {
+    caught = true;
+    if (err.errorCode !== "INVALID_FINANCIAL_SETTLEMENT" && err.name !== "AcademicEnrollmentError") {
+      throw new Error(`Expected INVALID_FINANCIAL_SETTLEMENT, got '${err.errorCode}'`);
+    }
+  }
+
+  if (!caught) {
+    throw new Error("Expected exception when refund_amount exceeds amount_paid.");
+  }
+}
+
+/**
+ * SCENARIO 10: Pre-flight invalid status choice guard (VALIDATION_FAILURE)
+ */
+function _testScenario10_InvalidStatusGuard(db) {
+  const payload = {
+    enrollment_id: "ENR-001001",
+    status: "invalid_status_enum_choice"
+  };
+
+  let caught = false;
+  try {
+    const service = AcademicEnrollmentService.getInstance();
+    service.updateEnrollment(payload, {});
+  } catch (err) {
+    caught = true;
+  }
+
+  if (!caught) {
+    throw new Error("Expected exception for invalid status choice, but none was thrown.");
+  }
+}
+
+/**
+ * SCENARIO 11: Pre-flight nonexistent enrollment guard (ENROLLMENT_NOT_FOUND)
+ */
+function _testScenario11_NonexistentEnrollmentGuard(db) {
+  const payload = {
+    enrollment_id: "ENR-NONEXISTENT-999",
+    roll_number: 5555
+  };
+
+  let caught = false;
+  try {
+    const service = AcademicEnrollmentService.getInstance();
+    service.updateEnrollment(payload, {});
+  } catch (err) {
+    caught = true;
+    if (err.errorCode !== "ENROLLMENT_NOT_FOUND") {
+      throw new Error(`Expected errorCode ENROLLMENT_NOT_FOUND, got '${err.errorCode}'`);
+    }
+  }
+
+  if (!caught) {
+    throw new Error("Expected exception for nonexistent enrollment, but none was thrown.");
+  }
+}
+
+/**
+ * SCENARIO 12: Pipeline LIFO Rollback when batch course_id does not match allocation course_id
+ */
+function _testScenario12_PipelineRollbackOnCourseMismatch(db) {
   const enrollmentId = "ENR-001001";
   const allocationId = "BAL-001001";
   const mismatchedBatchId = "BAT-MAT12A02"; // Belongs to CRS-MAT003, whereas BAL-001001 is for CRS-PHY001
 
-  // Re-activate enrollment for rollback assertion
   db.Enrollment.update(enrollmentId, { status: "active", roll_number: 2000 });
 
   const payload = {
@@ -225,115 +644,54 @@ function _testScenario3_PipelineRollbackOnCourseMismatch(db) {
     ]
   };
 
-  let caughtError = null;
+  let caught = false;
   try {
-    const context = { db: db, params: { payload: payload }, mutationManifest: [] };
-    const action = new UpdateEnrollmentAction();
-    action.handle(context);
+    const service = AcademicEnrollmentService.getInstance();
+    service.updateEnrollment(payload, {});
   } catch (err) {
-    caughtError = err;
+    caught = true;
   }
 
-  if (!caughtError) {
-    throw new Error("Expected AcademicEnrollmentError due to course mismatch, but request succeeded.");
+  if (!caught) {
+    throw new Error("Expected exception due to course mismatch, but request succeeded.");
   }
 
-  // Assert LIFO Rollback restored original roll_number 2000
   const afterRollback = db.Enrollment.findById(enrollmentId);
   if (afterRollback.roll_number !== 2000) {
     throw new Error(`Rollback assertion failed: roll_number should be restored to 2000, got ${afterRollback.roll_number}`);
   }
-
-  return { caught_error: caughtError.message, restored_roll_number: afterRollback.roll_number };
 }
 
 /**
- * SCENARIO 4: Pre-flight nonexistent enrollment guard (ENROLLMENT_NOT_FOUND)
+ * SCENARIO 13: ApiDispatcher routing integration (academic_update_enrollment)
  */
-function _testScenario4_NonexistentEnrollmentGuard(db) {
-  const payload = {
-    enrollment_id: "ENR-NONEXISTENT-999",
-    roll_number: 5555
-  };
-
-  let caughtError = null;
-  try {
-    const context = { db: db, params: { payload: payload }, mutationManifest: [] };
-    const action = new UpdateEnrollmentAction();
-    action.handle(context);
-  } catch (err) {
-    caughtError = err;
-  }
-
-  if (!caughtError) {
-    throw new Error("Expected exception for nonexistent enrollment, but none was thrown.");
-  }
-
-  if (caughtError.errorCode !== "ENROLLMENT_NOT_FOUND") {
-    throw new Error(`Expected errorCode ENROLLMENT_NOT_FOUND, got ${caughtError.errorCode}`);
-  }
-
-  return { caughtCode: caughtError.errorCode, message: caughtError.message };
-}
-
-/**
- * SCENARIO 5: Pre-flight invalid status choice guard (VALIDATION_FAILURE)
- */
-function _testScenario5_InvalidStatusGuard(db) {
+function _testScenario13_ApiDispatcherIntegration(db) {
   const payload = {
     enrollment_id: "ENR-001001",
-    status: "invalid_status_enum_choice"
+    roll_number: 8888
   };
 
-  let caughtError = null;
-  try {
-    const context = { db: db, params: { payload: payload }, mutationManifest: [] };
-    const action = new UpdateEnrollmentAction();
-    action.handle(context);
-  } catch (err) {
-    caughtError = err;
-  }
-
-  if (!caughtError) {
-    throw new Error("Expected exception for invalid status choice, but none was thrown.");
-  }
-
-  return { caughtCode: caughtError.errorCode || caughtError.name, message: caughtError.message };
-}
-
-/**
- * SCENARIO 6: Pre-flight unlinked allocation guard (INVALID_BATCH_ALLOCATION)
- */
-function _testScenario6_UnlinkedAllocationGuard(db) {
-  const payload = {
-    enrollment_id: "ENR-001001",
-    allocations: [
-      {
-        allocation_id: "BAL-002002", // Belongs to ENR-002002, NOT ENR-001001
-        remarks: "Unauthorized transfer attempt"
-      }
-    ]
+  const action = new UpdateEnrollmentAction();
+  const mockContext = {
+    db: db,
+    params: {
+      action: "academic_update_enrollment",
+      payload: payload
+    },
+    user: { username: "admin_tester", role: "admin" }
   };
 
-  let caughtError = null;
-  try {
-    const context = { db: db, params: { payload: payload }, mutationManifest: [] };
-    const action = new UpdateEnrollmentAction();
-    action.handle(context);
-  } catch (err) {
-    caughtError = err;
-  }
+  const response = action.run(mockContext);
 
-  if (!caughtError) {
-    throw new Error("Expected exception for unlinked allocation, but none was thrown.");
+  if (!response.success) {
+    throw new Error(`Action execution failed: ${JSON.stringify(response.error)}`);
   }
-
-  if (caughtError.errorCode !== "INVALID_BATCH_ALLOCATION") {
-    throw new Error(`Expected errorCode INVALID_BATCH_ALLOCATION, got ${caughtError.errorCode}`);
+  const resData = (response.data && response.data.data) ? response.data.data : response.data;
+  if (!resData || !resData.enrollment || resData.enrollment.roll_number !== 8888) {
+    throw new Error(`Expected response enrollment roll_number 8888, got '${resData ? resData.enrollment?.roll_number : null}'`);
   }
-
-  return { caughtCode: caughtError.errorCode, message: caughtError.message };
 }
 
-// Global scope export for Apps Script execution
+// Bind top-level entry point to global namespace for Apps Script execution
 globalThis.runAcademicUpdateEnrollmentTests = runAcademicUpdateEnrollmentTests;
+

@@ -740,12 +740,12 @@ class AcademicEnrollmentService {
   }
 
   /**
-   * Updates an existing Enrollment record and its associated BatchAllocation records atomically using AtomicPipeline.
+   * Updates an existing Enrollment record, its associated BatchAllocation records, and executes financial settlement policies atomically using AtomicPipeline.
    * Delegates pre-flight rules execution to ValidationEngine and EnrollmentUpdateRules.
    * 
    * @param {Object} payload - Input parameters.
    * @param {Object} requestContext - System execution context containing db and mutationManifest.
-   * @returns {Object} Presentation envelope object with updated Enrollment and BatchAllocation rows.
+   * @returns {Object} Presentation envelope object with updated Enrollment, BatchAllocation, and financial settlement data.
    * @throws {AcademicEnrollmentError} Structured domain exception for invalid state/not found scenarios.
    */
   updateEnrollment(payload, requestContext) {
@@ -763,6 +763,7 @@ class AcademicEnrollmentService {
       let errCode = "VALIDATION_FAILURE";
       if (firstErr.field === "enrollment_id") errCode = "ENROLLMENT_NOT_FOUND";
       if (firstErr.field === "allocations") errCode = "INVALID_BATCH_ALLOCATION";
+      if (firstErr.field === "financial_settlement") errCode = "INVALID_FINANCIAL_SETTLEMENT";
 
       throw new AcademicEnrollmentError(
         firstErr.message,
@@ -781,9 +782,14 @@ class AcademicEnrollmentService {
     }
 
     const existingAllocations = vCtx.state.existingAllocations || db.BatchAllocation.where({ enrollment_id: payload.enrollment_id });
+    const feeAccount = vCtx.state.existingFeeAccount !== undefined
+      ? vCtx.state.existingFeeAccount
+      : (db.StudentFeeAccount ? db.StudentFeeAccount.findOne({ enrollment_id: payload.enrollment_id }) : null);
+    const installments = (feeAccount && db.Installment) ? db.Installment.where({ student_fee_id: feeAccount.student_fee_id }) : [];
+    const nowIso = new Date().toISOString();
 
     // Step 2: AtomicPipeline Fluent Execution Chain
-    const pipelineResult = SheetDB.AtomicPipeline.begin(db, pipelineContext)
+    const pipeline = SheetDB.AtomicPipeline.begin(db, pipelineContext)
       .addStep("Enrollment", function(repo, state) {
         const updateData = {};
         if (payload.roll_number !== undefined) updateData.roll_number = payload.roll_number;
@@ -811,7 +817,7 @@ class AcademicEnrollmentService {
           if (allocInput.status !== undefined) allocPatch.status = allocInput.status;
           if (allocInput.remarks !== undefined) allocPatch.remarks = allocInput.remarks;
           if (allocInput.status === "dropped" && matchingAlloc && !matchingAlloc.dropped_at) {
-            allocPatch.dropped_at = new Date().toISOString();
+            allocPatch.dropped_at = nowIso;
           }
 
           if (matchingAlloc) {
@@ -835,15 +841,41 @@ class AcademicEnrollmentService {
           const cascadedAlloc = repo.update(allocId, patch);
           state.updatedAllocations.push(cascadedAlloc);
         });
-      })
-      .execute();
+      });
+
+    // Step 3: Financial Settlement Execution via Strategy Pattern
+    const isWithdrawing = payload.status === "withdrawn" || payload.academic_status === "withdrawn";
+    let settlementPolicy = payload.financial_settlement ? payload.financial_settlement.policy : null;
+    if (!settlementPolicy && isWithdrawing) {
+      settlementPolicy = "waive_unpaid"; // Safe conservative default on withdrawal
+    }
+
+    if (settlementPolicy && FinancialSettlementStrategyRegistry[settlementPolicy]) {
+      const strategyContext = {
+        feeAccount: feeAccount,
+        installments: installments,
+        payload: payload,
+        user: requestContext ? requestContext.user : null,
+        nowIso: nowIso
+      };
+      FinancialSettlementStrategyRegistry[settlementPolicy](strategyContext, pipeline);
+    }
+
+    const pipelineResult = pipeline.execute();
 
     return {
       success: true,
       message: `Enrollment contract [${payload.enrollment_id}] updated successfully.`,
       data: {
         enrollment: pipelineResult.updatedEnrollment,
-        allocations: pipelineResult.updatedAllocations
+        allocations: pipelineResult.updatedAllocations,
+        fee_account: pipelineResult.settledFeeAccount || null,
+        financial_settlement: settlementPolicy ? {
+          policy: settlementPolicy,
+          fee_account_status: pipelineResult.settledFeeAccount ? pipelineResult.settledFeeAccount.status : (feeAccount ? feeAccount.status : null),
+          balance_due: pipelineResult.settledFeeAccount ? pipelineResult.settledFeeAccount.balance_due : (feeAccount ? feeAccount.balance_due : 0),
+          refund_payment_id: pipelineResult.refundPayment ? pipelineResult.refundPayment.payment_id : null
+        } : null
       }
     };
   }
@@ -1243,10 +1275,266 @@ function _calculateAllocationStatusCascade(enrollmentStatus, existingAllocations
   return patches;
 }
 
+/**
+ * Declarative Financial Settlement Strategy Registry for Enrollment Status Transitions.
+ * Enforces Strategy Pattern and Open/Closed Principle (SOLID) for handling linked financial accounts.
+ */
+const FinancialSettlementStrategyRegistry = {
+  /**
+   * Waives unpaid balance, cancels pending installments, marks SFA completed, and preserves payment history.
+   * @param {Object} context - Execution strategy context { feeAccount, installments, payload, user, nowIso }.
+   * @param {Object} pipeline - Active AtomicPipeline step builder.
+   */
+  waive_unpaid: function (context, pipeline) {
+    const { feeAccount, installments, payload, nowIso } = context;
+    if (!feeAccount) return;
+
+    const remarksStr = (payload.financial_settlement && payload.financial_settlement.remarks)
+      ? String(payload.financial_settlement.remarks).trim()
+      : (payload.remarks ? String(payload.remarks).trim() : "Unpaid balance waived on enrollment withdrawal");
+
+    pipeline.addStep("StudentFeeAccount", function (repo, state) {
+      state.settledFeeAccount = repo.update(feeAccount.student_fee_id, {
+        status: "completed",
+        balance_due: 0,
+        remarks: remarksStr
+      });
+    });
+
+    pipeline.addStep("Installment", function (repo, state) {
+      state.cancelledInstallments = [];
+      installments.forEach(function (inst) {
+        if (inst.status !== "paid") {
+          const cancelledInst = repo.update(inst.installment_id, {
+            status: "cancelled",
+            due_amount: Number(inst.paid_amount || 0)
+          });
+          state.cancelledInstallments.push(cancelledInst);
+        }
+      });
+    });
+  },
+
+  /**
+   * Settles outstanding liability / drop penalty on withdrawal.
+   * Reschedules the first installment to match the required liability amount, cancels all subsequent installments,
+   * and adjusts StudentFeeAccount final_fee and balance_due.
+   * 
+   * @param {Object} context - Execution strategy context { feeAccount, installments, payload, user, nowIso }.
+   * @param {Object} pipeline - Active AtomicPipeline step builder.
+   */
+  settle_liability: function (context, pipeline) {
+    const { feeAccount, installments, payload, user, nowIso } = context;
+    if (!feeAccount) return;
+
+    const settlement = payload.financial_settlement || {};
+    const requiredAmount = Number(settlement.required_amount !== undefined ? settlement.required_amount : (settlement.liability_amount || 0));
+    const totalPaid = Number(feeAccount.amount_paid || 0);
+    const remarksStr = settlement.remarks
+      ? String(settlement.remarks).trim()
+      : `Outstanding liability settlement on withdrawal (Required: ₹${requiredAmount})`;
+
+    const newBalanceDue = Math.max(0, requiredAmount - totalPaid);
+    const newStatus = newBalanceDue <= 0 ? "completed" : "active";
+
+    // Sort installments ascending by installment_number
+    const sortedInstallments = [...installments].sort(function (a, b) {
+      return Number(a.installment_number || 1) - Number(b.installment_number || 1);
+    });
+
+    pipeline.addStep("StudentFeeAccount", function (repo, state) {
+      state.settledFeeAccount = repo.update(feeAccount.student_fee_id, {
+        total_fee: requiredAmount,
+        final_fee: requiredAmount,
+        balance_due: newBalanceDue,
+        status: newStatus,
+        remarks: remarksStr
+      });
+    });
+
+    pipeline.addStep("Installment", function (repo, state) {
+      state.updatedInstallments = [];
+      state.cancelledInstallments = [];
+
+      if (sortedInstallments.length > 0) {
+        // Installment #1 is reserved for the required liability obligation
+        const firstInst = sortedInstallments[0];
+        const inst1Paid = Number(firstInst.paid_amount || 0);
+        const inst1Patch = {
+          due_amount: requiredAmount,
+          status: requiredAmount <= inst1Paid ? "paid" : (inst1Paid > 0 ? "partially_paid" : "pending")
+        };
+        if (settlement.due_date) {
+          inst1Patch.due_date = settlement.due_date;
+        }
+
+        const updatedFirstInst = repo.update(firstInst.installment_id, inst1Patch);
+        state.updatedInstallments.push(updatedFirstInst);
+
+        // Cancel all subsequent installments (Installment #2..n)
+        for (let i = 1; i < sortedInstallments.length; i++) {
+          const inst = sortedInstallments[i];
+          const cancelledInst = repo.update(inst.installment_id, {
+            status: "cancelled",
+            due_amount: Number(inst.paid_amount || 0)
+          });
+          state.cancelledInstallments.push(cancelledInst);
+        }
+      }
+    });
+
+    // If student has overpaid past the required liability amount, issue refund for the difference
+    if (totalPaid > requiredAmount) {
+      const refundDifference = totalPaid - requiredAmount;
+      pipeline.addStep("Payment", function (repo, state) {
+        state.refundPayment = repo.insert({
+          student_fee_id: feeAccount.student_fee_id,
+          installment_id: sortedInstallments[0] ? sortedInstallments[0].installment_id : null,
+          amount_paid: -refundDifference,
+          payment_date: nowIso,
+          payment_method: settlement.payment_method || "cash",
+          status: "success",
+          remarks: `Excess credit refund on liability settlement: ${remarksStr}`,
+          created_by: user ? user.username : "system"
+        });
+      });
+    }
+  },
+
+  /**
+   * Issues refund payment, updates SFA status to 'refunded', cancels pending installments.
+   * @param {Object} context - Execution strategy context { feeAccount, installments, payload, user, nowIso }.
+   * @param {Object} pipeline - Active AtomicPipeline step builder.
+   */
+  refund: function (context, pipeline) {
+    const { feeAccount, installments, payload, user, nowIso } = context;
+    if (!feeAccount) return;
+
+    const totalPaid = Number(feeAccount.amount_paid || 0);
+    const refundAmount = (payload.financial_settlement && payload.financial_settlement.refund_amount !== undefined)
+      ? Number(payload.financial_settlement.refund_amount)
+      : totalPaid;
+
+    const remarksStr = (payload.financial_settlement && payload.financial_settlement.remarks)
+      ? String(payload.financial_settlement.remarks).trim()
+      : "Refund issued upon enrollment withdrawal";
+
+    const remainingAmountPaid = Math.max(0, totalPaid - refundAmount);
+
+    pipeline.addStep("StudentFeeAccount", function (repo, state) {
+      state.settledFeeAccount = repo.update(feeAccount.student_fee_id, {
+        status: "refunded",
+        amount_paid: remainingAmountPaid,
+        balance_due: 0,
+        remarks: remarksStr
+      });
+    });
+
+    pipeline.addStep("Installment", function (repo, state) {
+      state.cancelledInstallments = [];
+      installments.forEach(function (inst) {
+        if (inst.status !== "paid") {
+          const cancelledInst = repo.update(inst.installment_id, {
+            status: "cancelled",
+            due_amount: Number(inst.paid_amount || 0)
+          });
+          state.cancelledInstallments.push(cancelledInst);
+        }
+      });
+    });
+
+    if (refundAmount > 0) {
+      pipeline.addStep("Payment", function (repo, state) {
+        state.refundPayment = repo.insert({
+          student_fee_id: feeAccount.student_fee_id,
+          installment_id: null,
+          amount_paid: -refundAmount,
+          payment_date: nowIso,
+          payment_method: (payload.financial_settlement && payload.financial_settlement.payment_method) || "cash",
+          status: "success",
+          remarks: `Refund issued on withdrawal: ${remarksStr}`,
+          created_by: user ? user.username : "system"
+        });
+      });
+    }
+  },
+
+  /**
+   * Calculates prorated refund based on deduction or attended duration, adjusting fee and issuing refund.
+   * @param {Object} context - Execution strategy context { feeAccount, installments, payload, user, nowIso }.
+   * @param {Object} pipeline - Active AtomicPipeline step builder.
+   */
+  prorated_refund: function (context, pipeline) {
+    const { feeAccount, installments, payload, user, nowIso } = context;
+    if (!feeAccount) return;
+
+    const totalPaid = Number(feeAccount.amount_paid || 0);
+    const retainedAmount = (payload.financial_settlement && payload.financial_settlement.retained_amount !== undefined)
+      ? Number(payload.financial_settlement.retained_amount)
+      : 0;
+
+    const refundAmount = (payload.financial_settlement && payload.financial_settlement.refund_amount !== undefined)
+      ? Number(payload.financial_settlement.refund_amount)
+      : Math.max(0, totalPaid - retainedAmount);
+
+    const remarksStr = (payload.financial_settlement && payload.financial_settlement.remarks)
+      ? String(payload.financial_settlement.remarks).trim()
+      : `Prorated withdrawal settlement (Retained: ₹${retainedAmount}, Refund: ₹${refundAmount})`;
+
+    pipeline.addStep("StudentFeeAccount", function (repo, state) {
+      state.settledFeeAccount = repo.update(feeAccount.student_fee_id, {
+        status: "completed",
+        amount_paid: retainedAmount,
+        balance_due: 0,
+        final_fee: retainedAmount,
+        remarks: remarksStr
+      });
+    });
+
+    pipeline.addStep("Installment", function (repo, state) {
+      state.cancelledInstallments = [];
+      installments.forEach(function (inst) {
+        if (inst.status !== "paid") {
+          const cancelledInst = repo.update(inst.installment_id, {
+            status: "cancelled",
+            due_amount: Number(inst.paid_amount || 0)
+          });
+          state.cancelledInstallments.push(cancelledInst);
+        }
+      });
+    });
+
+    if (refundAmount > 0) {
+      pipeline.addStep("Payment", function (repo, state) {
+        state.refundPayment = repo.insert({
+          student_fee_id: feeAccount.student_fee_id,
+          installment_id: null,
+          amount_paid: -refundAmount,
+          payment_date: nowIso,
+          payment_method: (payload.financial_settlement && payload.financial_settlement.payment_method) || "cash",
+          status: "success",
+          remarks: `Prorated refund: ${remarksStr}`,
+          created_by: user ? user.username : "system"
+        });
+      });
+    }
+  },
+
+  /**
+   * Retains the ledger untouched for separate accounting processing.
+   * @param {Object} context - Execution strategy context.
+   * @param {Object} pipeline - Active AtomicPipeline step builder.
+   */
+  retain_ledger: function (context, pipeline) {
+    // No-op: ledger remains untouched.
+  }
+};
+
 // Global scope registration for Google Apps Script execution realm
 globalThis.FinanceAllocationUtil = FinanceAllocationUtil;
 globalThis.AcademicEnrollmentError = AcademicEnrollmentError;
 globalThis.AcademicEnrollmentService = AcademicEnrollmentService;
 globalThis._calculateAllocationStatusCascade = _calculateAllocationStatusCascade;
+globalThis.FinancialSettlementStrategyRegistry = FinancialSettlementStrategyRegistry;
 
 

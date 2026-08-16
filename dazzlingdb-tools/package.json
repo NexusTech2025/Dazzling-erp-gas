@@ -24,7 +24,9 @@
     "api-batch-insert": "node src/client/actions/batch_insert.js",
     "api-admin-action": "node src/client/actions/admin_action.js",
     "api-simulate-teacher-attendance": "node src/client/actions/simulate_teacher_attendance.js",
-    "api-student-attendance": "node src/client/actions/calculate_student_attendance.js"
+    "api-student-attendance": "node src/client/actions/calculate_student_attendance.js",
+    "api-action": "node src/client/actions/run_action.js",
+    "api-student-register": "node src/client/actions/run_action.js student_register"
   },
   "keywords": [
     "dazzlingdb",

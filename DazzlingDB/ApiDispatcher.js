@@ -57,6 +57,7 @@ const ApiDispatcher = (function () {
       "data_update": UpdateRecordAction,
       "data_delete": DeleteRecordAction,
       "student_delete": DeleteStudentAction,
+      "student_delete_untouched": DeleteUntouchedStudentAction,
       "data_delete_many": DeleteManyRecordsAction,
       "auth_delete_many_users": DeleteManyUsersAction,
       "user_query": UserQueryAction,

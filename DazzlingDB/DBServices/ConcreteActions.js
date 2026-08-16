@@ -192,6 +192,42 @@ class DeleteStudentAction extends BaseAction {
 }
 
 /**
+ * Students Domain: Delete untouched duplicate student account
+ * Endpoint Action Name: "student_delete_untouched"
+ */
+class DeleteUntouchedStudentAction extends BaseAction {
+  constructor() {
+    super(ActionType.DELETE);
+  }
+
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.student_id) {
+      throw new ActionValidationError("Payload must contain 'student_id'.");
+    }
+  }
+
+  _authorize() {
+    if (!AuthBridge.checkAccess(this._user, "Student")) {
+      throw new ActionAuthorizationError("Access denied: You are not authorized to delete student accounts.");
+    }
+  }
+
+  handle(requestContext) {
+    const payload = requestContext.params.payload;
+    const result = StudentService.deleteUntouchedStudent(payload, requestContext);
+    return {
+      success: true,
+      message: `Successfully purged untouched student account '${payload.student_id}'.`,
+      data: result
+    };
+  }
+}
+
+globalThis.DeleteUntouchedStudentAction = DeleteUntouchedStudentAction;
+
+/**
  * Academic Domain: Create CourseType (Segment)
  */
 class CreateCourseTypeAction extends BaseAction {
