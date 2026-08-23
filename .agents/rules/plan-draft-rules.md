@@ -14,7 +14,7 @@ The following block defines the technical guidelines governing code blocks, posi
 
 # AIRA SYSTEM DESIGN DECREE: INFRASTRUCTURE & PLATFORM RULES (NON-DOMAIN)
 `
-When proposing a structural code update, you must adhere to these six strict technical constraints.
+When proposing a structural code update, you must adhere to these ten strict technical constraints.
 
 ---
 
@@ -98,6 +98,30 @@ You are strictly prohibited from auto-writing or updating any test files during 
 
 * **No Inline Test Files in Phase 1**: The initial `implementation_plan.md` must not contain any file write/update actions or snippets targeting `DazzlingDB/Test/` or `apitest/` files.
 * **Define Plan Phase 2**: Instead, dedicate a section at the end of the implementation plan labeled `Plan Phase 2 (Testing & Verification)` detailing the required test files, scenarios, and validation strategies we will plan, review, and execute as a separate subsequent step.
+
+---
+
+### **Rule N8: Reusable Helper Function Decomposition & Decoupled Scope**
+
+Any multi-step calculation, state evaluation, or data transformation must be decomposed into reusable helper functions within the appropriate domain Service, Utility, or Module scope. Internal helper functions must be defined using standard function declarations (`function _helperName(...)`) at module/file scope rather than property assignments or inline loops to ensure reusability, testability, and DRY compliance across actions.
+
+---
+
+### **Rule N9: Custom Domain Exception & Error Code Verification Mandate**
+
+Before introducing exception throwing in actions or domain services, the agent must verify whether domain-specific custom exception classes (e.g., `AcademicEnrollmentError` extending structured error bases) and explicit error code strings (e.g., `ENROLLMENT_NOT_FOUND`, `INVALID_BATCH_ALLOCATION`, `VALIDATION_FAILURE`) are defined and registered in `BaseActions.js` (`ErrorMappingRegistry`). If absent, the implementation plan MUST prioritize defining the custom exception class and registering its error code mappings prior to usage.
+
+---
+
+### **Rule N10: Production-Ready Code Standard Compliance**
+
+All proposed code modifications, method blueprints, and architectural snippets in implementation plans must strictly adhere to the standards codified in [production-ready-code.md](e:/NAST/Dazzling/GAS/.agents/rules/production-ready-code.md).
+
+* **Explicit Contracts & JSDoc:** Every proposed method must document parameters, types, returns, and specific `@throws` domain exceptions.
+* **Fail-Fast Boundary Validation:** Input gates must validate types/schemas at method entry with domain-specific exceptions (`SheetDB.ValidationError`, `IntegrityError`, etc.), never generic `Error`.
+* **Structured Observability & Logging:** Include context tags (`[ClassName.methodName]`), performance timing benchmarks, and omit sensitive PII/secrets.
+* **Transactional Rollback Assurance:** Multi-entity mutations must incorporate `TransactionTracker` snapshots to guarantee clean LIFO rollback recovery on failure.
+* **GAS Platform Safety:** Enforce in-memory 2D array processing, single atomic batch persistence, and cross-realm safe prototype checks (`Utils.isDate()`).
 
 ---
 
