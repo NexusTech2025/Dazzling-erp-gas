@@ -112,6 +112,11 @@ const ErrorMappingRegistry = {
     clientMessage: error.message,
     errorDetails: error.details || null
   }),
+  "BackupError": (error) => ({
+    displayCode: error.errorCode || "DATABASE_BACKUP_FAILURE",
+    clientMessage: error.message,
+    errorDetails: error.details || error.context || null
+  }),
   "default": (error) => {
     if (error && error.errorCode) {
       return {
@@ -183,9 +188,18 @@ class BaseAction {
    * Concrete subclass authorization entrypoint.
    */
   _authorize() {
+    const userRole = this._user ? this._user.role : null;
+    if (userRole === 'superadmin') return;
+
+    if (Array.isArray(this.requiredRoles) && this.requiredRoles.length > 0) {
+      if (!this.requiredRoles.includes(userRole)) {
+        throw new ActionAuthorizationError(`Access denied. Action requires one of roles: [${this.requiredRoles.join(', ')}].`);
+      }
+      return;
+    }
+
     if (this.requiredRole) {
-      const userRole = this._user ? this._user.role : null;
-      if (userRole !== this.requiredRole && userRole !== 'superadmin') {
+      if (userRole !== this.requiredRole) {
         throw new ActionAuthorizationError(`Access denied. Action requires '${this.requiredRole}' role.`);
       }
     }

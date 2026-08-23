@@ -51,6 +51,11 @@ class BaseActionError extends SystemError {
 class ActionValidationError extends BaseActionError {}
 class ActionAuthorizationError extends BaseActionError {}
 
+/**
+ * 💾 BACKUP ERRORS
+ */
+class BackupError extends SystemError {}
+
 // Export to Global Namespace
 globalThis.SystemError = SystemError;
 globalThis.AuthAuthenticationError = AuthAuthenticationError;
@@ -60,3 +65,5 @@ globalThis.StudentProfileError = StudentProfileError;
 globalThis.BaseActionError = BaseActionError;
 globalThis.ActionValidationError = ActionValidationError;
 globalThis.ActionAuthorizationError = ActionAuthorizationError;
+globalThis.BackupError = BackupError;
+
