@@ -54,6 +54,7 @@ Test/*
 !Test/Student_HardDeleteTests.js
 !Test/FeeAccount_InstallmentConstraintTests.js
 !Test/Infrastructure_BackupTests.js
+!Test/Infrastructure_BackupNotificationTests.js
 
 
 

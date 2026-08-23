@@ -175,17 +175,22 @@ const BackupService = {
     try {
       const recipient = BackupService._resolveNotificationRecipient(options.notifyEmail);
       if (recipient) {
+        const attachmentName = `manifest_${report.backup_id}.json`;
         BackupService._sendNotification(report, snapshotFolder.getUrl(), recipient);
         report.notification = {
           email_sent: true,
           recipient: recipient,
+          manifest_attached: true,
+          attachment_name: attachmentName,
           error: null
         };
-        console.log(`[BackupService] Backup summary email dispatched to: '${recipient}'`);
+        console.log(`[BackupService] Backup summary email with attachment [${attachmentName}] dispatched to: '${recipient}'`);
       } else {
         report.notification = {
           email_sent: false,
           recipient: null,
+          manifest_attached: false,
+          attachment_name: null,
           error: "No active user email detected in execution session."
         };
       }
@@ -193,7 +198,9 @@ const BackupService = {
       console.warn(`[BackupService] Non-fatal: Email notification failed: ${notifyErr.message}`);
       report.notification = {
         email_sent: false,
-        recipient: options.notifyEmail || null,
+        recipient: options.notifyEmail || 'academydazzlingdream@gmail.com',
+        manifest_attached: false,
+        attachment_name: null,
         error: notifyErr.message
       };
     }
@@ -508,7 +515,7 @@ const BackupService = {
    * Safely resolves the target notification email recipient without throwing permission errors.
    * 
    * @param {string} [explicitEmail] - Optional explicitly configured email address.
-   * @returns {string} Resolved email or empty string if unresolvable.
+   * @returns {string} Resolved email or default 'academydazzlingdream@gmail.com'.
    * @private
    */
   _resolveNotificationRecipient: function (explicitEmail) {
@@ -532,11 +539,11 @@ const BackupService = {
       }
     }
 
-    return '';
+    return 'academydazzlingdream@gmail.com';
   },
 
   /**
-   * Dispatches a structured HTML execution summary email via MailApp.
+   * Dispatches a structured HTML execution summary email via MailApp with attached manifest.json.
    * 
    * @param {Object} report 
    * @param {string} snapshotFolderUrl 
@@ -625,16 +632,24 @@ const BackupService = {
           ${retentionSummary}
 
           <div style="margin-top: 24px; padding-top: 12px; border-top: 1px solid #e0e0e0; font-size: 11px; color: #888888; text-align: center;">
-            DazzlingDB Automated Database Operations • Built with SheetDB Engine
+            DazzlingDB Automated Database Operations • Built with SheetDB Engine • Attached: manifest_${report.backup_id}.json
           </div>
         </div>
       </div>
     `;
 
+    // Create manifest file attachment blob
+    const manifestBlob = Utilities.newBlob(
+      JSON.stringify(report, null, 2),
+      'application/json',
+      `manifest_${report.backup_id}.json`
+    );
+
     MailApp.sendEmail({
       to: recipientEmail,
       subject: subject,
-      htmlBody: htmlBody
+      htmlBody: htmlBody,
+      attachments: [manifestBlob]
     });
   }
 };
