@@ -137,57 +137,131 @@ function distributeBaseValueOverScope(config, baseAmount, summaryNote, billingMo
 }
 
 /**
- * Calculates variable dynamic revenue percentage payouts based on fee collections.
+ * Computes total attributed student payment revenue for a specific batch within a billing month.
+ * Traverses Payment -> StudentFeeAccount -> Enrollment -> BatchAllocation and applies
+ * course_fees proportion ratios for package enrollments.
+ * 
+ * @param {Object} db - The active DazzlingDB instance with Table Gateways.
+ * @param {string} targetBatchId - The primary key of the target batch (e.g. "BTC-101").
+ * @param {string} billingMonth - Target YYYY-MM billing month (e.g. "2026-06").
+ * @returns {number} Total attributed revenue collected for the batch in the billing month.
+ */
+function _resolveBatchAttributedRevenue(db, targetBatchId, billingMonth) {
+  if (!db || !db.BatchAllocation || !db.Enrollment || !db.StudentFeeAccount || !db.Payment) {
+    throw new SheetDB.ValidationError("[PAYROLL ERROR] Database gateways for batch revenue calculation are not available.");
+  }
+
+  const allocations = db.BatchAllocation.where({ batch_id: targetBatchId });
+  if (!allocations || allocations.length === 0) {
+    return 0.0;
+  }
+
+  const enrollmentCourseMap = {};
+  allocations.forEach(alloc => {
+    enrollmentCourseMap[alloc.enrollment_id] = alloc.course_id;
+  });
+
+  const enrollmentIds = Object.keys(enrollmentCourseMap);
+  let totalAttributedRevenue = 0.0;
+
+  enrollmentIds.forEach(enrollmentId => {
+    const enrollment = db.Enrollment.findById(enrollmentId);
+    if (!enrollment) return;
+
+    const sfas = db.StudentFeeAccount.where({ enrollment_id: enrollmentId });
+    if (!sfas || sfas.length === 0) return;
+
+    let courseRatio = 1.0;
+    const targetCourseId = enrollmentCourseMap[enrollmentId];
+
+    if (enrollment.enrollment_type === "package" && enrollment.metadata && enrollment.metadata.course_fees) {
+      const courseFees = enrollment.metadata.course_fees;
+      const courseFee = Number(courseFees[targetCourseId]) || 0;
+      let totalPackageFees = 0;
+      for (const cid in courseFees) {
+        totalPackageFees += Number(courseFees[cid]) || 0;
+      }
+      if (totalPackageFees > 0 && courseFee > 0) {
+        courseRatio = courseFee / totalPackageFees;
+      }
+    }
+
+    sfas.forEach(sfa => {
+      const payments = db.Payment.where({ student_fee_id: sfa.student_fee_id });
+      payments.forEach(payment => {
+        if (payment.status !== "success") return;
+
+        const pDate = new Date(payment.payment_date);
+        if (isNaN(pDate.getTime())) return;
+
+        const pYear = pDate.getFullYear();
+        const pMonth = String(pDate.getMonth() + 1).padStart(2, '0');
+        const formattedMonth = `${pYear}-${pMonth}`;
+
+        if (formattedMonth === billingMonth) {
+          const attributedAmount = Number(payment.amount_paid) * courseRatio;
+          totalAttributedRevenue += attributedAmount;
+        }
+      });
+    });
+  });
+
+  return Number(totalAttributedRevenue.toFixed(2));
+}
+
+/**
+ * Calculates variable dynamic revenue percentage payouts based on student tuition payments.
+ * Supports single_batch (rate in base_value) and batch_group (JSON map of batchId -> rate in scope_id).
+ * 
  * @param {Object} db - Database singleton context.
  * @param {Object} config - The TeacherSalaryConfig record.
  * @param {string} billingMonth - Target YYYY-MM month.
- * @returns {Array<Object>} List of dynamic payouts.
+ * @returns {Array<Object>} List of generated payout lines.
+ * @throws {SheetDB.ValidationError} When rates or batch scopes are malformed.
  */
 function calculateDynamicRevenuePercentage(db, config, billingMonth) {
-  const basePercentage = Number(config.base_value);
   const scopeType = config.scope_type;
   const scopeIdString = config.scope_id;
 
-  if (isNaN(basePercentage) || basePercentage < 0 || basePercentage > 100) {
-    throw new SheetDB.ValidationError(`[PAYROLL ERROR] Invalid base_value percentage '${config.base_value}' on TSC: ${config.salary_config_id}. Must be between 0 and 100.`);
-  }
-
-  let targetBatches = [];
-  let weights = {};
+  let batchRateMap = {};
 
   if (scopeType === "single_batch") {
-    targetBatches.push(scopeIdString);
-    weights[scopeIdString] = 100.0;
+    if (!scopeIdString) {
+      throw new SheetDB.ValidationError(`[SCOPE EXCEPTION] scope_id is required when scope_type is single_batch on TSC: ${config.salary_config_id}.`);
+    }
+    const singleRate = Number(config.base_value);
+    if (isNaN(singleRate) || singleRate < 0 || singleRate > 100) {
+      throw new SheetDB.ValidationError(`[PAYROLL ERROR] Invalid base_value percentage '${config.base_value}' on TSC: ${config.salary_config_id}. Must be between 0 and 100.`);
+    }
+    batchRateMap[scopeIdString] = singleRate;
   } else if (scopeType === "batch_group") {
+    if (!scopeIdString) {
+      throw new SheetDB.ValidationError(`[SCOPE EXCEPTION] scope_id is required when scope_type is batch_group on TSC: ${config.salary_config_id}.`);
+    }
     try {
-      const parsedMap = JSON.parse(scopeIdString);
-      targetBatches = Object.keys(parsedMap);
-      weights = parsedMap;
+      batchRateMap = JSON.parse(scopeIdString);
     } catch (e) {
-      throw new SheetDB.ValidationError(`[PARSING FAULT] Unable to parse batch weights on config '${config.salary_config_id}'.`);
+      throw new SheetDB.ValidationError(`[PARSING FAULT] Unable to parse batch rates JSON on config '${config.salary_config_id}'.`);
+    }
+
+    // Validate each independent batch rate
+    for (const batchId in batchRateMap) {
+      const rate = Number(batchRateMap[batchId]);
+      if (isNaN(rate) || rate < 0 || rate > 100) {
+        throw new SheetDB.ValidationError(`[INVALID RATE] Batch '${batchId}' rate '${batchRateMap[batchId]}' on TSC '${config.salary_config_id}' must be between 0 and 100.`);
+      }
+      batchRateMap[batchId] = rate;
     }
   } else {
-    throw new SheetDB.ValidationError(`[SCOPE EXCEPTION] Percentage strategies require explicit batch scopes. Global scope is forbidden.`);
+    throw new SheetDB.ValidationError(`[SCOPE EXCEPTION] Percentage strategies require explicit batch scopes (single_batch or batch_group). Global scope is forbidden.`);
   }
 
   let calculatedPayoutLines = [];
 
-  targetBatches.forEach(batchId => {
-    const allPaymentsForBatch = db.MoneyTransaction.where({ batch_id: batchId, status: "cleared" });
-    const paymentsInMonth = allPaymentsForBatch.filter((row) => {
-      const transDate = new Date(row.transaction_date);
-      const transYear = transDate.getFullYear();
-      const transMonth = String(transDate.getMonth() + 1).padStart(2, '0');
-      const formattedTransMonth = `${transYear}-${transMonth}`;
-      return formattedTransMonth === billingMonth;
-    });
-
-    const totalRevenueCollected = paymentsInMonth.reduce((accumulator, currentRow) => {
-      return accumulator + Number(currentRow.amount);
-    }, 0);
-
-    const weightMultiplier = weights[batchId] / 100;
-    const calculatedShare = totalRevenueCollected * (basePercentage / 100) * weightMultiplier;
+  for (const batchId in batchRateMap) {
+    const ratePercentage = batchRateMap[batchId];
+    const totalRevenueCollected = _resolveBatchAttributedRevenue(db, batchId, billingMonth);
+    const calculatedShare = totalRevenueCollected * (ratePercentage / 100);
 
     calculatedPayoutLines.push({
       entity_id: config.entity_id,
@@ -198,9 +272,9 @@ function calculateDynamicRevenuePercentage(db, config, billingMonth) {
       payment_mode: "bank_transfer",
       transaction_date: new Date(),
       salary_month: billingMonth,
-      notes: `Variable Revenue share at ${basePercentage}% rate. Scope Target: ${batchId} (Weight: ${weights[batchId]}%). Total collected fees: ₹${totalRevenueCollected.toFixed(2)}. Net: ₹${calculatedShare.toFixed(2)}.`
+      notes: `Variable Revenue share at ${ratePercentage}% rate. Scope Target: ${batchId}. Total collected student fees: ₹${totalRevenueCollected.toFixed(2)}. Net: ₹${calculatedShare.toFixed(2)}.`
     });
-  });
+  }
 
   return calculatedPayoutLines;
 }

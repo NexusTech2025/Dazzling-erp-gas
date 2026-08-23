@@ -99,7 +99,8 @@ const ApiDispatcher = (function () {
       "admin_peek_data": AdminPeekDataAction,
       "admin_cache_analyze": AdminCacheAnalyzeAction,
       "admin_purge_cache": AdminPurgeCacheAction,
-      "admin_purge_database": PurgeDatabaseAction
+      "admin_purge_database": PurgeDatabaseAction,
+      "admin_backup_database": AdminBackupDatabaseAction
     };
   }
 

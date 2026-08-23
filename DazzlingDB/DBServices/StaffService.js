@@ -129,6 +129,58 @@ const StaffService = {
   },
 
   /**
+   * Validates parameters for revenue_percentage salary configurations.
+   * @param {Object} db - Database singleton context.
+   * @param {string} scopeType - 'single_batch' or 'batch_group'.
+   * @param {string|Object} scopeId - Target batch ID or JSON mapping of batch IDs to rates.
+   * @param {number|string} baseValue - Flat percentage rate for single_batch.
+   */
+  _validateRevenuePercentageConfig(db, scopeType, scopeId, baseValue) {
+    if (scopeType === "global") {
+      throw new SheetDB.ValidationError("Percentage strategy requires explicit batch scopes ('single_batch' or 'batch_group'). Global scope is forbidden.");
+    }
+    if (scopeType === "single_batch") {
+      if (!scopeId || typeof scopeId !== "string" || !scopeId.trim()) {
+        throw new SheetDB.ValidationError("scope_id is required for single_batch revenue_percentage salary configuration.");
+      }
+      if (!db.Batch.findById(scopeId.trim())) {
+        throw new SheetDB.EntityNotFoundError("Batch", scopeId.trim(), "Academic");
+      }
+      const val = Number(baseValue);
+      if (isNaN(val) || val < 0 || val > 100) {
+        throw new SheetDB.ValidationError(`Invalid base_value percentage '${baseValue}'. Must be a number between 0 and 100.`);
+      }
+    } else if (scopeType === "batch_group") {
+      if (!scopeId) {
+        throw new SheetDB.ValidationError("scope_id is required for batch_group revenue_percentage salary configuration.");
+      }
+      let batchMap;
+      if (typeof scopeId === "object" && scopeId !== null) {
+        batchMap = scopeId;
+      } else {
+        try {
+          batchMap = JSON.parse(scopeId);
+        } catch (e) {
+          throw new SheetDB.ValidationError(`Malformed scope_id JSON mapping for batch_group: ${scopeId}`);
+        }
+      }
+      const batchIds = Object.keys(batchMap);
+      if (batchIds.length === 0) {
+        throw new SheetDB.ValidationError("scope_id JSON mapping must contain at least one batch.");
+      }
+      batchIds.forEach(bId => {
+        if (!db.Batch.findById(bId)) {
+          throw new SheetDB.EntityNotFoundError("Batch", bId, "Academic");
+        }
+        const rate = Number(batchMap[bId]);
+        if (isNaN(rate) || rate < 0 || rate > 100) {
+          throw new SheetDB.ValidationError(`Invalid rate '${batchMap[bId]}' for batch '${bId}'. Must be a number between 0 and 100.`);
+        }
+      });
+    }
+  },
+
+  /**
    * HR ONBOARDING
    */
 
@@ -316,6 +368,11 @@ const StaffService = {
       this._expireOverlappingActiveConfigs(entityId, entityType, payload.scope_type, payload.scope_id);
     }
 
+    // Validation for revenue_percentage
+    if (payload.rate_type === "revenue_percentage") {
+      this._validateRevenuePercentageConfig(db, payload.scope_type, payload.scope_id, payload.base_value);
+    }
+
     const insertPayload = {
       entity_type: entityType,
       entity_id: entityId,
@@ -392,6 +449,15 @@ const StaffService = {
       const targetScopeType = updateData.scope_type !== undefined ? updateData.scope_type : config.scope_type;
       const targetScopeId = updateData.scope_id !== undefined ? updateData.scope_id : config.scope_id;
       this._expireOverlappingActiveConfigs(entityId, resolvedType, targetScopeType, targetScopeId, salaryConfigId);
+    }
+
+    // Validation for revenue_percentage if rate_type, scope_type, scope_id, or base_value are being updated
+    const targetRateType = updateData.rate_type !== undefined ? updateData.rate_type : config.rate_type;
+    if (targetRateType === "revenue_percentage") {
+      const targetScopeType = updateData.scope_type !== undefined ? updateData.scope_type : config.scope_type;
+      const targetScopeId = updateData.scope_id !== undefined ? updateData.scope_id : config.scope_id;
+      const targetBaseValue = updateData.base_value !== undefined ? updateData.base_value : config.base_value;
+      this._validateRevenuePercentageConfig(db, targetScopeType, targetScopeId, targetBaseValue);
     }
 
     const updatedRecord = db.TeacherSalaryConfig.update(salaryConfigId, updateData);
