@@ -2,55 +2,579 @@
   "executionMetadata": {
     "tableContext": "Package",
     "actionContext": "academic_create_package",
-    "timestamp": "2026-07-19T10:49:39.061Z",
-    "totalProcessed": 1,
-    "successCount": 0,
-    "failureCount": 1,
-    "wallTimeMs": 9093,
-    "averageLatencyMs": 9093
+    "timestamp": "2026-08-19T16:55:01.740Z",
+    "totalProcessed": 18,
+    "successCount": 15,
+    "failureCount": 3,
+    "wallTimeMs": 234726,
+    "averageLatencyMs": 13040.3
   },
-  "successManifest": [],
-  "failureManifest": {
-    "0": {
-      "message": "undefined: A critical system exception was intercepted during server-side processing.",
-      "attemptedData": {
-        "name": "CBSE Class 11 PCM Bundle (2026)",
-        "description": "Standard PCM Package for Class 11 CBSE student preparation.",
-        "target_class": "11",
+  "successManifest": [
+    {
+      "inputPayloadIndex": 3,
+      "resolvedId": "PKG-F9444C8A",
+      "recordSnapshot": {
+        "name": "Class 4 CBSE Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 4 (CBSE)",
+        "target_class": "Class 4",
         "board": "CBSE",
         "month": 12,
-        "package_fee": 65000,
-        "discount_percent": 15,
+        "package_fee": 12000,
+        "discount_percent": 0,
         "status": "active",
-        "perks": [
-          {
-            "perk_title": "Comprehensive Material",
-            "perk_description": "Includes standard textbooks, homework worksheets, and past test archives.",
-            "icon": "book",
-            "display_order": 1
-          },
-          {
-            "perk_title": "Weekly Assessment",
-            "perk_description": "Weekly dynamic exams mapping standard CBSE layouts.",
-            "icon": "star",
-            "display_order": 2
-          }
-        ],
+        "package_id": "PKG-F9444C8A",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:21:40.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 4,
+      "resolvedId": "PKG-39D13BEE",
+      "recordSnapshot": {
+        "name": "Class 4 RBSE - English Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 4 (RBSE - English)",
+        "target_class": "Class 4",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 12000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-39D13BEE",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:21:50.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 5,
+      "resolvedId": "PKG-EF36486C",
+      "recordSnapshot": {
+        "name": "Class 4 RBSE - Hindi Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 4 (RBSE - Hindi)",
+        "target_class": "Class 4",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 12000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-EF36486C",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:22:25.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 6,
+      "resolvedId": "PKG-EB0E54D2",
+      "recordSnapshot": {
+        "name": "Class 5 CBSE Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 5 (CBSE)",
+        "target_class": "Class 5",
+        "board": "CBSE",
+        "month": 12,
+        "package_fee": 12000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-EB0E54D2",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:22:46.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 7,
+      "resolvedId": "PKG-BC9077B5",
+      "recordSnapshot": {
+        "name": "Class 5 RBSE - English Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 5 (RBSE - English)",
+        "target_class": "Class 5",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 12000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-BC9077B5",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:22:57.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 8,
+      "resolvedId": "PKG-BA43013C",
+      "recordSnapshot": {
+        "name": "Class 5 RBSE - Hindi Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 5 (RBSE - Hindi)",
+        "target_class": "Class 5",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 12000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-BA43013C",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:23:08.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 9,
+      "resolvedId": "PKG-2E82B09B",
+      "recordSnapshot": {
+        "name": "Class 6 CBSE Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 6 (CBSE)",
+        "target_class": "Class 6",
+        "board": "CBSE",
+        "month": 12,
+        "package_fee": 14000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-2E82B09B",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:23:19.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 10,
+      "resolvedId": "PKG-ADA8600A",
+      "recordSnapshot": {
+        "name": "Class 6 RBSE - English Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 6 (RBSE - English)",
+        "target_class": "Class 6",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 14000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-ADA8600A",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:23:30.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 11,
+      "resolvedId": "PKG-B0175834",
+      "recordSnapshot": {
+        "name": "Class 6 RBSE - Hindi Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 6 (RBSE - Hindi)",
+        "target_class": "Class 6",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 14000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-B0175834",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:23:42.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 12,
+      "resolvedId": "PKG-691AB2FD",
+      "recordSnapshot": {
+        "name": "Class 7 CBSE Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 7 (CBSE)",
+        "target_class": "Class 7",
+        "board": "CBSE",
+        "month": 12,
+        "package_fee": 14000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-691AB2FD",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:23:51.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 13,
+      "resolvedId": "PKG-ACA1F25B",
+      "recordSnapshot": {
+        "name": "Class 7 RBSE - English Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 7 (RBSE - English)",
+        "target_class": "Class 7",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 14000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-ACA1F25B",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:24:02.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 14,
+      "resolvedId": "PKG-5A1C3C3F",
+      "recordSnapshot": {
+        "name": "Class 7 RBSE - Hindi Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 7 (RBSE - Hindi)",
+        "target_class": "Class 7",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 14000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-5A1C3C3F",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:24:13.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 15,
+      "resolvedId": "PKG-73F6B6AA",
+      "recordSnapshot": {
+        "name": "Class 8 CBSE Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 8 (CBSE)",
+        "target_class": "Class 8",
+        "board": "CBSE",
+        "month": 12,
+        "package_fee": 16000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-73F6B6AA",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:24:24.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 16,
+      "resolvedId": "PKG-EEDFA4B5",
+      "recordSnapshot": {
+        "name": "Class 8 RBSE - English Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 8 (RBSE - English)",
+        "target_class": "Class 8",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 16000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-EEDFA4B5",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:24:46.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    },
+    {
+      "inputPayloadIndex": 17,
+      "resolvedId": "PKG-5C663D7E",
+      "recordSnapshot": {
+        "name": "Class 8 RBSE - Hindi Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 8 (RBSE - Hindi)",
+        "target_class": "Class 8",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 16000,
+        "discount_percent": 0,
+        "status": "active",
+        "package_id": "PKG-5C663D7E",
+        "__tx_id": null,
+        "__tx_status": "PENDING",
+        "__created_at": "2026-08-19T11:24:59.000Z",
+        "_presentation": {
+          "display_status": "Fully Enrolled",
+          "toast_message": "Data transaction committed safely to physical files."
+        }
+      }
+    }
+  ],
+  "failureManifest": {
+    "0": {
+      "message": "undefined: Pre-flight validation failed for Package creation.",
+      "attemptedData": {
+        "name": "Class 3 CBSE Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 3 (CBSE)",
+        "target_class": "Class 3",
+        "board": "CBSE",
+        "month": 12,
+        "package_fee": 12000,
+        "discount_percent": 0,
+        "status": "active",
         "courses": [
           {
-            "entity_type": "subject",
-            "on_demand": false,
-            "entity_id": "CRS-FB15A55B"
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 Mathematics (CBSE)",
+            "short_code": "MAT03CBSEE",
+            "language_medium": "English",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "CBSE"
+            }
           },
           {
-            "entity_type": "subject",
-            "on_demand": false,
-            "entity_id": "CRS-8FD279B7"
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 Science (CBSE)",
+            "short_code": "SCI03CBSEE",
+            "language_medium": "English",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "CBSE"
+            }
           },
           {
-            "entity_type": "subject",
-            "on_demand": false,
-            "entity_id": "CRS-79E92F19"
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 English (CBSE)",
+            "short_code": "ENG03CBSEE",
+            "language_medium": "English",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "CBSE"
+            }
+          },
+          {
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 Social Science (CBSE)",
+            "short_code": "SST03CBSEE",
+            "language_medium": "English",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "CBSE"
+            }
+          }
+        ]
+      }
+    },
+    "1": {
+      "message": "undefined: Pre-flight validation failed for Package creation.",
+      "attemptedData": {
+        "name": "Class 3 RBSE - English Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 3 (RBSE - English)",
+        "target_class": "Class 3",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 12000,
+        "discount_percent": 0,
+        "status": "active",
+        "courses": [
+          {
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 Mathematics (RBSE - English)",
+            "short_code": "MAT03RBSEE",
+            "language_medium": "English",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "RBSE"
+            }
+          },
+          {
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 Science (RBSE - English)",
+            "short_code": "SCI03RBSEE",
+            "language_medium": "English",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "RBSE"
+            }
+          },
+          {
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 English (RBSE - English)",
+            "short_code": "ENG03RBSEE",
+            "language_medium": "English",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "RBSE"
+            }
+          },
+          {
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 Social Science (RBSE - English)",
+            "short_code": "SST03RBSEE",
+            "language_medium": "English",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "RBSE"
+            }
+          }
+        ]
+      }
+    },
+    "2": {
+      "message": "undefined: Pre-flight validation failed for Package creation.",
+      "attemptedData": {
+        "name": "Class 3 RBSE - Hindi Package",
+        "description": "Package bundling Mathematics, Science, English, and Social Science for Class 3 (RBSE - Hindi)",
+        "target_class": "Class 3",
+        "board": "RBSE",
+        "month": 12,
+        "package_fee": 12000,
+        "discount_percent": 0,
+        "status": "active",
+        "courses": [
+          {
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 Mathematics (RBSE - Hindi)",
+            "short_code": "MAT03RBSEH",
+            "language_medium": "Hindi",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "RBSE"
+            }
+          },
+          {
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 Science (RBSE - Hindi)",
+            "short_code": "SCI03RBSEH",
+            "language_medium": "Hindi",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "RBSE"
+            }
+          },
+          {
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 English (RBSE - Hindi)",
+            "short_code": "ENG03RBSEH",
+            "language_medium": "Hindi",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "RBSE"
+            }
+          },
+          {
+            "entity_type": "course",
+            "on_demand": true,
+            "name": "Class 3 Social Science (RBSE - Hindi)",
+            "short_code": "SST03RBSEH",
+            "language_medium": "Hindi",
+            "duration_value": 12,
+            "duration_unit": "months",
+            "base_fee": 6000,
+            "segment_id": "SEG-40C4B9E6",
+            "status": "active",
+            "metadata": {
+              "class": "3",
+              "board": "RBSE"
+            }
           }
         ]
       }

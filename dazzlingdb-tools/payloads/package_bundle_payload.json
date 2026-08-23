@@ -1,0 +1,1370 @@
+[
+  {
+    "name": "Class 3 CBSE Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 3 (CBSE)",
+    "target_class": "Class 3",
+    "board": "CBSE",
+    "month": 12,
+    "package_fee": 12000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 Mathematics (CBSE)",
+        "short_code": "MAT03CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 Science (CBSE)",
+        "short_code": "SCI03CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 English (CBSE)",
+        "short_code": "ENG03CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 Social Science (CBSE)",
+        "short_code": "SST03CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "CBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 3 RBSE - English Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 3 (RBSE - English)",
+    "target_class": "Class 3",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 12000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 Mathematics (RBSE - English)",
+        "short_code": "MAT03RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 Science (RBSE - English)",
+        "short_code": "SCI03RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 English (RBSE - English)",
+        "short_code": "ENG03RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 Social Science (RBSE - English)",
+        "short_code": "SST03RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 3 RBSE - Hindi Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 3 (RBSE - Hindi)",
+    "target_class": "Class 3",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 12000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 Mathematics (RBSE - Hindi)",
+        "short_code": "MAT03RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 Science (RBSE - Hindi)",
+        "short_code": "SCI03RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 English (RBSE - Hindi)",
+        "short_code": "ENG03RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 3 Social Science (RBSE - Hindi)",
+        "short_code": "SST03RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "3",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 4 CBSE Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 4 (CBSE)",
+    "target_class": "Class 4",
+    "board": "CBSE",
+    "month": 12,
+    "package_fee": 12000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 Mathematics (CBSE)",
+        "short_code": "MAT04CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 Science (CBSE)",
+        "short_code": "SCI04CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 English (CBSE)",
+        "short_code": "ENG04CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 Social Science (CBSE)",
+        "short_code": "SST04CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "CBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 4 RBSE - English Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 4 (RBSE - English)",
+    "target_class": "Class 4",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 12000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 Mathematics (RBSE - English)",
+        "short_code": "MAT04RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 Science (RBSE - English)",
+        "short_code": "SCI04RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 English (RBSE - English)",
+        "short_code": "ENG04RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 Social Science (RBSE - English)",
+        "short_code": "SST04RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 4 RBSE - Hindi Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 4 (RBSE - Hindi)",
+    "target_class": "Class 4",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 12000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 Mathematics (RBSE - Hindi)",
+        "short_code": "MAT04RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 Science (RBSE - Hindi)",
+        "short_code": "SCI04RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 English (RBSE - Hindi)",
+        "short_code": "ENG04RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 4 Social Science (RBSE - Hindi)",
+        "short_code": "SST04RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "4",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 5 CBSE Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 5 (CBSE)",
+    "target_class": "Class 5",
+    "board": "CBSE",
+    "month": 12,
+    "package_fee": 12000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 Mathematics (CBSE)",
+        "short_code": "MAT05CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 Science (CBSE)",
+        "short_code": "SCI05CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 English (CBSE)",
+        "short_code": "ENG05CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 Social Science (CBSE)",
+        "short_code": "SST05CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "CBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 5 RBSE - English Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 5 (RBSE - English)",
+    "target_class": "Class 5",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 12000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 Mathematics (RBSE - English)",
+        "short_code": "MAT05RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 Science (RBSE - English)",
+        "short_code": "SCI05RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 English (RBSE - English)",
+        "short_code": "ENG05RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 Social Science (RBSE - English)",
+        "short_code": "SST05RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 5 RBSE - Hindi Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 5 (RBSE - Hindi)",
+    "target_class": "Class 5",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 12000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 Mathematics (RBSE - Hindi)",
+        "short_code": "MAT05RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 Science (RBSE - Hindi)",
+        "short_code": "SCI05RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 English (RBSE - Hindi)",
+        "short_code": "ENG05RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 5 Social Science (RBSE - Hindi)",
+        "short_code": "SST05RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 6000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "5",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 6 CBSE Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 6 (CBSE)",
+    "target_class": "Class 6",
+    "board": "CBSE",
+    "month": 12,
+    "package_fee": 14000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 Mathematics (CBSE)",
+        "short_code": "MAT06CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 Science (CBSE)",
+        "short_code": "SCI06CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 English (CBSE)",
+        "short_code": "ENG06CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 Social Science (CBSE)",
+        "short_code": "SST06CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "CBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 6 RBSE - English Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 6 (RBSE - English)",
+    "target_class": "Class 6",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 14000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 Mathematics (RBSE - English)",
+        "short_code": "MAT06RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 Science (RBSE - English)",
+        "short_code": "SCI06RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 English (RBSE - English)",
+        "short_code": "ENG06RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 Social Science (RBSE - English)",
+        "short_code": "SST06RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 6 RBSE - Hindi Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 6 (RBSE - Hindi)",
+    "target_class": "Class 6",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 14000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 Mathematics (RBSE - Hindi)",
+        "short_code": "MAT06RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 Science (RBSE - Hindi)",
+        "short_code": "SCI06RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 English (RBSE - Hindi)",
+        "short_code": "ENG06RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 6 Social Science (RBSE - Hindi)",
+        "short_code": "SST06RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "6",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 7 CBSE Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 7 (CBSE)",
+    "target_class": "Class 7",
+    "board": "CBSE",
+    "month": 12,
+    "package_fee": 14000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 Mathematics (CBSE)",
+        "short_code": "MAT07CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 Science (CBSE)",
+        "short_code": "SCI07CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 English (CBSE)",
+        "short_code": "ENG07CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 Social Science (CBSE)",
+        "short_code": "SST07CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "CBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 7 RBSE - English Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 7 (RBSE - English)",
+    "target_class": "Class 7",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 14000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 Mathematics (RBSE - English)",
+        "short_code": "MAT07RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 Science (RBSE - English)",
+        "short_code": "SCI07RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 English (RBSE - English)",
+        "short_code": "ENG07RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 Social Science (RBSE - English)",
+        "short_code": "SST07RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 7 RBSE - Hindi Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 7 (RBSE - Hindi)",
+    "target_class": "Class 7",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 14000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 Mathematics (RBSE - Hindi)",
+        "short_code": "MAT07RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 Science (RBSE - Hindi)",
+        "short_code": "SCI07RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 English (RBSE - Hindi)",
+        "short_code": "ENG07RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 7 Social Science (RBSE - Hindi)",
+        "short_code": "SST07RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 7000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "7",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 8 CBSE Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 8 (CBSE)",
+    "target_class": "Class 8",
+    "board": "CBSE",
+    "month": 12,
+    "package_fee": 16000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 Mathematics (CBSE)",
+        "short_code": "MAT08CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 Science (CBSE)",
+        "short_code": "SCI08CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 English (CBSE)",
+        "short_code": "ENG08CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "CBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 Social Science (CBSE)",
+        "short_code": "SST08CBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "CBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 8 RBSE - English Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 8 (RBSE - English)",
+    "target_class": "Class 8",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 16000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 Mathematics (RBSE - English)",
+        "short_code": "MAT08RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 Science (RBSE - English)",
+        "short_code": "SCI08RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 English (RBSE - English)",
+        "short_code": "ENG08RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 Social Science (RBSE - English)",
+        "short_code": "SST08RBSEE",
+        "language_medium": "English",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "RBSE"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Class 8 RBSE - Hindi Package",
+    "description": "Package bundling Mathematics, Science, English, and Social Science for Class 8 (RBSE - Hindi)",
+    "target_class": "Class 8",
+    "board": "RBSE",
+    "month": 12,
+    "package_fee": 16000,
+    "discount_percent": 0,
+    "status": "active",
+    "courses": [
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 Mathematics (RBSE - Hindi)",
+        "short_code": "MAT08RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 Science (RBSE - Hindi)",
+        "short_code": "SCI08RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 English (RBSE - Hindi)",
+        "short_code": "ENG08RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "RBSE"
+        }
+      },
+      {
+        "entity_type": "course",
+        "on_demand": true,
+        "name": "Class 8 Social Science (RBSE - Hindi)",
+        "short_code": "SST08RBSEH",
+        "language_medium": "Hindi",
+        "duration_value": 12,
+        "duration_unit": "months",
+        "base_fee": 8000,
+        "segment_id": "SEG-40C4B9E6",
+        "status": "active",
+        "metadata": {
+          "class": "8",
+          "board": "RBSE"
+        }
+      }
+    ]
+  }
+]

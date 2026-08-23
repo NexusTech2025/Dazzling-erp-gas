@@ -1,0 +1,1226 @@
+[
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 Mathematics (CBSE)",
+    "short_code": "MAT03CBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 3 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 Science (CBSE)",
+    "short_code": "SCI03CBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 3 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 English (CBSE)",
+    "short_code": "ENG03CBSEE",
+    "language_medium": "English",
+    "description": "English for Class 3 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 Social Science (CBSE)",
+    "short_code": "SST03CBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 3 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 Mathematics (RBSE - English)",
+    "short_code": "MAT03RBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 3 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 Science (RBSE - English)",
+    "short_code": "SCI03RBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 3 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 English (RBSE - English)",
+    "short_code": "ENG03RBSEE",
+    "language_medium": "English",
+    "description": "English for Class 3 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 Social Science (RBSE - English)",
+    "short_code": "SST03RBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 3 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 Mathematics (RBSE - Hindi)",
+    "short_code": "MAT03RBSEH",
+    "language_medium": "Hindi",
+    "description": "Mathematics for Class 3 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 Science (RBSE - Hindi)",
+    "short_code": "SCI03RBSEH",
+    "language_medium": "Hindi",
+    "description": "Science for Class 3 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 English (RBSE - Hindi)",
+    "short_code": "ENG03RBSEH",
+    "language_medium": "Hindi",
+    "description": "English for Class 3 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 3 Social Science (RBSE - Hindi)",
+    "short_code": "SST03RBSEH",
+    "language_medium": "Hindi",
+    "description": "Social Science for Class 3 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "3",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 Mathematics (CBSE)",
+    "short_code": "MAT04CBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 4 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 Science (CBSE)",
+    "short_code": "SCI04CBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 4 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 English (CBSE)",
+    "short_code": "ENG04CBSEE",
+    "language_medium": "English",
+    "description": "English for Class 4 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 Social Science (CBSE)",
+    "short_code": "SST04CBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 4 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 Mathematics (RBSE - English)",
+    "short_code": "MAT04RBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 4 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 Science (RBSE - English)",
+    "short_code": "SCI04RBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 4 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 English (RBSE - English)",
+    "short_code": "ENG04RBSEE",
+    "language_medium": "English",
+    "description": "English for Class 4 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 Social Science (RBSE - English)",
+    "short_code": "SST04RBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 4 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 Mathematics (RBSE - Hindi)",
+    "short_code": "MAT04RBSEH",
+    "language_medium": "Hindi",
+    "description": "Mathematics for Class 4 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 Science (RBSE - Hindi)",
+    "short_code": "SCI04RBSEH",
+    "language_medium": "Hindi",
+    "description": "Science for Class 4 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 English (RBSE - Hindi)",
+    "short_code": "ENG04RBSEH",
+    "language_medium": "Hindi",
+    "description": "English for Class 4 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 4 Social Science (RBSE - Hindi)",
+    "short_code": "SST04RBSEH",
+    "language_medium": "Hindi",
+    "description": "Social Science for Class 4 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "4",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 Mathematics (CBSE)",
+    "short_code": "MAT05CBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 5 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 Science (CBSE)",
+    "short_code": "SCI05CBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 5 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 English (CBSE)",
+    "short_code": "ENG05CBSEE",
+    "language_medium": "English",
+    "description": "English for Class 5 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 Social Science (CBSE)",
+    "short_code": "SST05CBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 5 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 Mathematics (RBSE - English)",
+    "short_code": "MAT05RBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 5 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 Science (RBSE - English)",
+    "short_code": "SCI05RBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 5 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 English (RBSE - English)",
+    "short_code": "ENG05RBSEE",
+    "language_medium": "English",
+    "description": "English for Class 5 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 Social Science (RBSE - English)",
+    "short_code": "SST05RBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 5 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 Mathematics (RBSE - Hindi)",
+    "short_code": "MAT05RBSEH",
+    "language_medium": "Hindi",
+    "description": "Mathematics for Class 5 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 Science (RBSE - Hindi)",
+    "short_code": "SCI05RBSEH",
+    "language_medium": "Hindi",
+    "description": "Science for Class 5 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 English (RBSE - Hindi)",
+    "short_code": "ENG05RBSEH",
+    "language_medium": "Hindi",
+    "description": "English for Class 5 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 5 Social Science (RBSE - Hindi)",
+    "short_code": "SST05RBSEH",
+    "language_medium": "Hindi",
+    "description": "Social Science for Class 5 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 6000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "5",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 Mathematics (CBSE)",
+    "short_code": "MAT06CBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 6 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 Science (CBSE)",
+    "short_code": "SCI06CBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 6 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 English (CBSE)",
+    "short_code": "ENG06CBSEE",
+    "language_medium": "English",
+    "description": "English for Class 6 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 Social Science (CBSE)",
+    "short_code": "SST06CBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 6 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 Mathematics (RBSE - English)",
+    "short_code": "MAT06RBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 6 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 Science (RBSE - English)",
+    "short_code": "SCI06RBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 6 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 English (RBSE - English)",
+    "short_code": "ENG06RBSEE",
+    "language_medium": "English",
+    "description": "English for Class 6 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 Social Science (RBSE - English)",
+    "short_code": "SST06RBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 6 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 Mathematics (RBSE - Hindi)",
+    "short_code": "MAT06RBSEH",
+    "language_medium": "Hindi",
+    "description": "Mathematics for Class 6 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 Science (RBSE - Hindi)",
+    "short_code": "SCI06RBSEH",
+    "language_medium": "Hindi",
+    "description": "Science for Class 6 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 English (RBSE - Hindi)",
+    "short_code": "ENG06RBSEH",
+    "language_medium": "Hindi",
+    "description": "English for Class 6 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 6 Social Science (RBSE - Hindi)",
+    "short_code": "SST06RBSEH",
+    "language_medium": "Hindi",
+    "description": "Social Science for Class 6 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "6",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 Mathematics (CBSE)",
+    "short_code": "MAT07CBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 7 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 Science (CBSE)",
+    "short_code": "SCI07CBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 7 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 English (CBSE)",
+    "short_code": "ENG07CBSEE",
+    "language_medium": "English",
+    "description": "English for Class 7 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 Social Science (CBSE)",
+    "short_code": "SST07CBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 7 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 Mathematics (RBSE - English)",
+    "short_code": "MAT07RBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 7 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 Science (RBSE - English)",
+    "short_code": "SCI07RBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 7 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 English (RBSE - English)",
+    "short_code": "ENG07RBSEE",
+    "language_medium": "English",
+    "description": "English for Class 7 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 Social Science (RBSE - English)",
+    "short_code": "SST07RBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 7 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 Mathematics (RBSE - Hindi)",
+    "short_code": "MAT07RBSEH",
+    "language_medium": "Hindi",
+    "description": "Mathematics for Class 7 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 Science (RBSE - Hindi)",
+    "short_code": "SCI07RBSEH",
+    "language_medium": "Hindi",
+    "description": "Science for Class 7 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 English (RBSE - Hindi)",
+    "short_code": "ENG07RBSEH",
+    "language_medium": "Hindi",
+    "description": "English for Class 7 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 7 Social Science (RBSE - Hindi)",
+    "short_code": "SST07RBSEH",
+    "language_medium": "Hindi",
+    "description": "Social Science for Class 7 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 7000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "7",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 Mathematics (CBSE)",
+    "short_code": "MAT08CBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 8 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 Science (CBSE)",
+    "short_code": "SCI08CBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 8 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 English (CBSE)",
+    "short_code": "ENG08CBSEE",
+    "language_medium": "English",
+    "description": "English for Class 8 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 Social Science (CBSE)",
+    "short_code": "SST08CBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 8 CBSE",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "CBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 Mathematics (RBSE - English)",
+    "short_code": "MAT08RBSEE",
+    "language_medium": "English",
+    "description": "Mathematics for Class 8 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 Science (RBSE - English)",
+    "short_code": "SCI08RBSEE",
+    "language_medium": "English",
+    "description": "Science for Class 8 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 English (RBSE - English)",
+    "short_code": "ENG08RBSEE",
+    "language_medium": "English",
+    "description": "English for Class 8 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 Social Science (RBSE - English)",
+    "short_code": "SST08RBSEE",
+    "language_medium": "English",
+    "description": "Social Science for Class 8 RBSE - English",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 Mathematics (RBSE - Hindi)",
+    "short_code": "MAT08RBSEH",
+    "language_medium": "Hindi",
+    "description": "Mathematics for Class 8 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 Science (RBSE - Hindi)",
+    "short_code": "SCI08RBSEH",
+    "language_medium": "Hindi",
+    "description": "Science for Class 8 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 English (RBSE - Hindi)",
+    "short_code": "ENG08RBSEH",
+    "language_medium": "Hindi",
+    "description": "English for Class 8 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "RBSE"
+    }
+  },
+  {
+    "segment_id": "SEG-40C4B9E6",
+    "entity_type": "subject",
+    "name": "Class 8 Social Science (RBSE - Hindi)",
+    "short_code": "SST08RBSEH",
+    "language_medium": "Hindi",
+    "description": "Social Science for Class 8 RBSE - Hindi",
+    "duration_value": 12,
+    "duration_unit": "months",
+    "base_fee": 8000,
+    "default_installment_count": 3,
+    "status": "active",
+    "metadata": {
+      "class": "8",
+      "board": "RBSE"
+    }
+  }
+]
