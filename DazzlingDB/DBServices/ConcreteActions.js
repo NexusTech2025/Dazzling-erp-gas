@@ -2220,5 +2220,27 @@ class UpdateStudentProfileAction extends BaseAction {
 
 globalThis.UpdateStudentProfileAction = UpdateStudentProfileAction;
 
+/**
+ * Admin Action: Triggers a full database backup snapshot.
+ * Accessible by SUPERADMIN and ADMIN roles.
+ */
+class AdminBackupDatabaseAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+    this.requiredRoles = [Roles.SUPERADMIN, Roles.ADMIN];
+  }
 
+  handle(requestContext) {
+    const payload = (requestContext.params && requestContext.params.payload) ? requestContext.params.payload : {};
+    const report = BackupService.createSnapshot({
+      targetFolderId: payload.targetFolderId,
+      sourceFolderId: payload.sourceFolderId,
+      label: payload.label,
+      excludeCategories: payload.excludeCategories,
+      notifyEmail: payload.notifyEmail
+    });
+    return report;
+  }
+}
 
+globalThis.AdminBackupDatabaseAction = AdminBackupDatabaseAction;

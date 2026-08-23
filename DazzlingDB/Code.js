@@ -352,3 +352,26 @@ function checkEnvironmentConfiguration() {
     console.log("GAS PropertiesService is not available in the current context.");
   }
 }
+
+/**
+ * Console Trigger: Creates a full database backup snapshot.
+ * Configurable via script properties or direct parameter override.
+ * 
+ * @param {Object} [options={}] - Backup options.
+ * @param {string} [options.targetFolderId] - Override target backup folder ID.
+ * @param {string} [options.sourceFolderId] - Override source database root folder ID.
+ * @param {string} [options.label] - Snapshot label (e.g. 'pre_release').
+ * @param {Array<string>} [options.excludeCategories] - Categories to skip.
+ * @param {string} [options.notifyEmail] - Email for backup report notification.
+ * @returns {Object} BackupReport
+ */
+function createDatabaseBackup(options = {}) {
+  console.log("[App] createDatabaseBackup invoked from console/trigger with options:", JSON.stringify(options));
+  const report = BackupService.createSnapshot(options);
+  console.log("[App] Database Backup Completed Successfully.");
+  return report;
+}
+
+// Bind trigger to global scope
+globalThis.createDatabaseBackup = createDatabaseBackup;
+

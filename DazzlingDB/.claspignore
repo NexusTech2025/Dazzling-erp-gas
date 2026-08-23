@@ -53,6 +53,7 @@ Test/*
 !Test/Student_SoftDeleteTests.js
 !Test/Student_HardDeleteTests.js
 !Test/FeeAccount_InstallmentConstraintTests.js
+!Test/Infrastructure_BackupTests.js
 
 
 

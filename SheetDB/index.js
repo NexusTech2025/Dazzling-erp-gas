@@ -215,6 +215,9 @@ Object.assign(globalThis, {
   init,
 
   // --- Core Classes (Injected for Library Visibility) ---
+  SpreadsheetFileSystem: globalThis.SpreadsheetFileSystem,
+  SheetDataSource: globalThis.SheetDataSource,
+  SchemaSetupEngine: globalThis.SchemaSetupEngine,
   BaseModel: globalThis.BaseModel,
   ModelRegistry: globalThis.ModelRegistry,
   FieldMapper: globalThis.FieldMapper,
