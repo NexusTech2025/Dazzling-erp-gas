@@ -28,6 +28,21 @@ const StudentService = {
   },
 
   /**
+   * Provisions a user account for an existing Student and links it via UserAccount junction table.
+   * 
+   * @param {string} studentId - Target student ID (e.g. 'STU-1001').
+   * @param {Object} userData - User credentials payload ({ username, password, role? }).
+   * @param {Object} context - Request execution lifecycle context.
+   * @returns {Object} Result envelope with user_id, account_link_id, username, entity_type, entity_id.
+   * @throws {UserAccountLinkError} If student does not exist or already has an active linked user.
+   * @throws {SheetDB.ConflictError} If username is already taken.
+   * @throws {SheetDB.ValidationError} If password does not meet complexity requirements.
+   */
+  createStudentUser(studentId, userData, context) {
+    return AuthBridge.createUserForEntity(userData, "Student", studentId, context);
+  },
+
+  /**
    * Orchestrates the registration of a new student using highly decoupled private primitives.
    * @param {Object} payload - The Comprehensive Relational Payload
    * @param {Object} context - Request execution lifecycle context

@@ -55,6 +55,7 @@ Test/*
 !Test/FeeAccount_InstallmentConstraintTests.js
 !Test/Infrastructure_BackupTests.js
 !Test/Infrastructure_BackupNotificationTests.js
+!Test/UserIdentityProvisioningTests.js
 
 
 

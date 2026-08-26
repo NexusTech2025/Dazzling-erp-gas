@@ -35,6 +35,32 @@ class RegisterStudentAction extends BaseAction {
 }
 
 /**
+ * Student Domain: Provision & Link User Credentials to Existing Student
+ */
+class StudentCreateUserAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+    this.requiredRole = Roles.ADMIN;
+  }
+
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.student_id || typeof p.student_id !== 'string' || !p.student_id.trim()) {
+      throw new ActionValidationError("payload must contain a non-empty string 'student_id'.");
+    }
+    if (!p.userData || typeof p.userData !== 'object' || !p.userData.username || typeof p.userData.username !== 'string' || !p.userData.username.trim() || !p.userData.password || typeof p.userData.password !== 'string' || !p.userData.password) {
+      throw new ActionValidationError("payload.userData must contain non-empty 'username' and 'password'.");
+    }
+  }
+
+  handle(requestContext) {
+    const { student_id, userData } = requestContext.params.payload;
+    return StudentService.createStudentUser(student_id, userData, requestContext);
+  }
+}
+
+/**
  * Student Domain: Withdraw a subject from package enrollment
  */
 class WithdrawStudentSubjectAction extends BaseAction {
@@ -796,6 +822,54 @@ class StaffOnboardTeacherAction extends BaseAction {
   }
   _validate() { this._requireParam("payload"); }
   handle(requestContext) { return StaffService.onboardTeacher(requestContext.params.payload, requestContext); }
+}
+
+/**
+ * 👨‍🏫 HR DOMAIN: Provision & Link User Credentials to Existing Teacher
+ */
+class StaffCreateTeacherUserAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+    this.requiredRole = Roles.ADMIN;
+  }
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.teacher_id || typeof p.teacher_id !== 'string' || !p.teacher_id.trim()) {
+      throw new ActionValidationError("payload must contain a non-empty string 'teacher_id'.");
+    }
+    if (!p.userData || typeof p.userData !== 'object' || !p.userData.username || typeof p.userData.username !== 'string' || !p.userData.username.trim() || !p.userData.password || typeof p.userData.password !== 'string' || !p.userData.password) {
+      throw new ActionValidationError("payload.userData must contain non-empty 'username' and 'password'.");
+    }
+  }
+  handle(requestContext) {
+    const { teacher_id, userData } = requestContext.params.payload;
+    return StaffService.createTeacherUser(teacher_id, userData, requestContext);
+  }
+}
+
+/**
+ * 🏢 HR DOMAIN: Provision & Link User Credentials to Existing Staff Member
+ */
+class StaffCreateMemberUserAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+    this.requiredRole = Roles.ADMIN;
+  }
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.staff_id || typeof p.staff_id !== 'string' || !p.staff_id.trim()) {
+      throw new ActionValidationError("payload must contain a non-empty string 'staff_id'.");
+    }
+    if (!p.userData || typeof p.userData !== 'object' || !p.userData.username || typeof p.userData.username !== 'string' || !p.userData.username.trim() || !p.userData.password || typeof p.userData.password !== 'string' || !p.userData.password) {
+      throw new ActionValidationError("payload.userData must contain non-empty 'username' and 'password'.");
+    }
+  }
+  handle(requestContext) {
+    const { staff_id, userData } = requestContext.params.payload;
+    return StaffService.createStaffMemberUser(staff_id, userData, requestContext);
+  }
 }
 
 class StaffUpdateTeacherAction extends BaseAction {
@@ -1606,6 +1680,7 @@ class DeleteManyRecordsAction extends BaseAction {
 // Bind subclasses to global namespace
 globalThis.PingAction = PingAction;
 globalThis.RegisterStudentAction = RegisterStudentAction;
+globalThis.StudentCreateUserAction = StudentCreateUserAction;
 globalThis.WithdrawStudentSubjectAction = WithdrawStudentSubjectAction;
 globalThis.UpgradeStudentPackageAction = UpgradeStudentPackageAction;
 globalThis.VerifyStudentAccessAction = VerifyStudentAccessAction;
@@ -1628,6 +1703,8 @@ globalThis.UserQueryAction = UserQueryAction;
 globalThis.UserUpdateAction = UserUpdateAction;
 globalThis.UserDeleteAction = UserDeleteAction;
 globalThis.StaffOnboardTeacherAction = StaffOnboardTeacherAction;
+globalThis.StaffCreateTeacherUserAction = StaffCreateTeacherUserAction;
+globalThis.StaffCreateMemberUserAction = StaffCreateMemberUserAction;
 globalThis.StaffUpdateTeacherAction = StaffUpdateTeacherAction;
 globalThis.StaffAssignSubjectsAction = StaffAssignSubjectsAction;
 globalThis.StaffSetSalaryConfigAction = StaffSetSalaryConfigAction;

@@ -160,6 +160,11 @@ const DEPENDENCY_GRAPH = {
       "table": "Session",
       "fk": "user_id",
       "onDelete": "protect"
+    },
+    {
+      "table": "UserAccount",
+      "fk": "user_id",
+      "onDelete": "protect"
     }
   ],
   "StudentFeeAccount": [

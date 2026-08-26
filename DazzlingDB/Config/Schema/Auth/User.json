@@ -57,6 +57,11 @@
       "type": "hasMany",
       "target": "Session",
       "foreignKey": "user_id"
+    },
+    "accounts": {
+      "type": "hasMany",
+      "target": "UserAccount",
+      "foreignKey": "user_id"
     }
   }
 }

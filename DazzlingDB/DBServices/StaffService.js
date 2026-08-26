@@ -181,19 +181,52 @@ const StaffService = {
   },
 
   /**
+   * Provisions a user account for an existing Teacher and links it via UserAccount junction table.
+   * 
+   * @param {string} teacherId - Target teacher ID (e.g. 'TCH-1001').
+   * @param {Object} userData - User credentials payload ({ username, password, role? }).
+   * @param {Object} context - Request execution lifecycle context.
+   * @returns {Object} Result envelope with user_id, account_link_id, username, entity_type, entity_id.
+   * @throws {UserAccountLinkError} If teacher does not exist or already has an active linked user.
+   * @throws {SheetDB.ConflictError} If username is already taken.
+   * @throws {SheetDB.ValidationError} If password does not meet complexity requirements.
+   */
+  createTeacherUser(teacherId, userData, context) {
+    return AuthBridge.createUserForEntity(userData, "Teacher", teacherId, context);
+  },
+
+  /**
+   * Provisions a user account for an existing Staff Member and links it via UserAccount junction table.
+   * 
+   * @param {string} staffId - Target staff ID (e.g. 'STF-1001').
+   * @param {Object} userData - User credentials payload ({ username, password, role? }).
+   * @param {Object} context - Request execution lifecycle context.
+   * @returns {Object} Result envelope with user_id, account_link_id, username, entity_type, entity_id.
+   * @throws {UserAccountLinkError} If staff member does not exist or already has an active linked user.
+   * @throws {SheetDB.ConflictError} If username is already taken.
+   * @throws {SheetDB.ValidationError} If password does not meet complexity requirements.
+   */
+  createStaffMemberUser(staffId, userData, context) {
+    return AuthBridge.createUserForEntity(userData, "StaffMember", staffId, context);
+  },
+
+  /**
    * HR ONBOARDING
    */
 
   /**
-   * Registers a new teacher profile.
-   * Optionally creates an Auth User if userData is provided.
+   * Registers a new teacher profile and child entities atomically via AtomicPipeline.
+   * Creates an Auth User and UserAccount junction mapping if userData is provided.
+   * 
+   * @param {Object} payload - Comprehensive teacher onboarding payload.
+   * @param {Object} context - Request execution lifecycle context.
+   * @returns {Object} The created Teacher entity record.
+   * @throws {SheetDB.ValidationError} If pre-flight validation fails or password is too weak.
+   * @throws {SheetDB.ConflictError} If username or email or mobile already exists.
    */
   onboardTeacher(payload, context) {
     const db = DBContext.getInstance();
-    console.log(`[StaffService] Initiating onboarding transaction for teacher: ${payload.full_name}`);
-
-    // Track successfully inserted records for rollback
-    const insertedRecords = [];
+    console.log(`[StaffService.onboardTeacher] Initiating atomic onboarding transaction for teacher: ${payload.full_name}`);
 
     // 1. DECOUPLED PRE-FLIGHT VALIDATION
     const ctx = new ValidationContext(db, null, payload);
@@ -205,99 +238,105 @@ const StaffService = {
       });
     }
 
-    const self = this;
+    // Defensive Guard: Validate password complexity if userData is provided
+    if (payload.userData && payload.userData.password) {
+      if (!AuthCore.isStrongPassword(payload.userData.password)) {
+        throw new SheetDB.ValidationError("Password is too weak (minimum 8 characters, uppercase, lowercase, digit, and symbol required).");
+      }
+    }
 
-    try {
-      // 2. CORE: INSERT TEACHER RECORD
-      // Strip out relation fields to keep clean columns in the Teacher sheet
-      const teacherInsertData = { ...payload };
-      delete teacherInsertData.userData;
-      delete teacherInsertData.salary_config;
-      delete teacherInsertData.subjects;
-      delete teacherInsertData.documents;
+    // 2. Prepare Clean Teacher Payload
+    const teacherInsertData = { ...payload };
+    delete teacherInsertData.userData;
+    delete teacherInsertData.salary_config;
+    delete teacherInsertData.subjects;
+    delete teacherInsertData.documents;
 
-      const teacher = db.Teacher.insert({
-        ...teacherInsertData,
-        status: payload.status || "active",
-        created_at: new Date()
+    const pipeCtx = new SheetDB.PipelineContext(context);
+    const pipeline = (typeof AtomicPipeline !== 'undefined' ? AtomicPipeline : SheetDB.AtomicPipeline);
+
+    let pipe = pipeline.begin(db, pipeCtx)
+      .addStep("Teacher", (repo, state) => {
+        console.log(`[StaffService.onboardTeacher] [Step: Teacher] Inserting core profile...`);
+        state.teacher = repo.insert({
+          ...teacherInsertData,
+          status: payload.status || "active",
+          created_at: new Date()
+        });
+        state.teacherId = state.teacher.teacher_id;
       });
 
-      // Log insertion for potential rollback
-      insertedRecords.push({ table: "Teacher", id: teacher.teacher_id });
-      this._trackMutation(context, "Teacher");
+    // Step: Auth User & UserAccount Junction Mapping
+    if (payload.userData) {
+      pipe = pipe
+        .addStep("User", (repo, state) => {
+          console.log(`[StaffService.onboardTeacher] [Step: User] Creating auth credentials...`);
+          const cleanUsername = String(payload.userData.username).trim();
+          const salt = AuthCore.generateSalt();
+          state.user = repo.insert({
+            username: cleanUsername,
+            password_salt: salt,
+            password_hash: AuthCore.hashPassword(payload.userData.password, salt),
+            role: "teacher",
+            status: "active",
+            failed_attempts: 0
+          });
+          state.userId = state.user.user_id;
+        })
+        .addStep("UserAccount", (repo, state) => {
+          console.log(`[StaffService.onboardTeacher] [Step: UserAccount] Binding user ${state.userId} to Teacher:${state.teacherId}`);
+          state.accountLink = repo.insert({
+            user_id: state.userId,
+            entity_type: "Teacher",
+            entity_id: state.teacherId,
+            status: "active",
+            created_at: new Date()
+          });
+        });
+    }
 
-      // 3. RELATION: CREATE AUTH USER PROFILE
-      if (payload.userData) {
-        const registeredUser = AuthBridge.registerUser({
-          ...payload.userData,
-          user_id: teacher.teacher_id, // 1:1 Domain Key Sync
-          role: "teacher"
-        }, context);
-        insertedRecords.push({ table: "User", id: registeredUser.user_id });
-        // Note: AuthBridge.registerUser handles its own User table tracking inside AuthBridge, 
-        // but since we are executing it, let's track "User" mutation here just in case.
-        this._trackMutation(context, "User");
-      }
-
-      // 4. RELATION: INITIAL COMPENSATION RATE (Polymorphic schema alignment)
-      if (payload.salary_config) {
-        const salaryConfig = db.TeacherSalaryConfig.insert({
+    // Step: Initial Compensation Rate
+    if (payload.salary_config) {
+      pipe = pipe.addStep("TeacherSalaryConfig", (repo, state) => {
+        console.log(`[StaffService.onboardTeacher] [Step: SalaryConfig] Setting payroll...`);
+        repo.insert({
           ...payload.salary_config,
           entity_type: "Teacher",
-          entity_id: teacher.teacher_id,
+          entity_id: state.teacherId,
           effective_from: payload.salary_config.effective_from || new Date()
         });
-        insertedRecords.push({ table: "TeacherSalaryConfig", id: salaryConfig.salary_config_id });
-        this._trackMutation(context, "TeacherSalaryConfig");
-      }
+      });
+    }
 
-      // 5. RELATION: ASSIGN TEACHING SUBJECTS
-      if (payload.subjects && Array.isArray(payload.subjects)) {
+    // Step: Assign Teaching Subjects
+    if (payload.subjects && Array.isArray(payload.subjects) && payload.subjects.length > 0) {
+      pipe = pipe.addStep("TeacherSubject", (repo, state) => {
+        console.log(`[StaffService.onboardTeacher] [Step: Subjects] Assigning ${payload.subjects.length} subjects...`);
         const subjectsToInsert = payload.subjects.map(subId => ({
-          teacher_id: teacher.teacher_id,
+          teacher_id: state.teacherId,
           subject_id: subId
         }));
-        const insertedSubjects = db.TeacherSubject.insertMany(subjectsToInsert);
-        insertedSubjects.forEach(ts => {
-          insertedRecords.push({ table: "TeacherSubject", id: ts.teacher_subject_id });
-        });
-        self._trackMutation(context, "TeacherSubject");
-      }
+        repo.insertMany(subjectsToInsert);
+      });
+    }
 
-      // 6. RELATION: UPLOAD VERIFIED ONBOARDING DOCUMENTS
-      if (payload.documents && Array.isArray(payload.documents)) {
+    // Step: Upload Verified Documents
+    if (payload.documents && Array.isArray(payload.documents) && payload.documents.length > 0) {
+      pipe = pipe.addStep("TeacherDocument", (repo, state) => {
+        console.log(`[StaffService.onboardTeacher] [Step: Documents] Storing ${payload.documents.length} documents...`);
         const docsToInsert = payload.documents.map(doc => ({
           ...doc,
-          teacher_id: teacher.teacher_id,
+          teacher_id: state.teacherId,
           uploaded_at: new Date()
         }));
-        const insertedDocs = db.TeacherDocument.insertMany(docsToInsert);
-        insertedDocs.forEach(td => {
-          insertedRecords.push({ table: "TeacherDocument", id: td.document_id });
-        });
-        self._trackMutation(context, "TeacherDocument");
-      }
-
-      console.log(`[StaffService] Onboarding transaction complete for: ${teacher.teacher_id}`);
-      return teacher;
-
-    } catch (e) {
-      console.error("[StaffService] Onboarding transaction failed! Starting rollback sequence...", e.message);
-
-      // Perform transaction rollback in reverse order of insertions
-      for (let i = insertedRecords.length - 1; i >= 0; i--) {
-        const record = insertedRecords[i];
-        try {
-          console.log(`[Rollback] Deleting record from ${record.table} ID: ${record.id}`);
-          db[record.table].remove(record.id);
-        } catch (rollbackErr) {
-          console.error(`[Rollback Error] Failed to delete from ${record.table} ID: ${record.id}:`, rollbackErr.message);
-        }
-      }
-
-      // Re-throw the original business error for meaningful API dispatch notifications
-      throw e;
+        repo.insertMany(docsToInsert);
+      });
     }
+
+    return pipe.execute((state) => {
+      console.log(`[StaffService.onboardTeacher] Onboarding atomic pipeline completed for: ${state.teacherId}`);
+      return state.teacher;
+    });
   },
 
   /**

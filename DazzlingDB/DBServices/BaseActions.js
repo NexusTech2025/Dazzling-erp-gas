@@ -117,6 +117,11 @@ const ErrorMappingRegistry = {
     clientMessage: error.message,
     errorDetails: error.details || error.context || null
   }),
+  "UserAccountLinkError": (error) => ({
+    displayCode: error.errorCode || "USER_ACCOUNT_LINK_FAILURE",
+    clientMessage: error.message,
+    errorDetails: error.details || null
+  }),
   "default": (error) => {
     if (error && error.errorCode) {
       return {
@@ -304,6 +309,25 @@ class BaseAction {
   }
 }
 
+/**
+ * Domain Exception for User Account Linking and Identity Provisioning failures.
+ */
+class UserAccountLinkError extends Error {
+  /**
+   * @param {string} message - Error description.
+   * @param {Object|null} [details=null] - Additional contextual details.
+   * @param {string} [errorCode="USER_ACCOUNT_LINK_FAILURE"] - Explicit error code string.
+   */
+  constructor(message, details = null, errorCode = "USER_ACCOUNT_LINK_FAILURE") {
+    super(message);
+    this.name = "UserAccountLinkError";
+    this.errorCode = errorCode;
+    this.details = details;
+  }
+}
+
 // Bind to global scope for Google Apps Script execution context
 globalThis.ActionType = ActionType;
 globalThis.BaseAction = BaseAction;
+globalThis.UserAccountLinkError = UserAccountLinkError;
+

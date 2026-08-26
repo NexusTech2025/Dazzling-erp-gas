@@ -26,7 +26,8 @@ const TeacherRegistrationRules = [
       if (!userData) return true;
       const requiredFields = ["username", "password"];
       for (const field of requiredFields) {
-        if (userData[field] === undefined || userData[field] === null || userData[field] === "") {
+        const val = userData[field];
+        if (val === undefined || val === null || val === "" || (typeof val === "string" && !val.trim())) {
           ctx.state.missingUserField = field;
           return false;
         }
@@ -35,6 +36,20 @@ const TeacherRegistrationRules = [
     },
     onError: (ctx) => {
       ctx.addError(`userData.${ctx.state.missingUserField}`, `User account field 'userData.${ctx.state.missingUserField}' is strictly required when userData is provided.`);
+    }
+  },
+  {
+    name: "user_data_password_strength",
+    validator: (ctx) => {
+      const { userData } = ctx.payload;
+      if (!userData || !userData.password) return true;
+      if (typeof AuthCore !== "undefined" && typeof AuthCore.isStrongPassword === "function") {
+        return AuthCore.isStrongPassword(userData.password);
+      }
+      return true;
+    },
+    onError: (ctx) => {
+      ctx.addError("userData.password", "Password is too weak (minimum 8 characters, uppercase, lowercase, digit, and symbol required).");
     }
   },
   {
@@ -127,11 +142,12 @@ const TeacherRegistrationRules = [
     validator: (ctx) => {
       const { userData } = ctx.payload;
       if (!userData || !userData.username) return true;
-      const duplicate = ctx.db.User.findOne({ username: userData.username });
+      const username = String(userData.username).trim();
+      const duplicate = ctx.db.User.findOne({ username: username });
       return !duplicate;
     },
     onError: (ctx) => {
-      ctx.addError("userData.username", `Username '${ctx.payload.userData.username}' is already taken.`);
+      ctx.addError("userData.username", `Username '${String(ctx.payload.userData.username).trim()}' is already taken.`);
     }
   },
   {

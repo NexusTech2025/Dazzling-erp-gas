@@ -124,6 +124,118 @@ const AuthBridge = {
   },
 
   /**
+   * Provisions a User account and atomically binds it to a domain entity via the UserAccount junction table.
+   * 
+   * @param {Object} userData - User credentials payload (username, password, optional role).
+   * @param {string} entityType - Target model discriminator ('Teacher' | 'Student' | 'StaffMember').
+   * @param {string} entityId - Target entity primary key (e.g. 'TCH-XXXXXXXX').
+   * @param {Object} context - Request execution context.
+   * @returns {Object} Result envelope with user_id, account_link_id, username, entity_type, entity_id.
+   * @throws {UserAccountLinkError} If entity does not exist or already has an active linked user.
+   * @throws {SheetDB.ConflictError} If username is already taken.
+   * @throws {SheetDB.ValidationError} If password does not meet complexity rules.
+   */
+  createUserForEntity(userData, entityType, entityId, context) {
+    const db = DBContext.getInstance();
+    console.log(`[AuthBridge.createUserForEntity] Provisioning user for ${entityType}: ${entityId}`);
+
+    // 1. Boundary & Pre-flight Validation
+    if (!userData || typeof userData !== 'object' || !userData.username || typeof userData.username !== 'string' || !userData.username.trim() || !userData.password || typeof userData.password !== 'string' || !userData.password) {
+      throw new UserAccountLinkError("Fields 'userData.username' and 'userData.password' are required.", null, "USER_CREDENTIALS_REQUIRED");
+    }
+    if (!["Teacher", "Student", "StaffMember"].includes(entityType)) {
+      throw new UserAccountLinkError(`Unsupported entity type: '${entityType}'.`, null, "INVALID_ENTITY_TYPE");
+    }
+    if (!entityId || typeof entityId !== 'string' || !entityId.trim()) {
+      throw new UserAccountLinkError("Parameter 'entityId' is required.", null, "ENTITY_ID_REQUIRED");
+    }
+
+    const cleanUsername = String(userData.username).trim();
+    const cleanEntityId = String(entityId).trim();
+
+    // 2. Target Entity Existence Check
+    const targetRepo = db[entityType];
+    const targetEntity = targetRepo ? targetRepo.findById(cleanEntityId) : null;
+    if (!targetRepo || !targetEntity) {
+      throw new UserAccountLinkError(`${entityType} with ID '${cleanEntityId}' does not exist.`, null, "ENTITY_NOT_FOUND");
+    }
+
+    // 3. Prevent Duplicate Active Link for this Entity
+    if (db.UserAccount && db.UserAccount.isTableExist()) {
+      const existingLink = db.UserAccount.findOne({ entity_type: entityType, entity_id: cleanEntityId, status: "active" });
+      if (existingLink) {
+        const linkedUser = db.User.findById(existingLink.user_id);
+        const username = linkedUser ? linkedUser.username : existingLink.user_id;
+        throw new UserAccountLinkError(`${entityType} '${cleanEntityId}' is already linked to active user '${username}'.`, null, "ENTITY_ALREADY_LINKED");
+      }
+    }
+
+    // 4. Validate Credentials (Uniqueness & Password Complexity)
+    if (db.User.exists({ username: cleanUsername })) {
+      throw new SheetDB.ConflictError(`Username '${cleanUsername}' is already taken.`);
+    }
+    if (!AuthCore.isStrongPassword(userData.password)) {
+      throw new SheetDB.ValidationError("Password is too weak (minimum 8 characters, uppercase, lowercase, digit, and symbol required).");
+    }
+
+    // Principle of Least Privilege: Default StaffMember credentials based on entity profile
+    let role = userData.role;
+    if (!role) {
+      if (entityType === "Teacher") {
+        role = "teacher";
+      } else if (entityType === "Student") {
+        role = "student";
+      } else if (entityType === "StaffMember") {
+        role = (targetEntity && targetEntity.role === "admin") ? "admin" : "user";
+      } else {
+        role = "guest";
+      }
+    }
+
+    // 5. Atomic Multi-Step Persistence via SheetDB.AtomicPipeline & PipelineContext
+    const pipeCtx = new SheetDB.PipelineContext(context);
+    const pipeline = (typeof AtomicPipeline !== 'undefined' ? AtomicPipeline : SheetDB.AtomicPipeline);
+
+    return pipeline.begin(db, pipeCtx)
+      .addStep("User", (repo, state) => {
+        console.log(`[AuthBridge.createUserForEntity] [Step: User] Creating credentials for ${cleanUsername}...`);
+        const salt = AuthCore.generateSalt();
+        state.user = repo.insert({
+          username: cleanUsername,
+          password_salt: salt,
+          password_hash: AuthCore.hashPassword(userData.password, salt),
+          role: role,
+          status: "active",
+          failed_attempts: 0
+        });
+        state.userId = state.user.user_id;
+      })
+      .addStep("UserAccount", (repo, state) => {
+        console.log(`[AuthBridge.createUserForEntity] [Step: UserAccount] Binding user ${state.userId} to ${entityType}:${cleanEntityId}`);
+        state.accountLink = repo.insert({
+          user_id: state.userId,
+          entity_type: entityType,
+          entity_id: cleanEntityId,
+          status: "active",
+          created_at: new Date()
+        });
+        state.accountLinkId = state.accountLink.account_link_id;
+      })
+      .execute((state) => {
+        console.log(`[AuthBridge.createUserForEntity] Successfully committed user mapping: ${state.accountLinkId}`);
+        return {
+          account_link_id: state.accountLinkId,
+          user_id: state.userId,
+          username: state.user.username,
+          role: state.user.role,
+          entity_type: entityType,
+          entity_id: cleanEntityId,
+          status: "active"
+        };
+      });
+  },
+
+  /**
    * Resolves a token into a UserContext object.
    */
   resolveContext(token) {
@@ -139,12 +251,25 @@ const AuthBridge = {
       return { isValid: false, role: "guest" };
     }
 
-    return {
+    const context = {
       userId: user.user_id,
       username: user.username,
       role: user.role,
-      isValid: true
+      isValid: true,
+      entityType: null,
+      entityId: null
     };
+
+    // Hydrate linked entity if exists in UserAccount junction table
+    if (db.UserAccount && db.UserAccount.isTableExist()) {
+      const link = db.UserAccount.findOne({ user_id: user.user_id, status: "active" });
+      if (link) {
+        context.entityType = link.entity_type;
+        context.entityId = link.entity_id;
+      }
+    }
+
+    return context;
   },
 
   /**

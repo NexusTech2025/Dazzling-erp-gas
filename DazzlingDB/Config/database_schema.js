@@ -1214,6 +1214,107 @@ const DATABASE_SCHEMA = {
               "type": "hasMany",
               "target": "Session",
               "foreignKey": "user_id"
+            },
+            "accounts": {
+              "type": "hasMany",
+              "target": "UserAccount",
+              "foreignKey": "user_id"
+            }
+          }
+        },
+        "UserAccount": {
+          "primaryKey": "account_link_id",
+          "columns": {
+            "account_link_id": {
+              "type": "auto",
+              "idPrefix": "UAL",
+              "editable": false,
+              "unique": true,
+              "required": false,
+              "description": "Unique auto-generated identifier for the user account link"
+            },
+            "user_id": {
+              "type": "foreign_key",
+              "required": true,
+              "description": "Foreign key reference to the Auth User credentials",
+              "maxLength": 255,
+              "onDelete": "protect"
+            },
+            "entity_type": {
+              "type": "string",
+              "required": true,
+              "choices": [
+                "Teacher",
+                "Student",
+                "StaffMember"
+              ],
+              "description": "Polymorphic discriminator for the linked profile model",
+              "maxLength": 50
+            },
+            "entity_id": {
+              "type": "foreign_key",
+              "required": true,
+              "onDelete": "protect",
+              "description": "Target primary key ID (e.g. TCH-..., STU-..., STF-...)",
+              "maxLength": 255
+            },
+            "status": {
+              "type": "string",
+              "choices": [
+                "active",
+                "inactive"
+              ],
+              "default": "active",
+              "maxLength": 50,
+              "description": "Status of the user-entity account mapping"
+            },
+            "created_at": {
+              "type": "datetime",
+              "description": "Timestamp when the link was created"
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "user": {
+              "type": "belongsTo",
+              "target": "User",
+              "foreignKey": "user_id",
+              "onDelete": "protect"
+            },
+            "linked_entity": {
+              "type": "belongsToPolymorphic",
+              "typeField": "entity_type",
+              "idField": "entity_id",
+              "mapping": {
+                "Teacher": "Teacher",
+                "Student": "Student",
+                "StaffMember": "StaffMember"
+              }
             }
           }
         }
