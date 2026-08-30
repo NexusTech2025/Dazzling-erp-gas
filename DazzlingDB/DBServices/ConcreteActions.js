@@ -1104,6 +1104,41 @@ class StaffAddDocumentAction extends BaseAction {
 }
 
 /**
+ * 📚 ACADEMIC COURSE NOTES ACTIONS
+ */
+class UploadCourseNoteAction extends BaseAction {
+  constructor() {
+    super(ActionType.CREATE);
+  }
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.course_id || !p.title || !p.file) {
+      throw new ActionValidationError("payload must contain 'course_id', 'title', and 'file'.");
+    }
+  }
+  handle(requestContext) {
+    return AcademicNotesService.uploadCourseNote(requestContext.params.payload, requestContext);
+  }
+}
+
+class DeleteCourseNoteAction extends BaseAction {
+  constructor() {
+    super(ActionType.DELETE);
+  }
+  _validate() {
+    this._requireParam("payload");
+    const p = this._params.payload;
+    if (!p.note_id) {
+      throw new ActionValidationError("payload must contain 'note_id'.");
+    }
+  }
+  handle(requestContext) {
+    return AcademicNotesService.deleteCourseNote(requestContext.params.payload.note_id, requestContext);
+  }
+}
+
+/**
  * 🔍 ADVANCED QUERY ENGINE ACTION
  */
 class InitErpAction extends BaseAction {
@@ -1723,6 +1758,8 @@ globalThis.SaveTestMarksBulkAction = SaveTestMarksBulkAction;
 globalThis.QueryTestReportAction = QueryTestReportAction;
 globalThis.StaffRecordPaymentAction = StaffRecordPaymentAction;
 globalThis.StaffAddDocumentAction = StaffAddDocumentAction;
+globalThis.UploadCourseNoteAction = UploadCourseNoteAction;
+globalThis.DeleteCourseNoteAction = DeleteCourseNoteAction;
 globalThis.InitErpAction = InitErpAction;
 globalThis.QueryAction = QueryAction;
 globalThis.AdminSystemStatusAction = AdminSystemStatusAction;

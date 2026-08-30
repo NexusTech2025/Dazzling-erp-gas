@@ -99,6 +99,12 @@
       "target": "Test",
       "foreignKey": "batch_id",
       "onDelete": "protect"
+    },
+    "coursenotes": {
+      "type": "hasMany",
+      "target": "CourseNote",
+      "foreignKey": "batch_id",
+      "onDelete": "protect"
     }
   }
 }

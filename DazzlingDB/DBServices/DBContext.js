@@ -150,6 +150,12 @@ const DBContext = (function () {
       }
 
       return { status: "OK", message: "Database context is active. (Library-level ping pending implementation)" };
-    }
+    },
+
+    /**
+     * Resolves the active environment's root folder ID string.
+     * @returns {string} Root container folder ID.
+     */
+    getTargetFolderId: getTargetFolderId
   };
 })();

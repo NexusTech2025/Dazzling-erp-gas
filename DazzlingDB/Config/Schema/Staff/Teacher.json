@@ -152,6 +152,12 @@
       "target": "MoneyTransaction",
       "foreignKey": "party_id",
       "onDelete": "do_nothing"
+    },
+    "coursenotes": {
+      "type": "hasMany",
+      "target": "CourseNote",
+      "foreignKey": "teacher_id",
+      "onDelete": "set_null"
     }
   }
 }

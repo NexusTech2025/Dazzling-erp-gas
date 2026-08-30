@@ -56,6 +56,17 @@ class ActionAuthorizationError extends BaseActionError {}
  */
 class BackupError extends SystemError {}
 
+/**
+ * 📚 COURSE NOTE ERRORS
+ */
+class CourseNoteError extends SystemError {
+  constructor(message, errorCode = "COURSE_NOTE_FAILURE", details = null) {
+    super(message, { errorCode, details });
+    this.errorCode = errorCode;
+    this.details = details;
+  }
+}
+
 // Export to Global Namespace
 globalThis.SystemError = SystemError;
 globalThis.AuthAuthenticationError = AuthAuthenticationError;
@@ -66,4 +77,5 @@ globalThis.BaseActionError = BaseActionError;
 globalThis.ActionValidationError = ActionValidationError;
 globalThis.ActionAuthorizationError = ActionAuthorizationError;
 globalThis.BackupError = BackupError;
+globalThis.CourseNoteError = CourseNoteError;
 

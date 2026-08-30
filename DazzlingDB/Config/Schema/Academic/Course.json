@@ -109,6 +109,11 @@
       "type": "hasMany",
       "target": "PackageItem",
       "foreignKey": "entity_id"
+    },
+    "coursenotes": {
+      "type": "hasMany",
+      "target": "CourseNote",
+      "foreignKey": "course_id"
     }
   }
 }

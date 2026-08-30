@@ -131,6 +131,12 @@ const DATABASE_SCHEMA = {
               "target": "Test",
               "foreignKey": "batch_id",
               "onDelete": "protect"
+            },
+            "coursenotes": {
+              "type": "hasMany",
+              "target": "CourseNote",
+              "foreignKey": "batch_id",
+              "onDelete": "protect"
             }
           }
         },
@@ -381,6 +387,176 @@ const DATABASE_SCHEMA = {
               "type": "hasMany",
               "target": "PackageItem",
               "foreignKey": "entity_id"
+            },
+            "coursenotes": {
+              "type": "hasMany",
+              "target": "CourseNote",
+              "foreignKey": "course_id"
+            }
+          }
+        },
+        "CourseNote": {
+          "primaryKey": "note_id",
+          "columns": {
+            "course_id": {
+              "type": "foreign_key",
+              "required": true,
+              "maxLength": 255,
+              "onDelete": "protect",
+              "description": "Foreign key referencing the Course table. Identifies the primary curriculum course or subject to which this educational note belongs. Protected from deletion if active notes are linked."
+            },
+            "batch_id": {
+              "type": "foreign_key",
+              "required": false,
+              "maxLength": 255,
+              "onDelete": "protect",
+              "description": "Optional foreign key referencing the Batch table. When populated, scopes note access strictly to that operational classroom batch. When null, signifies a course-wide document accessible to all batches."
+            },
+            "teacher_id": {
+              "type": "foreign_key",
+              "required": false,
+              "maxLength": 255,
+              "onDelete": "set_null",
+              "description": "Optional foreign key referencing the Teacher table. Identifies the faculty member or instructor authoring/uploading the note. Cascades to null upon teacher profile deletion to preserve educational records."
+            },
+            "title": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255,
+              "description": "The human-readable title or subject heading of the course note (e.g., 'Unit 1: Quantum Mechanics Lecture Notes'). Displayed prominently across student and faculty portals."
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 1000,
+              "description": "Extended contextual overview, topic outlines, specific study directives, or syllabus chapter references associated with the uploaded material."
+            },
+            "note_type": {
+              "type": "string",
+              "choices": [
+                "chapter_notes",
+                "short_notes",
+                "cheat_sheet",
+                "lecture_slides",
+                "assignment",
+                "question_bank",
+                "syllabus",
+                "reference"
+              ],
+              "default": "chapter_notes",
+              "maxLength": 255,
+              "description": "Taxonomical classification of the educational document. Enables structured client-side categorization, badge rendering, and filtered repository queries."
+            },
+            "file_type": {
+              "type": "string",
+              "choices": [
+                "pdf",
+                "image",
+                "presentation",
+                "document",
+                "spreadsheet",
+                "text",
+                "archive",
+                "other"
+              ],
+              "default": "other",
+              "maxLength": 50,
+              "description": "Simplified high-level file format classification auto-derived from MIME type and file extension (e.g., 'pdf', 'document', 'presentation', 'spreadsheet', 'image', 'text', 'archive', 'other'). Enables frontend icon rendering and format filtering."
+            },
+            "file_id": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255,
+              "description": "The unique Google Drive File identifier (alphanumeric ID string). Used by the backend Drive storage engine to verify existence, update permissions, or trigger compensatory trashing upon rollback."
+            },
+            "file_url": {
+              "type": "string",
+              "required": true,
+              "maxLength": 1000,
+              "description": "The permanent Google Drive web preview link or direct view URL, enabling authenticated students and faculty to open or download the physical document."
+            },
+            "file_name": {
+              "type": "string",
+              "required": true,
+              "maxLength": 255,
+              "description": "The sanitized original filename of the document including its extension (e.g., 'thermodynamics_unit1.pdf'). Stored for client download headers and Drive filesystem alignment."
+            },
+            "mime_type": {
+              "type": "string",
+              "required": true,
+              "maxLength": 100,
+              "description": "The standard IANA MIME type string of the file (e.g., 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'). Validated at gateway entry."
+            },
+            "file_size_bytes": {
+              "type": "number",
+              "description": "The physical binary file size in bytes calculated upon Base64 stream decoding. Used for storage quota monitoring and client download indicators."
+            },
+            "status": {
+              "type": "string",
+              "choices": [
+                "active",
+                "archived"
+              ],
+              "default": "active",
+              "maxLength": 255,
+              "description": "Operational lifecycle status. 'active' indicates live teaching material; 'archived' retains the physical file and metadata for audit trails while hiding it from active student query views."
+            },
+            "uploaded_at": {
+              "type": "datetime",
+              "description": "The exact date and time timestamp when the document was uploaded and committed to database storage. Facilitates chronological sorting and curriculum version auditing."
+            },
+            "note_id": {
+              "type": "auto",
+              "idPrefix": "CNT",
+              "editable": false,
+              "unique": true,
+              "required": false,
+              "description": "The unique, auto-generated platform primary key for this course note record. Prefixed with 'CNT', it serves as the definitive reference identifier across the ERP system."
+            },
+            "__tx_id": {
+              "type": "string",
+              "system": true,
+              "required": false,
+              "editable": false,
+              "description": "Unique Transaction ID"
+            },
+            "__tx_status": {
+              "type": "string",
+              "choices": [
+                "PENDING",
+                "COMMITTED",
+                "FAILED"
+              ],
+              "default": "PENDING",
+              "system": true,
+              "required": false,
+              "editable": false
+            },
+            "__created_at": {
+              "type": "datetime",
+              "autoNowAdd": true,
+              "system": true,
+              "required": false,
+              "editable": false
+            }
+          },
+          "relations": {
+            "course": {
+              "type": "belongsTo",
+              "target": "Course",
+              "foreignKey": "course_id",
+              "onDelete": "protect"
+            },
+            "batch": {
+              "type": "belongsTo",
+              "target": "Batch",
+              "foreignKey": "batch_id",
+              "onDelete": "protect"
+            },
+            "teacher": {
+              "type": "belongsTo",
+              "target": "Teacher",
+              "foreignKey": "teacher_id",
+              "onDelete": "set_null"
             }
           }
         },
@@ -2481,6 +2657,12 @@ const DATABASE_SCHEMA = {
               "target": "MoneyTransaction",
               "foreignKey": "party_id",
               "onDelete": "do_nothing"
+            },
+            "coursenotes": {
+              "type": "hasMany",
+              "target": "CourseNote",
+              "foreignKey": "teacher_id",
+              "onDelete": "set_null"
             }
           }
         },

@@ -16,6 +16,11 @@ const DEPENDENCY_GRAPH = {
       "onDelete": "protect"
     },
     {
+      "table": "CourseNote",
+      "fk": "course_id",
+      "onDelete": "protect"
+    },
+    {
       "table": "TeacherSubject",
       "fk": "subject_id",
       "onDelete": "protect"
@@ -26,6 +31,11 @@ const DEPENDENCY_GRAPH = {
       "table": "Batch",
       "fk": "teacher_id",
       "onDelete": "protect"
+    },
+    {
+      "table": "CourseNote",
+      "fk": "teacher_id",
+      "onDelete": "set_null"
     },
     {
       "table": "TeacherAttendance",
@@ -112,6 +122,11 @@ const DEPENDENCY_GRAPH = {
   "Batch": [
     {
       "table": "BatchAllocation",
+      "fk": "batch_id",
+      "onDelete": "protect"
+    },
+    {
+      "table": "CourseNote",
       "fk": "batch_id",
       "onDelete": "protect"
     },
