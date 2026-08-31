@@ -186,7 +186,8 @@ const CourseNoteValidationRules = [
         "assignment",
         "question_bank",
         "syllabus",
-        "reference"
+        "reference",
+        "daily_practice_paper"
       ];
 
       if (!allowedChoices.includes(noteType)) {

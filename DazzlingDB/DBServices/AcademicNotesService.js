@@ -84,6 +84,8 @@ const AcademicNotesService = {
             file_type: payload.file_type || uploadedFile.file_type || "other",
             file_id: uploadedFile.file_id,
             file_url: uploadedFile.file_url,
+            download_url: uploadedFile.download_url || null,
+            embed_url: uploadedFile.embed_url || null,
             file_name: uploadedFile.file_name,
             mime_type: uploadedFile.mime_type,
             file_size_bytes: uploadedFile.file_size_bytes,
@@ -115,6 +117,8 @@ const AcademicNotesService = {
 
       result._presentation = {
         display_status: "Active",
+        download_url: result.download_url || uploadedFile.download_url || null,
+        embed_url: result.embed_url || uploadedFile.embed_url || null,
         toast_message: `Course note '${result.title}' uploaded successfully.`
       };
 

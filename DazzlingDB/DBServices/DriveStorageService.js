@@ -208,6 +208,15 @@ const DriveStorageService = (function () {
 
         // 4. Ingest File to Google Drive
         const file = targetFolder.createFile(blob);
+        const fileId = file.getId();
+
+        // 5. Apply Public Link-Sharing Permissions (Defensive Workspace Safeguard)
+        try {
+          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          console.log(`[DriveStorageService.uploadDocument] Public link sharing (ANYONE_WITH_LINK, VIEW) applied to file '${fileId}'.`);
+        } catch (shareErr) {
+          console.warn(`[DriveStorageService.uploadDocument] Public sharing could not be applied by domain policy: ${shareErr.message}`);
+        }
 
         if (params.description) {
           try {
@@ -219,11 +228,18 @@ const DriveStorageService = (function () {
 
         const fileType = params.fileType || _deriveFileType(params.mimeType, params.fileName);
         const elapsed = Date.now() - startTime;
-        console.log(`[DriveStorageService.uploadDocument] File '${params.fileName}' (${fileSize} bytes, type: ${fileType}) created in Drive in ${elapsed} ms. File ID: ${file.getId()}`);
+        console.log(`[DriveStorageService.uploadDocument] File '${params.fileName}' (${fileSize} bytes, type: ${fileType}) created in Drive in ${elapsed} ms. File ID: ${fileId}`);
+
+        // 6. Generate Dedicated Access Endpoints
+        const fileUrl = file.getUrl();
+        const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        const embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
 
         return {
-          file_id: file.getId(),
-          file_url: file.getUrl(),
+          file_id: fileId,
+          file_url: fileUrl,
+          download_url: downloadUrl,
+          embed_url: embedUrl,
           file_name: params.fileName,
           mime_type: params.mimeType,
           file_type: fileType,

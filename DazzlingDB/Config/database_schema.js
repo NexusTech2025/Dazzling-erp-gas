@@ -440,7 +440,8 @@ const DATABASE_SCHEMA = {
                 "assignment",
                 "question_bank",
                 "syllabus",
-                "reference"
+                "reference",
+                "daily_practice_paper"
               ],
               "default": "chapter_notes",
               "maxLength": 255,
@@ -473,6 +474,18 @@ const DATABASE_SCHEMA = {
               "required": true,
               "maxLength": 1000,
               "description": "The permanent Google Drive web preview link or direct view URL, enabling authenticated students and faculty to open or download the physical document."
+            },
+            "download_url": {
+              "type": "string",
+              "required": false,
+              "maxLength": 1000,
+              "description": "Direct 1-click download link for the physical document file (https://drive.google.com/uc?export=download&id={FILE_ID})."
+            },
+            "embed_url": {
+              "type": "string",
+              "required": false,
+              "maxLength": 1000,
+              "description": "Clean, embedded Google Drive viewer URL for rendering inside <iframe /> or mobile WebViews without external navigation (https://drive.google.com/file/d/{FILE_ID}/preview)."
             },
             "file_name": {
               "type": "string",
